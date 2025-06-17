@@ -1,0 +1,270 @@
+{
+  "menstrual": [
+    {
+      "id": "M_symptoms_friendly_01",
+      "baseContent": "Tes crampes te parlent aujourd'hui ! 💕 Ton corps fait un travail incroyable. Essaie une bouillotte bien chaude et écoute ce qu'il te demande.",
+      "personaVariants": {
+        "emma": "Tes crampes te parlent aujourd'hui ! 💕 C'est normal, ton corps apprend à communiquer avec toi. Une bouillotte bien chaude sera ton amie.",
+        "laure": "Tes crampes signalent une phase importante de ton cycle. 💕 Optimise ta journée en t'accordant cette pause avec une bouillotte chaude.",
+        "sylvie": "Ces crampes sont un signal de ton corps en transition. 💕 Accueille-les avec bienveillance et une bouillotte bien chaude pour t'apaiser.",
+        "christine": "Tes crampes portent la sagesse de tes cycles passés. 💕 Honore cette douleur sacrée avec la chaleur réconfortante d'une bouillotte.",
+        "clara": "Tes crampes indiquent le processus physiologique actuel. 💕 Optimise ta récupération avec une thermothérapie locale - bouillotte recommandée."
+      },
+      "targetPersonas": ["emma", "laure", "sylvie", "christine", "clara"],
+      "targetPreferences": ["symptoms"],
+      "tone": "friendly",
+      "phase": "menstrual",
+      "jezaApproval": 4,
+      "status": "enriched",
+      "lastModified": "2025-06-09T15:30:00.000Z",
+      "enrichedBy": "persona-system-v2",
+      "journeyChoice": "body_disconnect"
+    },
+    {
+      "id": "M_symptoms_friendly_02",
+      "baseContent": "Mal de dos ? 🤗 Prends soin de toi comme tu le mérites. Un bon coussin, une respiration ventrale calme et lente, et ça ira mieux !",
+      "personaVariants": {
+        "emma": "Mal de dos ? 🤗 C'est ton corps qui découvre son rythme. Un coussin moelleux et des respirations douces vont t'aider !",
+        "laure": "Mal de dos ? 🤗 Intègre cette pause bien-être dans ton planning. Coussin ergonomique + respiration ventrale = efficacité restaurée.",
+        "sylvie": "Mal de dos ? 🤗 Ton corps traverse des changements, c'est normal. Un bon coussin et une respiration apaisante te soulageront.",
+        "christine": "Mal de dos ? 🤗 Cette tension raconte l'histoire de tes cycles. Un coussin bienveillant et une respiration consciente l'apaiseront.",
+        "clara": "Mal de dos ? 🤗 Position ergonomique + support lombaire + respiration diaphragmatique = soulagement optimal de tes tensions."
+      },
+      "targetPersonas": ["emma", "laure", "sylvie", "christine", "clara"],
+      "targetPreferences": ["symptoms"],
+      "tone": "friendly",
+      "phase": "menstrual",
+      "jezaApproval": 3,
+      "status": "enriched",
+      "lastModified": "2025-06-09T15:30:00.000Z",
+      "enrichedBy": "persona-system-v2",
+      "journeyChoice": "body_disconnect"
+    },
+    {
+      "id": "M_moods_inspiring_01",
+      "baseContent": "✨ Tes émotions sont des messagères sacrées. Chaque larme, chaque sentiment est un fil de sagesse tissant l'histoire de ton être féminin.",
+      "personaVariants": {
+        "emma": "✨ Tes émotions te parlent d'une voix nouvelle. Chaque ressenti est une découverte de qui tu deviens en tant que femme.",
+        "laure": "✨ Tes émotions sont des données précieuses sur ton état cyclique. Chaque sentiment révèle une facette de ta puissance féminine.",
+        "sylvie": "✨ Tes émotions traversent une métamorphose. Chaque variation est une transformation naturelle de ton être féminin.",
+        "christine": "✨ Tes émotions portent la sagesse de toutes tes sœurs. Chaque larme tisse le grand récit de la féminité éternelle.",
+        "clara": "✨ Tes émotions sont des indicateurs complexes de ton système hormonal. Chaque pattern révèle l'intelligence de ton cycle féminin."
+      },
+      "targetPersonas": ["christine", "sylvie", "emma"],
+      "targetPreferences": ["moods"],
+      "tone": "inspiring",
+      "phase": "menstrual",
+      "jezaApproval": 5,
+      "status": "enriched",
+      "lastModified": "2025-06-09T15:30:00.000Z",
+      "enrichedBy": "persona-system-v2",
+      "journeyChoice": "emotional_control"
+    },
+    {
+      "id": "M_phyto_professional_01",
+      "baseContent": "La camomille offre des propriétés apaisantes qui peuvent accompagner naturellement les variations physiologiques menstruelles.",
+      "personaVariants": {
+        "emma": "La camomille est une alliée douce pour tes premières expériences menstruelles. Ses propriétés apaisantes t'accompagnent naturellement.",
+        "laure": "La camomille optimise ton bien-être menstruel grâce à ses propriétés anti-inflammatoires documentées. Efficace et naturel.",
+        "sylvie": "La camomille soutient ton corps en transition avec ses vertus apaisantes traditionnelles. Une compagne douce pour cette période.",
+        "christine": "La camomille porte la sagesse millénaire des femmes. Ses propriétés apaisantes honorent ton cycle avec respect.",
+        "clara": "La camomille (Matricaria chamomilla) contient des flavonoïdes anti-inflammatoires particulièrement efficaces durant la menstruation."
+      },
+      "targetPersonas": ["laure", "sylvie", "clara"],
+      "targetPreferences": ["phyto"],
+      "tone": "professional",
+      "phase": "menstrual",
+      "jezaApproval": 4,
+      "status": "enriched",
+      "lastModified": "2025-06-09T15:30:00.000Z",
+      "enrichedBy": "persona-system-v2",
+      "journeyChoice": "hiding_nature"
+    }
+  ],
+  "follicular": [
+    {
+      "id": "F_symptoms_friendly_01",
+      "baseContent": "💕 Ton corps se réveille doucement. L'énergie revient, tu sens ce petit picotement de vie ?",
+      "personaVariants": {
+        "emma": "💕 Ton corps découvre une nouvelle énergie ! Tu sens cette petite étincelle qui grandit en toi ?",
+        "laure": "💕 Phase de reconstruction optimale détectée. Ton énergie se restaure, moment idéal pour planifier tes projets !",
+        "sylvie": "💕 Ton corps sort doucement de sa pause. Cette énergie naissante est un cadeau de ta transition.",
+        "christine": "💕 L'énergie ancestrale se réveille en toi. Tu sens cette force qui renaît comme mille printemps avant toi ?",
+        "clara": "💕 Tes œstrogènes remontent, ton énergie se reconstruit méthodiquement. Phase de récupération optimisée !"
+      },
+      "targetPersonas": ["emma", "laure", "clara"],
+      "targetPreferences": ["symptoms", "phases"],
+      "tone": "friendly",
+      "phase": "follicular",
+      "jezaApproval": 4,
+      "status": "enriched",
+      "lastModified": "2025-06-09T15:30:00.000Z",
+      "enrichedBy": "persona-system-v2",
+      "journeyChoice": "body_disconnect"
+    },
+    {
+      "id": "F_moods_friendly_01",
+      "baseContent": "💖 La créativité revient en force. Prête à danser avec tes idées ?",
+      "personaVariants": {
+        "emma": "💖 Tu déborde d'idées nouvelles ! C'est le moment de laisser ta créativité s'exprimer librement !",
+        "laure": "💖 Pic de créativité détecté ! Parfait timing pour brainstormer et structurer tes projets innovants.",
+        "sylvie": "💖 Tes idées refleurissent avec ta nouvelle énergie. Laisse cette créativité t'accompagner doucement.",
+        "christine": "💖 L'inspiration coule en toi comme une source sacrée. Tes idées portent la sagesse créatrice universelle.",
+        "clara": "💖 Neuroplasticité optimale ! Phase idéale pour innovation, apprentissage et expression créative maximisée."
+      },
+      "targetPersonas": ["emma", "laure", "clara", "christine"],
+      "targetPreferences": ["moods"],
+      "tone": "friendly",
+      "phase": "follicular",
+      "jezaApproval": 4,
+      "status": "enriched",
+      "lastModified": "2025-06-09T15:30:00.000Z",
+      "enrichedBy": "persona-system-v2",
+      "journeyChoice": "emotional_control"
+    },
+    {
+      "id": "F_rituals_inspiring_01",
+      "baseContent": "✨ Ton journal est un jardin. Chaque mot que tu y sèmes est une graine de devenir.",
+      "personaVariants": {
+        "emma": "✨ Ton journal devient ton terrain d'exploration. Chaque mot écrit trace le chemin de ta découverte personnelle.",
+        "laure": "✨ Ton journal optimise ta croissance personnelle. Chaque note stratégique cultive tes objectifs futurs.",
+        "sylvie": "✨ Ton journal accueille ta renaissance. Chaque mot posé nourrit la femme que tu redeviens.",
+        "christine": "✨ Ton journal est un temple de sagesse. Chaque mot écrit rejoint la grande bibliothèque féminine universelle.",
+        "clara": "✨ Ton journal structure ta réflexion cognitive. Chaque entrée optimise ta connaissance de soi et tes patterns comportementaux."
+      },
+      "targetPersonas": ["christine", "emma", "laure"],
+      "targetPreferences": ["rituals"],
+      "tone": "inspiring",
+      "phase": "follicular",
+      "jezaApproval": 5,
+      "status": "enriched",
+      "lastModified": "2025-06-09T15:30:00.000Z",
+      "enrichedBy": "persona-system-v2",
+      "journeyChoice": "hiding_nature"
+    }
+  ],
+  "ovulatory": [
+    {
+      "id": "O_symptoms_friendly_01",
+      "baseContent": "✨ Ton énergie est au top ! Tu rayonnes, c'est magique !",
+      "personaVariants": {
+        "emma": "✨ Tu découvres ta puissance maximale ! Cette énergie incroyable, c'est le pic de ta féminité !",
+        "laure": "✨ Performance énergétique optimale atteinte ! Moment parfait pour tes défis les plus ambitieux !",
+        "sylvie": "✨ Ton corps retrouve sa pleine force ! Cette énergie lumineuse annonce ton épanouissement.",
+        "christine": "✨ Tu incarnes la déesse à son zénith ! Cette énergie sacrée connecte toutes les femmes de l'univers.",
+        "clara": "✨ Pic d'œstrogènes atteint ! Capacités cognitives et physiques maximisées - moment optimal pour performer !"
+      },
+      "targetPersonas": ["emma", "laure", "clara", "christine"],
+      "targetPreferences": ["symptoms", "phases"],
+      "tone": "friendly",
+      "phase": "ovulatory",
+      "jezaApproval": 4,
+      "status": "enriched",
+      "lastModified": "2025-06-09T15:30:00.000Z",
+      "enrichedBy": "persona-system-v2",
+      "journeyChoice": "hiding_nature"
+    },
+    {
+      "id": "O_moods_inspiring_01",
+      "baseContent": "✨ Tu es un aimant de lumière. Tes émotions sont des rayons de soleil qui illuminent tout autour de toi.",
+      "personaVariants": {
+        "emma": "✨ Tu rayonnes d'une confiance nouvelle ! Tes émotions positives attirent naturellement de belles énergies.",
+        "laure": "✨ Ton charisme atteint son pic d'efficacité. Tes émotions inspirent et motivent ton entourage professionnel.",
+        "sylvie": "✨ Tu retrouves ta lumière intérieure ! Tes émotions apaisées rayonnent d'une beauté retrouvée.",
+        "christine": "✨ Tu es un phare de sagesse féminine. Tes émotions guident et inspirent toutes les femmes qui t'entourent.",
+        "clara": "✨ Optimisation émotionnelle maximale ! Ton intelligence relationnelle atteint des niveaux de performance exceptionnels."
+      },
+      "targetPersonas": ["christine", "emma", "laure"],
+      "targetPreferences": ["moods"],
+      "tone": "inspiring",
+      "phase": "ovulatory",
+      "jezaApproval": 5,
+      "status": "enriched",
+      "lastModified": "2025-06-09T15:30:00.000Z",
+      "enrichedBy": "persona-system-v2",
+      "journeyChoice": "emotional_control"
+    },
+    {
+      "id": "O_rituals_friendly_01",
+      "baseContent": "🎉 C'est le moment des projets créatifs ! Lance-toi, tu es irrésistible !",
+      "personaVariants": {
+        "emma": "🎉 Ose tes rêves les plus fous ! C'est LE moment pour tenter cette nouvelle aventure créative !",
+        "laure": "🎉 Fenêtre d'opportunité optimale ! Lance tes projets stratégiques, ton impact sera maximal !",
+        "sylvie": "🎉 Retrouve le plaisir de créer ! Tes projets portent ta renaissance, lance-toi en confiance !",
+        "christine": "🎉 Tes créations toucheront les âmes ! C'est le moment sacré pour partager tes dons au monde !",
+        "clara": "🎉 Phase de création optimisée ! Ressources cognitives maximales, timing parfait pour concrétiser !"
+      },
+      "targetPersonas": ["emma", "laure", "clara"],
+      "targetPreferences": ["rituals"],
+      "tone": "friendly",
+      "phase": "ovulatory",
+      "jezaApproval": 4,
+      "status": "enriched",
+      "lastModified": "2025-06-09T15:30:00.000Z",
+      "enrichedBy": "persona-system-v2",
+      "journeyChoice": "hiding_nature"
+    }
+  ],
+  "luteal": [
+    {
+      "id": "L_symptoms_friendly_01",
+      "baseContent": "💛 Ton corps ralentit doucement. C'est le moment de la douceur avec toi-même !",
+      "personaVariants": {
+        "emma": "💛 Ton corps te demande plus de repos, c'est normal ! Écoute-le et sois douce avec toi.",
+        "laure": "💛 Phase de récupération programmée. Optimise ton repos pour maintenir ta performance sur le long terme !",
+        "sylvie": "💛 Ton corps sage ralentit pour mieux se régénérer. Respecte ce rythme, il connaît tes besoins.",
+        "christine": "💛 La sage en toi demande l'introspection. Ce ralentissement porte la sagesse des cycles ancestraux.",
+        "clara": "💛 Diminution programmée de l'énergie pour optimisation métabolique. Phase de maintenance nécessaire !"
+      },
+      "targetPersonas": ["emma", "laure", "sylvie", "clara"],
+      "targetPreferences": ["symptoms", "phases"],
+      "tone": "friendly",
+      "phase": "luteal",
+      "jezaApproval": 4,
+      "status": "enriched",
+      "lastModified": "2025-06-09T15:30:00.000Z",
+      "enrichedBy": "persona-system-v2",
+      "journeyChoice": "body_disconnect"
+    },
+    {
+      "id": "L_moods_inspiring_01",
+      "baseContent": "✨ Tes émotions sont des vagues profondes. Chaque sentiment est une perle de sagesse.",
+      "personaVariants": {
+        "emma": "✨ Tes émotions t'apprennent à te connaître. Chaque ressenti te révèle qui tu es vraiment au plus profond.",
+        "laure": "✨ Tes émotions sont des données précieuses sur tes besoins actuels. Analyse-les pour optimiser ton bien-être.",
+        "sylvie": "✨ Tes émotions reflètent ta transformation intérieure. Chaque vague t'emmène vers qui tu deviens.",
+        "christine": "✨ Tes émotions portent la sagesse millénaire. Chaque larme connecte ton âme au grand mystère féminin.",
+        "clara": "✨ Tes fluctuations émotionnelles indiquent des ajustements hormonaux complexes. Chaque pattern révèle ton fonctionnement optimal."
+      },
+      "targetPersonas": ["christine", "sylvie", "emma"],
+      "targetPreferences": ["moods"],
+      "tone": "inspiring",
+      "phase": "luteal",
+      "jezaApproval": 5,
+      "status": "enriched",
+      "lastModified": "2025-06-09T15:30:00.000Z",
+      "enrichedBy": "persona-system-v2",
+      "journeyChoice": "emotional_control"
+    },
+    {
+      "id": "L_rituals_friendly_01",
+      "baseContent": "Salut ! 🕯️ Un petit cocooning ? C'est le moment parfait pour te chouchouter !",
+      "personaVariants": {
+        "emma": "Salut ! 🕯️ Découvre le plaisir du cocooning ! C'est ton moment pour apprendre à prendre soin de toi.",
+        "laure": "Salut ! 🕯️ Phase cocooning planifiée ! Optimise ta récupération avec des rituels bien-être structurés.",
+        "sylvie": "Salut ! 🕯️ Retrouve le réconfort du cocooning. Ton corps et ton cœur méritent cette tendresse.",
+        "christine": "Salut ! 🕯️ Le cocooning est un rituel sacré d'auto-soin. Honore cette sagesse féminine ancestrale.",
+        "clara": "Salut ! 🕯️ Protocole de récupération optimisé ! Cocooning = restauration neurologique et hormonale maximisée."
+      },
+      "targetPersonas": ["emma", "laure", "sylvie", "christine"],
+      "targetPreferences": ["rituals"],
+      "tone": "friendly",
+      "phase": "luteal",
+      "jezaApproval": 4,
+      "status": "enriched",
+      "lastModified": "2025-06-09T15:30:00.000Z",
+      "enrichedBy": "persona-system-v2",
+      "journeyChoice": "hiding_nature"
+    }
+  ]
+}

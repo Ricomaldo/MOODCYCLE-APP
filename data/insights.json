@@ -1,0 +1,2328 @@
+{
+    "menstrual": [
+      {
+        "id": "M_symptoms_friendly_01",
+        "baseContent": "Tes crampes te parlent aujourd'hui ! 💕 Ton corps fait un travail incroyable. Essaie une bouillotte bien chaude et écoute ce qu'il te demande.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "friendly",
+        "phase": "menstrual",
+        "jezaApproval": 1,
+        "status": "enriched",
+        "lastModified": "2025-06-16T01:01:51.182Z",
+        "enrichedBy": "admin-interface",
+        "personaVariants": {
+          "emma": ""
+        },
+        "targetJourney": [
+          "body_disconnect"
+        ]
+      },
+      {
+        "id": "M_symptoms_friendly_02",
+        "baseContent": "Mal de dos ? 🤗 Prends soin de toi comme tu le mérites. Un bon coussin, une respiration ventrale calme et lente, et ça ira mieux !",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "friendly",
+        "phase": "menstrual",
+        "jezaApproval": 2,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.127Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_symptoms_friendly_03",
+        "baseContent": "Hey, la fatigue frappe aujourd'hui ! 😴 Écoute ton corps et fais une sieste sans culpabiliser. Tu mérites ce repos.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "friendly",
+        "phase": "menstrual",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.127Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_symptoms_professional_01",
+        "baseContent": "Les crampes menstruelles résultent de contractions utérines nécessaires à l'évacuation de l'endomètre. La thermothérapie locale peut réduire efficacement l'intensité douloureuse.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "professional",
+        "phase": "menstrual",
+        "jezaApproval": 1,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_symptoms_professional_02",
+        "baseContent": "L'inflammation périodique provoque des douleurs musculaires et articulaires. Une hydratation optimale et des étirements doux peuvent atténuer ces symptômes.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "professional",
+        "phase": "menstrual",
+        "jezaApproval": 1,
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_symptoms_professional_03",
+        "baseContent": "La variation hormonale induit des modifications physiologiques complexes. Une alimentation anti-inflammatoire peut contribuer à réduire l'inconfort.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "professional",
+        "phase": "menstrual",
+        "jezaApproval": 2,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_symptoms_inspiring_01",
+        "baseContent": "✨ Chaque crampe est un murmure de ton corps. C'est l'ancien langage de la matrice, un rituel de renouveau qui t'ancre dans ta puissance féminine.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "inspiring",
+        "phase": "menstrual",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_symptoms_inspiring_02",
+        "baseContent": "🌊 La douleur n'est pas ton ennemie, mais une messagère. Elle raconte l'histoire millénaire de ta transformation cyclique.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "inspiring",
+        "phase": "menstrual",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_symptoms_inspiring_03",
+        "baseContent": "Tes symptômes sont des portes vers ta sagesse intérieure. Chaque sensation est un chuchotement de ton corps, une invitation à t’écouter profondément.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "inspiring",
+        "phase": "menstrual",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_symptoms_inspiring_04",
+        "baseContent": "✨ La fatigue n'est pas une faiblesse, la respecter c’est écouter les besoins de la femme que tu es. Tu descends dans les profondeurs de ton être pour renaître.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "inspiring",
+        "phase": "menstrual",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_moods_friendly_01",
+        "baseContent": "Hey ma belle ! 💖 Tes émotions sont comme des vagues. Laisse-les venir sans jugement, elles ont toutes leur place aujourd'hui.",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "friendly",
+        "phase": "menstrual",
+        "jezaApproval": 2,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_moods_friendly_02",
+        "baseContent": "Un peu triste ? 🤗 C'est super normal ! Ton corps traverse un grand voyage émotionnel. Un câlin à toi-même peut faire des merveilles !",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "friendly",
+        "phase": "menstrual",
+        "jezaApproval": 4,
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_moods_friendly_03",
+        "baseContent": "Sautes d'humeur à bloc ? 😅 Ton corps négocie avec ses hormones. Respire, souris, et sois douce avec toi-même !",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "friendly",
+        "phase": "menstrual",
+        "jezaApproval": 2,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_moods_professional_01",
+        "baseContent": "Les fluctuations hormonales influencent naturellement ton état émotionnel. Accueillir ces variations avec bienveillance est une forme de sagesse personnelle.",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "professional",
+        "phase": "menstrual",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_moods_professional_02",
+        "baseContent": "L'intensité émotionnelle actuelle résulte de processus physiologiques complexes. Chaque émotion mérite reconnaissance et espace.",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "professional",
+        "phase": "menstrual",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_moods_professional_03",
+        "baseContent": "Ton système hormonal orchestre un ballet émotionnel subtil. La compréhension et l'acceptation de ces états sont tes alliées.",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "professional",
+        "phase": "menstrual",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_moods_inspiring_01",
+        "baseContent": "✨ Tes émotions sont des messagères sacrées. Chaque larme, chaque sentiment est un fil de sagesse tissant l'histoire de ton être féminin.",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "inspiring",
+        "phase": "menstrual",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_moods_inspiring_02",
+        "baseContent": "Les profondeurs de ton âme s'expriment. Chaque émotion est un océan, chaque vague une histoire de transformation.",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "inspiring",
+        "phase": "menstrual",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_moods_inspiring_03",
+        "baseContent": "🌊 Tu es un monde, et tes émotions sont ses marées. Laisse-les danser, s’agiter et s’apaiser, sans résistance, sans jugement.",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "inspiring",
+        "phase": "menstrual",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_moods_inspiring_04",
+        "baseContent": "✨ Cette phase est un voyage intérieur. Tes émotions sont des clés qui ouvrent les portes de ta sagesse intérieure et d’une connaissance profonde toi-même.",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "inspiring",
+        "phase": "menstrual",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_phyto_professional_02",
+        "baseContent": "La camomille offre des propriétés apaisantes qui peuvent accompagner naturellement les variations physiologiques menstruelles.",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "professional",
+        "phase": "menstrual",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_phyto_professional_01",
+        "baseContent": "L'extrait de gingembre et de circulation présente des propriétés anti-inflammatoires significatives, particulièrement recommandé lors des dysménorrhées avec une intention de soulagement doux.",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "professional",
+        "phase": "menstrual",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_phyto_friendly_03",
+        "baseContent": "Hey ! 🌱 Le gingembre, c'est ton super-héros du moment. Une tisane épicée qui réchauffe et soulage ! Avec un peu de citron et de miel, elle te redonnera du pep’s !",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "friendly",
+        "phase": "menstrual",
+        "jezaApproval": 2,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_phyto_friendly_02",
+        "baseContent": "Salut ! 🍃 La sauge t'offre son réconfort. Une infusion magique qui te fait du bien, tu veux essayer ?",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "friendly",
+        "phase": "menstrual",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_phyto_friendly_01",
+        "baseContent": "Coucou ! 🌿 La camomille sera ton amie aujourd'hui. Une tisane chaude et hop, du réconfort en perspective !",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "friendly",
+        "phase": "menstrual",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_phyto_professional_03",
+        "baseContent": "Les huiles essentielles de lavande et de sauge sclarée peuvent contribuer à l'équilibre émotionnel et physiologique avec une délicatesse toute naturelle.",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "professional",
+        "phase": "menstrual",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_phyto_inspiring_01",
+        "baseContent": "✨ Chaque plante est une sœur, une alliée dans ton voyage cyclique. La sauge t'offre sa sagesse ancestrale de guérison et de transformation.",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "inspiring",
+        "phase": "menstrual",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_phyto_inspiring_02",
+        "baseContent": "🌿 Les plantes murmurent les secrets de guérison. Chaque feuille, chaque racine est un message de reconnexion à ton essence féminine.",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "inspiring",
+        "phase": "menstrual",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_phyto_inspiring_03",
+        "baseContent": "✨ La nature est ton alchimiste. Les plantes dansent avec tes hormones, transformant la douleur en énergie régénératrice.",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "inspiring",
+        "phase": "menstrual",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_phases_professional_01",
+        "baseContent": "La phase menstruelle représente un moment de basse énergie physiologique, invitant naturellement à un ralentissement bienveillant.",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "professional",
+        "phase": "menstrual",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_phases_professional_02",
+        "baseContent": "Les variations énergétiques actuelles suggèrent une période optimale pour l'introspection et le repos.",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "professional",
+        "phase": "menstrual",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_phases_inspiring_01",
+        "baseContent": "✨ Ce temps est un seuil sacré. Tu descends dans les profondeurs de ton être, où le sang raconte l'histoire de ta renaissance perpétuelle.",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "inspiring",
+        "phase": "menstrual",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_phases_inspiring_02",
+        "baseContent": "🌑 La lune en toi se retire, t'invitant à un voyage intérieur. Chaque cycle est un voyage dans ton féminin, comme la vie, les phases de ton cycle te guide dans un mouvement perpétuel, laisse-toi bercer.",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "inspiring",
+        "phase": "menstrual",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_phases_inspiring_03",
+        "baseContent": "✨ Tu es un océan en mouvement. Cette phase est ta marée basse, moment de recueillement, d’introspection et de libération silencieuse.",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "inspiring",
+        "phase": "menstrual",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_lithotherapy_professional_01",
+        "baseContent": "La rhodonite peut contribuer à l'équilibre émotionnel avec une douceur subtile, en soutenant ton parcours énergétique personnel.",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "professional",
+        "phase": "menstrual",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_lithotherapy_professional_02",
+        "baseContent": "Les cristaux agissent comme des supports énergétiques délicats, offrant un accompagnement subtil durant ta phase menstruelle.",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "professional",
+        "phase": "menstrual",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_lithotherapy_inspiring_01",
+        "baseContent": "✨ Le quartz rouge est la pierre de l'utérus. Elle chuchote les secrets de ta matrice, gardienne de ta force régénératrice.",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "inspiring",
+        "phase": "menstrual",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_lithotherapy_inspiring_02",
+        "baseContent": "🔮 Chaque cristal est un miroir de ton âme. L'améthyste t'invite à plonger dans tes profondeurs, à écouter ton monde intérieur.",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "inspiring",
+        "phase": "menstrual",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_lithotherapy_inspiring_03",
+        "baseContent": "✨ Les pierres sont des gardiennes silencieuses. Elles dansent avec tes énergies, t'offrant un soutien invisible et puissant.",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "inspiring",
+        "phase": "menstrual",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_rituals_professional_01",
+        "baseContent": "La pratique de l'auto-massage abdominal peut favoriser la relaxation musculaire avec une intention de soin et de reconnexion.",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "professional",
+        "phase": "menstrual",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_rituals_professional_02",
+        "baseContent": "Un journal intime peut devenir un outil précieux de transformation, permettant l'exploration de ton état intérieur actuel.",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "professional",
+        "phase": "menstrual",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_rituals_inspiring_01",
+        "baseContent": "✨ Cette phase est un rituel de descente. Allume une bougie, pose ta main sur ton ventre. Tu dialogues avec les mondes invisibles de ta féminité.",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "inspiring",
+        "phase": "menstrual",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_rituals_inspiring_02",
+        "baseContent": "🕯️ Ton corps est un temple. Chaque respiration est une prière, chaque mouvement un mantra de guérison.",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "inspiring",
+        "phase": "menstrual",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "M_rituals_inspiring_03",
+        "baseContent": "✨ Un bain aux herbes est un voyage. L'eau lave ce qui n'est plus, l'herbe chante ta renaissance.",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "inspiring",
+        "phase": "menstrual",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      }
+    ],
+    "follicular": [
+      {
+        "id": "F_symptoms_friendly_01",
+        "baseContent": "Hey ! 💕 Ton corps se réveille doucement. L'énergie revient, tu sens ce petit picotement de vie ?",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "friendly",
+        "phase": "follicular",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_symptoms_friendly_02",
+        "baseContent": "Coucou ! 🌱 La fatigue commence à s'éloigner. Tu peux célébrer ce petit regain d'énergie !",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "friendly",
+        "phase": "follicular",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_symptoms_professional_01",
+        "baseContent": "La phase folliculaire s'accompagne d'une restauration progressive de l'énergie physiologique, marquant un nouveau cycle de régénération.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "professional",
+        "phase": "follicular",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_symptoms_inspiring_01",
+        "baseContent": "✨ Ton corps est un jardin en éveil. Chaque cellule murmure une promesse de renaissance et de croissance.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "inspiring",
+        "phase": "follicular",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_symptoms_inspiring_02",
+        "baseContent": "🌱 Tu es un bourgeon qui s'ouvre. La vie en toi danse, prépare ses plus beaux mouvements.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "inspiring",
+        "phase": "follicular",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_symptoms_friendly_03",
+        "baseContent": "Hey ! 💖 Ton corps retrouve sa pêche. Une petite danse pour célébrer ?",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "friendly",
+        "phase": "follicular",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_symptoms_professional_02",
+        "baseContent": "La régénération tissulaire s'intensifie, accompagnée d'une restauration graduelle des réserves énergétiques.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "professional",
+        "phase": "follicular",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_symptoms_professional_03",
+        "baseContent": "L'augmentation des œstrogènes favorise une optimisation des fonctions physiologiques et métaboliques.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "professional",
+        "phase": "follicular",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_symptoms_inspiring_03",
+        "baseContent": "✨ Ton corps est un poème en mouvement. Dans cette phase, chaque cellule murmure une histoire de renaissance.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "inspiring",
+        "phase": "follicular",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_moods_friendly_01",
+        "baseContent": "Hey ! 💖 La créativité revient en force. Prête à danser avec tes idées ?",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "friendly",
+        "phase": "follicular",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_moods_professional_01",
+        "baseContent": "L'augmentation des œstrogènes favorise naturellement une stabilité émotionnelle et une dynamique créative.",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "professional",
+        "phase": "follicular",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_moods_inspiring_01",
+        "baseContent": "✨ Tes émotions sont des rivières qui s'élargissent. La vie en toi chante ses possibles, ses promesses.",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "inspiring",
+        "phase": "follicular",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_moods_friendly_02",
+        "baseContent": "Coucou ! 🌈 La créativité explose. Tes idées sont des feux d'artifice ! C’est le moment d’en faire quelque chose !",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "friendly",
+        "phase": "follicular",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_moods_friendly_03",
+        "baseContent": "Hey ! 💡 Ton cerveau est en mode turbo créatif. Laisse les idées couler et rend les possible dans la matière !",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "friendly",
+        "phase": "follicular",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_moods_professional_02",
+        "baseContent": "L'équilibre hormonal actuel favorise une stabilité émotionnelle propice à l'expression créative.",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "professional",
+        "phase": "follicular",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_moods_professional_03",
+        "baseContent": "La dynamique émotionnelle actuelle suggère une période optimale pour l'exploration et l'innovation personnelle.",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "professional",
+        "phase": "follicular",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_moods_inspiring_02",
+        "baseContent": "✨ Tes émotions sont des vagues de création. Chaque sentiment est un pinceau, chaque pensée une toile, chaque action une œuvre.",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "inspiring",
+        "phase": "follicular",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_moods_inspiring_03",
+        "baseContent": "🌈 Tu es un arc-en-ciel intérieur. Tes émotions dansent, libres et puissantes.",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "inspiring",
+        "phase": "follicular",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_phyto_friendly_01",
+        "baseContent": "Coucou ! 🌿 La menthe poivrée va booster ta pêche. Une tisane qui réveille !",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "friendly",
+        "phase": "follicular",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_phyto_professional_01",
+        "baseContent": "Le basilic offre des propriétés stimulantes qui peuvent soutenir naturellement ton regain d'énergie.",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "professional",
+        "phase": "follicular",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_phyto_inspiring_01",
+        "baseContent": "✨ Chaque plante est une alchimiste. Le romarin chante la vie qui se réveille en toi.",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "inspiring",
+        "phase": "follicular",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_phyto_friendly_02",
+        "baseContent": "Salut ! 🌿 La cannelle va réveiller ton énergie. Un petit coup de boost naturel !",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "friendly",
+        "phase": "follicular",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_phyto_friendly_03",
+        "baseContent": "Hey ! 🍃 Le thym, c'est ton allié énergisant. Une tisane qui réveille !",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "friendly",
+        "phase": "follicular",
+        "jezaApproval": 2,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_phyto_professional_02",
+        "baseContent": "La cannelle présente des propriétés stimulantes qui peuvent soutenir la dynamique énergétique.",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "professional",
+        "phase": "follicular",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_phyto_professional_03",
+        "baseContent": "Le thym offre des propriétés tonifiantes qui peuvent accompagner le regain d'énergie de cette phase.",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "professional",
+        "phase": "follicular",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_phyto_inspiring_02",
+        "baseContent": "✨ Les plantes murmurent les secrets de ta renaissance. Chaque feuille est un poème de vie qui t’accompagne.",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "inspiring",
+        "phase": "follicular",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_phyto_inspiring_03",
+        "baseContent": "🌱 Chaque herbe est une alchimiste. Elles transforment ta fatigue en énergie pure.",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "inspiring",
+        "phase": "follicular",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_phases_friendly_01",
+        "baseContent": "Hey ! 🌱 L'énergie monte. Tu sens cette petite flamme qui recommence à briller ?",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "friendly",
+        "phase": "follicular",
+        "jezaApproval": 2,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_phases_professional_01",
+        "baseContent": "La phase folliculaire représente un moment optimal de reconstruction et de préparation physiologique.",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "professional",
+        "phase": "follicular",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_phases_inspiring_01",
+        "baseContent": "✨ Tu es un bourgeon qui s'ouvre. La vie en toi prépare ses plus beaux mouvements, ses plus grandes danses. Tout est possible !",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "inspiring",
+        "phase": "follicular",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_phases_friendly_02",
+        "baseContent": "Coucou ! 🌟 Ton corps est en mode reconstruction. Célèbre cette renaissance !",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "friendly",
+        "phase": "follicular",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_phases_friendly_03",
+        "baseContent": "Hey ! 🌈 L'énergie remonte. Tu es un soleil qui se lève ! Profite et réalise tes rêves !",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "friendly",
+        "phase": "follicular",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_phases_professional_02",
+        "baseContent": "La dynamique physiologique actuelle favorise une régénération cellulaire optimale.",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "professional",
+        "phase": "follicular",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_phases_professional_03",
+        "baseContent": "Cette phase marque une période de reconstruction et de préparation énergétique.",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "professional",
+        "phase": "follicular",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_phases_inspiring_02",
+        "baseContent": "✨ Tu es un océan en mouvement. Chaque vague est une promesse de renaissance. Cette phase t’invite à oser !",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "inspiring",
+        "phase": "follicular",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_phases_inspiring_03",
+        "baseContent": "🌱 La vie en toi est un poème. Chaque respiration est un vers de renouveau.",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "inspiring",
+        "phase": "follicular",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_lithotherapy_friendly_01",
+        "baseContent": "Salut ! 💎 Le citrine va booster ta créativité. Un petit rayon de soleil minéral !",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "friendly",
+        "phase": "follicular",
+        "jezaApproval": 2,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_lithotherapy_professional_01",
+        "baseContent": "Le quartz peut favoriser la clarté mentale et soutenir les processus créatifs.",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "professional",
+        "phase": "follicular",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_lithotherapy_inspiring_01",
+        "baseContent": "✨ Chaque cristal est un miroir de ton âme. Le citrine chante la lumière qui grandit en toi.",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "inspiring",
+        "phase": "follicular",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_lithotherapy_friendly_02",
+        "baseContent": "Coucou ! 💎 Le quartz rose va booster ta confiance. Un petit coup de pouce énergétique !",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "friendly",
+        "phase": "follicular",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_lithotherapy_friendly_03",
+        "baseContent": "Hey ! 🔮 La pierre de soleil, c'est ton rayon de créativité !",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "friendly",
+        "phase": "follicular",
+        "jezaApproval": 2,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_lithotherapy_professional_02",
+        "baseContent": "Le quartz rose peut favoriser l'auto-compassion et l'équilibre émotionnel.",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "professional",
+        "phase": "follicular",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_lithotherapy_professional_03",
+        "baseContent": "La pierre de soleil offre un support énergétique propice à l'expression créative.",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "professional",
+        "phase": "follicular",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_lithotherapy_inspiring_02",
+        "baseContent": "✨ Chaque cristal est un miroir de ton âme. Le quartz rose chante ta beauté intérieure.",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "inspiring",
+        "phase": "follicular",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_lithotherapy_inspiring_03",
+        "baseContent": "🔮 Les pierres sont des gardiennes de lumière. Elles dansent avec tes rêves.",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "inspiring",
+        "phase": "follicular",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_rituals_friendly_01",
+        "baseContent": "Coucou ! 🌟 Un petit brainstorming créatif ? Laisse tes idées danser !",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "friendly",
+        "phase": "follicular",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_rituals_professional_01",
+        "baseContent": "La pratique de la visualisation peut soutenir l'émergence de nouvelles perspectives et intentions. Cette phase permettra de les mettre en forme.",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "professional",
+        "phase": "follicular",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_rituals_inspiring_01",
+        "baseContent": "✨ Ton journal est un jardin. Chaque mot que tu y sèmes est une graine de devenir.",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "inspiring",
+        "phase": "follicular",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_rituals_friendly_02",
+        "baseContent": "Salut ! 🌟 Un petit mood board créatif ? Laisse libre cours à ton imagination !",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "friendly",
+        "phase": "follicular",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_rituals_friendly_03",
+        "baseContent": "Hey ! 🎨 Temps de créativité pure. Un dessin, un poème, une innovation culinaire ? Fais ce que ton cœur désire !",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "friendly",
+        "phase": "follicular",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_rituals_professional_02",
+        "baseContent": "La pratique de la méditation créative peut favoriser l'émergence de nouvelles perspectives.",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "professional",
+        "phase": "follicular",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_rituals_professional_03",
+        "baseContent": "L'écriture intuitive peut devenir un outil de développement personnel et créatif.",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "professional",
+        "phase": "follicular",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_rituals_inspiring_02",
+        "baseContent": "✨ Ton journal est un sanctuaire. Chaque mot est une clé vers ta sagesse intérieure.",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "inspiring",
+        "phase": "follicular",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "F_rituals_inspiring_03",
+        "baseContent": "🌈 La créativité est un rituel sacré. Tu es l'artiste de ta propre renaissance.",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "inspiring",
+        "phase": "follicular",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      }
+    ],
+    "ovulatory": [
+      {
+        "id": "O_symptoms_friendly_01",
+        "baseContent": "Hey ! ✨ Ton énergie est au top ! Tu rayonnes, c'est magique !",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "friendly",
+        "phase": "ovulatory",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_symptoms_professional_01",
+        "baseContent": "Le pic d'œstrogènes optimise vos fonctions physiologiques et cognitives.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "professional",
+        "phase": "ovulatory",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_symptoms_inspiring_01",
+        "baseContent": "✨ Tu es un soleil en pleine gloire. Ton corps danse la symphonie de la vie.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "inspiring",
+        "phase": "ovulatory",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_symptoms_friendly_02",
+        "baseContent": "Hey ! 🌟 Tu rayonnes d'énergie pure ! C'est magique !",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "friendly",
+        "phase": "ovulatory",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_symptoms_professional_02",
+        "baseContent": "L'optimisation hormonale maximise vos capacités physiologiques et cognitives.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "professional",
+        "phase": "ovulatory",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_symptoms_inspiring_02",
+        "baseContent": "✨ Tu es une étoile à son zénith. Chaque cellule danse la symphonie de la vie. Ta vitalité s’étend aux autres.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "inspiring",
+        "phase": "ovulatory",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_symptoms_inspiring_03",
+        "baseContent": "🌟 Ton corps est un temple de lumière. Tu incarnes la force créatrice universelle et la transmet à ceux qui t’entourent.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "inspiring",
+        "phase": "ovulatory",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_moods_friendly_01",
+        "baseContent": "Salut ma belle ! 💖 Tu es rayonnante, sociable, magnétique ! Profite de cette énergie !",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "friendly",
+        "phase": "ovulatory",
+        "jezaApproval": 2,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_moods_professional_01",
+        "baseContent": "L'équilibre hormonal optimal favorise la confiance en soi et l'expression sociale.",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "professional",
+        "phase": "ovulatory",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_moods_inspiring_01",
+        "baseContent": "✨ Tu es un aimant de lumière. Tes émotions sont des rayons de soleil qui illuminent tout autour de toi.",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "inspiring",
+        "phase": "ovulatory",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_moods_friendly_02",
+        "baseContent": "Coucou ! 💫 Ton charisme est au maximum ! Tu illumines tout !",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "friendly",
+        "phase": "ovulatory",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_moods_professional_02",
+        "baseContent": "L'équilibre hormonal favorise une expression authentique et confiante.",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "professional",
+        "phase": "ovulatory",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_moods_inspiring_02",
+        "baseContent": "✨ Tu es un phare de lumière. Tes émotions guérissent le monde par leur beauté.",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "inspiring",
+        "phase": "ovulatory",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_moods_inspiring_03",
+        "baseContent": "🌟 Ton âme rayonne sa vérité. Tu es une messagère d'amour et de joie.",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "inspiring",
+        "phase": "ovulatory",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_phyto_friendly_01",
+        "baseContent": "Coucou ! 🌸 Les fleurs d'hibiscus vont sublimer ton éclat. Une tisane de reine !",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "friendly",
+        "phase": "ovulatory",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_phyto_professional_01",
+        "baseContent": "Les plantes adaptogènes peuvent soutenir l'équilibre énergétique optimal de cette phase.",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "professional",
+        "phase": "ovulatory",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_phyto_inspiring_01",
+        "baseContent": "✨ Les fleurs sont tes sœurs de lumière. Elles célèbrent avec toi l'apogée de ta féminité.",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "inspiring",
+        "phase": "ovulatory",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_phyto_friendly_02",
+        "baseContent": "Salut ! 🌺 La rose sublimera ton éclat naturel. Une tisane de reine !",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "friendly",
+        "phase": "ovulatory",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_phyto_professional_02",
+        "baseContent": "La rose offre des propriétés harmonisantes pour l'équilibre émotionnel.",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "professional",
+        "phase": "ovulatory",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_phyto_inspiring_02",
+        "baseContent": "✨ Les fleurs célèbrent ton apogée féminin. Chaque pétale chante ta beauté.",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "inspiring",
+        "phase": "ovulatory",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.128Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_phyto_inspiring_03",
+        "baseContent": "🌸 Les plantes reconnaissent en toi la déesse florissante. Utilise leurs charmes pour briller encore plus !",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "inspiring",
+        "phase": "ovulatory",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_phases_friendly_01",
+        "baseContent": "Hey ! 🌟 C'est ton moment de gloire ! Tu es au sommet de ton cycle, profite !",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "friendly",
+        "phase": "ovulatory",
+        "jezaApproval": 2,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_phases_professional_01",
+        "baseContent": "La phase ovulatoire représente l'apogée énergétique de votre cycle menstruel.",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "professional",
+        "phase": "ovulatory",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_phases_inspiring_01",
+        "baseContent": "✨ Tu es un soleil à midi. Cette phase est ton apogée, ta pleine lune intérieure.",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "inspiring",
+        "phase": "ovulatory",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_phases_friendly_02",
+        "baseContent": "Hey ! 🌞 Tu es à ton apogée ! Moment de gloire total !",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "friendly",
+        "phase": "ovulatory",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_phases_professional_02",
+        "baseContent": "Cette phase marque l'optimisation complète de vos ressources créatives.",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "professional",
+        "phase": "ovulatory",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_phases_inspiring_02",
+        "baseContent": "✨ Tu es la pleine lune de ton être. Temple de lumière, de création et d’ouverture sur le monde.",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "inspiring",
+        "phase": "ovulatory",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_phases_inspiring_03",
+        "baseContent": "🌕 Tu incarnes la déesse à son zénith. Chaque instant est un don sacré.",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "inspiring",
+        "phase": "ovulatory",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_lithotherapy_friendly_01",
+        "baseContent": "Salut ! 💎 La cornaline va amplifier ton rayonnement. Un petit feu d'artifice minéral !",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "friendly",
+        "phase": "ovulatory",
+        "jezaApproval": 2,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_lithotherapy_professional_01",
+        "baseContent": "La cornaline peut soutenir l'expression de votre énergie créative et sociale.",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "professional",
+        "phase": "ovulatory",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_lithotherapy_inspiring_01",
+        "baseContent": "✨ Chaque cristal chante ta lumière. La cornaline danse avec ton feu intérieur.",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "inspiring",
+        "phase": "ovulatory",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_lithotherapy_friendly_02",
+        "baseContent": "Coucou ! 💎 Le cristal de roche amplifie ton rayonnement !",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "friendly",
+        "phase": "ovulatory",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_lithotherapy_professional_02",
+        "baseContent": "Le cristal de roche amplifie l'énergie créative et la clarté mentale.",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "professional",
+        "phase": "ovulatory",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_lithotherapy_inspiring_02",
+        "baseContent": "✨ Chaque cristal amplifie ta splendeur. Tu es une constellation vivante.",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "inspiring",
+        "phase": "ovulatory",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_rituals_friendly_01",
+        "baseContent": "Coucou ! 🎉 C'est le moment des projets créatifs ! Lance-toi, tu es irrésistible !",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "friendly",
+        "phase": "ovulatory",
+        "jezaApproval": 2,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_rituals_professional_01",
+        "baseContent": "Cette phase favorise la concrétisation de projets et l'expression publique.",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "professional",
+        "phase": "ovulatory",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_rituals_inspiring_01",
+        "baseContent": "✨ C'est le temps de l'action sacrée. Tes projets sont des offrandes à la vie.",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "inspiring",
+        "phase": "ovulatory",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_rituals_friendly_02",
+        "baseContent": "Salut ! 🎭 Lance-toi dans tes grands projets ! C'est le moment !",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "friendly",
+        "phase": "ovulatory",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_rituals_professional_02",
+        "baseContent": "Cette période favorise la présentation publique et l'engagement créatif.",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "professional",
+        "phase": "ovulatory",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "O_rituals_inspiring_02",
+        "baseContent": "✨ Tes actions sont des danses sacrées. Chaque geste porte ta magie. N’hésite pas à la faire goûter au monde, c’est le moment !",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "inspiring",
+        "phase": "ovulatory",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      }
+    ],
+    "luteal": [
+      {
+        "id": "L_symptoms_friendly_01",
+        "baseContent": "Coucou ! 💛 Ton corps ralentit doucement. C'est le moment de la douceur avec toi-même !",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "friendly",
+        "phase": "luteal",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_symptoms_professional_01",
+        "baseContent": "La diminution hormonale induit naturellement une période de ralentissement physiologique.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "professional",
+        "phase": "luteal",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_symptoms_inspiring_01",
+        "baseContent": "✨ Ton corps murmure l'invitation au repos. C'est le temps de l'écoute intérieure profonde.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "inspiring",
+        "phase": "luteal",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_symptoms_friendly_02",
+        "baseContent": "Hey ! 💛 Ton corps murmure 'ralentis'. Écoute cette sage intuition !",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "friendly",
+        "phase": "luteal",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_symptoms_professional_02",
+        "baseContent": "La transition hormonale induit naturellement une conservation énergétique.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "professional",
+        "phase": "luteal",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_symptoms_inspiring_02",
+        "baseContent": "✨ Ton corps chuchote l'invitation au repos et à l’introspection. Sagesse de l'âme féminine.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "inspiring",
+        "phase": "luteal",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_symptoms_inspiring_03",
+        "baseContent": "🌙 Tu es une lune sage, rassemblant tes énergies pour une renaissance.",
+        "targetPreferences": [
+          "symptoms"
+        ],
+        "tone": "inspiring",
+        "phase": "luteal",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_moods_friendly_01",
+        "baseContent": "Hey ! 💕 Un peu plus sensible ? C'est ton cœur qui s'ouvre plus grand. Accueille ça avec tendresse !",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "friendly",
+        "phase": "luteal",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_moods_professional_01",
+        "baseContent": "Les variations hormonales peuvent intensifier la sensibilité émotionnelle, favorisant l'introspection.",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "professional",
+        "phase": "luteal",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_moods_inspiring_01",
+        "baseContent": "✨ Tes émotions sont des vagues profondes. Chaque sentiment est une perle de sagesse. Soit à l’écoute, respecte ces murmures.",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "inspiring",
+        "phase": "luteal",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_moods_friendly_02",
+        "baseContent": "Coucou ! 💕 Plus sensible ? C'est ton cœur qui s'ouvre plus grand !",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "friendly",
+        "phase": "luteal",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_moods_professional_02",
+        "baseContent": "L'intensification émotionnelle favorise l'introspection et l'auto-connaissance.",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "professional",
+        "phase": "luteal",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_moods_inspiring_02",
+        "baseContent": "✨ Tes émotions sont des océans profonds. Chaque vague porte une perle de sagesse. Écoute avec bienveillance.",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "inspiring",
+        "phase": "luteal",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_moods_inspiring_03",
+        "baseContent": "🌊 Tu es un temple d'émotions. Chaque sentiment est une prière sacrée. Elles te guident vers ce qui est le mieux pour toi.",
+        "targetPreferences": [
+          "moods"
+        ],
+        "tone": "inspiring",
+        "phase": "luteal",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_phyto_friendly_01",
+        "baseContent": "Salut ! 🌿 La verveine va t'apaiser en douceur. Une tisane comme un câlin !",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "friendly",
+        "phase": "luteal",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_phyto_professional_01",
+        "baseContent": "Les plantes relaxantes peuvent soutenir l'équilibre émotionnel durant cette phase.",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "professional",
+        "phase": "luteal",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_phyto_inspiring_01",
+        "baseContent": "✨ Les plantes sont tes guides vers l'intérieur. Elles t'accompagnent dans ton voyage vers toi-même.",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "inspiring",
+        "phase": "luteal",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_phyto_friendly_02",
+        "baseContent": "Salut ! 🌿 La mélisse va te câliner. Une tisane comme un doudou !",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "friendly",
+        "phase": "luteal",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_phyto_professional_02",
+        "baseContent": "La mélisse offre des propriétés apaisantes pour l'équilibre nerveux.",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "professional",
+        "phase": "luteal",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_phyto_inspiring_02",
+        "baseContent": "✨ Les plantes chuchotent les secrets du repos. Guides de paix intérieure.",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "inspiring",
+        "phase": "luteal",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_phyto_inspiring_03",
+        "baseContent": "🌿 Chaque herbe veille sur ton voyage intérieur. Gardiennes de sagesse.",
+        "targetPreferences": [
+          "phyto"
+        ],
+        "tone": "inspiring",
+        "phase": "luteal",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_phases_friendly_01",
+        "baseContent": "Hey ! 🌙 C'est le moment de lever le pied. Ton corps te demande de la douceur !",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "friendly",
+        "phase": "luteal",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_phases_professional_01",
+        "baseContent": "La phase lutéale favorise naturellement l'introspection et la préparation au nouveau cycle.",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "professional",
+        "phase": "luteal",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_phases_inspiring_01",
+        "baseContent": "✨ Tu es une lune qui décroît, préparant en secret ta prochaine renaissance.",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "inspiring",
+        "phase": "luteal",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_phases_friendly_02",
+        "baseContent": "Hey ! 🌙 Temps de cocooning ! Ton corps demande de la tendresse !",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "friendly",
+        "phase": "luteal",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_phases_professional_02",
+        "baseContent": "Cette période favorise naturellement l'introspection et la préparation au nettoyage de ton corps.",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "professional",
+        "phase": "luteal",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_phases_inspiring_02",
+        "baseContent": "✨ Tu es une lune qui se recueille. Temple de transformation silencieuse. Le silence, la lenteur, la douceur sont tes clefs d’apaisement.",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "inspiring",
+        "phase": "luteal",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_phases_inspiring_03",
+        "baseContent": "🌙 Tu descends dans tes profondeurs. Chaque repos est un acte sacré.",
+        "targetPreferences": [
+          "phases"
+        ],
+        "tone": "inspiring",
+        "phase": "luteal",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_lithotherapy_friendly_01",
+        "baseContent": "Coucou ! 💎 L'améthyste va t'aider à rester zen. Un petit cocon minéral !",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "friendly",
+        "phase": "luteal",
+        "jezaApproval": 2,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_lithotherapy_professional_01",
+        "baseContent": "L'améthyste peut favoriser la détente et l'équilibre émotionnel.",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "professional",
+        "phase": "luteal",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_lithotherapy_inspiring_01",
+        "baseContent": "✨ Chaque cristal est un gardien de paix. L'améthyste veille sur ton repos intérieur.",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "inspiring",
+        "phase": "luteal",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_lithotherapy_friendly_02",
+        "baseContent": "Coucou ! 💎 La pierre de lune guide ton introspection !",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "friendly",
+        "phase": "luteal",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_lithotherapy_professional_02",
+        "baseContent": "La pierre de lune soutient l'exploration émotionnelle et intuitive.",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "professional",
+        "phase": "luteal",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_lithotherapy_inspiring_02",
+        "baseContent": "✨ Les pierres chuchotent avec ton âme. Elles gardent tes mystères. Pierre de lune et améthyste sont des alliées.",
+        "targetPreferences": [
+          "lithotherapy"
+        ],
+        "tone": "inspiring",
+        "phase": "luteal",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_rituals_friendly_01",
+        "baseContent": "Salut ! 🕯️ Un petit cocooning ? C'est le moment parfait pour te chouchouter !",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "friendly",
+        "phase": "luteal",
+        "jezaApproval": 2,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_rituals_professional_01",
+        "baseContent": "Les pratiques de relaxation et d'introspection sont particulièrement bénéfiques durant cette phase.",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "professional",
+        "phase": "luteal",
+        "jezaApproval": 3,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_rituals_inspiring_01",
+        "baseContent": "✨ Le silence est ton temple. Chaque moment de repos est une prière à ton être.",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "inspiring",
+        "phase": "luteal",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_rituals_friendly_02",
+        "baseContent": "Salut ! 🕯️ Un bain relaxant ? Moment parfait pour te chouchouter !",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "friendly",
+        "phase": "luteal",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_rituals_professional_02",
+        "baseContent": "L'écriture introspective favorise l'exploration émotionnelle profonde.",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "professional",
+        "phase": "luteal",
+        "jezaApproval": 4,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      },
+      {
+        "id": "L_rituals_inspiring_02",
+        "baseContent": "✨ Le silence est ton sanctuaire. Chaque recueillement nourrit ton âme.",
+        "targetPreferences": [
+          "rituals"
+        ],
+        "tone": "inspiring",
+        "phase": "luteal",
+        "jezaApproval": 5,
+        "status": "validated",
+        "lastModified": "2025-06-16T00:56:33.129Z",
+        "enrichedBy": "admin-interface"
+      }
+    ]
+  }
