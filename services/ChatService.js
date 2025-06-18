@@ -295,16 +295,26 @@ class ChatService {
       console.log('🔍 API Response complète:', data);
     }
     
-    if (!data.success) {
+    // L'API retourne un format : { response, cost, timestamp, tokensUsed }
+    if (data.response) {
+      return data.response;
+    }
+    
+    // Format alternatif avec success (si l'API change)
+    if (data.success === false) {
       throw new Error(data.error?.message || 'Erreur API inconnue');
     }
 
-    if (!data.data?.message && !data.message) {
-      console.warn('⚠️ API retourne success=true mais message vide');
-      throw new Error('Message vide reçu de l\'API');
+    if (data.data?.message) {
+      return data.data.message;
+    }
+    
+    if (data.message) {
+      return data.message;
     }
 
-    return data.data?.message || data.message;
+    // Si aucun format reconnu
+    throw new Error('Format de réponse API non reconnu');
   }
 
   /**

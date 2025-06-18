@@ -7,7 +7,7 @@ import { useOnboardingStore } from '../../stores/useOnboardingStore';
 import { useAppStore } from '../../stores/useAppStore';
 import { useCycleStore } from '../../stores/useCycleStore';
 import { useChatStore } from '../../stores/useChatStore';
-
+import { useNotebookStore } from '../../stores/useNotebookStore';
 // Composants UI
 import { Heading3, BodyText, SmallText } from '../Typography';
 import PersonaSelector from './PersonaSelector';
@@ -21,6 +21,7 @@ export default function DevNavigation() {
   const app = useAppStore();
   const cycle = useCycleStore();
   const chat = useChatStore();
+  const notebook = useNotebookStore();
 
   if (!__DEV__ || !app.devMode) {
     return null;
@@ -31,6 +32,7 @@ export default function DevNavigation() {
     app.resetApp();
     cycle.resetCycleData();
     chat.resetChatData();
+    notebook.resetNotebook();
   };
 
   const advanceCycle = () => {

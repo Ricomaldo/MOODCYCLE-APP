@@ -53,7 +53,8 @@ export default function PaywallScreen() {
     // Marquer que l'utilisatrice a initié l'essai
     updateSubscriptionInfo({
       trialStarted: true,
-      trialStartDate: new Date().toISOString(),
+      trialStartDate: new Date().toLocaleString('fr-FR', {timeZone: 'Europe/Paris'})
+,
       planSelected: 'monthly'
     });
     

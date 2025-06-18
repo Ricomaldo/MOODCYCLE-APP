@@ -489,7 +489,8 @@ export class ChatService {
           context: {
             persona: context.persona,
             phase: context.phase,
-            currentDate: new Date().toISOString(),
+            currentDate: new Date().toLocaleString('fr-FR', {timeZone: 'Europe/Paris'})
+,
             preferences: context.preferences
           }
         })

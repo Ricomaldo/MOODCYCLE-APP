@@ -43,8 +43,10 @@ export default function PersonaSelector() {
         ...simulationData.userInfo,
         prenom: personaName,
         journeyStarted: true,
-        startDate: new Date().toISOString(),
-        prenomCollectedAt: new Date().toISOString(),
+        startDate: new Date().toLocaleString('fr-FR', {timeZone: 'Europe/Paris'})
+,
+        prenomCollectedAt: new Date().toLocaleString('fr-FR', {timeZone: 'Europe/Paris'})
+,
       });
       
       updateJourneyChoice({

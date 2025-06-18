@@ -1,25 +1,62 @@
 // components/ChatBubble/index.jsx
-import { View, StyleSheet } from 'react-native';
+import React from 'react';
+import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { BodyText } from '../Typography';
 import { theme } from '../../config/theme';
+import { useNotebookStore } from '../../stores/useNotebookStore';
+import { useCycleStore } from '../../stores/useCycleStore';
 
 export default function ChatBubble({ message, isUser = false, phase = 'menstrual' }) {
+  const { saveFromChat } = useNotebookStore();
+  const { getCurrentPhaseInfo } = useCycleStore();
+  
   // Calcul dynamique des couleurs pour les bulles de Melune selon la phase
   const phaseColor = theme.colors.phases[phase];
   const textColor = theme.getTextColorOn(phaseColor);
   
+  const handleLongPress = () => {
+    if (!isUser) { // Seulement pour messages Melune
+      Alert.alert(
+        "💾 Sauvegarder",
+        "Ajouter ce conseil à ton carnet ?",
+        [
+          { text: "Annuler", style: "cancel" },
+          { 
+            text: "Sauver", 
+            onPress: () => {
+              const currentPhase = getCurrentPhaseInfo().phase;
+              saveFromChat(message, currentPhase);
+              Alert.alert("✨", "Ajouté à ton carnet !");
+            }
+          }
+        ]
+      );
+    }
+  };
+
+  const BubbleContainer = isUser ? View : TouchableOpacity;
+  const containerProps = isUser ? {} : { 
+    onLongPress: handleLongPress,
+    delayLongPress: 500,
+    activeOpacity: 0.8
+  };
+
   return (
-    <View style={[
-      styles.container,
-      isUser ? styles.userBubble : [styles.meluneBubble, { backgroundColor: phaseColor }]
-    ]}>
+    <BubbleContainer 
+      style={[
+        styles.container,
+        isUser ? styles.userBubble : [styles.meluneBubble, { backgroundColor: phaseColor }]
+      ]}
+      {...containerProps}
+    >
       <BodyText style={isUser ? styles.userText : [styles.meluneText, { color: textColor }]}>
         {message}
       </BodyText>
-    </View>
+    </BubbleContainer>
   );
 }
 
+// Styles identiques à ton original
 const styles = StyleSheet.create({
   container: {
     maxWidth: '80%',

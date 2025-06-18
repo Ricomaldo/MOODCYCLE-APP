@@ -2,20 +2,21 @@
 import { View, StyleSheet, Pressable } from 'react-native';
 import Svg, { Circle, Path, G, Line, Text } from 'react-native-svg';
 import { theme } from '../../config/theme';
-import { useRouter } from 'expo-router';
 
 export default function CycleWheel({ 
   currentPhase = 'menstrual', 
   size = 250, 
   userName = 'Emma', 
   cycleDay = 8, 
-  cycleLength = 28 
+  cycleLength = 28,
+  onPhasePress = () => {}
 }) {
-  const router = useRouter();
-
   // Configuration des phases du cycle
   const phases = ['menstrual', 'follicular', 'ovulatory', 'luteal'];
   const colors = phases.map(phase => theme.colors.phases[phase]);
+  
+  // 🎯 Limite prénom à 12 caractères max
+  const displayName = userName.length > 12 ? userName.substring(0, 12) + '...' : userName;
   
   // Calculs de base pour le cercle
   const radius = size / 2;
@@ -42,11 +43,6 @@ export default function CycleWheel({
     const c2 = color2.match(/\w\w/g).map(x => parseInt(x, 16));
     const result = c1.map((v, i) => Math.round(v + (c2[i] - v) * factor));
     return '#' + result.map(x => x.toString(16).padStart(2, '0')).join('');
-  };
-  
-  // Fonction pour naviguer vers la page de phase
-  const navigateToPhase = (phaseId) => {
-    router.push(`/cycle/phases/${phaseId}`);
   };
   
   // Calcule la couleur d'un arc avec dégradé centré sur chaque phase
@@ -114,7 +110,7 @@ export default function CycleWheel({
         key={`arc-${startAngle}-${endAngle}`}
         d={pathData}
         fill={color}
-        onPress={() => navigateToPhase(currentPhaseId)}
+        onPress={() => onPhasePress(currentPhaseId)}
       />
     );
   };
@@ -179,17 +175,17 @@ export default function CycleWheel({
           fill={theme.colors.background} 
         />
         
-        {/* Prénom coloré selon la phase actuelle */}
+        {/* Prénom coloré selon la phase actuelle (max 12 chars) */}
         <Text
           x={adjustedCenterX}
           y={adjustedCenterY}
           textAnchor="middle"
           alignmentBaseline="middle"
-          fontSize={size > 200 ? "26" : "20"}
+          fontSize={size > 200 ? "24" : "18"}
           fontWeight="bold"
           fill={theme.colors.phases[currentPhase]}
         >
-          {userName}
+          {displayName}
         </Text>
         
         {/* Marqueur de position fixe en haut */}

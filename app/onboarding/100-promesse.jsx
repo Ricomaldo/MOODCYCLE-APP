@@ -26,7 +26,8 @@ export default function PromesseScreen() {
 
   const handleStartJourney = () => {
     // Marquer le début du parcours
-    updateUserInfo({ journeyStarted: true, startDate: new Date().toISOString() });
+    updateUserInfo({ journeyStarted: true, startDate: new Date().toLocaleString('fr-FR', {timeZone: 'Europe/Paris'})
+ });
     router.push('/onboarding/200-rencontre');
   };
 

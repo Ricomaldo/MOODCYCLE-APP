@@ -63,7 +63,8 @@ export default function PrenomScreen() {
       // Sauvegarder le prénom dans le store
       updateUserInfo({ 
         prenom: prenom.trim(),
-        prenomCollectedAt: new Date().toISOString()
+        prenomCollectedAt: new Date().toLocaleString('fr-FR', {timeZone: 'Europe/Paris'})
+
       });
       
       // Animation de validation puis navigation
@@ -138,7 +139,7 @@ export default function PrenomScreen() {
             onChangeText={handlePrenomChange}
             placeholder="Tape ton prénom ici"
             placeholderTextColor={theme.colors.textLight}
-            maxLength={20}
+            maxLength={12}
             autoCapitalize="words"
             autoFocus={true}
             returnKeyType="done"

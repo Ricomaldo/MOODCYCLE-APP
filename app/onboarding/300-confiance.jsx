@@ -27,7 +27,8 @@ export default function ConfidenceScreen() {
 
   const handleTrust = () => {
     // Marquer la confiance accordée
-    updateUserInfo({ trustGranted: true, trustDate: new Date().toISOString() });
+    updateUserInfo({ trustGranted: true, trustDate: new Date().toLocaleString('fr-FR', {timeZone: 'Europe/Paris'})
+ });
     
     setTimeout(() => {
       router.push('/onboarding/375-age');

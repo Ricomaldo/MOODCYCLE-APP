@@ -45,7 +45,8 @@ export const useChatStore = create(
         set((state) => ({
           messages: [...state.messages, {
             id: Date.now().toString(),
-            timestamp: new Date().toISOString(),
+            timestamp: new Date().toLocaleString('fr-FR', {timeZone: 'Europe/Paris'})
+,
             ...message,
           }],
         })),
@@ -89,7 +90,8 @@ export const useChatStore = create(
           currentSessionId: sessionId,
           chatSessions: [...state.chatSessions, {
             id: sessionId,
-            startTime: new Date().toISOString(),
+            startTime: new Date().toLocaleString('fr-FR', {timeZone: 'Europe/Paris'})
+,
             messages: [],
             topic: null,
           }],
@@ -105,7 +107,8 @@ export const useChatStore = create(
             currentSessionId: null,
             chatSessions: state.chatSessions.map(session =>
               session.id === state.currentSessionId
-                ? { ...session, endTime: new Date().toISOString(), messages: state.messages }
+                ? { ...session, endTime: new Date().toLocaleString('fr-FR', {timeZone: 'Europe/Paris'})
+, messages: state.messages }
                 : session
             ),
             messages: [],
@@ -124,7 +127,8 @@ export const useChatStore = create(
             ...state.conversationContext,
             topicHistory: [...state.conversationContext.topicHistory, {
               topic,
-              timestamp: new Date().toISOString(),
+              timestamp: new Date().toLocaleString('fr-FR', {timeZone: 'Europe/Paris'})
+,
             }].slice(-10), // Garde seulement les 10 derniers sujets
           },
         })),
