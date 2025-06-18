@@ -1,19 +1,62 @@
-import React, { useState } from 'react';
-import { View, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+// components/Notebook/NotebookScreen.jsx - VERSION FINALE PHASE 2
+import React, { useState, useMemo } from 'react';
+import { View, FlatList, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons, Feather } from '@expo/vector-icons';
 import { theme } from '../../config/theme';
-import { Heading, BodyText } from '../Typography';
+import { Heading, BodyText, Caption } from '../Typography';
 import { useNotebookStore } from '../../stores/useNotebookStore';
 import QuickTrackingModal from './QuickTrackingModal';
+import FreeWritingModal from './FreeWritingModal';
 import EntryDetailModal from '../EntryDetailModal';
+
+const FILTER_PILLS = [
+  { id: 'all', label: 'Tout', icon: 'all-inclusive' },
+  { id: 'saved', label: 'Sauvegardé', icon: 'bookmark' },
+  { id: 'personal', label: 'Personnel', icon: 'edit' },
+  { id: 'tracking', label: 'Tracking', icon: 'bar-chart' }
+];
+
+const PHASE_FILTERS = [
+  { id: 'menstruelle', label: 'Mens.', color: theme.colors.phases.menstrual },
+  { id: 'folliculaire', label: 'Foll.', color: theme.colors.phases.follicular },
+  { id: 'ovulatoire', label: 'Ovu.', color: theme.colors.phases.ovulatory },
+  { id: 'lutéale', label: 'Lutéale', color: theme.colors.phases.luteal }
+];
 
 export default function NotebookScreen() {
   const insets = useSafeAreaInsets();
-  const { entries, formatTrackingEmotional, calculateTrends } = useNotebookStore();
+  const { 
+    entries, searchEntries, formatTrackingEmotional, calculateTrends, 
+    getTagStats, availableTags 
+  } = useNotebookStore();
+  
+  // États filtres et modales
   const [filter, setFilter] = useState('all');
+  const [phaseFilter, setPhaseFilter] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
+  const [selectedTags, setSelectedTags] = useState([]);
+  
+  // Modales
   const [showQuickTracking, setShowQuickTracking] = useState(false);
+  const [showFreeWriting, setShowFreeWriting] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState(null);
+  const [showFabOptions, setShowFabOptions] = useState(false);
+
+  // ✅ Filtrage intelligent avec nouvelle logique
+  const filteredEntries = useMemo(() => {
+    const filters = {
+      type: filter !== 'all' ? filter : null,
+      phase: phaseFilter,
+      tags: selectedTags.length > 0 ? selectedTags : null
+    };
+    
+    return searchEntries(searchQuery, filters);
+  }, [entries, filter, phaseFilter, searchQuery, selectedTags, searchEntries]);
+
+  // ✅ Stats pour insights
+  const tagStats = useMemo(() => getTagStats(), [entries]);
 
   const getEntryIcon = (type) => {
     const iconProps = { size: 16, color: theme.colors.primary };
@@ -31,27 +74,26 @@ export default function NotebookScreen() {
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     
-    if (minutes < 60) return `Il y a ${minutes}min`;
-    if (hours < 24) return `Il y a ${hours}h`;
-    if (days < 7) return `Il y a ${days} jour${days > 1 ? 's' : ''}`;
+    if (minutes < 60) return `${minutes}min`;
+    if (hours < 24) return `${hours}h`;
+    if (days < 7) return `${days}j`;
     return new Date(timestamp).toLocaleDateString('fr-FR', { 
-      day: 'numeric', 
-      month: 'short' 
+      day: 'numeric', month: 'short' 
     });
   };
 
-  const formatFullDate = (timestamp) => {
-    return new Date(timestamp).toLocaleDateString('fr-FR', {
-      weekday: 'long',
-      day: 'numeric', 
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  // ✅ Tags d'une entrée (auto + manuels)
+  const getEntryTags = (entry) => {
+    return [...(entry.autoTags || []), ...(entry.metadata?.tags || [])];
   };
 
-
+  const toggleTagFilter = (tag) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) 
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag]
+    );
+  };
 
   const renderTrendingInsight = () => {
     const trends = calculateTrends();
@@ -65,52 +107,78 @@ export default function NotebookScreen() {
         </BodyText>
         {trends.topSymptom && (
           <BodyText style={styles.trendText}>
-            📍 Symptôme principal: {trends.topSymptom}
+            📍 Symptôme: {trends.topSymptom}
           </BodyText>
         )}
         <BodyText style={styles.trendSubtext}>
-          {trends.entriesCount} entrée{trends.entriesCount > 1 ? 's' : ''} cette semaine
+          {trends.entriesCount} entrée{trends.entriesCount > 1 ? 's' : ''}
         </BodyText>
       </View>
     );
   };
 
-  const renderEntry = ({ item }) => (
-    <TouchableOpacity 
-      style={styles.entryCard}
-      onPress={() => setSelectedEntry(item)}
-    >
-      <View style={styles.entryHeader}>
-        {getEntryIcon(item.type)}
-        <BodyText style={styles.timestamp}>
-          {formatRelativeTime(item.timestamp)}
+  const renderEntry = ({ item }) => {
+    const entryTags = getEntryTags(item);
+    
+    return (
+      <TouchableOpacity 
+        style={styles.entryCard}
+        onPress={() => setSelectedEntry(item)}
+      >
+        <View style={styles.entryHeader}>
+          {getEntryIcon(item.type)}
+          <BodyText style={styles.timestamp}>
+            {formatRelativeTime(item.timestamp)}
+          </BodyText>
+          {item.metadata?.phase && (
+            <View style={[
+              styles.phaseDot,
+              { backgroundColor: PHASE_FILTERS.find(p => p.id === item.metadata.phase)?.color }
+            ]} />
+          )}
+        </View>
+        
+        <BodyText style={styles.content} numberOfLines={3}>
+          {item.content || formatTrackingEmotional(item)}
         </BodyText>
-      </View>
-      <BodyText style={styles.content} numberOfLines={3}>
-        {item.content || formatTrackingEmotional(item)}
-      </BodyText>
-    </TouchableOpacity>
-  );
+        
+        {/* Tags de l'entrée */}
+        {entryTags.length > 0 && (
+          <View style={styles.entryTags}>
+            {entryTags.slice(0, 3).map((tag, index) => (
+              <View key={index} style={styles.entryTag}>
+                <Caption style={styles.entryTagText}>{tag}</Caption>
+              </View>
+            ))}
+            {entryTags.length > 3 && (
+              <Caption style={styles.moreTagsText}>+{entryTags.length - 3}</Caption>
+            )}
+          </View>
+        )}
+      </TouchableOpacity>
+    );
+  };
 
-  // État vide pour première utilisation
+  // État vide
   if (entries.length === 0) {
     return (
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <Heading style={styles.title}>Mon Carnet</Heading>
         <BodyText style={styles.description}>
-          Sauvegarde tes moments marquants avec Melune, écris tes ressentis, note tes observations.
+          Sauvegarde tes moments avec Melune, écris tes ressentis, note tes observations.
         </BodyText>
+        
         <TouchableOpacity 
           style={styles.startButton}
-          onPress={() => setShowQuickTracking(true)}
+          onPress={() => setShowFreeWriting(true)}
         >
-          <MaterialIcons name="add" size={20} color="white" />
-          <BodyText style={styles.startButtonText}>Commencer</BodyText>
+          <MaterialIcons name="edit" size={20} color="white" />
+          <BodyText style={styles.startButtonText}>Commencer à écrire</BodyText>
         </TouchableOpacity>
 
-        <QuickTrackingModal 
-          visible={showQuickTracking}
-          onClose={() => setShowQuickTracking(false)}
+        <FreeWritingModal 
+          visible={showFreeWriting}
+          onClose={() => setShowFreeWriting(false)}
         />
       </View>
     );
@@ -118,26 +186,191 @@ export default function NotebookScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      <Heading style={styles.title}>Mon Carnet</Heading>
-      
+      {/* Header avec recherche */}
+      <View style={styles.header}>
+        <Heading style={styles.title}>Mon Carnet</Heading>
+        <TouchableOpacity 
+          onPress={() => setShowSearch(!showSearch)}
+          style={styles.searchToggle}
+        >
+          <MaterialIcons name="search" size={24} color={theme.colors.primary} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Barre de recherche */}
+      {showSearch && (
+        <View style={styles.searchContainer}>
+          <View style={styles.searchInput}>
+            <MaterialIcons name="search" size={20} color={theme.colors.textLight} />
+            <TextInput
+              style={styles.searchText}
+              placeholder="Rechercher dans ton carnet..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholderTextColor={theme.colors.textLight}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <MaterialIcons name="clear" size={20} color={theme.colors.textLight} />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      )}
+
+      {/* Filtres par type */}
+      <View style={styles.filtersContainer}>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={FILTER_PILLS}
+          keyExtractor={item => item.id}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={[
+                styles.filterPill,
+                filter === item.id && styles.filterPillActive
+              ]}
+              onPress={() => setFilter(item.id)}
+            >
+              <MaterialIcons 
+                name={item.icon} 
+                size={16} 
+                color={filter === item.id ? 'white' : theme.colors.textLight} 
+              />
+              <BodyText style={[
+                styles.filterText,
+                filter === item.id && styles.filterTextActive
+              ]}>
+                {item.label}
+              </BodyText>
+            </TouchableOpacity>
+          )}
+        />
+      </View>
+
+      {/* Filtres par phase */}
+      <View style={styles.phaseFiltersContainer}>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={PHASE_FILTERS}
+          keyExtractor={item => item.id}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={[
+                styles.phasePill,
+                { borderColor: item.color },
+                phaseFilter === item.id && { backgroundColor: item.color + '20' }
+              ]}
+              onPress={() => setPhaseFilter(phaseFilter === item.id ? null : item.id)}
+            >
+              <BodyText style={[
+                styles.phaseText,
+                { color: item.color },
+                phaseFilter === item.id && styles.phaseTextActive
+              ]}>
+                {item.label}
+              </BodyText>
+            </TouchableOpacity>
+          )}
+        />
+      </View>
+
+      {/* Tags populaires */}
+      {tagStats.length > 0 && (
+        <View style={styles.tagsContainer}>
+          <Caption style={styles.tagsTitle}>Tags populaires:</Caption>
+          <FlatList
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            data={tagStats.slice(0, 6)}
+            keyExtractor={([tag]) => tag}
+            renderItem={({ item: [tag, count] }) => (
+              <TouchableOpacity
+                style={[
+                  styles.tagFilter,
+                  selectedTags.includes(tag) && styles.tagFilterActive
+                ]}
+                onPress={() => toggleTagFilter(tag)}
+              >
+                <BodyText style={[
+                  styles.tagFilterText,
+                  selectedTags.includes(tag) && styles.tagFilterTextActive
+                ]}>
+                  {tag} ({count})
+                </BodyText>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+      )}
+
+      {/* Résultats */}
       <FlatList
-        data={entries}
+        data={filteredEntries}
         renderItem={renderEntry}
         keyExtractor={item => item.id}
         style={styles.list}
         ListHeaderComponent={renderTrendingInsight}
+        ListEmptyComponent={() => (
+          <View style={styles.emptyState}>
+            <BodyText style={styles.emptyText}>
+              Aucune entrée trouvée pour ces filtres
+            </BodyText>
+          </View>
+        )}
       />
 
-      <TouchableOpacity 
-        style={[styles.fab, { bottom: theme.spacing.xl + insets.bottom + 60 }]}
-        onPress={() => setShowQuickTracking(true)}
-      >
-        <MaterialIcons name="add" size={24} color="white" />
-      </TouchableOpacity>
+      {/* FAB Multi-options */}
+      <View style={[styles.fabContainer, { bottom: theme.spacing.xl + insets.bottom + 60 }]}>
+        {showFabOptions && (
+          <View style={styles.fabOptions}>
+            <TouchableOpacity 
+              style={styles.fabOption}
+              onPress={() => {
+                setShowFreeWriting(true);
+                setShowFabOptions(false);
+              }}
+            >
+              <MaterialIcons name="edit" size={20} color="white" />
+              <Caption style={styles.fabOptionText}>Écrire</Caption>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.fabOption}
+              onPress={() => {
+                setShowQuickTracking(true);
+                setShowFabOptions(false);
+              }}
+            >
+              <MaterialIcons name="bar-chart" size={20} color="white" />
+              <Caption style={styles.fabOptionText}>Tracker</Caption>
+            </TouchableOpacity>
+          </View>
+        )}
+        
+        <TouchableOpacity 
+          style={styles.fab}
+          onPress={() => setShowFabOptions(!showFabOptions)}
+        >
+          <MaterialIcons 
+            name={showFabOptions ? "close" : "add"} 
+            size={24} 
+            color="white" 
+          />
+        </TouchableOpacity>
+      </View>
 
+      {/* Modales */}
       <QuickTrackingModal 
         visible={showQuickTracking}
         onClose={() => setShowQuickTracking(false)}
+      />
+
+      <FreeWritingModal 
+        visible={showFreeWriting}
+        onClose={() => setShowFreeWriting(false)}
       />
 
       <EntryDetailModal
@@ -156,27 +389,109 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
     padding: theme.spacing.l,
   },
-  title: {
-    textAlign: 'center',
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: theme.spacing.l,
   },
-  description: {
+  title: {
+    flex: 1,
     textAlign: 'center',
-    marginBottom: theme.spacing.xl,
-    opacity: 0.7,
   },
-  startButton: {
+  searchToggle: {
+    padding: theme.spacing.s,
+  },
+  
+  // Recherche
+  searchContainer: {
+    marginBottom: theme.spacing.m,
+  },
+  searchInput: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.primary,
-    paddingHorizontal: theme.spacing.l,
-    paddingVertical: theme.spacing.m,
-    borderRadius: theme.borderRadius.m,
-    alignSelf: 'center',
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.medium,
+    paddingHorizontal: theme.spacing.m,
+    paddingVertical: theme.spacing.s,
+    gap: theme.spacing.s,
   },
-  startButtonText: {
+  searchText: {
+    flex: 1,
+    fontSize: 16,
+    color: theme.colors.text,
+  },
+  
+  // Filtres
+  filtersContainer: {
+    marginBottom: theme.spacing.m,
+  },
+  filterPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.pill,
+    paddingHorizontal: theme.spacing.m,
+    paddingVertical: theme.spacing.s,
+    marginRight: theme.spacing.s,
+    gap: theme.spacing.xs,
+  },
+  filterPillActive: {
+    backgroundColor: theme.colors.primary,
+  },
+  filterText: {
+    fontSize: 14,
+    color: theme.colors.textLight,
+  },
+  filterTextActive: {
     color: 'white',
-    marginLeft: theme.spacing.s,
+    fontWeight: '600',
+  },
+  
+  // Filtres phases
+  phaseFiltersContainer: {
+    marginBottom: theme.spacing.m,
+  },
+  phasePill: {
+    borderWidth: 1,
+    borderRadius: theme.borderRadius.pill,
+    paddingHorizontal: theme.spacing.m,
+    paddingVertical: theme.spacing.s,
+    marginRight: theme.spacing.s,
+  },
+  phaseText: {
+    fontSize: 12,
+  },
+  phaseTextActive: {
+    fontWeight: '600',
+  },
+  
+  // Tags
+  tagsContainer: {
+    marginBottom: theme.spacing.m,
+  },
+  tagsTitle: {
+    marginBottom: theme.spacing.s,
+    color: theme.colors.textLight,
+  },
+  tagFilter: {
+    backgroundColor: theme.colors.border,
+    borderRadius: theme.borderRadius.pill,
+    paddingHorizontal: theme.spacing.m,
+    paddingVertical: theme.spacing.xs,
+    marginRight: theme.spacing.s,
+  },
+  tagFilterActive: {
+    backgroundColor: theme.colors.primary + '20',
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+  },
+  tagFilterText: {
+    fontSize: 12,
+    color: theme.colors.textLight,
+  },
+  tagFilterTextActive: {
+    color: theme.colors.primary,
     fontWeight: '600',
   },
   
@@ -205,6 +520,7 @@ const styles = StyleSheet.create({
     color: theme.colors.textLight,
   },
 
+  // Entries
   entryCard: {
     backgroundColor: 'white',
     padding: theme.spacing.m,
@@ -225,16 +541,95 @@ const styles = StyleSheet.create({
     marginLeft: theme.spacing.s,
     fontSize: 12,
     opacity: 0.6,
+    flex: 1,
+  },
+  phaseDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   content: {
     lineHeight: 20,
+    marginBottom: theme.spacing.s,
   },
+  entryTags: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: theme.spacing.xs,
+  },
+  entryTag: {
+    backgroundColor: theme.colors.primary + '15',
+    borderRadius: theme.borderRadius.pill,
+    paddingHorizontal: theme.spacing.s,
+    paddingVertical: 2,
+  },
+  entryTagText: {
+    fontSize: 10,
+    color: theme.colors.primary,
+  },
+  moreTagsText: {
+    fontSize: 10,
+    color: theme.colors.textLight,
+  },
+  
+  // États
+  emptyState: {
+    padding: theme.spacing.xl,
+    alignItems: 'center',
+  },
+  emptyText: {
+    textAlign: 'center',
+    color: theme.colors.textLight,
+  },
+  description: {
+    textAlign: 'center',
+    marginBottom: theme.spacing.xl,
+    opacity: 0.7,
+  },
+  startButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: theme.spacing.l,
+    paddingVertical: theme.spacing.m,
+    borderRadius: theme.borderRadius.m,
+    alignSelf: 'center',
+  },
+  startButtonText: {
+    color: 'white',
+    marginLeft: theme.spacing.s,
+    fontWeight: '600',
+  },
+  
   list: {
     flex: 1,
   },
-  fab: {
+  
+  // FAB
+  fabContainer: {
     position: 'absolute',
     right: theme.spacing.l,
+    alignItems: 'center',
+  },
+  fabOptions: {
+    marginBottom: theme.spacing.m,
+    gap: theme.spacing.s,
+  },
+  fabOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.pill,
+    paddingHorizontal: theme.spacing.m,
+    paddingVertical: theme.spacing.s,
+    gap: theme.spacing.xs,
+  },
+  fabOptionText: {
+    color: 'white',
+    fontSize: 12,
+  },
+  fab: {
     width: 56,
     height: 56,
     borderRadius: 28,

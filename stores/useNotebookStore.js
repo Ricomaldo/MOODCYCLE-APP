@@ -1,12 +1,18 @@
+// stores/useNotebookStore.js - ENRICHI AVEC TAGS + RECHERCHE
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Version optimisée selon spécs finales + tendances
 export const useNotebookStore = create(
     persist(
       (set, get) => ({
         entries: [],
+        
+        // ✅ NOUVEAU : Système de tags automatiques + manuels
+        availableTags: [
+          '#recette', '#rdv', '#inspiration', '#objectif', '#découverte', 
+          '#émotion', '#conseil', '#symptôme', '#bien-être', '#réflexion'
+        ],
         
         addEntry: (content, type = 'personal', metadata = {}) => {
           const entry = {
@@ -14,32 +20,171 @@ export const useNotebookStore = create(
             content,
             type, // 'saved' | 'personal' | 'tracking'
             metadata: {
-              phase: metadata.phase || 'menstrual', // Valeur par défaut
+              phase: metadata.phase || 'menstrual',
               mood: metadata.mood || null,
               energy: metadata.energy || null,
               symptoms: metadata.symptoms || [],
               tags: metadata.tags || [],
               ...metadata
             },
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            // ✅ NOUVEAU : Tags automatiques
+            autoTags: get().generateAutoTags(content, type, metadata)
           };
           
           set(state => ({
             entries: [entry, ...state.entries]
           }));
         },
-  
-        // Quick tracking spécialisé
+
+        // ✅ NOUVEAU : Génération tags automatiques
+        generateAutoTags: (content, type, metadata) => {
+          const tags = [];
+          
+          // Tags par type
+          switch (type) {
+            case 'saved': tags.push('#sauvegardé'); break;
+            case 'personal': tags.push('#personnel'); break;
+            case 'tracking': tags.push('#tracking'); break;
+          }
+          
+          // Tag phase cyclique
+          if (metadata.phase) {
+            tags.push(`#${metadata.phase}`);
+          }
+          
+          // Tags basés sur le contenu
+          const contentLower = content.toLowerCase();
+          if (contentLower.includes('recette') || contentLower.includes('cuisine')) {
+            tags.push('#recette');
+          }
+          if (contentLower.includes('rdv') || contentLower.includes('rendez-vous')) {
+            tags.push('#rdv');
+          }
+          if (contentLower.includes('idée') || contentLower.includes('inspiration')) {
+            tags.push('#inspiration');
+          }
+          if (contentLower.includes('objectif') || contentLower.includes('but')) {
+            tags.push('#objectif');
+          }
+          
+          // Tags émotionnels
+          if (metadata.mood === 'sad') tags.push('#émotion');
+          if (metadata.symptoms?.length > 0) tags.push('#symptôme');
+          
+          return [...new Set(tags)]; // Éliminer doublons
+        },
+
+        // ✅ NOUVEAU : Recherche unifiée avancée
+        searchEntries: (query, filters = {}) => {
+          const { entries } = get();
+          
+          if (!query && !filters.tags && !filters.type && !filters.phase) {
+            return entries;
+          }
+          
+          return entries.filter(entry => {
+            // Recherche textuelle
+            if (query) {
+              const searchIn = `${entry.content} ${entry.metadata.tags?.join(' ')} ${entry.autoTags?.join(' ')}`.toLowerCase();
+              if (!searchIn.includes(query.toLowerCase())) {
+                return false;
+              }
+            }
+            
+            // Filtre par tags
+            if (filters.tags && filters.tags.length > 0) {
+              const entryTags = [...(entry.autoTags || []), ...(entry.metadata.tags || [])];
+              const hasRequiredTag = filters.tags.some(tag => entryTags.includes(tag));
+              if (!hasRequiredTag) return false;
+            }
+            
+            // Filtre par type
+            if (filters.type && entry.type !== filters.type) {
+              return false;
+            }
+            
+            // Filtre par phase
+            if (filters.phase && entry.metadata.phase !== filters.phase) {
+              return false;
+            }
+            
+            return true;
+          });
+        },
+
+        // ✅ NOUVEAU : Suggestions tags intelligentes
+        getSuggestedTags: (content) => {
+          const { availableTags } = get();
+          const contentLower = content.toLowerCase();
+          
+          return availableTags.filter(tag => {
+            const tagWord = tag.substring(1); // Enlever le #
+            return contentLower.includes(tagWord) || 
+                   contentLower.includes(tagWord.substring(0, 3)); // Match partiel
+          });
+        },
+
+        // ✅ NOUVEAU : Stats tags pour insights
+        getTagStats: () => {
+          const { entries } = get();
+          const tagCount = {};
+          
+          entries.forEach(entry => {
+            const allTags = [...(entry.autoTags || []), ...(entry.metadata.tags || [])];
+            allTags.forEach(tag => {
+              tagCount[tag] = (tagCount[tag] || 0) + 1;
+            });
+          });
+          
+          return Object.entries(tagCount)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 10); // Top 10 tags
+        },
+
+        // ✅ NOUVEAU : Ajouter tag manuel à une entrée
+        addTagToEntry: (entryId, tag) => {
+          set(state => ({
+            entries: state.entries.map(entry => 
+              entry.id === entryId 
+                ? {
+                    ...entry,
+                    metadata: {
+                      ...entry.metadata,
+                      tags: [...(entry.metadata.tags || []), tag]
+                    }
+                  }
+                : entry
+            )
+          }));
+        },
+
+        // ✅ NOUVEAU : Supprimer tag d'une entrée
+        removeTagFromEntry: (entryId, tag) => {
+          set(state => ({
+            entries: state.entries.map(entry => 
+              entry.id === entryId 
+                ? {
+                    ...entry,
+                    metadata: {
+                      ...entry.metadata,
+                      tags: (entry.metadata.tags || []).filter(t => t !== tag)
+                    }
+                  }
+                : entry
+            )
+          }));
+        },
+
+        // Fonctions existantes conservées...
         addQuickTracking: (energy, mood, symptoms = []) => {
           get().addEntry('', 'tracking', { energy, mood, symptoms });
         },
 
-        // Fonction pour sauvegarder depuis le chat (utilisée par ChatBubble)
         saveFromChat: (message, phase) => {
           get().addEntry(message, 'saved', { phase });
         },
 
-        // Calcul tendances 7 derniers jours
         calculateTrends: () => {
           const { entries } = get();
           const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
@@ -50,7 +195,6 @@ export const useNotebookStore = create(
 
           if (trackingEntries.length < 2) return null;
 
-          // Calcul tendance énergie
           const energyValues = trackingEntries
             .map(entry => entry.metadata.energy)
             .filter(energy => energy !== null);
@@ -66,7 +210,6 @@ export const useNotebookStore = create(
             else if (secondAvg < firstAvg - 0.5) energyTrend = 'baisse';
           }
 
-          // Symptômes les plus fréquents
           const allSymptoms = trackingEntries
             .flatMap(entry => entry.metadata.symptoms || []);
           const symptomCount = allSymptoms.reduce((acc, symptom) => {
@@ -85,7 +228,6 @@ export const useNotebookStore = create(
           };
         },
 
-        // Format émotionnel pour tracking
         formatTrackingEmotional: (entry) => {
           if (entry.type !== 'tracking') return 'Données de tracking';
           
@@ -109,17 +251,7 @@ export const useNotebookStore = create(
           
           return preview;
         },
-  
-        // Recherche unifiée
-        searchEntries: (query) => {
-          const { entries } = get();
-          return entries.filter(entry => 
-            entry.content.toLowerCase().includes(query.toLowerCase()) ||
-            entry.metadata.tags?.some(tag => tag.includes(query))
-          );
-        },
 
-        // Helper pour CalendarView
         getEntriesForDate: (dateString) => {
           const { entries } = get();
           return entries.filter(entry => {

@@ -33,15 +33,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="cycle"
-        options={{
-          title: 'Cycle',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="radio-button-on" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
         name="chat"
         options={{
           title: 'Melune',
@@ -49,7 +40,7 @@ export default function TabLayout() {
             <Ionicons name="chatbubble-ellipses" size={size} color={color} />
           ),
         }}
-      />
+      /> 
       <Tabs.Screen
         name="notebook"
         options={{
@@ -58,7 +49,17 @@ export default function TabLayout() {
             <Ionicons name="book-outline" size={size} color={color} />
           ),
         }}
+      />     
+      <Tabs.Screen
+        name="cycle"
+        options={{
+          title: 'Cycle',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="radio-button-on" size={size} color={color} />
+          ),
+        }}
       />
+      
     </Tabs>
   );
 }
