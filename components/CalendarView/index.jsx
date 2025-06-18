@@ -3,16 +3,22 @@ import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../config/theme';
 import { Caption } from '../Typography';
+import { useNotebookStore } from '../../stores/useNotebookStore';
 
 export default function CalendarView({ 
   currentPhase = 'menstrual',
   cycleDay = 1,
   cycleLength = 28,
   lastPeriodDate,
-  onPhasePress = () => {}
+  onPhasePress = () => {},
+  onDatePress = () => {}
 }) {
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  
+  // Hook pour les entrées du carnet
+  const { formatEntriesForCalendar } = useNotebookStore();
+  const notebookEntries = formatEntriesForCalendar();
   
   // Navigation mensuelle
   const goToPreviousMonth = () => {
@@ -117,6 +123,26 @@ export default function CalendarView({
     
     return Math.max(0, 1 - (distanceFromPeak / maxDistance));
   };
+
+  // Obtenir les entrées du carnet pour une date
+  const getEntriesForDate = (dayNumber) => {
+    const dateString = new Date(currentYear, currentMonth, dayNumber).toISOString().split('T')[0];
+    return notebookEntries[dateString] || [];
+  };
+
+  // Obtenir les indicateurs d'entrées pour un jour
+  const getEntryIndicators = (entries) => {
+    if (!entries.length) return [];
+    
+    const typeColors = {
+      saved: theme.colors.primary,      // Rose pour sauvegardé
+      personal: theme.colors.secondary, // Citron vert pour personnel
+      tracking: theme.colors.phases.ovulatory // Bleu pour tracking
+    };
+    
+    const uniqueTypes = [...new Set(entries.map(e => e.type))];
+    return uniqueTypes.map(type => typeColors[type] || theme.colors.primary);
+  };
   
   // Générer la grille des jours
   const generateCalendarDays = () => {
@@ -136,6 +162,8 @@ export default function CalendarView({
       const dayStyle = getDayStyle(null, day);
       const dayDate = new Date(currentYear, currentMonth, day);
       const cycleDayForDate = getCycleDayForDate(dayDate);
+      const dayEntries = getEntriesForDate(day);
+      const entryIndicators = getEntryIndicators(dayEntries);
       
       days.push(
         <TouchableOpacity
@@ -149,11 +177,35 @@ export default function CalendarView({
               borderColor: dayStyle.borderColor,
             }
           ]}
-          onPress={() => dayStyle.phase && onPhasePress(dayStyle.phase)}
+          onPress={() => {
+            if (dayEntries.length > 0) {
+              onDatePress(dayDate.toISOString().split('T')[0], dayEntries);
+            } else if (dayStyle.phase) {
+              onPhasePress(dayStyle.phase);
+            }
+          }}
         >
           <Text style={styles.dayText}>
             {day}
           </Text>
+          
+          {/* Indicateurs d'entrées du carnet */}
+          {entryIndicators.length > 0 && (
+            <View style={styles.entryIndicatorsContainer}>
+              {entryIndicators.slice(0, 3).map((color, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.entryIndicator,
+                    { backgroundColor: color }
+                  ]}
+                />
+              ))}
+              {entryIndicators.length > 3 && (
+                <Text style={styles.moreIndicator}>+</Text>
+              )}
+            </View>
+          )}
         </TouchableOpacity>
       );
     }
@@ -197,6 +249,20 @@ export default function CalendarView({
         <Caption style={styles.legendText}>
           Intensité des couleurs = position dans la phase
         </Caption>
+        <View style={styles.legendRow}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: theme.colors.primary }]} />
+            <Caption style={styles.legendItemText}>Sauvegardé</Caption>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: theme.colors.secondary }]} />
+            <Caption style={styles.legendItemText}>Personnel</Caption>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: theme.colors.phases.ovulatory }]} />
+            <Caption style={styles.legendItemText}>Tracking</Caption>
+          </View>
+        </View>
       </View>
     </View>
   );
@@ -265,5 +331,46 @@ const styles = StyleSheet.create({
   legendText: {
     color: theme.colors.textSecondary,
     fontStyle: 'italic',
+    marginBottom: theme.spacing.xs,
+  },
+  legendRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  legendDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: theme.spacing.xs,
+  },
+  legendItemText: {
+    fontSize: 10,
+    color: theme.colors.textSecondary,
+  },
+  
+  // Styles pour les indicateurs d'entrées
+  entryIndicatorsContainer: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  entryIndicator: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    marginLeft: 1,
+  },
+  moreIndicator: {
+    fontSize: 8,
+    fontWeight: 'bold',
+    color: theme.colors.primary,
+    marginLeft: 1,
   },
 });

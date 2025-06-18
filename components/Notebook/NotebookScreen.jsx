@@ -1,20 +1,19 @@
-import React, { useState, useRef } from 'react';
-import { View, FlatList, TouchableOpacity, StyleSheet, Modal, Alert, Share } from 'react-native';
+import React, { useState } from 'react';
+import { View, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons, Feather } from '@expo/vector-icons';
-import { captureRef } from 'react-native-view-shot';
 import { theme } from '../../config/theme';
 import { Heading, BodyText } from '../Typography';
 import { useNotebookStore } from '../../stores/useNotebookStore';
 import QuickTrackingModal from './QuickTrackingModal';
+import EntryDetailModal from '../EntryDetailModal';
 
 export default function NotebookScreen() {
   const insets = useSafeAreaInsets();
-  const { entries, deleteEntry, formatTrackingEmotional, calculateTrends } = useNotebookStore();
+  const { entries, formatTrackingEmotional, calculateTrends } = useNotebookStore();
   const [filter, setFilter] = useState('all');
   const [showQuickTracking, setShowQuickTracking] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState(null);
-  const shareCardRef = useRef();
 
   const getEntryIcon = (type) => {
     const iconProps = { size: 16, color: theme.colors.primary };
@@ -52,39 +51,7 @@ export default function NotebookScreen() {
     });
   };
 
-  const handleDelete = (item) => {
-    Alert.alert(
-      "Supprimer",
-      "Supprimer cette entrée ?",
-      [
-        { text: "Annuler", style: "cancel" },
-        { 
-          text: "Supprimer", 
-          style: "destructive", 
-          onPress: () => {
-            deleteEntry(item.id);
-            setSelectedEntry(null);
-          }
-        }
-      ]
-    );
-  };
 
-  const handleShare = async () => {
-    try {
-      const uri = await captureRef(shareCardRef, {
-        format: 'png',
-        quality: 0.8,
-      });
-      
-      await Share.share({
-        url: uri,
-        message: 'Mon suivi MoodCycle 🌙',
-      });
-    } catch (error) {
-      Alert.alert('Erreur', 'Impossible de partager cette entrée');
-    }
-  };
 
   const renderTrendingInsight = () => {
     const trends = calculateTrends();
@@ -173,106 +140,12 @@ export default function NotebookScreen() {
         onClose={() => setShowQuickTracking(false)}
       />
 
-      {/* Modal détail enrichie */}
-      <Modal visible={!!selectedEntry} transparent animationType="fade">
-        <View style={styles.detailOverlay}>
-          <View style={styles.detailModal}>
-            <View ref={shareCardRef} style={styles.shareableCard}>
-              <View style={styles.detailHeader}>
-                <View style={styles.detailHeaderLeft}>
-                  {selectedEntry && getEntryIcon(selectedEntry.type)}
-                  <View style={styles.timestampContainer}>
-                    <BodyText style={styles.detailTimestamp}>
-                      {selectedEntry && formatRelativeTime(selectedEntry.timestamp)}
-                    </BodyText>
-                    <BodyText style={styles.fullDate}>
-                      {selectedEntry && formatFullDate(selectedEntry.timestamp)}
-                    </BodyText>
-                  </View>
-                </View>
-                <TouchableOpacity onPress={() => setSelectedEntry(null)}>
-                  <MaterialIcons name="close" size={24} color={theme.colors.textLight} />
-                </TouchableOpacity>
-              </View>
-              
-              <BodyText style={styles.detailContent}>
-                {selectedEntry?.content || (selectedEntry && formatTrackingEmotional(selectedEntry))}
-              </BodyText>
-
-              {/* Symptômes badges pour tracking */}
-              {selectedEntry?.type === 'tracking' && selectedEntry?.metadata?.symptoms?.length > 0 && (
-                <View style={styles.symptomsSection}>
-                  <BodyText style={styles.symptomsSectionTitle}>Symptômes</BodyText>
-                  <View style={styles.symptomsContainer}>
-                    {selectedEntry.metadata.symptoms.map((symptomId) => {
-                      const symptomLabels = {
-                        crampes: { label: 'Crampes', color: theme.colors.phases.menstrual },
-                        fatigue: { label: 'Fatigue', color: theme.colors.phases.luteal },
-                        sensibilite: { label: 'Sensibilité', color: theme.colors.phases.ovulatory },
-                        maux_tete: { label: 'Maux de tête', color: theme.colors.warning },
-                        ballonnements: { label: 'Ballonnements', color: theme.colors.phases.follicular },
-                      };
-                      const symptom = symptomLabels[symptomId] || { label: symptomId, color: theme.colors.primary };
-                      
-                      return (
-                        <View
-                          key={symptomId}
-                          style={[
-                            styles.symptomBadge,
-                            { 
-                              borderColor: symptom.color,
-                              backgroundColor: symptom.color + '20'
-                            }
-                          ]}
-                        >
-                          <BodyText style={[styles.symptomBadgeText, { color: symptom.color }]}>
-                            {symptom.label}
-                          </BodyText>
-                        </View>
-                      );
-                    })}
-                  </View>
-                </View>
-              )}
-
-              {/* Trends pour entrées tracking */}
-              {selectedEntry?.type === 'tracking' && (
-                <View style={styles.trackingDetails}>
-                  {renderTrendingInsight()}
-                </View>
-              )}
-            </View>
-            
-            {/* Actions */}
-            <View style={styles.actionButtons}>
-              <TouchableOpacity 
-                style={styles.actionButton}
-                onPress={handleShare}
-              >
-                <MaterialIcons name="share" size={20} color={theme.colors.primary} />
-                <BodyText style={styles.actionButtonText}>Partager</BodyText>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={[styles.actionButton, styles.deleteButton]}
-                onPress={() => handleDelete(selectedEntry)}
-              >
-                <MaterialIcons name="delete" size={20} color={theme.colors.error} />
-                <BodyText style={[styles.actionButtonText, { color: theme.colors.error }]}>
-                  Supprimer
-                </BodyText>
-              </TouchableOpacity>
-            </View>
-            
-            <TouchableOpacity 
-              style={styles.detailCloseButton}
-              onPress={() => setSelectedEntry(null)}
-            >
-              <BodyText style={styles.detailCloseText}>Fermer</BodyText>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      <EntryDetailModal
+        entries={selectedEntry ? [selectedEntry] : []}
+        visible={!!selectedEntry}
+        onClose={() => setSelectedEntry(null)}
+        showActions={true}
+      />
     </View>
   );
 }
@@ -373,126 +246,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
-  },
-  
-  // Styles modal détail
-  detailOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.l,
-  },
-  detailModal: {
-    backgroundColor: 'white',
-    borderRadius: theme.borderRadius.large,
-    padding: theme.spacing.l,
-    width: '100%',
-    maxHeight: '80%',
-  },
-  shareableCard: {
-    backgroundColor: 'white',
-  },
-  detailHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.m,
-    paddingBottom: theme.spacing.s,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  detailHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  timestampContainer: {
-    marginLeft: theme.spacing.s,
-    flex: 1,
-  },
-  detailTimestamp: {
-    fontSize: 12,
-    opacity: 0.6,
-  },
-  detailContent: {
-    fontSize: 16,
-    lineHeight: 24,
-    marginBottom: theme.spacing.s,
-  },
-  fullDate: {
-    fontSize: 10,
-    color: theme.colors.textLight,
-    fontStyle: 'italic',
-    marginTop: 2,
-  },
-  
-  // Tracking details
-  trackingDetails: {
-    marginTop: theme.spacing.m,
-  },
-  
-  // Symptômes section
-  symptomsSection: {
-    marginTop: theme.spacing.m,
-    paddingTop: theme.spacing.m,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-  },
-  symptomsSectionTitle: {
-    fontSize: 14,
-    fontFamily: theme.fonts.bodyBold,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.s,
-  },
-  symptomsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: theme.spacing.s,
-  },
-  symptomBadge: {
-    paddingHorizontal: theme.spacing.m,
-    paddingVertical: theme.spacing.s,
-    borderRadius: theme.borderRadius.pill,
-    borderWidth: 1,
-    marginBottom: theme.spacing.s,
-  },
-  symptomBadgeText: {
-    fontSize: 14,
-  },
-  
-  // Action buttons
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginVertical: theme.spacing.m,
-    paddingTop: theme.spacing.m,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.m,
-    paddingVertical: theme.spacing.s,
-  },
-  deleteButton: {
-    // Style spécifique si nécessaire
-  },
-  actionButtonText: {
-    marginLeft: theme.spacing.s,
-    fontSize: 14,
-    color: theme.colors.primary,
-  },
-  
-  detailCloseButton: {
-    backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.m,
-    borderRadius: theme.borderRadius.medium,
-    alignItems: 'center',
-  },
-  detailCloseText: {
-    color: 'white',
-    fontWeight: '600',
   },
 });

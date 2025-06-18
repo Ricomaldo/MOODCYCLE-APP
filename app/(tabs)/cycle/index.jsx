@@ -10,12 +10,14 @@ import { Heading, BodyText, Caption } from '../../../components/Typography';
 import DevNavigation from '../../../components/DevNavigation/DevNavigation';
 import { useCycleStore } from '../../../stores/useCycleStore';
 import { useOnboardingStore } from '../../../stores/useOnboardingStore';
+import EntryDetailModal from '../../../components/EntryDetailModal';
 import phases from '../../../data/phases.json';
 
 export default function CycleScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [viewMode, setViewMode] = useState('wheel'); // 'wheel' | 'calendar'
+  const [selectedEntry, setSelectedEntry] = useState(null);
   
   const { getCurrentPhaseInfo, initializeFromOnboarding } = useCycleStore();
   const { userInfo, cycleData } = useOnboardingStore();
@@ -110,9 +112,22 @@ export default function CycleScreen() {
             cycleLength={cycleLength}
             lastPeriodDate={cycleData.lastPeriodDate}
             onPhasePress={navigateToPhase}
+            onDatePress={(date, entries) => {
+              // Afficher toutes les entrées du jour dans la modale
+              if (entries.length > 0) {
+                setSelectedEntry(entries);
+              }
+            }}
           />
         </View>
       )}
+
+      <EntryDetailModal
+        entries={selectedEntry || []}
+        visible={!!selectedEntry}
+        onClose={() => setSelectedEntry(null)}
+        showActions={false}
+      />
     </View>
   );
 }

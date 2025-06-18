@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, TouchableOpacity, Alert, Share } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { captureRef } from 'react-native-view-shot';
 import { theme } from '../../../config/theme';
 import MeluneAvatar from '../../../components/MeluneAvatar';
 import { Heading1, BodyText } from '../../../components/Typography';
 import InsightCard from '../../../components/InsightCard';
 import DevNavigation from '../../../components/DevNavigation/DevNavigation';
+import ShareableCard from '../../../components/ShareableCard';
 
 // Stores Zustand
 import { useAppStore } from '../../../stores/useAppStore';
@@ -45,6 +47,10 @@ export default function HomeScreen() {
   const [currentInsight, setCurrentInsight] = useState("Chargement de ton insight personnalisé...");
   const [insightResult, setInsightResult] = useState({ id: null, source: 'loading' });
   
+  // État pour le partage
+  const [isSharing, setIsSharing] = useState(false);
+  const shareCardRef = useRef();
+  
   // 🌟 NOUVEAU : Charger insight de façon async
   useEffect(() => {
     const loadInsight = async () => {
@@ -72,7 +78,7 @@ export default function HomeScreen() {
     };
     
     loadInsight();
-  }, [phase, persona.assigned, preferences, melune]); // Recharger si ces données changent
+  }, [phase, persona.assigned, preferences, melune]); // Recharger si ces données changenti
   
   // 👈 DEBUG : Cycle et Persona
   console.log('Données du cycle:', cycleData);
@@ -102,6 +108,31 @@ export default function HomeScreen() {
     }
   }, [userInfo.ageRange, preferences, melune, persona.assigned]);
   
+  // Fonction de partage de l'insight du jour
+  const handleShare = async () => {
+    try {
+      setIsSharing(true);
+      
+      setTimeout(async () => {
+        const uri = await captureRef(shareCardRef, {
+          format: 'png',
+          quality: 1.0,
+          result: 'tmpfile'
+        });
+        
+        await Share.share({
+          url: uri,
+          message: 'Mon insight MoodCycle du jour 🌙',
+        });
+        
+        setIsSharing(false);
+      }, 200);
+    } catch (error) {
+      setIsSharing(false);
+      Alert.alert('Erreur', 'Impossible de partager cet insight');
+    }
+  };
+  
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* DevNavigation pour le développement */}
@@ -126,12 +157,30 @@ export default function HomeScreen() {
       
       <InsightCard insight={currentInsight} phase={phase} />
       
-      <TouchableOpacity 
-        style={styles.chatButton}
-        onPress={() => router.push('/chat')}
-      >
-        <BodyText style={styles.chatButtonText}>Discuter avec Melune</BodyText>
-      </TouchableOpacity>
+      <View style={styles.buttonsContainer}>
+        <TouchableOpacity 
+          style={styles.chatButton}
+          onPress={() => router.push('/chat')}
+        >
+          <BodyText style={styles.buttonText}>Discuter avec Melune</BodyText>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.shareButton}
+          onPress={handleShare}
+        >
+          <BodyText style={styles.buttonText}>Partager mon insight</BodyText>
+        </TouchableOpacity>
+      </View>
+
+      {/* ShareableCard hors écran pour capture */}
+      {isSharing && (
+        <ShareableCard 
+          ref={shareCardRef}
+          message={currentInsight}
+          visible={true}
+        />
+      )}
     </View>
   );
 }
@@ -151,14 +200,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: theme.spacing.xl,
   },
+  buttonsContainer: {
+    marginTop: theme.spacing.l,
+    gap: theme.spacing.m,
+  },
   chatButton: {
     backgroundColor: theme.colors.primary,
     borderRadius: theme.borderRadius.pill,
     padding: theme.spacing.m,
     alignItems: 'center',
-    marginTop: theme.spacing.l,
   },
-  chatButtonText: {
+  shareButton: {
+    backgroundColor: theme.colors.secondary,
+    borderRadius: theme.borderRadius.pill,
+    padding: theme.spacing.m,
+    alignItems: 'center',
+  },
+  buttonText: {
     color: 'white',
     fontWeight: 'bold',
   },

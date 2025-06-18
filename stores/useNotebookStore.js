@@ -117,7 +117,26 @@ export const useNotebookStore = create(
             entry.content.toLowerCase().includes(query.toLowerCase()) ||
             entry.metadata.tags?.some(tag => tag.includes(query))
           );
-        }, 
+        },
+
+        // Helper pour CalendarView
+        getEntriesForDate: (dateString) => {
+          const { entries } = get();
+          return entries.filter(entry => {
+            const entryDate = new Date(entry.timestamp).toISOString().split('T')[0];
+            return entryDate === dateString;
+          });
+        },
+
+        formatEntriesForCalendar: () => {
+          const { entries } = get();
+          return entries.reduce((acc, entry) => {
+            const date = new Date(entry.timestamp).toISOString().split('T')[0];
+            if (!acc[date]) acc[date] = [];
+            acc[date].push(entry);
+            return acc;
+          }, {});
+        },
         
         deleteEntry: (id) => {
           set(state => ({
