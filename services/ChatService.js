@@ -1,13 +1,17 @@
 // services/ChatService.js
 // Service de gestion du chat avec API MoodCycle
-// Gestion cache + personnalisation progressive
+// Gestion cache + personnalisation progressive + mémoire conversationnelle
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useOnboardingStore } from '../stores/useOnboardingStore.js';
 import ContextFormatter from './ContextFormatter.js';
 import { getApiRequestConfig } from '../config/api.js';
+
 const CACHE_KEY = 'conversation_context_v1';
 const DEVICE_ID_KEY = 'device_id_v1';
+// ✅ NOUVEAU : Clé pour l'historique conversationnel
+const HISTORY_KEY = 'conversation_history_v1';
+const MAX_HISTORY_EXCHANGES = 4; // 4 échanges max en mémoire
 
 // Réponses fallback pour simulation locale
 const FALLBACK_RESPONSES = {
@@ -22,6 +26,8 @@ class ChatService {
     this.cachedContext = null;
     this.deviceId = null;
     this.isInitialized = false;
+    // ✅ NOUVEAU : Cache mémoire pour l'historique
+    this.conversationHistory = [];
   }
 
   /**
@@ -80,7 +86,7 @@ class ChatService {
 
   /**
    * 🎯 INITIALISATION CONTEXTE (PREMIER MESSAGE)
-   * Calcule et met en cache le contexte personnalisé
+   * Calcule et met en cache le contexte personnalisé + charge historique
    */
   async initializeContext() {
     try {
@@ -91,8 +97,14 @@ class ChatService {
         return this.createFallbackContext();
       }
 
+      // ✅ NOUVEAU : Charger historique conversationnel
+      await this.loadConversationHistory();
+
       // Générer contexte personnalisé
       const context = ContextFormatter.formatCompact();
+      
+      // ✅ NOUVEAU : Ajouter historique au contexte
+      context.conversationHistory = this.conversationHistory;
       
       // Valider le contexte généré
       const contextValidation = ContextFormatter.validateContext(context);
@@ -105,7 +117,7 @@ class ChatService {
       await this.cacheContext(context);
       this.cachedContext = context;
       
-      console.log('✅ Contexte initialisé et mis en cache');
+      console.log('✅ Contexte initialisé et mis en cache avec historique:', this.conversationHistory.length, 'échanges');
       return context;
       
     } catch (error) {
@@ -230,7 +242,7 @@ class ChatService {
 
   /**
    * 💬 ENVOI MESSAGE PRINCIPAL
-   * Gestion cache + appel API + fallback
+   * Gestion cache + historique + appel API + fallback
    */
   async sendMessage(message, isFirstMessage = false) {
     // S'assurer que le service est initialisé
@@ -251,8 +263,17 @@ class ChatService {
         context = await this.initializeContext();
       }
 
+      // ✅ NOUVEAU : Ajouter historique au contexte si pas déjà présent
+      if (!context.conversationHistory) {
+        await this.loadConversationHistory();
+        context.conversationHistory = this.conversationHistory;
+      }
+
       // Appel API
       const response = await this.callChatAPI(message, context);
+      
+      // ✅ NOUVEAU : Sauvegarder échange dans l'historique
+      await this.saveMessageExchange(message, response);
       
       return {
         success: true,
@@ -264,7 +285,14 @@ class ChatService {
       console.error('🚨 Erreur sendMessage:', error);
       
       // Fallback simulation locale
-      return this.getFallbackResponse(message);
+      const fallbackResponse = this.getFallbackResponse(message);
+      
+      // ✅ NOUVEAU : Sauvegarder même les fallbacks
+      if (fallbackResponse.success) {
+        await this.saveMessageExchange(message, fallbackResponse.message);
+      }
+      
+      return fallbackResponse;
     }
   }
 
@@ -332,24 +360,122 @@ class ChatService {
   }
 
   /**
-   * 🧹 NETTOYAGE CACHE
+   * ✅ NOUVEAU : CHARGEMENT HISTORIQUE DEPUIS ASYNCSTORAGE
+   */
+  async loadConversationHistory() {
+    try {
+      const historyJson = await AsyncStorage.getItem(HISTORY_KEY);
+      
+      if (!historyJson) {
+        this.conversationHistory = [];
+        return;
+      }
+      
+      const historyData = JSON.parse(historyJson);
+      
+      // Validation format
+      if (Array.isArray(historyData.exchanges)) {
+        this.conversationHistory = historyData.exchanges;
+        console.log('📚 Historique chargé:', this.conversationHistory.length, 'échanges');
+      } else {
+        console.warn('🚨 Format historique invalide, reset');
+        this.conversationHistory = [];
+      }
+      
+    } catch (error) {
+      console.warn('🚨 Erreur chargement historique:', error);
+      this.conversationHistory = [];
+    }
+  }
+
+  /**
+   * ✅ NOUVEAU : SAUVEGARDE ÉCHANGE DANS HISTORIQUE
+   */
+  async saveMessageExchange(userMessage, meluneResponse) {
+    try {
+      // Créer nouvel échange
+      const newExchange = {
+        user: userMessage,
+        melune: meluneResponse,
+        timestamp: Date.now()
+      };
+      
+      // Ajouter au début (plus récent en premier)
+      this.conversationHistory.unshift(newExchange);
+      
+      // Limiter à MAX_HISTORY_EXCHANGES
+      if (this.conversationHistory.length > MAX_HISTORY_EXCHANGES) {
+        this.conversationHistory = this.conversationHistory.slice(0, MAX_HISTORY_EXCHANGES);
+      }
+      
+      // Sauvegarder en AsyncStorage
+      const historyData = {
+        exchanges: this.conversationHistory,
+        lastUpdated: Date.now(),
+        version: '1.0'
+      };
+      
+      await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(historyData));
+      
+      console.log('💾 Échange sauvegardé. Total historique:', this.conversationHistory.length);
+      
+    } catch (error) {
+      console.warn('🚨 Erreur sauvegarde échange:', error);
+    }
+  }
+
+  /**
+   * ✅ NOUVEAU : STATS HISTORIQUE (DEBUG)
+   */
+  getHistoryStats() {
+    return {
+      count: this.conversationHistory.length,
+      maxCount: MAX_HISTORY_EXCHANGES,
+      exchanges: this.conversationHistory.map(exchange => ({
+        userPreview: exchange.user.substring(0, 30) + '...',
+        melunePreview: exchange.melune.substring(0, 30) + '...',
+        timestamp: new Date(exchange.timestamp).toLocaleString()
+      })),
+      totalCharacters: this.conversationHistory.reduce((total, exchange) => 
+        total + exchange.user.length + exchange.melune.length, 0)
+    };
+  }
+
+  /**
+   * ✅ NOUVEAU : NETTOYAGE HISTORIQUE (DEBUG)
+   */
+  async clearHistory() {
+    try {
+      this.conversationHistory = [];
+      await AsyncStorage.removeItem(HISTORY_KEY);
+      console.log('🧹 Historique conversationnel nettoyé');
+    } catch (error) {
+      console.warn('🚨 Erreur nettoyage historique:', error);
+    }
+  }
+
+  /**
+   * 🧹 NETTOYAGE CACHE (MODIFIÉ)
    */
   async clearCache() {
     try {
       await AsyncStorage.removeItem(CACHE_KEY);
       this.cachedContext = null;
-      console.log('🧹 Cache contexte nettoyé');
+      // ✅ NOUVEAU : Optionnel - garder historique ou non lors du clear cache
+      console.log('🧹 Cache contexte nettoyé (historique préservé)');
     } catch (error) {
       console.warn('🚨 Erreur nettoyage cache:', error);
     }
   }
 
   /**
-   * 🔄 INVALIDATION CACHE (si OnboardingStore change)
+   * 🔄 INVALIDATION CACHE (MODIFIÉ)
    */
   async invalidateCache() {
     await this.clearCache();
-    console.log('🔄 Cache invalidé - recalcul au prochain message');
+    // ✅ NOUVEAU : Recharger historique au prochain message
+    this.conversationHistory = [];
+    console.log('🔄 Cache invalidé - recalcul au prochain message avec historique');
   }
 }
 
