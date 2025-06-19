@@ -1,6 +1,6 @@
 // components/Notebook/NotebookScreen.jsx - VERSION FINALE PHASE 2
 import React, { useState, useMemo } from 'react';
-import { View, FlatList, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
+import { View, FlatList, TouchableOpacity, StyleSheet, Alert, Share } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons, Feather } from '@expo/vector-icons';
 import { theme } from '../../config/theme';
@@ -9,6 +9,12 @@ import { useNotebookStore } from '../../stores/useNotebookStore';
 import QuickTrackingModal from './QuickTrackingModal';
 import FreeWritingModal from './FreeWritingModal';
 import EntryDetailModal from '../EntryDetailModal';
+import { 
+  AnimatedFAB, 
+  AnimatedSearchBar, 
+  AnimatedFilterPill,
+  EntryLoadingSkeleton 
+} from './AnimatedComponents';
 
 const FILTER_PILLS = [
   { id: 'all', label: 'Tout', icon: 'all-inclusive' },
@@ -117,13 +123,59 @@ export default function NotebookScreen() {
     );
   };
 
-  const renderEntry = ({ item }) => {
+  const renderEntry = ({ item, index }) => {
     const entryTags = getEntryTags(item);
+    
+    const handleLongPress = () => {
+      const actions = [
+        { text: "Annuler", style: "cancel" },
+        { 
+          text: "Tag #important", 
+          onPress: () => {
+            if (!entryTags.includes('#important')) {
+              // addTagToEntry(item.id, '#important'); // TODO: implement
+            }
+          }
+        }
+      ];
+
+      // Partage seulement pour 'saved' et 'tracking', pas 'personal'
+      if (item.type !== 'personal') {
+        actions.splice(-1, 0, { 
+          text: "Partager", 
+          onPress: () => {
+            Share.share({
+              message: item.content || formatTrackingEmotional(item),
+              title: 'Mon carnet MoodCycle'
+            });
+          }
+        });
+      }
+
+      actions.push({ 
+        text: "Supprimer", 
+        style: "destructive", 
+        onPress: () => {
+          Alert.alert(
+            "Supprimer",
+            "Supprimer cette entrée ?",
+            [
+              { text: "Annuler", style: "cancel" },
+              { text: "Supprimer", style: "destructive", onPress: () => deleteEntry(item.id) }
+            ]
+          );
+        }
+      });
+
+      Alert.alert("Actions", "Que veux-tu faire ?", actions);
+    };
     
     return (
       <TouchableOpacity 
         style={styles.entryCard}
         onPress={() => setSelectedEntry(item)}
+        onLongPress={handleLongPress}
+        delayLongPress={800}
       >
         <View style={styles.entryHeader}>
           {getEntryIcon(item.type)}
@@ -142,7 +194,6 @@ export default function NotebookScreen() {
           {item.content || formatTrackingEmotional(item)}
         </BodyText>
         
-        {/* Tags de l'entrée */}
         {entryTags.length > 0 && (
           <View style={styles.entryTags}>
             {entryTags.slice(0, 3).map((tag, index) => (
@@ -198,25 +249,12 @@ export default function NotebookScreen() {
       </View>
 
       {/* Barre de recherche */}
-      {showSearch && (
-        <View style={styles.searchContainer}>
-          <View style={styles.searchInput}>
-            <MaterialIcons name="search" size={20} color={theme.colors.textLight} />
-            <TextInput
-              style={styles.searchText}
-              placeholder="Rechercher dans ton carnet..."
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholderTextColor={theme.colors.textLight}
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery('')}>
-                <MaterialIcons name="clear" size={20} color={theme.colors.textLight} />
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-      )}
+      <AnimatedSearchBar
+        visible={showSearch}
+        query={searchQuery}
+        onChangeText={setSearchQuery}
+        onClear={() => setSearchQuery('')}
+      />
 
       {/* Filtres par type */}
       <View style={styles.filtersContainer}>
@@ -322,45 +360,20 @@ export default function NotebookScreen() {
         )}
       />
 
-      {/* FAB Multi-options */}
-      <View style={[styles.fabContainer, { bottom: theme.spacing.xl + insets.bottom + 60 }]}>
-        {showFabOptions && (
-          <View style={styles.fabOptions}>
-            <TouchableOpacity 
-              style={styles.fabOption}
-              onPress={() => {
-                setShowFreeWriting(true);
-                setShowFabOptions(false);
-              }}
-            >
-              <MaterialIcons name="edit" size={20} color="white" />
-              <Caption style={styles.fabOptionText}>Écrire</Caption>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.fabOption}
-              onPress={() => {
-                setShowQuickTracking(true);
-                setShowFabOptions(false);
-              }}
-            >
-              <MaterialIcons name="bar-chart" size={20} color="white" />
-              <Caption style={styles.fabOptionText}>Tracker</Caption>
-            </TouchableOpacity>
-          </View>
-        )}
-        
-        <TouchableOpacity 
-          style={styles.fab}
-          onPress={() => setShowFabOptions(!showFabOptions)}
-        >
-          <MaterialIcons 
-            name={showFabOptions ? "close" : "add"} 
-            size={24} 
-            color="white" 
-          />
-        </TouchableOpacity>
-      </View>
+      {/* FAB Animé */}
+      <AnimatedFAB
+        showOptions={showFabOptions}
+        onToggle={() => setShowFabOptions(!showFabOptions)}
+        onWritePress={() => {
+          setShowFreeWriting(true);
+          setShowFabOptions(false);
+        }}
+        onTrackPress={() => {
+          setShowQuickTracking(true);
+          setShowFabOptions(false);
+        }}
+        bottom={theme.spacing.xl + insets.bottom + 60}
+      />
 
       {/* Modales */}
       <QuickTrackingModal 
@@ -403,24 +416,8 @@ const styles = StyleSheet.create({
     padding: theme.spacing.s,
   },
   
-  // Recherche
-  searchContainer: {
-    marginBottom: theme.spacing.m,
-  },
-  searchInput: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.medium,
-    paddingHorizontal: theme.spacing.m,
-    paddingVertical: theme.spacing.s,
-    gap: theme.spacing.s,
-  },
-  searchText: {
-    flex: 1,
-    fontSize: 16,
-    color: theme.colors.text,
-  },
+  // Recherche (maintenant dans AnimatedSearchBar)
+  // Supprimé - géré par le composant animé
   
   // Filtres
   filtersContainer: {
