@@ -9,7 +9,7 @@
 //
 import React, { useState } from 'react';
 import { View, Modal, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { MaterialIcons, Feather } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import { theme } from '../../config/theme';
 import { Heading2, BodyText } from '../../core/ui/Typography';
 import { useNotebookStore } from '../../stores/useNotebookStore';
@@ -70,7 +70,7 @@ export default function QuickTrackingModal({ visible, onClose }) {
             <View style={styles.header}>
               <Heading2 style={styles.title}>Comment tu te sens ?</Heading2>
               <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                <MaterialIcons name="close" size={24} color={theme.colors.textLight} />
+                <Feather name="x" size={24} color={theme.colors.textLight} />
               </TouchableOpacity>
             </View>
 
@@ -163,7 +163,7 @@ export default function QuickTrackingModal({ visible, onClose }) {
 
             {/* Bouton sauvegarder */}
             <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-              <MaterialIcons name="save" size={20} color="white" />
+              <Feather name="save" size={20} color="white" />
               <BodyText style={styles.saveButtonText}>Sauvegarder</BodyText>
             </TouchableOpacity>
           </ScrollView>

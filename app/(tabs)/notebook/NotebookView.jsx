@@ -8,7 +8,7 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
 import React, { useState, useMemo } from 'react';
-import { View, FlatList, TouchableOpacity, StyleSheet, Alert, Share } from 'react-native';
+import { View, FlatList, TouchableOpacity, StyleSheet, Alert, Share, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons, Feather } from '@expo/vector-icons';
 import { theme } from '../../../src/config/theme';
@@ -17,8 +17,9 @@ import { useNotebookStore } from '../../../src/stores/useNotebookStore';
 import QuickTrackingModal from '../../../src/features/notebook/QuickTrackingModal';
 import FreeWritingModal from '../../../src/features/notebook/FreeWritingModal';
 import EntryDetailModal from '../../../src/features/shared/EntryDetailModal';
+import SwipeableEntryIOS from '../../../src/features/notebook/SwipeableEntryIOS';
+import ToolbarIOS from '../../../src/features/notebook/ToolbarIOS';
 import {
-  AnimatedFAB,
   AnimatedSearchBar,
   AnimatedFilterPill,
   EntryLoadingSkeleton,
@@ -28,10 +29,10 @@ import DevNavigation from '../../../src/core/dev/DevNavigation';
 
 
 const FILTER_PILLS = [
-  { id: 'all', label: 'Tout', icon: 'all-inclusive' },
+  { id: 'all', label: 'Tout', icon: 'layers' },
   { id: 'saved', label: 'Sauvegardé', icon: 'bookmark' },
-  { id: 'personal', label: 'Personnel', icon: 'edit' },
-  { id: 'tracking', label: 'Tracking', icon: 'bar-chart' },
+  { id: 'personal', label: 'Personnel', icon: 'edit-3' },
+  { id: 'tracking', label: 'Tracking', icon: 'bar-chart-2' },
 ];
 
 const PHASE_FILTERS = [
@@ -64,7 +65,9 @@ export default function NotebookView() {
   const [showQuickTracking, setShowQuickTracking] = useState(false);
   const [showFreeWriting, setShowFreeWriting] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState(null);
-  const [showFabOptions, setShowFabOptions] = useState(false);
+  
+  // Refresh state
+  const [refreshing, setRefreshing] = useState(false);
 
   // ✅ Filtrage intelligent avec nouvelle logique
   const filteredEntries = useMemo(() => {
@@ -80,17 +83,25 @@ export default function NotebookView() {
   // ✅ Stats pour insights
   const tagStats = useMemo(() => getPopularTags(), [entries]);
 
+  // ✅ Pull to refresh function
+  const onRefresh = async () => {
+    setRefreshing(true);
+    // Simule refresh (peut trigger recalcul trends)
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setRefreshing(false);
+  };
+
   const getEntryIcon = (type) => {
     const iconProps = { size: 16, color: theme.colors.primary };
     switch (type) {
       case 'saved':
-        return <MaterialIcons name="bookmark" {...iconProps} />;
+        return <Feather name="bookmark" {...iconProps} />;
       case 'personal':
-        return <Feather name="edit" {...iconProps} />;
+        return <Feather name="edit-3" {...iconProps} />;
       case 'tracking':
-        return <MaterialIcons name="bar-chart" {...iconProps} />;
+        return <Feather name="bar-chart-2" {...iconProps} />;
       default:
-        return <Feather name="edit" {...iconProps} />;
+        return <Feather name="edit-3" {...iconProps} />;
     }
   };
 
@@ -140,85 +151,17 @@ export default function NotebookView() {
     );
   };
 
-  const renderEntry = ({ item, index }) => {
-    const entryTags = getEntryTags(item);
-
-    const handleLongPress = () => {
-      const actions = [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Tag #important',
-          onPress: () => {
-            if (!entryTags.includes('#important')) {
-              // addTagToEntry(item.id, '#important'); // TODO: implement
-            }
-          },
-        },
-      ];
-
-      // Partage seulement pour 'saved' et 'tracking', pas 'personal'
-      if (item.type !== 'personal') {
-        actions.splice(-1, 0, {
-          text: 'Partager',
-          onPress: () => {
-            Share.share({
-              message: item.content || formatTrackingEmotional(item),
-              title: 'Mon carnet MoodCycle',
-            });
-          },
-        });
-      }
-
-      actions.push({
-        text: 'Supprimer',
-        style: 'destructive',
-        onPress: () => deleteEntry(item.id),
-      });
-
-      Alert.alert('Actions', 'Que veux-tu faire ?', actions);
-    };
-
-    return (
-      <TouchableOpacity
-        style={styles.entryCard}
-        onPress={() => setSelectedEntry(item)}
-        onLongPress={handleLongPress}
-        delayLongPress={800}
-      >
-        <View style={styles.entryHeader}>
-          {getEntryIcon(item.type)}
-          <BodyText style={styles.timestamp}>{formatRelativeTime(item.timestamp)}</BodyText>
-          {item.metadata?.phase && (
-            <View
-              style={[
-                styles.phaseDot,
-                {
-                  backgroundColor: PHASE_FILTERS.find((p) => p.id === item.metadata.phase)?.color,
-                },
-              ]}
-            />
-          )}
-        </View>
-
-        <BodyText style={styles.content} numberOfLines={3}>
-          {item.content || formatTrackingEmotional(item)}
-        </BodyText>
-
-        {entryTags.length > 0 && (
-          <View style={styles.entryTags}>
-            {entryTags.slice(0, 3).map((tag, index) => (
-              <View key={index} style={styles.entryTag}>
-                <Caption style={styles.entryTagText}>{tag}</Caption>
-              </View>
-            ))}
-            {entryTags.length > 3 && (
-              <Caption style={styles.moreTagsText}>+{entryTags.length - 3}</Caption>
-            )}
-          </View>
-        )}
-      </TouchableOpacity>
-    );
-  };
+  // ✅ NOUVEAU renderEntry avec SwipeableEntryIOS
+  const renderEntry = ({ item, index }) => (
+    <SwipeableEntryIOS
+      item={item}
+      onPress={() => setSelectedEntry(item)}
+      formatTrackingEmotional={formatTrackingEmotional}
+      formatRelativeTime={formatRelativeTime}
+      getEntryIcon={getEntryIcon}
+      getEntryTags={getEntryTags}
+    />
+  );
 
   // État vide
   if (entries.length === 0) {
@@ -228,7 +171,7 @@ export default function NotebookView() {
         <View style={styles.header}>
           <Heading style={styles.title}>Mon Carnet</Heading>
           <TouchableOpacity onPress={() => setShowSearch(!showSearch)} style={styles.searchToggle}>
-            <MaterialIcons name="search" size={24} color={theme.colors.primary} />
+            <Feather name="search" size={24} color={theme.colors.primary} />
           </TouchableOpacity>
         </View>
         <View style={styles.emptyContent}>
@@ -236,7 +179,7 @@ export default function NotebookView() {
             Sauvegarde tes moments avec Melune, écris tes ressentis, note tes observations.
           </BodyText>
           <TouchableOpacity style={styles.startButton} onPress={() => setShowFreeWriting(true)}>
-            <MaterialIcons name="edit" size={20} color="white" />
+            <Feather name="edit-3" size={20} color="white" />
             <BodyText style={styles.startButtonText}>Commencer à écrire</BodyText>
           </TouchableOpacity>
         </View>
@@ -249,12 +192,12 @@ export default function NotebookView() {
     <ScreenContainer style={styles.container} hasTabs={true}>
       <DevNavigation />
       {/* Header avec recherche */}
-      <View style={styles.header}>
-        <Heading style={styles.title}>Mon Carnet</Heading>
-        <TouchableOpacity onPress={() => setShowSearch(!showSearch)} style={styles.searchToggle}>
-          <MaterialIcons name="search" size={24} color={theme.colors.primary} />
-        </TouchableOpacity>
-      </View>
+              <View style={styles.header}>
+          <Heading style={styles.title}>Mon Carnet</Heading>
+          <TouchableOpacity onPress={() => setShowSearch(!showSearch)} style={styles.searchToggle}>
+            <Feather name="search" size={24} color={theme.colors.primary} />
+          </TouchableOpacity>
+        </View>
 
       {/* Barre de recherche */}
       <AnimatedSearchBar
@@ -276,7 +219,7 @@ export default function NotebookView() {
               style={[styles.filterPill, filter === item.id && styles.filterPillActive]}
               onPress={() => setFilter(item.id)}
             >
-              <MaterialIcons
+              <Feather
                 name={item.icon}
                 size={16}
                 color={filter === item.id ? 'white' : theme.colors.textLight}
@@ -355,6 +298,15 @@ export default function NotebookView() {
         renderItem={renderEntry}
         keyExtractor={(item) => item.id}
         style={styles.list}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.colors.primary}
+            title="Actualisation..."
+            titleColor={theme.colors.textLight}
+          />
+        }
         ListHeaderComponent={renderTrendingInsight}
         ListEmptyComponent={() => (
           <View style={styles.emptyState}>
@@ -364,18 +316,10 @@ export default function NotebookView() {
       />
 
       {/* FAB Animé */}
-      <AnimatedFAB
-        showOptions={showFabOptions}
-        onToggle={() => setShowFabOptions(!showFabOptions)}
-        onWritePress={() => {
-          setShowFreeWriting(true);
-          setShowFabOptions(false);
-        }}
-        onTrackPress={() => {
-          setShowQuickTracking(true);
-          setShowFabOptions(false);
-        }}
-        bottom={theme.spacing.xl + insets.bottom + 60}
+      {/* ToolbarIOS pour ajouter des entrées */}
+      <ToolbarIOS
+        onWritePress={() => setShowFreeWriting(true)}
+        onTrackPress={() => setShowQuickTracking(true)}
       />
 
       {/* Modales */}
@@ -524,57 +468,7 @@ const styles = StyleSheet.create({
   },
 
   // Entries
-  entryCard: {
-    backgroundColor: 'white',
-    padding: theme.spacing.m,
-    borderRadius: theme.borderRadius.m,
-    marginBottom: theme.spacing.m,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  entryHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: theme.spacing.s,
-  },
-  timestamp: {
-    marginLeft: theme.spacing.s,
-    fontSize: 12,
-    opacity: 0.6,
-    flex: 1,
-  },
-  phaseDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  content: {
-    lineHeight: 20,
-    marginBottom: theme.spacing.s,
-  },
-  entryTags: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: theme.spacing.xs,
-  },
-  entryTag: {
-    backgroundColor: theme.colors.primary + '15',
-    borderRadius: theme.borderRadius.pill,
-    paddingHorizontal: theme.spacing.s,
-    paddingVertical: 2,
-  },
-  entryTagText: {
-    fontSize: 10,
-    color: theme.colors.primary,
-  },
-  moreTagsText: {
-    fontSize: 10,
-    color: theme.colors.textLight,
-  },
+
 
   // États
   emptyContent: {
@@ -652,3 +546,4 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
 });
+

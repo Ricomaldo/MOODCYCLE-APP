@@ -11,7 +11,8 @@ import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { useState, useEffect } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
+import * as Haptics from 'expo-haptics';
 import { theme } from "../../../../src/config/theme";
 import ContentManager from "../../../../src/services/ContentManager";
 import { Heading, BodyText, Caption } from "../../../../src/core/ui/Typography";
@@ -66,10 +67,13 @@ export default function PhaseDetailScreen() {
       >
         <View style={styles.navigationRow}>
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              router.back();
+            }}
             style={styles.backButton}
           >
-            <Ionicons name="arrow-back" size={24} color={headerTextColor} />
+            <Feather name="arrow-left" size={24} color={headerTextColor} />
           </TouchableOpacity>
           <BodyText style={[styles.breadcrumb, { color: headerTextColor }]}>
             Mon cycle

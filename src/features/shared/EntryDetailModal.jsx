@@ -8,8 +8,8 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
 import React, { useRef, useState } from 'react';
-import { View, Modal, TouchableOpacity, StyleSheet, Alert, Share } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { View, Modal, TouchableOpacity, StyleSheet, Alert, Share, ActionSheetIOS, Platform } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { captureRef } from 'react-native-view-shot';
 import { theme } from '../../config/theme';
 import { BodyText } from '../../core/ui/Typography';
@@ -62,13 +62,13 @@ export default function EntryDetailModal({ entries = [], visible, onClose, showA
     const iconProps = { size: 16, color: theme.colors.primary };
     switch (type) {
       case 'saved':
-        return <MaterialIcons name="bookmark" {...iconProps} />;
+        return <Feather name="bookmark" {...iconProps} />;
       case 'personal':
-        return <MaterialIcons name="edit" {...iconProps} />;
+        return <Feather name="edit-3" {...iconProps} />;
       case 'tracking':
-        return <MaterialIcons name="bar-chart" {...iconProps} />;
+        return <Feather name="bar-chart-2" {...iconProps} />;
       default:
-        return <MaterialIcons name="edit" {...iconProps} />;
+        return <Feather name="edit-3" {...iconProps} />;
     }
   };
 
@@ -85,25 +85,52 @@ export default function EntryDetailModal({ entries = [], visible, onClose, showA
   };
 
   const handleDelete = () => {
-    Alert.alert('Supprimer', 'Supprimer cette entrée ?', [
-      { text: 'Annuler', style: 'cancel' },
-      {
-        text: 'Supprimer',
-        style: 'destructive',
-        onPress: () => {
-          deleteEntry(currentEntry.id);
-          // Si c'était la dernière entrée, fermer la modale
-          if (entries.length === 1) {
-            onClose();
-          } else {
-            // Ajuster l'index si nécessaire
-            if (currentIndex >= entries.length - 1) {
-              setCurrentIndex(Math.max(0, currentIndex - 1));
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          title: 'Supprimer cette entrée',
+          message: 'Cette action est irréversible',
+          options: ['Annuler', 'Supprimer'],
+          cancelButtonIndex: 0,
+          destructiveButtonIndex: 1,
+          userInterfaceStyle: 'light',
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) {
+            deleteEntry(currentEntry.id);
+            // Si c'était la dernière entrée, fermer la modale
+            if (entries.length === 1) {
+              onClose();
+            } else {
+              // Ajuster l'index si nécessaire
+              if (currentIndex >= entries.length - 1) {
+                setCurrentIndex(Math.max(0, currentIndex - 1));
+              }
             }
           }
+        }
+      );
+    } else {
+      Alert.alert('Supprimer', 'Supprimer cette entrée ?', [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: () => {
+            deleteEntry(currentEntry.id);
+            // Si c'était la dernière entrée, fermer la modale
+            if (entries.length === 1) {
+              onClose();
+            } else {
+              // Ajuster l'index si nécessaire
+              if (currentIndex >= entries.length - 1) {
+                setCurrentIndex(Math.max(0, currentIndex - 1));
+              }
+            }
+          },
         },
-      },
-    ]);
+      ]);
+    }
   };
 
   const handleShare = async () => {
@@ -181,7 +208,7 @@ export default function EntryDetailModal({ entries = [], visible, onClose, showA
                       disabled={currentIndex === 0}
                       style={[styles.navButton, currentIndex === 0 && styles.navButtonDisabled]}
                     >
-                      <MaterialIcons
+                      <Feather
                         name="chevron-left"
                         size={20}
                         color={currentIndex === 0 ? theme.colors.textLight : theme.colors.primary}
@@ -200,7 +227,7 @@ export default function EntryDetailModal({ entries = [], visible, onClose, showA
                         currentIndex === entries.length - 1 && styles.navButtonDisabled,
                       ]}
                     >
-                      <MaterialIcons
+                      <Feather
                         name="chevron-right"
                         size={20}
                         color={
@@ -214,7 +241,7 @@ export default function EntryDetailModal({ entries = [], visible, onClose, showA
                 )}
 
                 <TouchableOpacity onPress={onClose}>
-                  <MaterialIcons name="close" size={24} color={theme.colors.textLight} />
+                  <Feather name="x" size={24} color={theme.colors.textLight} />
                 </TouchableOpacity>
               </View>
 
@@ -275,7 +302,7 @@ export default function EntryDetailModal({ entries = [], visible, onClose, showA
               <View style={styles.actionButtons}>
                 {currentEntry.type !== 'tracking' && (
                   <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
-                    <MaterialIcons name="share" size={20} color={theme.colors.primary} />
+                    <Feather name="share" size={20} color={theme.colors.primary} />
                     <BodyText style={styles.actionButtonText}>Partager</BodyText>
                   </TouchableOpacity>
                 )}
@@ -284,7 +311,7 @@ export default function EntryDetailModal({ entries = [], visible, onClose, showA
                   style={[styles.actionButton, styles.deleteButton]}
                   onPress={handleDelete}
                 >
-                  <MaterialIcons name="delete" size={20} color={theme.colors.error} />
+                  <Feather name="trash-2" size={20} color={theme.colors.error} />
                   <BodyText style={[styles.actionButtonText, { color: theme.colors.error }]}>
                     Supprimer
                   </BodyText>

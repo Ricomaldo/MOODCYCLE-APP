@@ -10,6 +10,10 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import performanceMonitor from '../core/monitoring/PerformanceMonitor';
+
+// 🚀 Démarrer le monitoring de l'hydratation
+performanceMonitor.startStoreHydration('notebookStore');
 
 export const useNotebookStore = create(
   persist(
@@ -521,4 +525,7 @@ export const useNotebookStore = create(
     }
   )
 );
+
+// ✅ Marquer la fin de l'hydratation du store
+performanceMonitor.endStoreHydration('notebookStore');
       

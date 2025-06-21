@@ -20,10 +20,12 @@ import { useNotebookStore } from '../../stores/useNotebookStore';
 // Composants UI
 import { BodyText, SmallText } from '../ui/Typography';
 import PersonaSelector from './PersonaSelector';
+import PerformanceDashboard from './PerformanceDashboard';
 
 export default function DevNavigation() {
   const router = useRouter();
   const [isVisible, setIsVisible] = useState(false);
+  const [showPerformanceDashboard, setShowPerformanceDashboard] = useState(false);
 
   // Stores
   const { reset, updateCycle, cycle } = useUserStore();
@@ -191,6 +193,31 @@ export default function DevNavigation() {
           <TouchableOpacity style={[styles.actionButton, {backgroundColor: '#673AB7'}]} onPress={() => setPhase('luteal')}>
             <SmallText style={styles.actionButtonText}>🍂 Lutéale</SmallText>
           </TouchableOpacity>
+
+          {/* Performance Dashboard */}
+          <BodyText style={[styles.sectionTitle, { marginTop: 10 }]}>📊 Performance</BodyText>
+
+          <TouchableOpacity 
+            style={[styles.actionButton, {backgroundColor: showPerformanceDashboard ? '#FF6B35' : '#007AFF'}]} 
+            onPress={() => setShowPerformanceDashboard(!showPerformanceDashboard)}
+          >
+            <SmallText style={styles.actionButtonText}>
+              {showPerformanceDashboard ? '📊 Fermer Dashboard' : '📊 Performance Dashboard'}
+            </SmallText>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Performance Dashboard en plein écran */}
+      {showPerformanceDashboard && (
+        <View style={styles.dashboardContainer}>
+          <PerformanceDashboard />
+          <TouchableOpacity 
+            style={styles.closeDashboard}
+            onPress={() => setShowPerformanceDashboard(false)}
+          >
+            <BodyText style={styles.closeDashboardText}>✕</BodyText>
+          </TouchableOpacity>
         </View>
       )}
     </View>
@@ -253,5 +280,27 @@ const styles = StyleSheet.create({
   buttonsRow: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  dashboardContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeDashboard: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    padding: 10,
+    borderRadius: 10,
+  },
+  closeDashboardText: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
   },
 });

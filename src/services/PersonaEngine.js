@@ -2,50 +2,11 @@
 // ─────────────────────────────────────────────────────────
 // 📄 File: src/services/PersonaEngine.js
 // 🧩 Type: Service
-// 📚 Description: Algorithme pur calcul personas - Fonction pure uniquement
-// 🕒 Version: 4.0 - 2025-06-21
+// 📚 Description: Algorithme pur calcul personas - Fonction pure optimisée
+// 🕒 Version: 5.0 - 2025-06-21
 // ─────────────────────────────────────────────────────────
 //
-
-const PERSONA_PROFILES = {
-  emma: {
-    ageRange: ['18-25'],
-    preferredJourney: ['body_disconnect'],
-    referencePreferences: { symptoms: 2, moods: 3, phyto: 4, phases: 3, lithotherapy: 2, rituals: 3 },
-    communicationStyle: ['friendly']
-  },
-  laure: {
-    ageRange: ['26-35'],
-    preferredJourney: ['hiding_nature'],
-    referencePreferences: { symptoms: 3, moods: 4, phyto: 3, phases: 5, lithotherapy: 2, rituals: 4 },
-    communicationStyle: ['professional']
-  },
-  sylvie: {
-    ageRange: ['36-45'],
-    preferredJourney: ['emotional_control'],
-    referencePreferences: { symptoms: 4, moods: 5, phyto: 3, phases: 4, lithotherapy: 2, rituals: 5 },
-    communicationStyle: ['inspiring']
-  },
-  christine: {
-    ageRange: ['46-55', '55+'],
-    preferredJourney: ['hiding_nature', 'emotional_control'],
-    referencePreferences: { symptoms: 3, moods: 4, phyto: 4, phases: 3, lithotherapy: 3, rituals: 5 },
-    communicationStyle: ['professional', 'inspiring']
-  },
-  clara: {
-    ageRange: ['26-35'],
-    preferredJourney: ['body_disconnect'],
-    referencePreferences: { symptoms: 2, moods: 5, phyto: 1, phases: 5, lithotherapy: 1, rituals: 2 },
-    communicationStyle: ['friendly']
-  }
-};
-
-const SCORING_WEIGHTS = {
-  JOURNEY_CHOICE: 0.25,
-  AGE_RANGE: 0.15,
-  PREFERENCES: 0.40,
-  COMMUNICATION: 0.20
-};
+import { PERSONA_PROFILES, SCORING_WEIGHTS } from '../config/personaProfiles.js';
 
 /**
  * 🎯 FONCTION PRINCIPALE - Calcul persona depuis données UserStore
@@ -84,29 +45,46 @@ function calculatePersonaScores(userData) {
 }
 
 /**
- * 📊 CALCUL SCORE INDIVIDUEL
+ * 📊 CALCUL SCORE INDIVIDUEL OPTIMISÉ
  */
 function calculatePersonaScore(userData, personaName) {
   const reference = PERSONA_PROFILES[personaName];
   if (!reference) return 0;
 
-  let totalScore = 0;
-
-  // 1. Score voyage (25%)
+  // Calcul des scores individuels
   const journeyScore = calculateJourneyScore(userData, reference);
-  totalScore += journeyScore * SCORING_WEIGHTS.JOURNEY_CHOICE;
-
-  // 2. Score âge (15%)
   const ageScore = calculateAgeScore(userData, reference);
-  totalScore += ageScore * SCORING_WEIGHTS.AGE_RANGE;
-
-  // 3. Score préférences (40%)
   const prefScore = calculatePreferencesScore(userData, reference);
-  totalScore += prefScore * SCORING_WEIGHTS.PREFERENCES;
-
-  // 4. Score communication (20%)
   const styleScore = calculateCommunicationScore(userData, reference);
-  totalScore += styleScore * SCORING_WEIGHTS.COMMUNICATION;
+
+  // Coefficients persona (plus subtils)
+  const coeffs = reference.coefficients || {};
+  const journeyCoeff = Math.min(coeffs.journey || 1.0, 1.15); // Max +15%
+  const ageCoeff = Math.min(coeffs.age || 1.0, 1.2);          // Max +20%
+  const prefCoeff = Math.min(coeffs.preferences || 1.0, 1.2); // Max +20%
+  const commCoeff = Math.min(coeffs.communication || 1.0, 1.1); // Max +10%
+
+  // Score pondéré avec coefficients
+  let totalScore = 0;
+  totalScore += journeyScore * SCORING_WEIGHTS.JOURNEY_CHOICE * journeyCoeff;
+  totalScore += ageScore * SCORING_WEIGHTS.AGE_RANGE * ageCoeff;
+  totalScore += prefScore * SCORING_WEIGHTS.PREFERENCES * prefCoeff;
+  totalScore += styleScore * SCORING_WEIGHTS.COMMUNICATION * commCoeff;
+
+  // 🎯 BONUS DE CORRESPONDANCE MULTIPLE
+  let bonus = 0;
+  const matchCount = journeyScore + ageScore + (prefScore > 0.7 ? 1 : 0) + styleScore;
+  
+  if (matchCount >= 4) bonus += 0.15;      // Correspondance parfaite
+  else if (matchCount >= 3) bonus += 0.10; // Très bonne correspondance
+  else if (matchCount >= 2) bonus += 0.05; // Bonne correspondance
+
+  // Bonus spéciaux pour cohérence
+  if (journeyScore > 0 && ageScore > 0) bonus += 0.03;        // Combo âge+voyage
+  if (journeyScore > 0 && styleScore > 0) bonus += 0.02;      // Combo voyage+style
+  if (ageScore > 0 && styleScore > 0) bonus += 0.02;          // Combo âge+style
+
+  totalScore += bonus;
 
   return Math.max(0, Math.min(100, totalScore * 100));
 }
@@ -122,6 +100,9 @@ function calculateAgeScore(userData, reference) {
   return 1;
 }
 
+/**
+ * 🎯 CALCUL PRÉFÉRENCES OPTIMISÉ - Plus tolérant
+ */
 function calculatePreferencesScore(userData, reference) {
   const userPrefs = userData.preferences;
   const refPrefs = reference.referencePreferences;
@@ -142,7 +123,18 @@ function calculatePreferencesScore(userData, reference) {
   if (prefCount === 0) return 0;
 
   const avgDistance = totalDistance / prefCount;
-  return Math.max(0, 1 - avgDistance / 5);
+  
+  // 🎯 COURBE DE TOLÉRANCE AMÉLIORÉE
+  if (avgDistance === 0) return 1.0;           // Parfait
+  if (avgDistance <= 0.5) return 0.95;         // Quasi-parfait
+  if (avgDistance <= 1.0) return 0.85;         // Très bon
+  if (avgDistance <= 1.5) return 0.75;         // Bon
+  if (avgDistance <= 2.0) return 0.60;         // Acceptable
+  if (avgDistance <= 2.5) return 0.45;         // Moyen
+  if (avgDistance <= 3.0) return 0.30;         // Faible
+  
+  // Formule progressive pour distances élevées
+  return Math.max(0, 0.30 - (avgDistance - 3.0) * 0.1);
 }
 
 function calculateCommunicationScore(userData, reference) {

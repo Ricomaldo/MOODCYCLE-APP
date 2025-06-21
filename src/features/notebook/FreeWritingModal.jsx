@@ -135,11 +135,11 @@ export default function FreeWritingModal({ visible, onClose }) {
                   onPress={() => setShowPrompts(!showPrompts)}
                   style={styles.promptButton}
                 >
-                  <MaterialIcons name="lightbulb-outline" size={20} color={theme.colors.primary} />
+                  <Feather name="zap" size={20} color={theme.colors.primary} />
                 </TouchableOpacity>
 
                 <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                  <MaterialIcons name="close" size={24} color={theme.colors.textLight} />
+                  <Feather name="x" size={24} color={theme.colors.textLight} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -217,7 +217,7 @@ export default function FreeWritingModal({ visible, onClose }) {
                         onPress={() => toggleTag(tag)}
                         style={styles.removeTagButton}
                       >
-                        <MaterialIcons name="close" size={14} color={theme.colors.primary} />
+                        <Feather name="x" size={14} color={theme.colors.primary} />
                       </TouchableOpacity>
                     </View>
                   ))}
@@ -239,7 +239,7 @@ export default function FreeWritingModal({ visible, onClose }) {
                 onPress={handleSave}
                 disabled={content.trim().length === 0}
               >
-                <MaterialIcons name="save" size={20} color="white" />
+                <Feather name="save" size={20} color="white" />
                 <BodyText style={styles.saveButtonText}>Sauvegarder</BodyText>
               </TouchableOpacity>
             </View>

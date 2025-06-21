@@ -9,137 +9,12 @@
 //
 import React, { useEffect, useRef } from 'react';
 import { View, TouchableOpacity, StyleSheet, Animated, TextInput, Platform } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import { theme } from '../../config/theme';
 import { BodyText, Caption } from './Typography';
 
 // ✅ FAB Animé Multi-Options
-export function AnimatedFAB({ showOptions, onToggle, onWritePress, onTrackPress, bottom }) {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
-  const optionsAnim = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    // Animation rotation + options
-    Animated.parallel([
-      Animated.timing(rotateAnim, {
-        toValue: showOptions ? 1 : 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(optionsAnim, {
-        toValue: showOptions ? 1 : 0,
-        duration: 300,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, [showOptions]);
-
-  const handlePress = () => {
-    // Animation tactile
-    Animated.sequence([
-      Animated.timing(scaleAnim, {
-        toValue: 0.9,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    onToggle();
-  };
-
-  const rotation = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '45deg'],
-  });
-
-  return (
-    <View style={[styles.fabContainer, { bottom }]}>
-      {/* Options avec animation staggered */}
-      <Animated.View
-        style={[
-          styles.fabOptions,
-          {
-            opacity: optionsAnim,
-            transform: [
-              {
-                translateY: optionsAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [20, 0],
-                }),
-              },
-            ],
-          },
-        ]}
-      >
-        <AnimatedFabOption
-          icon="edit"
-          label="Écrire"
-          onPress={onWritePress}
-          delay={0}
-          show={showOptions}
-        />
-        <AnimatedFabOption
-          icon="bar-chart"
-          label="Tracker"
-          onPress={onTrackPress}
-          delay={100}
-          show={showOptions}
-        />
-      </Animated.View>
-
-      {/* FAB principal */}
-      <Animated.View
-        style={[
-          styles.fab,
-          {
-            transform: [{ scale: scaleAnim }, { rotate: rotation }],
-          },
-        ]}
-      >
-        <TouchableOpacity style={styles.fabTouchable} onPress={handlePress} activeOpacity={0.8}>
-          <MaterialIcons name="add" size={24} color="white" />
-        </TouchableOpacity>
-      </Animated.View>
-    </View>
-  );
-}
-
-// Option FAB individuelle animée
-function AnimatedFabOption({ icon, label, onPress, delay, show }) {
-  const scaleAnim = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.timing(scaleAnim, {
-      toValue: show ? 1 : 0,
-      duration: 200,
-      delay: show ? delay : 0,
-      useNativeDriver: true,
-    }).start();
-  }, [show, delay]);
-
-  return (
-    <Animated.View
-      style={[
-        styles.fabOption,
-        {
-          transform: [{ scale: scaleAnim }],
-          opacity: scaleAnim,
-        },
-      ]}
-    >
-      <TouchableOpacity style={styles.fabOptionTouchable} onPress={onPress} activeOpacity={0.9}>
-        <MaterialIcons name={icon} size={20} color="white" />
-        <Caption style={styles.fabOptionText}>{label}</Caption>
-      </TouchableOpacity>
-    </Animated.View>
-  );
-}
 
 // ✅ Barre de Recherche Animée
 export function AnimatedSearchBar({ visible, query, onChangeText, onClear }) {
@@ -174,7 +49,7 @@ export function AnimatedSearchBar({ visible, query, onChangeText, onClear }) {
       ]}
     >
       <View style={styles.searchInput}>
-        <MaterialIcons name="search" size={20} color={theme.colors.textLight} />
+        <Feather name="search" size={20} color={theme.colors.textLight} />
         <TextInput
           style={styles.searchText}
           placeholder="Rechercher dans ton carnet..."
@@ -185,7 +60,7 @@ export function AnimatedSearchBar({ visible, query, onChangeText, onClear }) {
         />
         {query.length > 0 && (
           <TouchableOpacity onPress={onClear}>
-            <MaterialIcons name="clear" size={20} color={theme.colors.textLight} />
+            <Feather name="x" size={20} color={theme.colors.textLight} />
           </TouchableOpacity>
         )}
       </View>
@@ -232,7 +107,7 @@ export function AnimatedFilterPill({ item, isActive, onPress, index }) {
     >
       <TouchableOpacity onPress={onPress}>
         <Animated.View style={[styles.filterPill, { backgroundColor }]}>
-          <MaterialIcons
+          <Feather
             name={item.icon}
             size={16}
             color={isActive ? 'white' : theme.colors.textLight}
@@ -321,54 +196,6 @@ export function AnimatedChatBubble({ children, delay = 0, isUser = false }) {
 }
 
 const styles = StyleSheet.create({
-  // FAB Container
-  fabContainer: {
-    position: 'absolute',
-    right: theme.spacing.l,
-    alignItems: 'center',
-  },
-  fabOptions: {
-    marginBottom: theme.spacing.m,
-    gap: theme.spacing.s,
-  },
-  fabOption: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  fabOptionTouchable: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.pill,
-    paddingHorizontal: theme.spacing.m,
-    paddingVertical: theme.spacing.s,
-    gap: theme.spacing.xs,
-  },
-  fabOptionText: {
-    color: 'white',
-    fontSize: 12,
-  },
-  fab: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  fabTouchable: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: theme.colors.primary,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
 
   // Search
   searchContainer: {

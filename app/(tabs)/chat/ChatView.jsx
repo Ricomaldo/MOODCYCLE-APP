@@ -18,11 +18,12 @@ import {
   Platform,
   ActionSheetIOS,
   Animated,
+  RefreshControl,
 } from "react-native";
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect } from 'expo-router';
-import { Ionicons } from "@expo/vector-icons";
+import { Feather } from "@expo/vector-icons";
 import ChatBubble from "../../../src/features/chat/ChatBubble";
 import { theme } from "../../../src/config/theme";
 import { Heading } from "../../../src/core/ui/Typography";
@@ -32,6 +33,8 @@ import ScreenContainer from "../../../src/core/layout/ScreenContainer";
 import { useUserStore } from "../../../src/stores/useUserStore";
 import { useNotebookStore } from "../../../src/stores/useNotebookStore";
 import { useCycle } from '../../../src/hooks/useCycle';
+import { usePersona } from '../../../src/hooks/usePersona';
+import { useRenderMonitoring } from '../../../src/hooks/usePerformanceMonitoring';
 
 const HEADER_HEIGHT = 60;
 
@@ -97,12 +100,16 @@ function TypingIndicator() {
 } 
 
 export default function ChatScreen() {
+  // 📊 Monitoring de performance
+  const renderCount = useRenderMonitoring('ChatScreen');
+  
   const insets = useSafeAreaInsets();
   const scrollViewRef = useRef(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   
   const { profile, melune } = useUserStore();
@@ -156,6 +163,13 @@ export default function ChatScreen() {
         scrollViewRef.current.scrollToEnd({ animated: true });
       }, 100);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    // Recharger historique conversation
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setRefreshing(false);
   };
 
   const handleSaveMessage = (message) => {
@@ -240,6 +254,15 @@ export default function ChatScreen() {
           contentContainerStyle={styles.messagesContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={theme.colors.primary}
+              title="Actualisation..."
+              titleColor={theme.colors.textLight}
+            />
+          }
         >
           {showMessages && messages.map((message, index) => (
             <ChatBubble
@@ -275,9 +298,9 @@ export default function ChatScreen() {
               onPress={handleSend}
               disabled={!input.trim() || isLoading}
             >
-              <Ionicons
-                name="arrow-up-circle-sharp"
-                size={32}
+              <Feather
+                name="send"
+                size={24}
                 color={!input.trim() || isLoading ? "#C7C7CC" : "#007AFF"}
               />
             </TouchableOpacity>

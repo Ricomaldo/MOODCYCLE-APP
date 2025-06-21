@@ -9,7 +9,7 @@
 //
 import { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import { theme } from '../../config/theme';
 import { Caption } from '../../core/ui/Typography';
 import { useNotebookStore } from '../../stores/useNotebookStore';
@@ -93,7 +93,7 @@ export default function CalendarView({
       };
     }
 
-    const phase = getPhaseForCycleDay(cycleDayForDate);
+    const phase = getPhaseFromCycleDay(cycleDayForDate);
     const baseColor = theme.colors.phases[phase];
 
     // Opacity basée sur la position dans la phase (plus intense au centre)
@@ -197,7 +197,7 @@ export default function CalendarView({
       {/* Header du mois avec navigation */}
       <View style={styles.monthNavigationHeader}>
         <TouchableOpacity onPress={goToPreviousMonth} style={styles.navButton}>
-          <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
+          <Feather name="chevron-left" size={24} color={theme.colors.primary} />
         </TouchableOpacity>
 
         <Text style={styles.monthHeader}>
@@ -205,7 +205,7 @@ export default function CalendarView({
         </Text>
 
         <TouchableOpacity onPress={goToNextMonth} style={styles.navButton}>
-          <Ionicons name="chevron-forward" size={24} color={theme.colors.primary} />
+          <Feather name="chevron-right" size={24} color={theme.colors.primary} />
         </TouchableOpacity>
       </View>
 

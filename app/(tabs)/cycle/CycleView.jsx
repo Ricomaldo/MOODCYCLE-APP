@@ -8,10 +8,10 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
 import { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Alert, ActionSheetIOS, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { theme } from '../../../src/config/theme';
 import CycleWheel from '../../../src/features/cycle/CycleWheel';
@@ -24,6 +24,7 @@ import phases from '../../../src/data/phases.json';
 import ScreenContainer from '../../../src/core/layout/ScreenContainer';
 import { useCycle } from '../../../src/hooks/useCycle';
 import { CYCLE_DEFAULTS } from '../../../src/config/cycleConstants';
+import { useRenderMonitoring } from '../../../src/hooks/usePerformanceMonitoring';
 
 export default function CycleScreen() {
   const insets = useSafeAreaInsets();
@@ -40,7 +41,11 @@ export default function CycleScreen() {
 
   const phasesData = phases;
 
+  // 📊 Monitoring de performance
+  const renderCount = useRenderMonitoring('CycleScreen');
+
   const navigateToPhase = (phaseId) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     router.push(`/cycle/phases/${phaseId}`);
   };
 
@@ -51,31 +56,34 @@ export default function CycleScreen() {
   const handleStartNewPeriod = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     
-    Alert.alert(
-      '🩸 Mes règles ont commencé',
-      'Confirmer le début de tes règles aujourd\'hui ?',
-      [
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
         {
-          text: 'Annuler',
-          style: 'cancel',
+          title: '🩸 Mes règles ont commencé',
+          message: 'Confirmer le début de tes règles aujourd\'hui ?',
+          options: ['Annuler', 'Confirmer'],
+          cancelButtonIndex: 0,
+          userInterfaceStyle: 'light',
         },
-        {
-          text: 'Confirmer',
-          style: 'default',
-          onPress: () => {
+        (buttonIndex) => {
+          if (buttonIndex === 1) {
             startNewPeriod();
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             
-            // Message Melune style
-            Alert.alert(
-              '✨ Merci !',
-              'Je m\'adapte à ton rythme unique. Ton cycle est maintenant à jour ! 🌙',
-              [{ text: 'Parfait', style: 'default' }]
+            // Success ActionSheet
+            ActionSheetIOS.showActionSheetWithOptions(
+              {
+                title: '✨ Merci !',
+                message: 'Je m\'adapte à ton rythme unique. Ton cycle est maintenant à jour ! 🌙',
+                options: ['Parfait'],
+                userInterfaceStyle: 'light',
+              },
+              () => {}
             );
-          },
-        },
-      ]
-    );
+          }
+        }
+      );
+    }
   };
 
   return (
@@ -86,8 +94,8 @@ export default function CycleScreen() {
       <View style={styles.header}>
         <Heading style={styles.title}>Mon Cycle</Heading>
         <TouchableOpacity style={styles.toggleButton} onPress={toggleView}>
-          <Ionicons
-            name={viewMode === 'wheel' ? 'calendar-outline' : 'radio-button-on-outline'}
+          <Feather
+            name={viewMode === 'wheel' ? 'calendar' : 'circle'}
             size={24}
             color={theme.colors.primary}
           />
