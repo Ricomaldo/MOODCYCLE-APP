@@ -23,6 +23,7 @@ import { theme } from '../../config/theme';
 import { Heading2, BodyText, Caption } from '../../core/ui/Typography';
 import { useNotebookStore } from '../../stores/useNotebookStore';
 import { useUserStore } from '../../stores/useUserStore';
+import { useCycle } from '../../hooks/useCycle';
 
 const PROMPTS_BY_PHASE = {
   menstruelle: [
@@ -49,15 +50,15 @@ const PROMPTS_BY_PHASE = {
 
 export default function FreeWritingModal({ visible, onClose }) {
   const { addEntry } = useNotebookStore();
-  const { getCurrentPhaseInfo } = useUserStore();
+  const { currentPhase } = useCycle();
 
   const [content, setContent] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
   const [showPrompts, setShowPrompts] = useState(false);
   const [suggestedTags, setSuggestedTags] = useState([]);
 
-  const currentPhase = getCurrentPhaseInfo().phase || 'menstruelle';
-  const prompts = PROMPTS_BY_PHASE[currentPhase] || PROMPTS_BY_PHASE.menstruelle;
+  const currentPhaseKey = currentPhase || 'menstruelle';
+  const prompts = PROMPTS_BY_PHASE[currentPhaseKey] || PROMPTS_BY_PHASE.menstruelle;
 
   // Mise à jour suggestions tags en temps réel
   useEffect(() => {
@@ -82,7 +83,7 @@ export default function FreeWritingModal({ visible, onClose }) {
     if (content.trim().length === 0) return;
 
     // Utiliser la nouvelle API simplifiée
-    const tags = [`#${currentPhase}`, ...selectedTags];
+    const tags = [`#${currentPhaseKey}`, ...selectedTags];
     addEntry(content, 'personal', tags);
 
     // Reset et fermer
@@ -125,8 +126,8 @@ export default function FreeWritingModal({ visible, onClose }) {
             {/* Header */}
             <View style={styles.header}>
               <View style={styles.headerLeft}>
-                <Heading2 style={styles.title}>{getPhaseEmoji(currentPhase)} Mon Journal</Heading2>
-                <Caption style={styles.phaseLabel}>Phase {currentPhase}</Caption>
+                <Heading2 style={styles.title}>{getPhaseEmoji(currentPhaseKey)} Mon Journal</Heading2>
+                <Caption style={styles.phaseLabel}>Phase {currentPhaseKey}</Caption>
               </View>
 
               <View style={styles.headerActions}>

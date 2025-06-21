@@ -13,6 +13,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../config/theme';
 import { Caption } from '../../core/ui/Typography';
 import { useNotebookStore } from '../../stores/useNotebookStore';
+import { useCycle } from '../../hooks/useCycle';
+import { 
+  CALENDAR_CONSTANTS, 
+  CALENDAR_STYLES, 
+  getPhaseFromCycleDay, 
+  getPhasePosition 
+} from '../../config/cycleConstants';
 
 export default function CalendarView({
   currentPhase = 'menstrual',
@@ -25,8 +32,9 @@ export default function CalendarView({
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
-  // Hook pour les entrées du carnet
+  // Hooks
   const { getEntriesGroupedByDate } = useNotebookStore();
+  const { getCurrentCycleDay } = useCycle();
   const notebookEntries = getEntriesGroupedByDate();
 
   // Navigation mensuelle
@@ -57,22 +65,8 @@ export default function CalendarView({
   const firstDayWeekday = firstDayOfMonth.getDay(); // 0 = dimanche
   const daysInMonth = lastDayOfMonth.getDate();
 
-  // Noms des jours et mois
-  const dayNames = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-  const monthNames = [
-    'Janvier',
-    'Février',
-    'Mars',
-    'Avril',
-    'Mai',
-    'Juin',
-    'Juillet',
-    'Août',
-    'Septembre',
-    'Octobre',
-    'Novembre',
-    'Décembre',
-  ];
+  // Noms des jours et mois depuis les constantes
+  const { DAYS_OF_WEEK: dayNames, MONTHS: monthNames } = CALENDAR_CONSTANTS;
 
   // Fonction pour calculer le jour de cycle à partir d'une date
   const getCycleDayForDate = (date) => {
@@ -84,14 +78,6 @@ export default function CalendarView({
     if (daysDiff < 0) return null; // Avant le dernier cycle
 
     return (daysDiff % cycleLength) + 1;
-  };
-
-  // Fonction pour obtenir la phase à partir du jour de cycle
-  const getPhaseForCycleDay = (cycleDay) => {
-    if (cycleDay <= 5) return 'menstrual';
-    if (cycleDay <= 13) return 'follicular';
-    if (cycleDay <= 16) return 'ovulatory';
-    return 'luteal';
   };
 
   // Fonction pour obtenir le style d'un jour
@@ -112,7 +98,7 @@ export default function CalendarView({
 
     // Opacity basée sur la position dans la phase (plus intense au centre)
     const phasePosition = getPhasePosition(cycleDayForDate);
-    const opacity = 0.15 + phasePosition * 0.4; // 0.15 à 0.55
+    const opacity = CALENDAR_STYLES.PHASE_OPACITY.MIN + phasePosition * CALENDAR_STYLES.PHASE_OPACITY.MULTIPLIER;
 
     const isToday = dayDate.toDateString() === today.toDateString();
 
@@ -125,26 +111,7 @@ export default function CalendarView({
     };
   };
 
-  // Calculer la position dans la phase (0 = début, 1 = pic, 0 = fin)
-  const getPhasePosition = (cycleDay) => {
-    const phases = [
-      { start: 1, end: 5, peak: 3 }, // menstrual
-      { start: 6, end: 13, peak: 10 }, // follicular
-      { start: 14, end: 16, peak: 15 }, // ovulatory
-      { start: 17, end: 28, peak: 22 }, // luteal
-    ];
 
-    const currentPhase = phases.find((p) => cycleDay >= p.start && cycleDay <= p.end);
-    if (!currentPhase) return 0;
-
-    const distanceFromPeak = Math.abs(cycleDay - currentPhase.peak);
-    const maxDistance = Math.max(
-      currentPhase.peak - currentPhase.start,
-      currentPhase.end - currentPhase.peak
-    );
-
-    return Math.max(0, 1 - distanceFromPeak / maxDistance);
-  };
 
   // Obtenir les entrées du carnet pour une date
   const getEntriesForDate = (dayNumber) => {
@@ -212,10 +179,10 @@ export default function CalendarView({
           {/* Indicateurs d'entrées du carnet */}
           {entryIndicators.length > 0 && (
             <View style={styles.entryIndicatorsContainer}>
-              {entryIndicators.slice(0, 3).map((color, index) => (
+              {entryIndicators.slice(0, CALENDAR_STYLES.ENTRY_INDICATORS.MAX_VISIBLE).map((color, index) => (
                 <View key={index} style={[styles.entryIndicator, { backgroundColor: color }]} />
               ))}
-              {entryIndicators.length > 3 && <Text style={styles.moreIndicator}>+</Text>}
+              {entryIndicators.length > CALENDAR_STYLES.ENTRY_INDICATORS.MAX_VISIBLE && <Text style={styles.moreIndicator}>+</Text>}
             </View>
           )}
         </TouchableOpacity>

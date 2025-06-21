@@ -18,6 +18,7 @@ export const useAppStore = create(
       isFirstLaunch: true,
       currentTheme: "light", // 'light' | 'dark'
       isOnline: true,
+      devMode: __DEV__, // Mode développement (activé en DEV)
 
       // Notifications simplifiées
       notifications: {
@@ -32,6 +33,8 @@ export const useAppStore = create(
       setTheme: (theme) => set({ currentTheme: theme }),
 
       setOnlineStatus: (isOnline) => set({ isOnline }),
+
+      toggleDevMode: () => set((state) => ({ devMode: !state.devMode })),
 
       updateNotifications: (settings) =>
         set((state) => ({
@@ -48,6 +51,7 @@ export const useAppStore = create(
         set({
           isFirstLaunch: true,
           currentTheme: "light",
+          devMode: __DEV__,
           notifications: {
             enabled: true,
             cycleReminders: true,
@@ -61,6 +65,7 @@ export const useAppStore = create(
       partialize: (state) => ({
         isFirstLaunch: state.isFirstLaunch,
         currentTheme: state.currentTheme,
+        devMode: state.devMode,
         notifications: state.notifications,
       }),
     }

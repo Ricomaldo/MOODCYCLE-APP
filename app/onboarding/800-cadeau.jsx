@@ -3,7 +3,7 @@
 // 📄 Fichier : app/onboarding/800-cadeau.jsx
 // 🧩 Type : Composant Écran (Screen)
 // 📚 Description : Écran final de l'onboarding, remise d'un insight personnalisé à l'utilisatrice
-// 🕒 Version : 3.0 - 2025-06-21
+// 🕒 Version : 4.0 - 2025-06-21 (Migration vers useOnboardingInsight)
 // 🧭 Utilisé dans : onboarding flow (étape 10)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
@@ -17,16 +17,19 @@ import { theme } from '../../src/config/theme';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
 import ChatBubble from '../../src/features/chat/ChatBubble';
 
-// 🌟 NOUVEAU : Import du système d'enrichissement contextuel unifié
-import { enrichInsightWithContext } from '../../src/services/InsightsEngine';
-import { getDaysSinceLastPeriod, calculateCurrentPhase } from '../../src/utils/dateUtils';
+// 🌟 NOUVEAU : Import du hook d'insight personnalisé pour onboarding
+import { useOnboardingInsight } from '../../src/hooks/usePersonalizedInsight';
+import { useCycle } from '../../src/hooks/useCycle';
 
 export default function CadeauScreen() {
   const router = useRouter();
-  const { profile, preferences, melune, completeProfile } = useUserStore();
+  const { profile, melune, completeProfile } = useUserStore();
+  const { currentPhase } = useCycle();
+  
+  // 🎯 NOUVEAU : Utilisation du hook spécialisé onboarding
+  const { content: personalizedInsight, loading: insightLoading, generate } = useOnboardingInsight();
 
   const [showInsight, setShowInsight] = useState(false);
-  const [personalizedInsight, setPersonalizedInsight] = useState('');
 
   // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -49,25 +52,21 @@ export default function CadeauScreen() {
       }),
     ]).start();
 
-    // Générer l'insight personnalisé
-    setTimeout(async () => {
-      try {
-        const insight = await generatePersonalizedInsight();
-        setPersonalizedInsight(insight);
-        setShowInsight(true);
-
-        // Animation de célébration
-        startCelebrationAnimation();
-      } catch (error) {
-        console.error('Erreur génération insight:', error);
-        setPersonalizedInsight(
-          `${profile.prenom || 'Belle âme'}, bienvenue dans ton voyage cyclique ! ✨`
-        );
-        setShowInsight(true);
-        startCelebrationAnimation();
+    // Générer l'insight personnalisé après animation
+    setTimeout(() => {
+      if (!personalizedInsight && !insightLoading) {
+        generate(); // Déclencher la génération
       }
     }, 1000);
   }, []);
+
+  // Effet pour afficher l'insight quand il est prêt
+  useEffect(() => {
+    if (personalizedInsight && !showInsight) {
+      setShowInsight(true);
+      startCelebrationAnimation();
+    }
+  }, [personalizedInsight, showInsight]);
 
   const startCelebrationAnimation = () => {
     // Animation de scintillement continu
@@ -94,68 +93,6 @@ export default function CadeauScreen() {
     }).start();
   };
 
-  const generatePersonalizedInsight = async () => {
-    // Utiliser les données depuis useUserStore
-    const { profile, preferences, melune } = useUserStore.getState();
-
-    // Générer un message basé sur le choix du voyage
-    let baseMessage = '';
-
-    if (profile.journeyChoice?.includes('reconnexion')) {
-      baseMessage = 'Je sens en toi un désir profond de retrouver ton essence féminine';
-    } else if (profile.journeyChoice?.includes('comprendre')) {
-      baseMessage = 'Ta quête de compréhension de ton corps et de tes émotions me touche';
-    } else if (profile.journeyChoice?.includes('équilibre')) {
-      baseMessage = "Ton aspiration à l'harmonie cyclique résonne avec la sagesse ancestrale";
-    } else {
-      baseMessage = "Je ressens ta belle énergie et ta soif d'épanouissement";
-    }
-
-    // Ajouter l'information sur la phase actuelle
-    const phaseMessage = getPhaseMessage('follicular'); // Phase par défaut
-
-    // Ajouter des conseils basés sur les préférences fortes
-    const strongPreferences = Object.entries(preferences || {})
-      .filter(([key, value]) => value >= 4)
-      .map(([key]) => key);
-    const preferencesAdvice = getPreferencesAdvice(strongPreferences);
-
-    const combinedMessage = `${baseMessage}. ${phaseMessage}. ${preferencesAdvice}`;
-    return combinedMessage;
-  };
-
-  const getPhaseMessage = (phase) => {
-    const phaseMessages = {
-      menstrual: "Tu es dans ta phase menstruelle, temps sacré de régénération et d'introspection",
-      follicular: 'Tu entres dans ta phase folliculaire, période de renouveau et de créativité',
-      ovulation: "Tu rayonnes dans ta phase d'ovulation, moment de pleine puissance féminine",
-      luteal: 'Tu traverses ta phase lutéale, temps de maturation et de sagesse intérieure',
-      premenstrual:
-        'Tu approches de tes prochaines lunes, période de lâcher-prise et de préparation',
-    };
-
-    return phaseMessages[phase] || 'Tu es dans un moment unique de ton cycle';
-  };
-
-  const getPreferencesAdvice = (strongPreferences) => {
-    const adviceMap = {
-      symptoms: "Je t'accompagnerai avec des conseils naturels pour ton bien-être physique",
-      moods: 'Nous explorerons ensemble la richesse de tes émotions cycliques',
-      phyto: 'Les plantes et huiles essentielles seront tes alliées précieuses',
-      phases: 'Tu découvriras la magie de tes différentes énergies cycliques',
-      lithotherapy: "Les cristaux t'aideront à harmoniser tes énergies subtiles",
-      rituals: 'Nous créerons ensemble des rituels qui nourriront ton âme',
-    };
-
-    if (strongPreferences.length === 0) {
-      return "Je m'adapterai parfaitement à tes besoins au fil de notre voyage";
-    } else if (strongPreferences.length === 1) {
-      return adviceMap[strongPreferences[0]] || 'Je te guiderai selon tes préférences';
-    } else {
-      return 'Ensemble, nous explorerons tous les aspects qui te passionnent';
-    }
-  };
-
   const handleComplete = () => {
     console.log('🎯 Finalisation onboarding...');
     completeProfile();
@@ -169,6 +106,13 @@ export default function CadeauScreen() {
       router.replace("/(tabs)");
     }
   };
+
+  // Message d'insight avec fallback si pas encore généré
+  const displayInsight = personalizedInsight || (
+    profile.prenom 
+      ? `${profile.prenom}, bienvenue dans ton voyage cyclique ! ✨ Je sens en toi une belle énergie prête à s'épanouir.`
+      : "Bienvenue dans ton voyage cyclique ! ✨ Je sens en toi une belle énergie prête à s'épanouir."
+  );
 
   return (
     <ScreenContainer style={styles.container}>
@@ -244,7 +188,7 @@ export default function CadeauScreen() {
           </Animated.View>
 
           {/* Insight personnalisé */}
-          {showInsight && (
+          {(showInsight || insightLoading) && (
             <Animated.View
               style={[
                 styles.insightContainer,
@@ -271,7 +215,11 @@ export default function CadeauScreen() {
               </View>
 
               <View style={styles.insightCard}>
-                <BodyText style={styles.insightText}>{personalizedInsight}</BodyText>
+                {insightLoading ? (
+                  <BodyText style={styles.loadingText}>Génération de ton insight personnalisé... ✨</BodyText>
+                ) : (
+                  <BodyText style={styles.insightText}>{displayInsight}</BodyText>
+                )}
               </View>
 
               <View style={styles.celebrationMessage}>
@@ -288,7 +236,7 @@ export default function CadeauScreen() {
           )}
 
           {/* Bouton de finalisation */}
-          {showInsight && (
+          {(showInsight || personalizedInsight) && (
             <Animated.View
               style={[
                 styles.buttonContainer,
@@ -400,6 +348,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     color: theme.colors.text,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  loadingText: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: theme.colors.textLight,
     textAlign: 'center',
     fontStyle: 'italic',
   },

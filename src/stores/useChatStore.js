@@ -77,8 +77,10 @@ export const useChatStore = create(
 
       getContextualSuggestions: () => {
         // Import useUserStore pour suggestions contextuelles
+        const { getCurrentPhase } = require("../utils/cycleCalculations");
         const { useUserStore } = require("./useUserStore");
-        const currentPhase = useUserStore.getState().getCurrentPhase();
+        const cycle = useUserStore.getState().cycle;
+        const currentPhase = getCurrentPhase(cycle.lastPeriodDate, cycle.length, cycle.periodDuration);
 
         const phaseSuggestions = {
           menstrual: [
@@ -140,9 +142,11 @@ export const useChatStore = create(
         if (message && message.type === "melune") {
           // Import notebook store
           const { useNotebookStore } = require("./useNotebookStore");
+          const { getCurrentPhase } = require("../utils/cycleCalculations");
           const { useUserStore } = require("./useUserStore");
           
-          const currentPhase = useUserStore.getState().getCurrentPhase();
+          const cycle = useUserStore.getState().cycle;
+          const currentPhase = getCurrentPhase(cycle.lastPeriodDate, cycle.length, cycle.periodDuration);
           
           useNotebookStore.getState().addEntry(
             message.content,

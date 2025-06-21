@@ -41,9 +41,11 @@ export const useNotebookStore = create(
       // ✏️ CRÉATION ENTRÉES
       // ═══════════════════════════════════════════════════════
       addEntry: (content, type = "personal", tags = []) => {
-        // Import dynamique pour phase actuelle
+        // Import dynamique pour phase actuelle - utilise les nouvelles utils
+        const { getCurrentPhase } = require("../utils/cycleCalculations");
         const { useUserStore } = require("./useUserStore");
-        const currentPhase = useUserStore.getState().getCurrentPhase();
+        const cycle = useUserStore.getState().cycle;
+        const currentPhase = getCurrentPhase(cycle.lastPeriodDate, cycle.length, cycle.periodDuration);
 
         const entry = {
           id: Date.now().toString(),
@@ -381,8 +383,10 @@ export const useNotebookStore = create(
 
       // Suggestions d'entrées basées sur phase actuelle
       getPhaseBasedSuggestions: () => {
+        const { getCurrentPhase } = require("../utils/cycleCalculations");
         const { useUserStore } = require("./useUserStore");
-        const currentPhase = useUserStore.getState().getCurrentPhase();
+        const cycle = useUserStore.getState().cycle;
+        const currentPhase = getCurrentPhase(cycle.lastPeriodDate, cycle.length, cycle.periodDuration);
 
         const suggestions = {
           menstrual: [

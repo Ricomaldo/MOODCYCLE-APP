@@ -24,6 +24,8 @@ import {
   EntryLoadingSkeleton,
 } from '../../../src/core/ui/AnimatedComponents';
 import ScreenContainer from '../../../src/core/layout/ScreenContainer';
+import DevNavigation from '../../../src/core/dev/DevNavigation';
+
 
 const FILTER_PILLS = [
   { id: 'all', label: 'Tout', icon: 'all-inclusive' },
@@ -221,24 +223,31 @@ export default function NotebookView() {
   // État vide
   if (entries.length === 0) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
-        <Heading style={styles.title}>Mon Carnet</Heading>
-        <BodyText style={styles.description}>
-          Sauvegarde tes moments avec Melune, écris tes ressentis, note tes observations.
-        </BodyText>
-
-        <TouchableOpacity style={styles.startButton} onPress={() => setShowFreeWriting(true)}>
-          <MaterialIcons name="edit" size={20} color="white" />
-          <BodyText style={styles.startButtonText}>Commencer à écrire</BodyText>
-        </TouchableOpacity>
-
+      <ScreenContainer style={styles.container} hasTabs={true}>
+        <DevNavigation />
+        <View style={styles.header}>
+          <Heading style={styles.title}>Mon Carnet</Heading>
+          <TouchableOpacity onPress={() => setShowSearch(!showSearch)} style={styles.searchToggle}>
+            <MaterialIcons name="search" size={24} color={theme.colors.primary} />
+          </TouchableOpacity>
+        </View>
+        <View style={styles.emptyContent}>
+          <BodyText style={styles.description}>
+            Sauvegarde tes moments avec Melune, écris tes ressentis, note tes observations.
+          </BodyText>
+          <TouchableOpacity style={styles.startButton} onPress={() => setShowFreeWriting(true)}>
+            <MaterialIcons name="edit" size={20} color="white" />
+            <BodyText style={styles.startButtonText}>Commencer à écrire</BodyText>
+          </TouchableOpacity>
+        </View>
         <FreeWritingModal visible={showFreeWriting} onClose={() => setShowFreeWriting(false)} />
-      </View>
+      </ScreenContainer>
     );
   }
 
   return (
-    <ScreenContainer style={{ flex: 1 }}>
+    <ScreenContainer style={styles.container} hasTabs={true}>
+      <DevNavigation />
       {/* Header avec recherche */}
       <View style={styles.header}>
         <Heading style={styles.title}>Mon Carnet</Heading>
@@ -391,16 +400,25 @@ const styles = StyleSheet.create({
     padding: theme.spacing.l,
   },
   header: {
+    height: 60, // Hauteur standardisée
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center', // Centrer le titre
     alignItems: 'center',
     marginBottom: theme.spacing.l,
+    position: 'relative', // Pour positionner le bouton de recherche
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   title: {
-    flex: 1,
     textAlign: 'center',
+    fontSize: 20, // Taille standardisée
+    fontWeight: '600',
   },
   searchToggle: {
+    position: 'absolute',
+    right: 0,
     padding: theme.spacing.s,
   },
 
@@ -559,6 +577,12 @@ const styles = StyleSheet.create({
   },
 
   // États
+  emptyContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: theme.spacing.xl * 2,
+  },
   emptyState: {
     padding: theme.spacing.xl,
     alignItems: 'center',

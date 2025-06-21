@@ -3,8 +3,8 @@
 // 📄 File: src/stores/useUserStore.js
 // 🧩 Type: Store Utilisateur
 // 📚 Description: Profil + Cycle + Persona + Melune - Source unique
-// 🕒 Version: 4.0 - 2025-06-21
-// 🧭 Used in: onboarding, cycle, chat, persona engine
+// 🕒 Version: 5.0 - 2025-06-21 (ÉPURÉ - calculs déplacés)
+// 🧭 Used in: onboarding, avec hooks/useCycle pour calculs
 // ─────────────────────────────────────────────────────────
 //
 import { create } from "zustand";
@@ -38,7 +38,7 @@ export const useUserStore = create(
       },
 
       // ═══════════════════════════════════════════════════════
-      // 🌙 CYCLE MENSTRUEL (SOURCE UNIQUE)
+      // 🌙 CYCLE MENSTRUEL (DONNÉES UNIQUEMENT)
       // ═══════════════════════════════════════════════════════
       cycle: {
         lastPeriodDate: null,     // Date dernières règles
@@ -96,80 +96,11 @@ export const useUserStore = create(
         })),
 
       // ═══════════════════════════════════════════════════════
-      // 🧮 CALCULS CYCLE (FONCTIONS PURES)
-      // ═══════════════════════════════════════════════════════
-      getCurrentPhase: () => {
-        const { cycle } = get();
-        if (!cycle.lastPeriodDate) return "menstrual";
-
-        const daysSince = Math.floor(
-          (Date.now() - new Date(cycle.lastPeriodDate)) / (1000 * 60 * 60 * 24)
-        );
-
-        // Logique phases simplifiée
-        if (daysSince <= cycle.periodDuration) return "menstrual";
-        if (daysSince <= cycle.length * 0.4) return "follicular";
-        if (daysSince <= cycle.length * 0.6) return "ovulatory";
-        if (daysSince < cycle.length) return "luteal";
-        
-        return "menstrual"; // Nouveau cycle commencé
-      },
-
-      getCurrentDay: () => {
-        const { cycle } = get();
-        if (!cycle.lastPeriodDate) return 1;
-
-        const daysSince = Math.floor(
-          (Date.now() - new Date(cycle.lastPeriodDate)) / (1000 * 60 * 60 * 24)
-        );
-
-        return (daysSince % cycle.length) + 1;
-      },
-
-      getDaysSinceLastPeriod: () => {
-        const { cycle } = get();
-        if (!cycle.lastPeriodDate) return 0;
-
-        return Math.floor(
-          (Date.now() - new Date(cycle.lastPeriodDate)) / (1000 * 60 * 60 * 24)
-        );
-      },
-
-      // Phase info enrichie
-      getCurrentPhaseInfo: () => {
-        const state = get();
-        const phase = state.getCurrentPhase();
-        const day = state.getCurrentDay();
-
-        const phaseNames = {
-          menstrual: "Menstruelle",
-          follicular: "Folliculaire", 
-          ovulatory: "Ovulatoire",
-          luteal: "Lutéale",
-        };
-
-        const phaseColors = {
-          menstrual: "#ff6b6b",
-          follicular: "#51cf66",
-          ovulatory: "#ffd43b", 
-          luteal: "#845ef7",
-        };
-
-        return {
-          phase,
-          name: phaseNames[phase],
-          color: phaseColors[phase],
-          day,
-        };
-      },
-
-      // ═══════════════════════════════════════════════════════
       // 🎭 GESTION PERSONA
       // ═══════════════════════════════════════════════════════
       calculatePersona: () => {
         const { profile, preferences } = get();
         
-        // Utilisation de l'import direct
         const result = calculatePersona({ profile, preferences });
         
         set((state) => ({
@@ -196,15 +127,16 @@ export const useUserStore = create(
         })),
 
       // ═══════════════════════════════════════════════════════
-      // 🔄 UTILITAIRES
+      // 🔄 UTILITAIRES (LEGACY - utiliser hooks/useCycle)
       // ═══════════════════════════════════════════════════════
       
       // Export données pour services externes
       getContextForAPI: () => {
         const state = get();
+        // FIXME: Utiliser useCycle().currentPhase dans les composants
         return {
           persona: state.persona.assigned,
-          phase: state.getCurrentPhase(),
+          phase: 'menstrual', // Placeholder - utiliser useCycle
           preferences: state.preferences,
           profile: state.profile,
         };

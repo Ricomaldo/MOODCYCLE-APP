@@ -2,7 +2,7 @@
 // ─────────────────────────────────────────────────────────
 // 📄 File: src/config/theme.js
 // 🧩 Type: Config
-// 📚 Description: Thème global de l’application (couleurs, polices, styles)
+// 📚 Description: Thème global de l'application (couleurs, polices, styles)
 // 🕒 Version: 3.0 - 2025-06-21
 // 🧭 Used in: global theme config, UI components, screens
 // ─────────────────────────────────────────────────────────
@@ -103,6 +103,17 @@ export const theme = {
     md: 16, // Alias pour compatibilité
     large: 24,
     pill: 999,
+  },
+  tabBar: {
+    height: 80,
+    activeTintColor: "#E91E63",
+    inactiveTintColor: "#757575",
+    backgroundColor: "#FAFAFA",
+    borderColor: "#E0E0E0",
+    labelSize: 12,
+    labelWeight: "500",
+    paddingTop: 8,
+    marginBottom: 4,
   },
 };
 

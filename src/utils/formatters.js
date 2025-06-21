@@ -2,10 +2,12 @@
  * 📝 FORMATAGE SIMPLE DONNÉES
  */
 
+import { getCurrentPhase } from './cycleCalculations';
+
 export const formatUserProfile = (user) => ({
     prenom: user.profile?.prenom,
     age: user.profile?.ageRange,
-    phase: user.getCurrentPhase(),
+    phase: getCurrentPhase(user.cycle?.lastPeriodDate, user.cycle?.length, user.cycle?.periodDuration),
     persona: user.persona?.assigned
   });
   

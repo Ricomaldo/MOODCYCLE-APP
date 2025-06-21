@@ -8,10 +8,11 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
 import { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { theme } from '../../../src/config/theme';
 import CycleWheel from '../../../src/features/cycle/CycleWheel';
 import CalendarView from '../../../src/features/cycle/CalendarView';
@@ -21,6 +22,8 @@ import { useUserStore } from '../../../src/stores/useUserStore';
 import EntryDetailModal from '../../../src/features/shared/EntryDetailModal';
 import phases from '../../../src/data/phases.json';
 import ScreenContainer from '../../../src/core/layout/ScreenContainer';
+import { useCycle } from '../../../src/hooks/useCycle';
+import { CYCLE_DEFAULTS } from '../../../src/config/cycleConstants';
 
 export default function CycleScreen() {
   const insets = useSafeAreaInsets();
@@ -29,15 +32,13 @@ export default function CycleScreen() {
   const [selectedEntry, setSelectedEntry] = useState(null);
 
   // Utilisation du store unifié
-  const { getCurrentPhaseInfo, profile, cycle } = useUserStore();
+  const { profile, cycle } = useUserStore();
+  const { currentPhase, currentDay, phaseInfo, startNewPeriod } = useCycle();
 
-  const currentPhaseInfo = getCurrentPhaseInfo();
-  const currentPhase = currentPhaseInfo.phase;
-  const cycleDay = currentPhaseInfo.day;
-  const cycleLength = cycle.length || 28;
+  const cycleLength = cycle.length || CYCLE_DEFAULTS.LENGTH;
   const prenom = profile.prenom || 'Utilisatrice';
 
-  const phaseInfo = phases;
+  const phasesData = phases;
 
   const navigateToPhase = (phaseId) => {
     router.push(`/cycle/phases/${phaseId}`);
@@ -47,8 +48,38 @@ export default function CycleScreen() {
     setViewMode((prev) => (prev === 'wheel' ? 'calendar' : 'wheel'));
   };
 
+  const handleStartNewPeriod = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    
+    Alert.alert(
+      '🩸 Mes règles ont commencé',
+      'Confirmer le début de tes règles aujourd\'hui ?',
+      [
+        {
+          text: 'Annuler',
+          style: 'cancel',
+        },
+        {
+          text: 'Confirmer',
+          style: 'default',
+          onPress: () => {
+            startNewPeriod();
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            
+            // Message Melune style
+            Alert.alert(
+              '✨ Merci !',
+              'Je m\'adapte à ton rythme unique. Ton cycle est maintenant à jour ! 🌙',
+              [{ text: 'Parfait', style: 'default' }]
+            );
+          },
+        },
+      ]
+    );
+  };
+
   return (
-    <ScreenContainer style={styles.container}>
+    <ScreenContainer style={styles.container} hasTabs={true}>
       <DevNavigation />
 
       {/* Header avec toggle */}
@@ -65,11 +96,19 @@ export default function CycleScreen() {
 
       <View style={styles.infoContainer}>
         <Caption>
-          Jour {cycleDay} sur {cycleLength}
+          Jour {currentDay} sur {cycleLength}
         </Caption>
-        <Heading style={styles.phaseTitle}>{phaseInfo[currentPhase].name}</Heading>
-        <BodyText style={styles.phaseDescription}>{phaseInfo[currentPhase].description}</BodyText>
+        <Heading style={styles.phaseTitle}>{phasesData[currentPhase].name}</Heading>
+        <BodyText style={styles.phaseDescription}>{phasesData[currentPhase].description}</BodyText>
       </View>
+
+      {/* Bouton "Mes règles ont commencé" */}
+      <TouchableOpacity style={styles.periodButton} onPress={handleStartNewPeriod}>
+        <View style={styles.periodButtonContent}>
+          <BodyText style={styles.periodButtonText}>🩸 Mes règles ont commencé</BodyText>
+          <Caption style={styles.periodButtonSubtext}>Mettre à jour mon cycle</Caption>
+        </View>
+      </TouchableOpacity>
 
       {/* Vue conditionnelle */}
       {viewMode === 'wheel' ? (
@@ -77,7 +116,7 @@ export default function CycleScreen() {
           <View style={styles.wheelContainer}>
             <CycleWheel
               currentPhase={currentPhase}
-              cycleDay={cycleDay}
+              cycleDay={currentDay}
               userName={prenom}
               size={250}
               onPhasePress={navigateToPhase}
@@ -85,7 +124,7 @@ export default function CycleScreen() {
           </View>
 
           <View style={styles.legendContainer}>
-            {Object.entries(phaseInfo).map(([phase, info]) => (
+            {Object.entries(phasesData).map(([phase, info]) => (
               <TouchableOpacity
                 key={phase}
                 style={styles.legendItem}
@@ -101,7 +140,7 @@ export default function CycleScreen() {
         <View style={styles.calendarContainer}>
           <CalendarView
             currentPhase={currentPhase}
-            cycleDay={cycleDay}
+            cycleDay={currentDay}
             cycleLength={cycleLength}
             lastPeriodDate={cycle.lastPeriodDate}
             onPhasePress={navigateToPhase}
@@ -127,14 +166,17 @@ const styles = StyleSheet.create({
     padding: theme.spacing.l,
   },
   header: {
+    height: 60, // Hauteur standardisée
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center', // Centrer le titre
     alignItems: 'center',
-    marginVertical: theme.spacing.l,
+    marginBottom: 0, // Pas de margin pour alignement
+    position: 'relative', // Pour positionner le bouton toggle
   },
   title: {
-    flex: 1,
     textAlign: 'center',
+    fontSize: 20, // Taille standardisée
+    fontWeight: '600',
   },
   toggleButton: {
     position: 'absolute',
@@ -187,5 +229,29 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
     marginRight: theme.spacing.xs,
+  },
+  periodButton: {
+    backgroundColor: theme.colors.phases.menstrual,
+    borderRadius: theme.borderRadius.medium,
+    padding: theme.spacing.m,
+    marginVertical: theme.spacing.m,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  periodButtonContent: {
+    alignItems: 'center',
+  },
+  periodButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+    marginBottom: theme.spacing.xs,
+  },
+  periodButtonSubtext: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 12,
   },
 });

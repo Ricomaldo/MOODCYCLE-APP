@@ -26,15 +26,19 @@ export default function DevNavigation() {
   const [isVisible, setIsVisible] = useState(false);
 
   // Stores
-  const { reset } = useUserStore();
+  const { reset, updateCycle, cycle } = useUserStore();
   const { devMode } = useAppStore();
   const { clearMessages } = useChatStore();
-  const { resetNotebook } = useNotebookStore();
+  const { reset: resetNotebook } = useNotebookStore();
 
   if (!__DEV__ || !devMode) {
     return null;
   }
 
+  // ========================================
+  // 🚀 ACTIONS DE RESET
+  // ========================================
+  
   const resetOnboardingAction = () => {
     reset();
     router.push('/onboarding/100-promesse');
@@ -46,6 +50,61 @@ export default function DevNavigation() {
 
   const resetNotebookAction = () => {
     resetNotebook();
+  };
+
+  // ========================================
+  // 🔄 ACTIONS DE CYCLE
+  // ========================================
+  
+  // Fonction générique pour avancer le cycle
+  const advanceCycle = (daysToAdvance) => {
+    const currentDate = new Date();
+    
+    // Calculer la nouvelle date des dernières règles
+    let newLastPeriodDate;
+    
+    if (cycle.lastPeriodDate) {
+      // Si on a déjà une date, avancer de X jours
+      const currentLastPeriod = new Date(cycle.lastPeriodDate);
+      const daysSince = Math.floor((currentDate - currentLastPeriod) / (1000 * 60 * 60 * 24));
+      const newDaysSince = daysSince + daysToAdvance;
+      
+      // Si on dépasse la longueur du cycle, recommencer au début
+      if (newDaysSince >= cycle.length) {
+        newLastPeriodDate = new Date(currentDate.getTime() - (cycle.length * 24 * 60 * 60 * 1000));
+      } else {
+        newLastPeriodDate = new Date(currentLastPeriod.getTime() + (daysToAdvance * 24 * 60 * 60 * 1000));
+      }
+    } else {
+      // Si pas de date, commencer il y a X jours
+      newLastPeriodDate = new Date(currentDate.getTime() - (daysToAdvance * 24 * 60 * 60 * 1000));
+    }
+    
+    updateCycle({ lastPeriodDate: newLastPeriodDate.toISOString() });
+  };
+
+  const advanceCycleBy1 = () => advanceCycle(1);
+  const advanceCycleBy7 = () => advanceCycle(7);
+
+  // Actions pour tester les phases spécifiques
+  const setPhase = (targetPhase) => {
+    const currentDate = new Date();
+    const phaseDays = {
+      menstrual: 2,     // Jour 2 du cycle
+      follicular: 10,   // Jour 10 du cycle  
+      ovulatory: 15,    // Jour 15 du cycle
+      luteal: 22        // Jour 22 du cycle
+    };
+    
+    const daysAgo = phaseDays[targetPhase] || 2;
+    const newLastPeriodDate = new Date(currentDate.getTime() - (daysAgo * 24 * 60 * 60 * 1000));
+    
+    updateCycle({ lastPeriodDate: newLastPeriodDate.toISOString() });
+  };
+
+  // Action pour tester "Mes règles ont commencé"
+  const startNewPeriodAction = () => {
+    updateCycle({ lastPeriodDate: new Date().toISOString() });
   };
 
   return (
@@ -63,9 +122,10 @@ export default function DevNavigation() {
 
       {isVisible && (
         <View style={styles.panel}>
+          {/* Navigation */}
           <BodyText style={styles.sectionTitle}>🧭 Navigation</BodyText>
-
-          <TouchableOpacity style={styles.navButton} onPress={() => router.push('/(tabs)/home')}>
+          
+          <TouchableOpacity style={styles.navButton} onPress={() => router.push('/(tabs)/')}>
             <SmallText style={styles.navButtonText}>🏠 Accueil</SmallText>
           </TouchableOpacity>
 
@@ -73,18 +133,22 @@ export default function DevNavigation() {
             <SmallText style={styles.navButtonText}>💬 Chat</SmallText>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.navButton} onPress={() => router.push('/(tabs)/cycle')}>
-            <SmallText style={styles.navButtonText}>🌙 Cycle</SmallText>
-          </TouchableOpacity>
-
           <TouchableOpacity
             style={styles.navButton}
             onPress={() => router.push('/(tabs)/notebook')}
           >
-            <SmallText style={styles.navButtonText}>📖 Carnet</SmallText>
+            <SmallText style={styles.navButtonText}>📖 Notebook</SmallText>
           </TouchableOpacity>
 
-          <BodyText style={[styles.sectionTitle, { marginTop: 10 }]}>⚡ Actions</BodyText>
+          {/* Test Bouton Règles */}
+          <BodyText style={[styles.sectionTitle, { marginTop: 10 }]}>🩸 Test Règles</BodyText>
+
+          <TouchableOpacity style={[styles.actionButton, {backgroundColor: '#F44336'}]} onPress={startNewPeriodAction}>
+            <SmallText style={styles.actionButtonText}>🩸 Nouvelles règles</SmallText>
+          </TouchableOpacity>
+
+          {/* Actions de Reset */}
+          <BodyText style={[styles.sectionTitle, { marginTop: 10 }]}>🚀 Reset</BodyText>
 
           <TouchableOpacity style={styles.actionButton} onPress={resetOnboardingAction}>
             <SmallText style={styles.actionButtonText}>🚀 Onboarding</SmallText>
@@ -96,6 +160,36 @@ export default function DevNavigation() {
 
           <TouchableOpacity style={styles.actionButton} onPress={resetNotebookAction}>
             <SmallText style={styles.actionButtonText}>📝 Vider Carnet</SmallText>
+          </TouchableOpacity>
+
+          {/* Actions de Cycle */}
+          <BodyText style={[styles.sectionTitle, { marginTop: 10 }]}>🔄 Cycle</BodyText>
+
+          <TouchableOpacity style={styles.actionButton} onPress={advanceCycleBy1}>
+            <SmallText style={styles.actionButtonText}>J + 1</SmallText>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionButton} onPress={advanceCycleBy7}>
+            <SmallText style={styles.actionButtonText}>J + 7</SmallText>
+          </TouchableOpacity>
+
+          {/* Test des phases */}
+          <BodyText style={[styles.sectionTitle, { marginTop: 10 }]}>🎨 Phases</BodyText>
+
+          <TouchableOpacity style={[styles.actionButton, {backgroundColor: '#F44336'}]} onPress={() => setPhase('menstrual')}>
+            <SmallText style={styles.actionButtonText}>🌙 Mens.</SmallText>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.actionButton, {backgroundColor: '#FFC107'}]} onPress={() => setPhase('follicular')}>
+            <SmallText style={styles.actionButtonText}>🌱 Foll.</SmallText>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.actionButton, {backgroundColor: '#00BCD4'}]} onPress={() => setPhase('ovulatory')}>
+            <SmallText style={styles.actionButtonText}>☀️ Ovu.</SmallText>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.actionButton, {backgroundColor: '#673AB7'}]} onPress={() => setPhase('luteal')}>
+            <SmallText style={styles.actionButtonText}>🍂 Lutéale</SmallText>
           </TouchableOpacity>
         </View>
       )}

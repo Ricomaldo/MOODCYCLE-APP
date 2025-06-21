@@ -10,34 +10,37 @@
 import { View, StyleSheet, Pressable } from 'react-native';
 import Svg, { Circle, Path, G, Line, Text } from 'react-native-svg';
 import { theme } from '../../config/theme';
+import { CYCLE_DEFAULTS, PHASE_NAMES, WHEEL_CONSTANTS } from '../../config/cycleConstants';
 
 export default function CycleWheel({
-  currentPhase = 'menstrual',
+  currentPhase = PHASE_NAMES.MENSTRUAL,
   size = 250,
   userName = 'Emma',
   cycleDay = 8,
-  cycleLength = 28,
+  cycleLength = CYCLE_DEFAULTS.LENGTH,
   onPhasePress = () => {},
 }) {
-  // Configuration des phases du cycle
-  const phases = ['menstrual', 'follicular', 'ovulatory', 'luteal'];
+  // Configuration des phases du cycle depuis les constantes
+  const phases = Object.values(PHASE_NAMES);
   const colors = phases.map((phase) => theme.colors.phases[phase]);
 
-  // 🎯 Limite prénom à 12 caractères max
-  const displayName = userName.length > 12 ? userName.substring(0, 12) + '...' : userName;
+  // 🎯 Limite prénom selon constante
+  const displayName = userName.length > WHEEL_CONSTANTS.MAX_NAME_LENGTH 
+    ? userName.substring(0, WHEEL_CONSTANTS.MAX_NAME_LENGTH) + '...' 
+    : userName;
 
   // Calculs de base pour le cercle
   const radius = size / 2;
-  const strokeWidth = 40; // Épaisseur de l'anneau
+  const strokeWidth = WHEEL_CONSTANTS.STROKE_WIDTH;
   const innerRadius = radius - strokeWidth;
 
-  // Configuration du dégradé (1 semaine par phase = 7 arcs par quart)
-  const arcsPerQuart = 7;
-  const degreesPerArc = 90 / arcsPerQuart; // ~12.86° par arc
-  const totalArcs = phases.length * arcsPerQuart; // 28 arcs total
+  // Configuration du dégradé depuis les constantes
+  const arcsPerQuart = WHEEL_CONSTANTS.ARCS_PER_QUARTER;
+  const degreesPerArc = 90 / arcsPerQuart;
+  const totalArcs = phases.length * arcsPerQuart;
 
-  // Extension pour les lignes de séparation et ajustement de la viewBox
-  const separatorExtension = 8;
+  // Extension pour les lignes de séparation
+  const separatorExtension = WHEEL_CONSTANTS.SEPARATOR_EXTENSION;
   const adjustedSize = size + 2 * separatorExtension;
   const adjustedCenterX = radius + separatorExtension;
   const adjustedCenterY = radius + separatorExtension;
@@ -193,7 +196,7 @@ export default function CycleWheel({
           y={adjustedCenterY}
           textAnchor="middle"
           alignmentBaseline="middle"
-          fontSize={size > 200 ? '24' : '18'}
+          fontSize={size > WHEEL_CONSTANTS.SIZE_THRESHOLD ? WHEEL_CONSTANTS.FONT_SIZE.LARGE : WHEEL_CONSTANTS.FONT_SIZE.SMALL}
           fontWeight="bold"
           fill={theme.colors.phases[currentPhase]}
         >
@@ -201,7 +204,7 @@ export default function CycleWheel({
         </Text>
 
         {/* Marqueur de position fixe en haut */}
-        <Circle cx={markerX} cy={markerY} r={10} fill="white" stroke="#333" strokeWidth={2} />
+        <Circle cx={markerX} cy={markerY} r={WHEEL_CONSTANTS.MARKER_RADIUS} fill="white" stroke="#333" strokeWidth={2} />
       </Svg>
     </View>
   );

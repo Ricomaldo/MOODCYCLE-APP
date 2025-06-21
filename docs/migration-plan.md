@@ -5,7 +5,7 @@
 ### Phase 1 : Préparation (30min)
 1. **Créer branche** : `git checkout -b refactor/unified-stores`
 2. **Backup** : Copier stores actuels dans `/stores/legacy/`
-3. **Créer nouveaux stores** dans `/stores/`
+3. **Créer nouveaux stores** dans `/stores/v2/`
 
 ### Phase 2 : Nouveaux stores (45min)
 1. ✅ `useAppStore.js` - État global minimal

@@ -2,16 +2,13 @@
 // ─────────────────────────────────────────────────────────
 // 📄 File: src/services/InsightsEngine.js
 // 🧩 Type: Service
-// 📚 Description: Service pour la génération, l’enrichissement et la personnalisation des insights cycliques
-// 🕒 Version: 3.0 - 2025-06-21
-// 🧭 Used in: notebook, onboarding, API, personalized insights
+// 📚 Description: Service pour la génération, l'enrichissement et la personnalisation des insights cycliques
+// 🕒 Version: 4.0 - 2025-06-21 (ÉPURÉ - Interface simplifiée)
+// 🧭 Used in: hooks/usePersonalizedInsight, onboarding, API
 // ─────────────────────────────────────────────────────────
-//
-// Version 2.0 - 2025-06-21
 //
 import ContentManager from './ContentManager.js';
 import localInsights from '../data/insights.json';
-import localPhases from '../data/phases.json';
 import localClosings from '../data/closings.json';
 
 // 🎯 MAPPING Journey Options vers Journey Targets
@@ -34,7 +31,7 @@ const getFallbackInsight = (phase, persona = null, prenom = null) => {
   return prenom ? `${prenom}, ${baseContent.toLowerCase()}` : baseContent;
 };
 
-// 🎯 CLOSINGS PERSONNALISÉS - MAINTENANT EN API
+// 🎯 CLOSINGS PERSONNALISÉS
 const getPersonalizedClosing = async (persona, journeyChoice) => {
   try {
     const closings = await ContentManager.getClosings();
@@ -54,40 +51,48 @@ const getPersonalizedClosing = async (persona, journeyChoice) => {
 };
 
 // 🎯 ENRICHISSEMENT CONTEXTUEL - VERSION SIMPLIFIÉE
-const enrichInsightWithContext = async (baseVariant, onboardingStore, phase) => {
+const enrichInsightWithContext = async (baseVariant, userContext) => {
   try {
-    const prenom = onboardingStore?.userInfo?.prenom;
-    const assignedPersona = onboardingStore?.persona?.assigned;
-    const journeyChoice = onboardingStore?.journeyChoice?.selectedOption;
+    const prenom = userContext?.profile?.prenom;
+    const persona = userContext?.persona?.assigned;
+    const journeyChoice = userContext?.profile?.journeyChoice;
 
     // Enrichissement simple : prénom + insight + closing personnalisé
     let enrichedMessage = prenom ? `${prenom}, ${baseVariant}` : baseVariant;
 
     // Ajouter closing personnalisé
-    const personalizedClosing = await getPersonalizedClosing(assignedPersona, journeyChoice);
-    if (personalizedClosing) {
-      enrichedMessage += ` ${personalizedClosing}`;
+    if (persona && journeyChoice) {
+      const personalizedClosing = await getPersonalizedClosing(persona, journeyChoice);
+      if (personalizedClosing) {
+        enrichedMessage += ` ${personalizedClosing}`;
+      }
     }
 
     return enrichedMessage;
   } catch (error) {
     console.warn('🚨 Erreur enrichissement:', error);
-    return prenom ? `${prenom}, ${baseVariant}` : baseVariant;
+    return baseVariant;
   }
 };
 
-// 🎯 FONCTION PRINCIPALE - VERSION API
-export const getPersonalizedInsight = async (
-  phase,
-  persona,
-  userPreferences,
-  meluneConfig,
-  usedInsights = [],
-  onboardingStore = null
-) => {
+// 🎯 FONCTION PRINCIPALE - VERSION ÉPURÉE
+export const getPersonalizedInsight = async (context, options = {}) => {
+  const {
+    phase,
+    persona,
+    preferences,
+    melune,
+    profile
+  } = context;
+
+  const {
+    usedInsights = [],
+    enrichWithContext = false
+  } = options;
+
   if (!phase) {
     return {
-      content: getFallbackInsight(phase, persona, onboardingStore?.userInfo?.prenom),
+      content: getFallbackInsight(phase, persona, profile?.prenom),
       id: null,
       source: 'fallback-no-phase',
     };
@@ -100,19 +105,19 @@ export const getPersonalizedInsight = async (
 
     if (!phaseInsights || phaseInsights.length === 0) {
       return {
-        content: getFallbackInsight(phase, persona, onboardingStore?.userInfo?.prenom),
+        content: getFallbackInsight(phase, persona, profile?.prenom),
         id: null,
         source: 'fallback-no-phase-data',
       };
     }
 
-    // Logique de sélection identique (ton algorithme reste intact)
+    // Logique de sélection (algorithme existant)
     let availableInsights = phaseInsights;
 
     // Filtrage par ton si spécifié
-    if (meluneConfig?.communicationTone) {
+    if (melune?.tone) {
       const toneInsights = phaseInsights.filter(
-        (insight) => insight.tone === meluneConfig.communicationTone
+        (insight) => insight.tone === melune.tone
       );
       if (toneInsights.length > 0) availableInsights = toneInsights;
     }
@@ -127,13 +132,13 @@ export const getPersonalizedInsight = async (
 
     if (unusedInsights.length === 0) {
       return {
-        content: getFallbackInsight(phase, persona, onboardingStore?.userInfo?.prenom),
+        content: getFallbackInsight(phase, persona, profile?.prenom),
         id: null,
         source: 'fallback-no-insights',
       };
     }
 
-    // Scoring (ton algorithme)
+    // Scoring (algorithme existant)
     const scoredInsights = unusedInsights.map((insight) => {
       let score = 0;
       if (insight.targetPersonas?.includes(persona)) score += 100;
@@ -155,11 +160,13 @@ export const getPersonalizedInsight = async (
       content = selectedInsight.content || getFallbackInsight(phase, persona);
     }
 
-    // Enrichissement contextuel
-    const finalContent = await enrichInsightWithContext(content, onboardingStore, phase);
+    // Enrichissement contextuel optionnel
+    if (enrichWithContext) {
+      content = await enrichInsightWithContext(content, context);
+    }
 
     return {
-      content: finalContent,
+      content,
       id: selectedInsight.id,
       persona: persona,
       relevanceScore: selectedInsight.relevanceScore,
@@ -167,9 +174,8 @@ export const getPersonalizedInsight = async (
     };
   } catch (error) {
     console.error('🚨 Erreur API insights, fallback local:', error);
-    // Fallback vers ton système local actuel
     return {
-      content: getFallbackInsight(phase, persona, onboardingStore?.userInfo?.prenom),
+      content: getFallbackInsight(phase, persona, profile?.prenom),
       id: null,
       source: 'fallback-error',
     };

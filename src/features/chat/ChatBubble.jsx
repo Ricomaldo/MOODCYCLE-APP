@@ -2,94 +2,130 @@
 // ─────────────────────────────────────────────────────────
 // 📄 File: src/features/chat/ChatBubble.jsx
 // 🧩 Type: UI Component
-// 📚 Description: Bulle de message pour le chat, gère l'affichage et la sauvegarde d'un message
-// 🕒 Version: 3.0 - 2025-06-21
-// 🧭 Used in: chat screen, notebook, shared UI
+// 📚 Description: Bulle de message moderne iPhone 2025 avec avatar intégré
+// 🕒 Version: 4.0 - 2025-06-21
+// 🧭 Used in: chat screen
 // ─────────────────────────────────────────────────────────
 //
-import React from 'react';
-import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { BodyText } from '../../core/ui/Typography';
 import { theme } from '../../config/theme';
-import { useNotebookStore } from '../../stores/useNotebookStore';
-import { useUserStore } from '../../stores/useUserStore';
+import MeluneAvatar from '../shared/MeluneAvatar';
 
-export default function ChatBubble({ message, isUser = false, phase = 'menstrual' }) {
-  const { addEntry } = useNotebookStore();
-  const { getCurrentPhaseInfo } = useUserStore();
+export default function ChatBubble({ 
+  message, 
+  isUser = false, 
+  phase = 'menstrual',
+  onSave,
+  delay = 0
+}) {
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+  const translateYAnim = useRef(new Animated.Value(5)).current;
 
-  // Calcul dynamique des couleurs pour les bulles de Melune selon la phase
-  const phaseColor = theme.colors.phases[phase];
-  const textColor = theme.getTextColorOn(phaseColor);
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacityAnim, {
+        toValue: 1,
+        duration: 300,
+        delay,
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateYAnim, {
+        toValue: 0,
+        duration: 200,
+        delay,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [delay]);
+
+  const animatedStyle = {
+    opacity: opacityAnim,
+    transform: [{ translateY: translateYAnim }],
+  };
 
   const handleLongPress = () => {
-    if (!isUser) {
-      // Seulement pour messages Melune
-      Alert.alert('💾 Sauvegarder', 'Ajouter ce conseil à ton carnet ?', [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Sauver',
-          onPress: () => {
-            const currentPhase = getCurrentPhaseInfo().phase;
-            addEntry(message, 'saved', [`#${currentPhase}`, '#conseil']);
-            Alert.alert('✨', 'Ajouté à ton carnet !');
-          },
-        },
-      ]);
+    if (!isUser && onSave) {
+      onSave();
     }
   };
 
-  const BubbleContainer = isUser ? View : TouchableOpacity;
-  const containerProps = isUser
-    ? {}
-    : {
-        onLongPress: handleLongPress,
-        delayLongPress: 500,
-        activeOpacity: 0.8,
-      };
+  if (isUser) {
+    return (
+      <Animated.View style={animatedStyle}>
+        <View style={styles.userContainer}>
+          <View style={styles.userBubble}>
+            <BodyText style={styles.userText}>{message}</BodyText>
+          </View>
+        </View>
+      </Animated.View>
+    );
+  }
 
   return (
-    <BubbleContainer
-      style={[
-        styles.container,
-        isUser ? styles.userBubble : [styles.meluneBubble, { backgroundColor: phaseColor }],
-      ]}
-      {...containerProps}
-    >
-      <BodyText style={isUser ? styles.userText : [styles.meluneText, { color: textColor }]}>
-        {message}
-      </BodyText>
-    </BubbleContainer>
+    <Animated.View style={animatedStyle}>
+      <TouchableOpacity
+        style={styles.meluneContainer}
+        onLongPress={handleLongPress}
+        delayLongPress={600}
+        activeOpacity={0.9}
+      >
+        <MeluneAvatar phase={phase} size="small" style="classic" />
+        <View style={[styles.meluneBubble, { backgroundColor: theme.colors.phases[phase] }]}>
+          <BodyText style={[styles.meluneText, { color: theme.getTextColorOn(theme.colors.phases[phase]) }]}>
+            {message}
+          </BodyText>
+        </View>
+      </TouchableOpacity>
+    </Animated.View>
   );
 }
 
-// Styles identiques à ton original
 const styles = StyleSheet.create({
-  container: {
-    maxWidth: '80%',
-    borderRadius: theme.borderRadius.medium,
-    padding: theme.spacing.m,
-    marginVertical: theme.spacing.s,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+  userContainer: {
+    alignItems: 'flex-end',
+    marginVertical: 4,
   },
   userBubble: {
-    alignSelf: 'flex-end',
-    backgroundColor: '#EFEFEF',
-    borderBottomRightRadius: theme.spacing.xs,
-  },
-  meluneBubble: {
-    alignSelf: 'flex-start',
-    backgroundColor: theme.colors.primary,
-    borderBottomLeftRadius: theme.spacing.xs,
+    backgroundColor: '#007AFF',
+    borderRadius: 20,
+    borderBottomRightRadius: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    maxWidth: '75%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   userText: {
-    color: theme.colors.text,
+    color: '#FFFFFF',
+    fontSize: 16,
+    lineHeight: 20,
+  },
+  meluneContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    marginVertical: 8,
+    paddingRight: 40,
+  },
+  meluneBubble: {
+    borderRadius: 20,
+    borderBottomLeftRadius: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginLeft: 8,
+    maxWidth: '85%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   meluneText: {
-    color: theme.getTextColorOn(theme.colors.primary),
+    fontSize: 16,
+    lineHeight: 22,
   },
 });
