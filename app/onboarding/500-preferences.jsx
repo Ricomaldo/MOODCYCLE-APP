@@ -1,64 +1,78 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, Animated, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Heading2, BodyText } from '../../components/Typography';
-import { useOnboardingStore } from '../../stores/useOnboardingStore';
-import { theme } from '../../config/theme';
-import MeluneAvatar from '../../components/MeluneAvatar';
-import ChatBubble from '../../components/ChatBubble';
-
+//
+// ─────────────────────────────────────────────────────────
+// 📄 Fichier : app/onboarding/500-preferences.jsx
+// 🧩 Type : Composant Écran (Screen)
+// 📚 Description : Écran de sélection des préférences de conseils (symptômes, humeurs, rituels, etc.)
+// 🕒 Version : 3.0 - 2025-06-21
+// 🧭 Utilisé dans : onboarding flow (étape 6)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//
+import React, { useState, useEffect, useRef } from "react";
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+  ScrollView,
+} from "react-native";
+import { useRouter } from "expo-router";
+import ScreenContainer from "../../src/core/layout/ScreenContainer";
+import { Heading2, BodyText } from "../../src/core/ui/Typography";
+import { useUserStore } from "../../src/stores/useUserStore";
+import { theme } from "../../src/config/theme";
+import MeluneAvatar from "../../src/features/shared/MeluneAvatar";
+import ChatBubble from "../../src/features/chat/ChatBubble";
 
 const PREFERENCES_CONFIG = [
   {
-    key: 'symptoms',
-    label: 'Symptômes physiques',
-    description: 'Conseils sur douleurs, énergie, bien-être corporel',
-    icon: '💪',
-    color: '#E53E3E'
+    key: "symptoms",
+    label: "Symptômes physiques",
+    description: "Conseils sur douleurs, énergie, bien-être corporel",
+    icon: "💪",
+    color: "#E53E3E",
   },
   {
-    key: 'moods',
-    label: 'Humeurs',
-    description: 'Compréhension émotionnelle et gestion des ressentis',
-    icon: '💭',
-    color: '#9F7AEA'
+    key: "moods",
+    label: "Humeurs",
+    description: "Compréhension émotionnelle et gestion des ressentis",
+    icon: "💭",
+    color: "#9F7AEA",
   },
   {
-    key: 'phyto',
-    label: 'Phyto/HE',
-    description: 'Plantes, huiles essentielles, remèdes naturels',
-    icon: '🌿',
-    color: '#38A169'
+    key: "phyto",
+    label: "Phyto/HE",
+    description: "Plantes, huiles essentielles, remèdes naturels",
+    icon: "🌿",
+    color: "#38A169",
   },
   {
-    key: 'phases',
-    label: 'Énergie des phases',
-    description: 'Sagesse cyclique, rythmes féminins',
-    icon: '🌙',
-    color: '#3182CE'
+    key: "phases",
+    label: "Énergie des phases",
+    description: "Sagesse cyclique, rythmes féminins",
+    icon: "🌙",
+    color: "#3182CE",
   },
   {
-    key: 'lithotherapy',
-    label: 'Lithothérapie',
-    description: 'Cristaux, pierres, énergies subtiles',
-    icon: '💎',
-    color: '#D53F8C'
+    key: "lithotherapy",
+    label: "Lithothérapie",
+    description: "Cristaux, pierres, énergies subtiles",
+    icon: "💎",
+    color: "#D53F8C",
   },
   {
-    key: 'rituals',
-    label: 'Rituels bien-être',
-    description: 'Pratiques, méditation, soins personnels',
-    icon: '🧘‍♀️',
-    color: '#DD6B20'
-  }
+    key: "rituals",
+    label: "Rituels bien-être",
+    description: "Pratiques, méditation, soins personnels",
+    icon: "🧘‍♀️",
+    color: "#DD6B20",
+  },
 ];
 
 export default function PreferencesScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const { updatePreferences } = useOnboardingStore();
-  
+  // insets handled by ScreenContainer
+  const { updatePreferences } = useUserStore();
+
   // États des préférences (0-5 pour chaque dimension)
   const [preferences, setPreferences] = useState({
     symptoms: 3,
@@ -66,12 +80,12 @@ export default function PreferencesScreen() {
     phyto: 3,
     phases: 3,
     lithotherapy: 3,
-    rituals: 3
+    rituals: 3,
   });
-  
+
   const [step, setStep] = useState(1); // 1: intro, 2: ajustements, 3: validation
   const [lastChanged, setLastChanged] = useState(null);
-  
+
   // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
@@ -92,9 +106,9 @@ export default function PreferencesScreen() {
   }, [step]);
 
   const handlePreferenceChange = (key, value) => {
-    setPreferences(prev => ({ ...prev, [key]: value }));
+    setPreferences((prev) => ({ ...prev, [key]: value }));
     setLastChanged(key);
-    
+
     // Passer à l'étape ajustements si on était à l'intro
     if (step === 1) {
       setStep(2);
@@ -102,25 +116,17 @@ export default function PreferencesScreen() {
   };
 
   const handleContinue = () => {
-    if (step < 3) {
-      setStep(step + 1);
-    } else {
-      // Sauvegarder et continuer
-      updatePreferences(preferences);
-      
-      setTimeout(() => {
-        router.push('/onboarding/550-prenom');
-      }, 300);
-    }
+    updatePreferences(preferences);
+    router.push("/onboarding/550-prenom");
   };
 
   const getMeluneMessage = () => {
     if (step === 1) {
       return "Comment préfères-tu que je t'accompagne ? Ajuste chaque dimension selon tes besoins 💜";
     } else if (step === 2 && lastChanged) {
-      const config = PREFERENCES_CONFIG.find(p => p.key === lastChanged);
+      const config = PREFERENCES_CONFIG.find((p) => p.key === lastChanged);
       const value = preferences[lastChanged];
-      
+
       if (value >= 4) {
         return `Parfait ! Tu aimes ${config.label.toLowerCase()}, je te donnerai plein de conseils dans ce domaine ✨`;
       } else if (value <= 1) {
@@ -148,46 +154,49 @@ export default function PreferencesScreen() {
   };
 
   const getIntensityLabel = (value) => {
-    const labels = ['Pas du tout', 'Très peu', 'Un peu', 'Modérément', 'Beaucoup', 'Énormément'];
-    return labels[value] || 'Modérément';
+    const labels = [
+      "Pas du tout",
+      "Très peu",
+      "Un peu",
+      "Modérément",
+      "Beaucoup",
+      "Énormément",
+    ];
+    return labels[value] || "Modérément";
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-
-
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+    <ScreenContainer style={styles.container}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-          
           {/* Avatar Melune */}
           <View style={styles.avatarContainer}>
             <MeluneAvatar phase="menstrual" size="medium" />
           </View>
 
           {/* Message de Melune */}
-          <Animated.View 
+          <Animated.View
             style={[
               styles.messageContainer,
-              { transform: [{ translateY: slideAnim }] }
+              { transform: [{ translateY: slideAnim }] },
             ]}
           >
-            <ChatBubble 
-              message={getMeluneMessage()} 
-              isUser={false} 
-            />
+            <ChatBubble message={getMeluneMessage()} isUser={false} />
           </Animated.View>
 
           {/* Interface selon l'étape */}
-          <Animated.View 
+          <Animated.View
             style={[
               styles.interactionContainer,
-              { 
+              {
                 opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }] 
-              }
+                transform: [{ translateY: slideAnim }],
+              },
             ]}
           >
-            
             {/* Étape 1 & 2: Sliders des préférences */}
             {(step === 1 || step === 2) && (
               <View style={styles.preferencesContainer}>
@@ -195,54 +204,79 @@ export default function PreferencesScreen() {
                   <View key={config.key} style={styles.preferenceItem}>
                     <View style={styles.preferenceHeader}>
                       <View style={styles.preferenceLabelContainer}>
-                        <BodyText style={styles.preferenceIcon}>{config.icon}</BodyText>
+                        <BodyText style={styles.preferenceIcon}>
+                          {config.icon}
+                        </BodyText>
                         <View style={styles.preferenceTexts}>
-                          <BodyText style={styles.preferenceLabel}>{config.label}</BodyText>
-                          <BodyText style={styles.preferenceDescription}>{config.description}</BodyText>
+                          <BodyText style={styles.preferenceLabel}>
+                            {config.label}
+                          </BodyText>
+                          <BodyText style={styles.preferenceDescription}>
+                            {config.description}
+                          </BodyText>
                         </View>
                       </View>
                       <BodyText style={styles.preferenceValue}>
                         {getIntensityLabel(preferences[config.key])}
                       </BodyText>
                     </View>
-                    
+
                     {/* Slider custom */}
                     <View style={styles.sliderContainer}>
                       <View style={styles.sliderButtons}>
-                        <TouchableOpacity 
+                        <TouchableOpacity
                           style={styles.sliderButton}
-                          onPress={() => handlePreferenceChange(config.key, Math.max(0, preferences[config.key] - 1))}
+                          onPress={() =>
+                            handlePreferenceChange(
+                              config.key,
+                              Math.max(0, preferences[config.key] - 1)
+                            )
+                          }
                         >
                           <BodyText style={styles.sliderButtonText}>-</BodyText>
                         </TouchableOpacity>
-                        
-                        <View style={[styles.sliderTrack, { backgroundColor: config.color + '30' }]}>
-                          <View style={[
-                            styles.sliderIndicator,
-                            { 
-                              left: `${(preferences[config.key] / 5) * 100}%`,
-                              backgroundColor: config.color
-                            }
-                          ]} />
+
+                        <View
+                          style={[
+                            styles.sliderTrack,
+                            { backgroundColor: config.color + "30" },
+                          ]}
+                        >
+                          <View
+                            style={[
+                              styles.sliderIndicator,
+                              {
+                                left: `${(preferences[config.key] / 5) * 100}%`,
+                                backgroundColor: config.color,
+                              },
+                            ]}
+                          />
                         </View>
-                        
-                        <TouchableOpacity 
+
+                        <TouchableOpacity
                           style={styles.sliderButton}
-                          onPress={() => handlePreferenceChange(config.key, Math.min(5, preferences[config.key] + 1))}
+                          onPress={() =>
+                            handlePreferenceChange(
+                              config.key,
+                              Math.min(5, preferences[config.key] + 1)
+                            )
+                          }
                         >
                           <BodyText style={styles.sliderButtonText}>+</BodyText>
                         </TouchableOpacity>
                       </View>
-                      
+
                       {/* Points indicateurs */}
                       <View style={styles.sliderDots}>
-                        {[0,1,2,3,4,5].map(i => (
-                          <View 
-                            key={i} 
+                        {[0, 1, 2, 3, 4, 5].map((i) => (
+                          <View
+                            key={i}
                             style={[
-                              styles.sliderDot, 
-                              preferences[config.key] === i && { backgroundColor: config.color }
-                            ]} 
+                              styles.sliderDot,
+                              preferences[config.key] === i && {
+                                backgroundColor: config.color,
+                              },
+                            ]}
                           />
                         ))}
                       </View>
@@ -255,28 +289,38 @@ export default function PreferencesScreen() {
             {/* Étape 3: Résumé des préférences */}
             {step === 3 && (
               <View style={styles.summaryContainer}>
-                <BodyText style={styles.summaryTitle}>Ton profil de préférences</BodyText>
-                
+                <BodyText style={styles.summaryTitle}>
+                  Ton profil de préférences
+                </BodyText>
+
                 {PREFERENCES_CONFIG.map((config) => {
                   const value = preferences[config.key];
                   return (
                     <View key={config.key} style={styles.summaryItem}>
                       <View style={styles.summaryLeft}>
-                        <BodyText style={styles.summaryIcon}>{config.icon}</BodyText>
-                        <BodyText style={styles.summaryLabel}>{config.label}</BodyText>
+                        <BodyText style={styles.summaryIcon}>
+                          {config.icon}
+                        </BodyText>
+                        <BodyText style={styles.summaryLabel}>
+                          {config.label}
+                        </BodyText>
                       </View>
                       <View style={styles.summaryRight}>
-                        <BodyText style={[styles.summaryValue, { color: config.color }]}>
+                        <BodyText
+                          style={[styles.summaryValue, { color: config.color }]}
+                        >
                           {getIntensityLabel(value)}
                         </BodyText>
                         <View style={styles.summaryBar}>
-                          <View style={[
-                            styles.summaryBarFill,
-                            { 
-                              width: `${(value / 5) * 100}%`,
-                              backgroundColor: config.color
-                            }
-                          ]} />
+                          <View
+                            style={[
+                              styles.summaryBarFill,
+                              {
+                                width: `${(value / 5) * 100}%`,
+                                backgroundColor: config.color,
+                              },
+                            ]}
+                          />
                         </View>
                       </View>
                     </View>
@@ -284,12 +328,11 @@ export default function PreferencesScreen() {
                 })}
               </View>
             )}
-
           </Animated.View>
 
           {/* Bouton de continuation */}
-          <TouchableOpacity 
-            style={styles.continueButton} 
+          <TouchableOpacity
+            style={styles.continueButton}
             onPress={handleContinue}
             activeOpacity={0.8}
           >
@@ -297,10 +340,9 @@ export default function PreferencesScreen() {
               {getContinueText()}
             </BodyText>
           </TouchableOpacity>
-
         </Animated.View>
       </ScrollView>
-    </View>
+    </ScreenContainer>
   );
 }
 
@@ -317,18 +359,18 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing.xl,
   },
   avatarContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: theme.spacing.xl,
     marginBottom: theme.spacing.l,
   },
   messageContainer: {
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
     marginBottom: theme.spacing.xl,
   },
   interactionContainer: {
     marginBottom: theme.spacing.xl,
   },
-  
+
   // Styles des préférences
   preferencesContainer: {
     gap: theme.spacing.l,
@@ -338,22 +380,22 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.medium,
     padding: theme.spacing.m,
     borderWidth: 1,
-    borderColor: theme.colors.primary + '20',
-    shadowColor: '#000',
+    borderColor: theme.colors.primary + "20",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
   },
   preferenceHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: theme.spacing.m,
   },
   preferenceLabelContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     flex: 1,
   },
   preferenceIcon: {
@@ -374,24 +416,24 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: theme.colors.textLight,
     lineHeight: 18,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
   preferenceValue: {
     fontSize: 13,
     fontFamily: theme.fonts.bodyBold,
     color: theme.colors.primary,
-    textAlign: 'right',
+    textAlign: "right",
     minWidth: 80,
   },
-  
+
   // Styles des sliders
   sliderContainer: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   sliderButtons: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
     marginBottom: theme.spacing.s,
   },
   sliderButton: {
@@ -399,8 +441,8 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     backgroundColor: theme.colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     shadowColor: theme.colors.primary,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.3,
@@ -417,36 +459,36 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
     marginHorizontal: theme.spacing.m,
-    position: 'relative',
+    position: "relative",
   },
   sliderIndicator: {
-    position: 'absolute',
+    position: "absolute",
     top: -6,
     width: 16,
     height: 16,
     borderRadius: 8,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 3,
     elevation: 3,
   },
   sliderDots: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '80%',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "80%",
     marginTop: theme.spacing.xs,
   },
   sliderDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: theme.colors.textLight + '40',
+    backgroundColor: theme.colors.textLight + "40",
   },
-  
+
   // Styles du résumé
   summaryContainer: {
-    backgroundColor: theme.colors.primary + '10',
+    backgroundColor: theme.colors.primary + "10",
     borderRadius: theme.borderRadius.medium,
     padding: theme.spacing.l,
     borderLeftWidth: 4,
@@ -457,17 +499,17 @@ const styles = StyleSheet.create({
     fontFamily: theme.fonts.bodyBold,
     color: theme.colors.primary,
     marginBottom: theme.spacing.l,
-    textAlign: 'center',
+    textAlign: "center",
   },
   summaryItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: theme.spacing.m,
   },
   summaryLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
   },
   summaryIcon: {
@@ -480,7 +522,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   summaryRight: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
     flex: 1,
   },
   summaryValue: {
@@ -491,21 +533,21 @@ const styles = StyleSheet.create({
   summaryBar: {
     width: 60,
     height: 4,
-    backgroundColor: theme.colors.textLight + '30',
+    backgroundColor: theme.colors.textLight + "30",
     borderRadius: 2,
   },
   summaryBarFill: {
-    height: '100%',
+    height: "100%",
     borderRadius: 2,
   },
-  
+
   // Bouton de continuation
   continueButton: {
     backgroundColor: theme.colors.primary,
     paddingVertical: theme.spacing.m,
     paddingHorizontal: theme.spacing.xl,
     borderRadius: theme.borderRadius.large,
-    alignItems: 'center',
+    alignItems: "center",
     shadowColor: theme.colors.primary,
     shadowOffset: {
       width: 0,
@@ -520,6 +562,6 @@ const styles = StyleSheet.create({
     color: theme.getTextColorOn(theme.colors.primary),
     fontFamily: theme.fonts.bodyBold,
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

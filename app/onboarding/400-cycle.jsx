@@ -1,27 +1,37 @@
+//
+// ─────────────────────────────────────────────────────────
+// 📄 Fichier : app/onboarding/400-cycle.jsx
+// 🧩 Type : Composant Écran (Screen)
+// 📚 Description : Écran de saisie des informations de cycle menstruel (date, durée, etc.)
+// 🕒 Version : 3.0 - 2025-06-21
+// 🧭 Utilisé dans : onboarding flow (étape 5)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, Animated, ScrollView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Heading2, BodyText } from '../../components/Typography';
-import { useOnboardingStore } from '../../stores/useOnboardingStore';
-import { theme } from '../../config/theme';
-import MeluneAvatar from '../../components/MeluneAvatar';
-import ChatBubble from '../../components/ChatBubble';
-import { formatDateFrench } from '../../utils/dateUtils';
+import ScreenContainer from '../../src/core/layout/ScreenContainer';
+import { Heading2, BodyText } from '../../src/core/ui/Typography';
+import { useUserStore } from '../../src/stores/useUserStore';
+import { theme } from '../../src/config/theme';
+import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
+import ChatBubble from '../../src/features/chat/ChatBubble';
+import { formatDateFrench } from '../../src/utils/dateUtils';
 
 // import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function CycleScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const { updateCycleData } = useOnboardingStore();
-  
+  // SafeArea managed by ScreenContainer
+
+  const { updateCycle } = useUserStore();
+
   // États
   const [step, setStep] = useState(1); // 1: intro, 2: date, 3: durée, 4: validation
   const [lastPeriodDate, setLastPeriodDate] = useState(new Date());
   const [cycleLength, setCycleLength] = useState(28);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  
+
   // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
@@ -45,42 +55,21 @@ export default function CycleScreen() {
     const currentDate = selectedDate || lastPeriodDate;
     setShowDatePicker(Platform.OS === 'ios');
     setLastPeriodDate(currentDate);
-    
+
     if (Platform.OS === 'android') {
       setTimeout(() => setStep(3), 500);
     }
   };
 
   const handleContinue = () => {
-    if (step < 4) {
-      setStep(step + 1);
-      // Reset animations pour le prochain step
-      fadeAnim.setValue(0);
-      slideAnim.setValue(20);
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      // Sauvegarder et continuer
-      updateCycleData({
-        lastPeriodDate: lastPeriodDate.toISOString(),
-        averageCycleLength: cycleLength,
-        trackingExperience: 'onboarding',
-      });
-      
-      setTimeout(() => {
-        router.push('/onboarding/500-preferences');
-      }, 300);
-    }
+    updateCycle({
+      lastPeriodDate: lastPeriodDate.toISOString(),
+      length: cycleLength,
+      periodDuration: cycleLength,
+      isRegular: true,
+      trackingExperience: 'onboarding',
+    });
+    router.push("/onboarding/500-preferences");
   };
 
   // Utilisation de la fonction centralisée pour le formatage des dates
@@ -89,69 +78,59 @@ export default function CycleScreen() {
   const getMeluneMessage = () => {
     switch (step) {
       case 1:
-        return "Parle-moi de ton rythme naturel. Quand as-tu eu tes dernières règles ? 🌸";
+        return 'Parle-moi de ton rythme naturel. Quand as-tu eu tes dernières règles ? 🌸';
       case 2:
-        return "Parfait ! Maintenant, dis-moi combien de jours dure généralement ton cycle ?";
+        return 'Parfait ! Maintenant, dis-moi combien de jours dure généralement ton cycle ?';
       case 3:
         return `${cycleLength} jours, c'est ton rythme unique ! Chaque femme a le sien et c'est parfaitement normal ✨`;
       case 4:
         return `Merci pour ta confiance ! Ces informations vont m'aider à te donner des conseils personnalisés 💜`;
       default:
-        return "";
+        return '';
     }
   };
 
   const getContinueText = () => {
     switch (step) {
       case 1:
-        return "Choisir la date";
+        return 'Choisir la date';
       case 2:
         return "C'est noté !";
       case 3:
-        return "Parfait !";
+        return 'Parfait !';
       case 4:
-        return "Continuer vers mes préférences";
+        return 'Continuer vers mes préférences';
       default:
-        return "Continuer";
+        return 'Continuer';
     }
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-
-
+    <ScreenContainer style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-          
           {/* Avatar Melune */}
           <View style={styles.avatarContainer}>
             <MeluneAvatar phase="menstrual" size="medium" />
           </View>
 
           {/* Message de Melune */}
-          <Animated.View 
-            style={[
-              styles.messageContainer,
-              { transform: [{ translateY: slideAnim }] }
-            ]}
+          <Animated.View
+            style={[styles.messageContainer, { transform: [{ translateY: slideAnim }] }]}
           >
-            <ChatBubble 
-              message={getMeluneMessage()} 
-              isUser={false} 
-            />
+            <ChatBubble message={getMeluneMessage()} isUser={false} />
           </Animated.View>
 
           {/* Interface interactive selon l'étape */}
-          <Animated.View 
+          <Animated.View
             style={[
               styles.interactionContainer,
-              { 
+              {
                 opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }] 
-              }
+                transform: [{ translateY: slideAnim }],
+              },
             ]}
           >
-            
             {/* Étape 1: Présentation */}
             {step === 1 && (
               <View style={styles.stepContainer}>
@@ -165,19 +144,14 @@ export default function CycleScreen() {
             {step === 2 && (
               <View style={styles.stepContainer}>
                 <BodyText style={styles.sectionTitle}>Date de tes dernières règles</BodyText>
-                
-                <TouchableOpacity 
-                  style={styles.dateButton}
-                  onPress={() => setShowDatePicker(true)}
-                >
-                  <BodyText style={styles.dateButtonText}>
-                    📅 {formatDate(lastPeriodDate)}
-                  </BodyText>
+
+                <TouchableOpacity style={styles.dateButton} onPress={() => setShowDatePicker(true)}>
+                  <BodyText style={styles.dateButtonText}>📅 {formatDate(lastPeriodDate)}</BodyText>
                 </TouchableOpacity>
 
                 {showDatePicker && (
                   <View style={styles.simpleDatePicker}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={styles.dateNavButton}
                       onPress={() => {
                         const newDate = new Date(lastPeriodDate);
@@ -189,8 +163,8 @@ export default function CycleScreen() {
                     >
                       <BodyText style={styles.dateNavText}>← Jour précédent</BodyText>
                     </TouchableOpacity>
-                    
-                    <TouchableOpacity 
+
+                    <TouchableOpacity
                       style={styles.dateNavButton}
                       onPress={() => {
                         const newDate = new Date(lastPeriodDate);
@@ -214,34 +188,36 @@ export default function CycleScreen() {
                 <BodyText style={styles.helpText}>
                   De la première journée des règles jusqu'aux prochaines
                 </BodyText>
-                
+
                 <View style={styles.sliderContainer}>
                   <BodyText style={styles.sliderValue}>{cycleLength} jours</BodyText>
-                  
+
                   {/* Slider simulé avec boutons */}
                   <View style={styles.sliderButtons}>
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={styles.sliderButton}
                       onPress={() => setCycleLength(Math.max(21, cycleLength - 1))}
                     >
                       <BodyText style={styles.sliderButtonText}>-</BodyText>
                     </TouchableOpacity>
-                    
+
                     <View style={styles.sliderTrack}>
-                      <View style={[
-                        styles.sliderIndicator,
-                        { left: `${((cycleLength - 21) / 14) * 100}%` }
-                      ]} />
+                      <View
+                        style={[
+                          styles.sliderIndicator,
+                          { left: `${((cycleLength - 21) / 14) * 100}%` },
+                        ]}
+                      />
                     </View>
-                    
-                    <TouchableOpacity 
+
+                    <TouchableOpacity
                       style={styles.sliderButton}
                       onPress={() => setCycleLength(Math.min(35, cycleLength + 1))}
                     >
                       <BodyText style={styles.sliderButtonText}>+</BodyText>
                     </TouchableOpacity>
                   </View>
-                  
+
                   <View style={styles.sliderLabels}>
                     <BodyText style={styles.sliderLabel}>21j</BodyText>
                     <BodyText style={styles.sliderLabel}>35j</BodyText>
@@ -266,23 +242,19 @@ export default function CycleScreen() {
                 </View>
               </View>
             )}
-
           </Animated.View>
 
           {/* Bouton de continuation */}
-          <TouchableOpacity 
-            style={styles.continueButton} 
+          <TouchableOpacity
+            style={styles.continueButton}
             onPress={handleContinue}
             activeOpacity={0.8}
           >
-            <BodyText style={styles.continueButtonText}>
-              {getContinueText()}
-            </BodyText>
+            <BodyText style={styles.continueButtonText}>{getContinueText()}</BodyText>
           </TouchableOpacity>
-
         </Animated.View>
       </ScrollView>
-    </View>
+    </ScreenContainer>
   );
 }
 
@@ -327,7 +299,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.m,
     textAlign: 'center',
   },
-  
+
   // Styles DatePicker
   dateButton: {
     backgroundColor: theme.colors.primary + '20',
@@ -361,7 +333,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: theme.fonts.bodyBold,
   },
-  
+
   // Styles Slider
   sliderContainer: {
     alignItems: 'center',
@@ -428,7 +400,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: theme.colors.textLight,
   },
-  
+
   // Styles Résumé
   summaryContainer: {
     backgroundColor: theme.colors.primary + '10',
@@ -459,7 +431,7 @@ const styles = StyleSheet.create({
     fontFamily: theme.fonts.bodyBold,
     color: theme.colors.primary,
   },
-  
+
   // Bouton de continuation
   continueButton: {
     backgroundColor: theme.colors.primary,
@@ -483,4 +455,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
   },
-}); 
+});

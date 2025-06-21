@@ -1,17 +1,26 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Heading1, Heading2, BodyText } from '../../components/Typography';
-import { useOnboardingStore } from '../../stores/useOnboardingStore';
-import { theme } from '../../config/theme';
-import { DevNavigation } from '../../components/DevNavigation';
+//
+// ─────────────────────────────────────────────────────────
+// 📄 Fichier : app/onboarding/100-promesse.jsx
+// 🧩 Type : Composant Écran (Screen)
+// 📚 Description : Écran d'introduction et de démarrage du parcours onboarding
+// 🕒 Version : 3.0 - 2025-06-21
+// 🧭 Utilisé dans : onboarding flow (étape 1)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//
+import React, { useEffect, useRef } from "react";
+import { View, StyleSheet, TouchableOpacity, Animated } from "react-native";
+import { useRouter } from "expo-router";
+import ScreenContainer from "../../src/core/layout/ScreenContainer";
+import { Heading1, Heading2, BodyText } from "../../src/core/ui/Typography";
+import { useUserStore } from "../../src/stores/useUserStore";
+import { theme } from "../../src/config/theme";
+import { DevNavigation } from "../../src/core/dev/DevNavigation";
 
 export default function PromesseScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const { updateUserInfo } = useOnboardingStore();
-  
+  // SafeArea handled by ScreenContainer
+  const { updateProfile } = useUserStore();
+
   // Animation simple
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -26,18 +35,21 @@ export default function PromesseScreen() {
 
   const handleStartJourney = () => {
     // Marquer le début du parcours
-    updateUserInfo({ journeyStarted: true, startDate: new Date().toLocaleString('fr-FR', {timeZone: 'Europe/Paris'})
- });
-    router.push('/onboarding/200-rencontre');
+    updateProfile({
+      journeyStarted: true,
+      startDate: new Date().toLocaleString("fr-FR", {
+        timeZone: "Europe/Paris",
+      }),
+    });
+    router.push("/onboarding/200-rencontre");
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+    <ScreenContainer style={styles.container}>
       {/* DevNavigation pour le développement */}
       <DevNavigation />
-      
+
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-        
         {/* Illustration simple
         <View style={styles.illustrationContainer}>
           <View style={styles.circle}>
@@ -47,12 +59,12 @@ export default function PromesseScreen() {
 
         {/* Titre Hero */}
         <Heading1 style={styles.heroTitle}>
-          Devenez la femme{'\n'}que vous êtes
+          Devenez la femme{"\n"}que vous êtes
         </Heading1>
 
         {/* Sous-titre */}
         <Heading2 style={styles.subtitle}>
-          Votre cycle révèle{'\n'}votre vraie nature
+          Votre cycle révèle{"\n"}votre vraie nature
         </Heading2>
 
         {/* Question engageante */}
@@ -61,8 +73,8 @@ export default function PromesseScreen() {
         </BodyText>
 
         {/* Bouton Call-to-Action */}
-        <TouchableOpacity 
-          style={styles.startButton} 
+        <TouchableOpacity
+          style={styles.startButton}
           onPress={handleStartJourney}
           activeOpacity={0.8}
         >
@@ -70,9 +82,8 @@ export default function PromesseScreen() {
             Oui, je commence ce voyage
           </BodyText>
         </TouchableOpacity>
-
       </Animated.View>
-    </View>
+    </ScreenContainer>
   );
 }
 
@@ -83,21 +94,21 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: theme.spacing.l,
   },
   illustrationContainer: {
     marginBottom: theme.spacing.xxl,
-    alignItems: 'center',
+    alignItems: "center",
   },
   circle: {
     width: 120,
     height: 120,
     borderRadius: 60,
     backgroundColor: theme.colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     shadowColor: theme.colors.primary,
     shadowOffset: {
       width: 0,
@@ -112,25 +123,25 @@ const styles = StyleSheet.create({
     color: theme.getTextColorOn(theme.colors.primary),
   },
   heroTitle: {
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: theme.spacing.l,
     color: theme.colors.primary,
     lineHeight: 32,
   },
   subtitle: {
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: theme.spacing.xl,
     color: theme.colors.text,
     lineHeight: 28,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
   question: {
-    textAlign: 'center',
+    textAlign: "center",
     fontSize: 16,
     color: theme.colors.textLight,
     lineHeight: 24,
     marginBottom: theme.spacing.xxl,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
   startButton: {
     backgroundColor: theme.colors.primary,
@@ -150,6 +161,6 @@ const styles = StyleSheet.create({
     color: theme.getTextColorOn(theme.colors.primary),
     fontFamily: theme.fonts.bodyBold,
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

@@ -1,11 +1,20 @@
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { useState, useEffect } from 'react';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../../../config/theme';
-import ContentManager from '../../../../services/ContentManager';
-import { Heading, BodyText, Caption } from '../../../../components/Typography';
+//
+// ─────────────────────────────────────────────────────────
+// 📄 Fichier : app/(tabs)/cycle/phases/[id].jsx
+// 🧩 Type : Composant Écran
+// 📚 Description : Composant affichant l’écran principal
+// 🕒 Version : 3.0 - 2025-06-21
+// 🧭 Utilisé dans : /notebook cycle route
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//
+import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
+import { useState, useEffect } from "react";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { theme } from "../../../../src/config/theme";
+import ContentManager from "../../../../src/services/ContentManager";
+import { Heading, BodyText, Caption } from "../../../../src/core/ui/Typography";
 
 export default function PhaseDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -20,8 +29,8 @@ export default function PhaseDetailScreen() {
         const phases = await ContentManager.getPhases();
         setPhaseData(phases[id]); // id depuis useLocalSearchParams
       } catch (error) {
-        console.log('📱 Fallback vers phases.json local');
-        const phases = require('../../../../data/phases.json');
+        console.log("📱 Fallback vers phases.json local");
+        const phases = require("../../../../src/data/phases.json");
         setPhaseData(phases[id]);
       } finally {
         setLoading(false);
@@ -52,14 +61,23 @@ export default function PhaseDetailScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header unifié avec contraste automatique */}
-      <View style={[styles.unifiedHeader, { backgroundColor: phaseData.color }]}>
+      <View
+        style={[styles.unifiedHeader, { backgroundColor: phaseData.color }]}
+      >
         <View style={styles.navigationRow}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
             <Ionicons name="arrow-back" size={24} color={headerTextColor} />
           </TouchableOpacity>
-          <BodyText style={[styles.breadcrumb, { color: headerTextColor }]}>Mon cycle</BodyText>
+          <BodyText style={[styles.breadcrumb, { color: headerTextColor }]}>
+            Mon cycle
+          </BodyText>
         </View>
-        <Heading style={[styles.title, { color: headerTextColor }]}>{phaseData.name}</Heading>
+        <Heading style={[styles.title, { color: headerTextColor }]}>
+          {phaseData.name}
+        </Heading>
       </View>
 
       <ScrollView style={styles.scrollView}>
@@ -69,24 +87,32 @@ export default function PhaseDetailScreen() {
             <BodyText style={styles.symbolSmall}>{phaseData.symbol}</BodyText>
             <Caption style={styles.duration}>{phaseData.duration}</Caption>
           </View>
-          
-          <BodyText style={styles.description}>{phaseData.description}</BodyText>
+
+          <BodyText style={styles.description}>
+            {phaseData.description}
+          </BodyText>
 
           <Heading style={styles.sectionTitle}>Caractéristiques</Heading>
           <View style={styles.section}>
             {phaseData.characteristics.physical.map((item, index) => (
-              <BodyText key={index} style={styles.listItem}>• {item}</BodyText>
+              <BodyText key={index} style={styles.listItem}>
+                • {item}
+              </BodyText>
             ))}
           </View>
 
           <Heading style={styles.sectionTitle}>Conseils</Heading>
           <View style={styles.section}>
             {phaseData.advice.nutrition.map((item, index) => (
-              <BodyText key={index} style={styles.listItem}>• {item}</BodyText>
+              <BodyText key={index} style={styles.listItem}>
+                • {item}
+              </BodyText>
             ))}
           </View>
 
-          <BodyText style={styles.affirmation}>"{phaseData.affirmation}"</BodyText>
+          <BodyText style={styles.affirmation}>
+            "{phaseData.affirmation}"
+          </BodyText>
         </View>
       </ScrollView>
     </View>
@@ -103,8 +129,8 @@ const styles = StyleSheet.create({
     paddingTop: theme.spacing.s,
   },
   navigationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: theme.spacing.m,
   },
   backButton: {
@@ -116,8 +142,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
   },
   scrollView: {
     flex: 1,
@@ -126,8 +152,8 @@ const styles = StyleSheet.create({
     padding: theme.spacing.m,
   },
   durationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: theme.spacing.s,
   },
   symbolSmall: {
@@ -147,7 +173,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: theme.colors.text,
     marginTop: theme.spacing.m,
     marginBottom: theme.spacing.s,
@@ -162,10 +188,10 @@ const styles = StyleSheet.create({
   },
   affirmation: {
     fontSize: 18,
-    fontStyle: 'italic',
+    fontStyle: "italic",
     color: theme.colors.text,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: theme.spacing.l,
     paddingHorizontal: theme.spacing.m,
   },
-}); 
+});

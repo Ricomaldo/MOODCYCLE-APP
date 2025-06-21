@@ -1,4 +1,5 @@
-import { Stack } from 'expo-router';
+// filepath: app/onboarding/_layout.jsx
+import { Stack } from "expo-router";
 
 export default function OnboardingLayout() {
   return (
@@ -14,4 +15,4 @@ export default function OnboardingLayout() {
       <Stack.Screen name="800-cadeau" />
     </Stack>
   );
-} 
+}

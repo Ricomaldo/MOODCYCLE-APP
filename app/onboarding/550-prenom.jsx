@@ -1,21 +1,37 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Animated, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Heading1, Heading2, BodyText } from '../../components/Typography';
-import { useOnboardingStore } from '../../stores/useOnboardingStore';
-import { theme } from '../../config/theme';
-import MeluneAvatar from '../../components/MeluneAvatar';
-import ChatBubble from '../../components/ChatBubble';
+//
+// ─────────────────────────────────────────────────────────
+// 📄 Fichier : app/onboarding/550-prenom.jsx
+// 🧩 Type : Composant Écran (Screen)
+// 📚 Description : Écran de saisie du prénom de l'utilisatrice
+// 🕒 Version : 3.0 - 2025-06-21
+// 🧭 Utilisé dans : onboarding flow (étape 7)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//
+import React, { useEffect, useRef, useState } from "react";
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+import { useRouter } from "expo-router";
+import ScreenContainer from "../../src/core/layout/ScreenContainer";
+import { Heading1, Heading2, BodyText } from "../../src/core/ui/Typography";
+import { useUserStore } from "../../src/stores/useUserStore";
+import { theme } from "../../src/config/theme";
+import MeluneAvatar from "../../src/features/shared/MeluneAvatar";
+import ChatBubble from "../../src/features/chat/ChatBubble";
 
 export default function PrenomScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const { updateUserInfo, userInfo } = useOnboardingStore();
-  
-  const [prenom, setPrenom] = useState('');
+  const { updateProfile, profile } = useUserStore();
+
+  const [prenom, setPrenom] = useState("");
   const [showValidation, setShowValidation] = useState(false);
-  
+
   // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
@@ -59,71 +75,60 @@ export default function PrenomScreen() {
   };
 
   const handleContinue = () => {
-    if (prenom.trim().length >= 2) {
-      // Sauvegarder le prénom dans le store
-      updateUserInfo({ 
+    if (prenom.trim().length > 0) {
+      updateProfile({
         prenom: prenom.trim(),
-        prenomCollectedAt: new Date().toLocaleString('fr-FR', {timeZone: 'Europe/Paris'})
-
       });
-      
-      // Animation de validation puis navigation
-      setTimeout(() => {
-        router.push('/onboarding/600-avatar');
-      }, 400);
+      router.push("/onboarding/600-avatar");
     }
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
+    <ScreenContainer style={styles.container}>
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-        
         {/* Avatar Melune avec expression douce */}
-        <Animated.View 
+        <Animated.View
           style={[
             styles.avatarContainer,
-            { transform: [{ translateY: slideAnim }] }
+            { transform: [{ translateY: slideAnim }] },
           ]}
         >
           <MeluneAvatar phase="ovulatory" size="medium" />
         </Animated.View>
 
         {/* Messages intimes de Melune */}
-        <Animated.View 
+        <Animated.View
           style={[
             styles.messagesContainer,
-            { 
+            {
               opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }
+              transform: [{ translateY: slideAnim }],
+            },
           ]}
         >
           <View style={styles.messageWrapper}>
-            <ChatBubble 
-              message="Nous avons déjà partagé tant de choses ensemble... ✨" 
-              isUser={false} 
+            <ChatBubble
+              message="Nous avons déjà partagé tant de choses ensemble... ✨"
+              isUser={false}
             />
           </View>
-          
+
           <View style={styles.messageWrapper}>
-            <ChatBubble 
-              message="Pour que notre connexion soit vraiment personnelle, comment puis-je t'appeler ?" 
-              isUser={false} 
+            <ChatBubble
+              message="Pour que notre connexion soit vraiment personnelle, comment puis-je t'appeler ?"
+              isUser={false}
             />
           </View>
         </Animated.View>
 
         {/* Section prénom avec cœur animé */}
-        <Animated.View 
+        <Animated.View
           style={[
             styles.prenomSection,
-            { 
+            {
               opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }
+              transform: [{ translateY: slideAnim }],
+            },
           ]}
         >
           <View style={styles.prenomHeader}>
@@ -153,13 +158,13 @@ export default function PrenomScreen() {
 
         {/* Validation et bouton */}
         {showValidation && (
-          <Animated.View 
+          <Animated.View
             style={[
               styles.validationContainer,
-              { 
+              {
                 opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }]
-              }
+                transform: [{ translateY: slideAnim }],
+              },
             ]}
           >
             <View style={styles.previewContainer}>
@@ -168,8 +173,8 @@ export default function PrenomScreen() {
               </BodyText>
             </View>
 
-            <TouchableOpacity 
-              style={styles.continueButton} 
+            <TouchableOpacity
+              style={styles.continueButton}
               onPress={handleContinue}
               activeOpacity={0.8}
             >
@@ -179,9 +184,8 @@ export default function PrenomScreen() {
             </TouchableOpacity>
           </Animated.View>
         )}
-
       </Animated.View>
-    </KeyboardAvoidingView>
+    </ScreenContainer>
   );
 }
 
@@ -195,7 +199,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.l,
   },
   avatarContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: theme.spacing.xl,
     marginBottom: theme.spacing.l,
   },
@@ -203,16 +207,16 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xl,
   },
   messageWrapper: {
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
     marginBottom: theme.spacing.m,
   },
   prenomSection: {
     marginBottom: theme.spacing.xl,
   },
   prenomHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: theme.spacing.l,
   },
   heartIcon: {
@@ -222,19 +226,19 @@ const styles = StyleSheet.create({
   prenomTitle: {
     color: theme.colors.primary,
     fontSize: 18,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
   prenomInput: {
     backgroundColor: theme.colors.background,
     borderWidth: 2,
-    borderColor: theme.colors.primary + '40',
+    borderColor: theme.colors.primary + "40",
     borderRadius: theme.borderRadius.medium,
     paddingVertical: theme.spacing.m,
     paddingHorizontal: theme.spacing.l,
     fontSize: 18,
     fontFamily: theme.fonts.body,
     color: theme.colors.text,
-    textAlign: 'center',
+    textAlign: "center",
     shadowColor: theme.colors.primary,
     shadowOffset: {
       width: 0,
@@ -245,18 +249,18 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   helpText: {
-    textAlign: 'center',
+    textAlign: "center",
     color: theme.colors.textLight,
     fontSize: 13,
-    fontStyle: 'italic',
+    fontStyle: "italic",
     marginTop: theme.spacing.s,
     lineHeight: 18,
   },
   validationContainer: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   previewContainer: {
-    backgroundColor: theme.colors.secondary + '20',
+    backgroundColor: theme.colors.secondary + "20",
     borderRadius: theme.borderRadius.medium,
     paddingVertical: theme.spacing.m,
     paddingHorizontal: theme.spacing.l,
@@ -267,8 +271,8 @@ const styles = StyleSheet.create({
   previewText: {
     fontSize: 16,
     color: theme.colors.text,
-    fontStyle: 'italic',
-    textAlign: 'center',
+    fontStyle: "italic",
+    textAlign: "center",
   },
   continueButton: {
     backgroundColor: theme.colors.primary,
@@ -288,6 +292,6 @@ const styles = StyleSheet.create({
     color: theme.getTextColorOn(theme.colors.primary),
     fontFamily: theme.fonts.bodyBold,
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
-}); 
+});

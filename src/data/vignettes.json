@@ -1,0 +1,571 @@
+{
+    "version": "1.0",
+    "lastUpdated": "2025-01-18",
+    "description": "Vignettes contextuelles par phase cyclique et persona - Guidance thérapeutique Jeza",
+    
+    "menstrual": {
+      "emma": [
+        {
+          "id": "menstrual_emma_1",
+          "icon": "💭",
+          "title": "Explore tes ressentis",
+          "action": "chat",
+          "prompt": "Melune, comment mieux honorer mon besoin de repos aujourd'hui ? 🌙",
+          "category": "emotions"
+        },
+        {
+          "id": "menstrual_emma_2", 
+          "icon": "✍️",
+          "title": "Note ce qui émerge",
+          "action": "notebook",
+          "prompt": "Qu'est-ce que mon corps me demande vraiment en ce moment ?",
+          "category": "body"
+        },
+        {
+          "id": "menstrual_emma_3",
+          "icon": "🌙",
+          "title": "Découvre ta phase",
+          "action": "phase_detail",
+          "prompt": null,
+          "category": "cycle"
+        }
+      ],
+      
+      "laure": [
+        {
+          "id": "menstrual_laure_1",
+          "icon": "🎯",
+          "title": "Optimise ton repos",
+          "action": "chat", 
+          "prompt": "Melune, comment adapter mon planning pour respecter mon énergie actuelle ?",
+          "category": "productivity"
+        },
+        {
+          "id": "menstrual_laure_2",
+          "icon": "📊",
+          "title": "Analyse tes patterns",
+          "action": "notebook",
+          "prompt": "Quels patterns énergétiques est-ce que j'observe ce cycle ?",
+          "category": "tracking"
+        },
+        {
+          "id": "menstrual_laure_3",
+          "icon": "⚡",
+          "title": "Maîtrise cette phase",
+          "action": "phase_detail",
+          "prompt": null,
+          "category": "optimization"
+        }
+      ],
+      
+      "clara": [
+        {
+          "id": "menstrual_clara_1",
+          "icon": "🔥",
+          "title": "Transforme ton énergie",
+          "action": "chat",
+          "prompt": "Melune, comment utiliser cette phase pour me ressourcer profondément ?",
+          "category": "transformation"
+        },
+        {
+          "id": "menstrual_clara_2",
+          "icon": "💪",
+          "title": "Challenge ton mental",
+          "action": "notebook", 
+          "prompt": "Comment cette phase me rend plus forte et consciente ?",
+          "category": "growth"
+        },
+        {
+          "id": "menstrual_clara_3",
+          "icon": "🚀",
+          "title": "Unlock cette phase",
+          "action": "phase_detail",
+          "prompt": null,
+          "category": "mastery"
+        }
+      ],
+      
+      "sylvie": [
+        {
+          "id": "menstrual_sylvie_1",
+          "icon": "🤗",
+          "title": "Accueille tes besoins",
+          "action": "chat",
+          "prompt": "Melune, comment m'offrir la douceur dont j'ai besoin ?",
+          "category": "selfcare"
+        },
+        {
+          "id": "menstrual_sylvie_2",
+          "icon": "🌸",
+          "title": "Chéris ton expérience",
+          "action": "notebook",
+          "prompt": "Comment honorer cette sagesse que mon corps partage ?",
+          "category": "wisdom"
+        },
+        {
+          "id": "menstrual_sylvie_3",
+          "icon": "💖",
+          "title": "Comprends ta phase",
+          "action": "phase_detail",
+          "prompt": null,
+          "category": "understanding"
+        }
+      ],
+      
+      "christine": [
+        {
+          "id": "menstrual_christine_1",
+          "icon": "🙏",
+          "title": "Honore ce temps sacré",
+          "action": "chat",
+          "prompt": "Melune, comment transformer ce moment en rituel de ressourcement ?",
+          "category": "ritual"
+        },
+        {
+          "id": "menstrual_christine_2",
+          "icon": "📿",
+          "title": "Recueille ta sagesse",
+          "action": "notebook",
+          "prompt": "Quelle sagesse mon corps me transmet-il dans cette phase ?",
+          "category": "spirituality"
+        },
+        {
+          "id": "menstrual_christine_3",
+          "icon": "✨",
+          "title": "Explore le mystère",
+          "action": "phase_detail",
+          "prompt": null,
+          "category": "mystery"
+        }
+      ]
+    },
+    
+    "follicular": {
+      "emma": [
+        {
+          "id": "follicular_emma_1",
+          "icon": "🌱",
+          "title": "Explore ton énergie",
+          "action": "chat",
+          "prompt": "Melune, comment canaliser cette énergie qui remonte ? ✨",
+          "category": "energy"
+        },
+        {
+          "id": "follicular_emma_2",
+          "icon": "💡",
+          "title": "Capture tes idées",
+          "action": "notebook",
+          "prompt": "Quels projets m'inspirent en ce moment ?",
+          "category": "creativity"
+        },
+        {
+          "id": "follicular_emma_3",
+          "icon": "🌸",
+          "title": "Découvre ta renaissance",
+          "action": "phase_detail",
+          "prompt": null,
+          "category": "renewal"
+        }
+      ],
+      
+      "laure": [
+        {
+          "id": "follicular_laure_1",
+          "icon": "🎯",
+          "title": "Planifie tes projets",
+          "action": "chat",
+          "prompt": "Melune, comment structurer mes objectifs pour cette phase énergétique ?",
+          "category": "planning"
+        },
+        {
+          "id": "follicular_laure_2",
+          "icon": "📈",
+          "title": "Optimise ta croissance",
+          "action": "notebook",
+          "prompt": "Quelles initiatives vais-je lancer avec cette énergie montante ?",
+          "category": "growth"
+        },
+        {
+          "id": "follicular_laure_3",
+          "icon": "⚡",
+          "title": "Maîtrise ta phase",
+          "action": "phase_detail",
+          "prompt": null,
+          "category": "mastery"
+        }
+      ],
+      
+      "clara": [
+        {
+          "id": "follicular_clara_1",
+          "icon": "🚀",
+          "title": "Maximise ton potentiel",
+          "action": "chat",
+          "prompt": "Melune, comment exploiter au max cette phase de création ?",
+          "category": "optimization"
+        },
+        {
+          "id": "follicular_clara_2",
+          "icon": "⚡",
+          "title": "Hack ton énergie",
+          "action": "notebook",
+          "prompt": "Comment transformer cette énergie en résultats concrets ?",
+          "category": "productivity"
+        },
+        {
+          "id": "follicular_clara_3",
+          "icon": "🔥",
+          "title": "Unlock ta puissance",
+          "action": "phase_detail",
+          "prompt": null,
+          "category": "power"
+        }
+      ],
+      
+      "sylvie": [
+        {
+          "id": "follicular_sylvie_1",
+          "icon": "🌺",
+          "title": "Nourris tes rêves",
+          "action": "chat",
+          "prompt": "Melune, comment cultiver mes aspirations avec douceur ?",
+          "category": "dreams"
+        },
+        {
+          "id": "follicular_sylvie_2",
+          "icon": "🌿",
+          "title": "Sème tes intentions",
+          "action": "notebook",
+          "prompt": "Quelles graines vais-je planter pour mon épanouissement ?",
+          "category": "intentions"
+        },
+        {
+          "id": "follicular_sylvie_3",
+          "icon": "🌱",
+          "title": "Embrasse ta croissance",
+          "action": "phase_detail",
+          "prompt": null,
+          "category": "growth"
+        }
+      ],
+      
+      "christine": [
+        {
+          "id": "follicular_christine_1",
+          "icon": "🌟",
+          "title": "Éveille ton potentiel",
+          "action": "chat",
+          "prompt": "Melune, comment harmoniser cette renaissance avec ma sagesse ?",
+          "category": "awakening"
+        },
+        {
+          "id": "follicular_christine_2",
+          "icon": "📜",
+          "title": "Écris ta vision",
+          "action": "notebook",
+          "prompt": "Quelle vision sage émerge de cette énergie créatrice ?",
+          "category": "vision"
+        },
+        {
+          "id": "follicular_christine_3",
+          "icon": "✨",
+          "title": "Explore la création",
+          "action": "phase_detail",
+          "prompt": null,
+          "category": "creation"
+        }
+      ]
+    },
+    
+    "ovulatory": {
+      "emma": [
+        {
+          "id": "ovulatory_emma_1",
+          "icon": "💬",
+          "title": "Exprime ta créativité",
+          "action": "chat",
+          "prompt": "Melune, comment utiliser cette énergie communicative ? 🌟",
+          "category": "expression"
+        },
+        {
+          "id": "ovulatory_emma_2",
+          "icon": "🎨",
+          "title": "Crée et partage",
+          "action": "notebook",
+          "prompt": "Qu'est-ce que j'ai envie d'exprimer au monde ?",
+          "category": "creativity"
+        },
+        {
+          "id": "ovulatory_emma_3",
+          "icon": "☀️",
+          "title": "Rayonne pleinement",
+          "action": "phase_detail",
+          "prompt": null,
+          "category": "radiance"
+        }
+      ],
+      
+      "laure": [
+        {
+          "id": "ovulatory_laure_1",
+          "icon": "🎤",
+          "title": "Communique efficacement",
+          "action": "chat",
+          "prompt": "Melune, comment optimiser mes interactions et présentations ?",
+          "category": "communication"
+        },
+        {
+          "id": "ovulatory_laure_2",
+          "icon": "🤝",
+          "title": "Connecte et influence",
+          "action": "notebook",
+          "prompt": "Comment maximiser mon impact relationnel aujourd'hui ?",
+          "category": "influence"
+        },
+        {
+          "id": "ovulatory_laure_3",
+          "icon": "⭐",
+          "title": "Brille au maximum",
+          "action": "phase_detail",
+          "prompt": null,
+          "category": "peak"
+        }
+      ],
+      
+      "clara": [
+        {
+          "id": "ovulatory_clara_1",
+          "icon": "🔥",
+          "title": "Domine tes interactions",
+          "action": "chat",
+          "prompt": "Melune, comment exploiter cette confiance ultime ?",
+          "category": "dominance"
+        },
+        {
+          "id": "ovulatory_clara_2",
+          "icon": "💎",
+          "title": "Manifeste ta puissance",
+          "action": "notebook",
+          "prompt": "Comment transformer cette énergie en leadership ?",
+          "category": "manifestation"
+        },
+        {
+          "id": "ovulatory_clara_3",
+          "icon": "👑",
+          "title": "Règne sur ta phase",
+          "action": "phase_detail",
+          "prompt": null,
+          "category": "mastery"
+        }
+      ],
+      
+      "sylvie": [
+        {
+          "id": "ovulatory_sylvie_1",
+          "icon": "🌻",
+          "title": "Partage ta lumière",
+          "action": "chat",
+          "prompt": "Melune, comment rayonner ma bienveillance naturelle ?",
+          "category": "sharing"
+        },
+        {
+          "id": "ovulatory_sylvie_2",
+          "icon": "💝",
+          "title": "Offre ton soutien",
+          "action": "notebook",
+          "prompt": "Comment utiliser cette énergie pour nourrir mes relations ?",
+          "category": "nurturing"
+        },
+        {
+          "id": "ovulatory_sylvie_3",
+          "icon": "🌞",
+          "title": "Épanouis-toi pleinement",
+          "action": "phase_detail",
+          "prompt": null,
+          "category": "blooming"
+        }
+      ],
+      
+      "christine": [
+        {
+          "id": "ovulatory_christine_1",
+          "icon": "🕊️",
+          "title": "Transmets ta sagesse",
+          "action": "chat",
+          "prompt": "Melune, comment partager mes apprentissages avec grâce ?",
+          "category": "transmission"
+        },
+        {
+          "id": "ovulatory_christine_2",
+          "icon": "🌈",
+          "title": "Inspire les autres",
+          "action": "notebook",
+          "prompt": "Quelle sagesse puis-je offrir avec cette énergie rayonnante ?",
+          "category": "inspiration"
+        },
+        {
+          "id": "ovulatory_christine_3",
+          "icon": "✨",
+          "title": "Illumine ta phase",
+          "action": "phase_detail",
+          "prompt": null,
+          "category": "illumination"
+        }
+      ]
+    },
+    
+    "luteal": {
+      "emma": [
+        {
+          "id": "luteal_emma_1",
+          "icon": "🔮",
+          "title": "Écoute ton intuition",
+          "action": "chat",
+          "prompt": "Melune, comment mieux respecter mes limites ? 🍂",
+          "category": "intuition"
+        },
+        {
+          "id": "luteal_emma_2",
+          "icon": "📚",
+          "title": "Observe tes patterns",
+          "action": "notebook",
+          "prompt": "Qu'est-ce que j'ai appris sur moi ce cycle ?",
+          "category": "learning"
+        },
+        {
+          "id": "luteal_emma_3",
+          "icon": "🍂",
+          "title": "Prépare la transition",
+          "action": "phase_detail",
+          "prompt": null,
+          "category": "transition"
+        }
+      ],
+      
+      "laure": [
+        {
+          "id": "luteal_laure_1",
+          "icon": "📋",
+          "title": "Organise et finalise",
+          "action": "chat",
+          "prompt": "Melune, comment structurer mes priorités avec cette énergie focus ?",
+          "category": "organization"
+        },
+        {
+          "id": "luteal_laure_2",
+          "icon": "🎯",
+          "title": "Affine tes stratégies",
+          "action": "notebook",
+          "prompt": "Quelles améliorations vais-je implémenter ?",
+          "category": "refinement"
+        },
+        {
+          "id": "luteal_laure_3",
+          "icon": "🔧",
+          "title": "Optimise ta phase",
+          "action": "phase_detail",
+          "prompt": null,
+          "category": "optimization"
+        }
+      ],
+      
+      "clara": [
+        {
+          "id": "luteal_clara_1",
+          "icon": "⚔️",
+          "title": "Maîtrise tes défis",
+          "action": "chat",
+          "prompt": "Melune, comment transformer cette intensité en superpouvoir ?",
+          "category": "mastery"
+        },
+        {
+          "id": "luteal_clara_2",
+          "icon": "🔬",
+          "title": "Analyse tes données",
+          "action": "notebook",
+          "prompt": "Quels insights révèlent mes patterns lutéaux ?",
+          "category": "analysis"
+        },
+        {
+          "id": "luteal_clara_3",
+          "icon": "💪",
+          "title": "Conquiers ta phase",
+          "action": "phase_detail",
+          "prompt": null,
+          "category": "conquest"
+        }
+      ],
+      
+      "sylvie": [
+        {
+          "id": "luteal_sylvie_1",
+          "icon": "🤗",
+          "title": "Câline tes émotions",
+          "action": "chat",
+          "prompt": "Melune, comment accueillir cette sensibilité avec tendresse ?",
+          "category": "emotional_care"
+        },
+        {
+          "id": "luteal_sylvie_2",
+          "icon": "🍃",
+          "title": "Récolte tes apprentissages",
+          "action": "notebook",
+          "prompt": "Quelle sagesse ce cycle m'a-t-il apportée ?",
+          "category": "harvest"
+        },
+        {
+          "id": "luteal_sylvie_3",
+          "icon": "🌰",
+          "title": "Honore ta richesse",
+          "action": "phase_detail",
+          "prompt": null,
+          "category": "abundance"
+        }
+      ],
+      
+      "christine": [
+        {
+          "id": "luteal_christine_1",
+          "icon": "🍷",
+          "title": "Savoure cette profondeur",
+          "action": "chat",
+          "prompt": "Melune, comment honorer cette phase de transformation intérieure ?",
+          "category": "depth"
+        },
+        {
+          "id": "luteal_christine_2",
+          "icon": "📖",
+          "title": "Distille ta sagesse",
+          "action": "notebook",
+          "prompt": "Quelles vérités profondes émergent de cette introspection ?",
+          "category": "wisdom"
+        },
+        {
+          "id": "luteal_christine_3",
+          "icon": "🌙",
+          "title": "Embrasse le mystère",
+          "action": "phase_detail",
+          "prompt": null,
+          "category": "mystery"
+        }
+      ]
+    },
+    
+    "metadata": {
+      "totalVignettes": 60,
+      "phases": ["menstrual", "follicular", "ovulatory", "luteal"],
+      "personas": ["emma", "laure", "clara", "sylvie", "christine"],
+      "actions": ["chat", "notebook", "phase_detail"],
+      "categories": [
+        "emotions", "body", "cycle", "productivity", "tracking", "optimization",
+        "transformation", "growth", "mastery", "selfcare", "wisdom", "understanding",
+        "ritual", "spirituality", "mystery", "energy", "creativity", "renewal",
+        "planning", "dreams", "intentions", "awakening", "vision", "creation",
+        "expression", "radiance", "communication", "influence", "peak", "dominance",
+        "manifestation", "sharing", "nurturing", "blooming", "transmission",
+        "inspiration", "illumination", "intuition", "learning", "transition",
+        "organization", "refinement", "analysis", "conquest", "emotional_care",
+        "harvest", "abundance", "depth"
+      ]
+    }
+  }

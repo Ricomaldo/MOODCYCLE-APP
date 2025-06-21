@@ -1,71 +1,86 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, Animated, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Heading2, BodyText } from '../../components/Typography';
-import { useOnboardingStore } from '../../stores/useOnboardingStore';
-import { theme } from '../../config/theme';
-import MeluneAvatar from '../../components/MeluneAvatar';
-import ChatBubble from '../../components/ChatBubble';
-
+//
+// ─────────────────────────────────────────────────────────
+// 📄 Fichier : app/onboarding/600-avatar.jsx
+// 🧩 Type : Composant Écran (Screen)
+// 📚 Description : Écran de choix de l'avatar et du ton de Melune
+// 🕒 Version : 3.0 - 2025-06-21
+// 🧭 Utilisé dans : onboarding flow (étape 8)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//
+import React, { useState, useEffect, useRef } from "react";
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+  ScrollView,
+} from "react-native";
+import { useRouter } from "expo-router";
+import ScreenContainer from "../../src/core/layout/ScreenContainer";
+import { Heading2, BodyText } from "../../src/core/ui/Typography";
+import { useUserStore } from "../../src/stores/useUserStore";
+import { theme } from "../../src/config/theme";
+import MeluneAvatar from "../../src/features/shared/MeluneAvatar";
+import ChatBubble from "../../src/features/chat/ChatBubble";
 
 const AVATAR_STYLES = [
   {
-    key: 'classic',
-    label: 'Classique',
-    description: 'Bienveillante et douce',
-    icon: '🤗',
-    color: '#E53E3E'
+    key: "classic",
+    label: "Classique",
+    description: "Bienveillante et douce",
+    icon: "🤗",
+    color: "#E53E3E",
   },
   {
-    key: 'modern',
-    label: 'Moderne',
-    description: 'Énergique et directe',
-    icon: '⚡',
-    color: '#3182CE'
+    key: "modern",
+    label: "Moderne",
+    description: "Énergique et directe",
+    icon: "⚡",
+    color: "#3182CE",
   },
   {
-    key: 'mystique',
-    label: 'Mystique',
-    description: 'Sage et spirituelle',
-    icon: '🔮',
-    color: '#9F7AEA'
-  }
+    key: "mystique",
+    label: "Mystique",
+    description: "Sage et spirituelle",
+    icon: "🔮",
+    color: "#9F7AEA",
+  },
 ];
 
 const COMMUNICATION_TONES = [
   {
-    key: 'friendly',
-    label: 'Amicale',
-    description: 'Comme une sœur',
-    icon: '💕',
-    example: "Hey ma belle ! Tu es incroyable et je suis là pour toi 🌸"
+    key: "friendly",
+    label: "Amicale",
+    description: "Comme une sœur",
+    icon: "💕",
+    example: "Hey ma belle ! Tu es incroyable et je suis là pour toi 🌸",
   },
   {
-    key: 'professional',
-    label: 'Professionnelle',
-    description: 'Conseillère experte',
-    icon: '🎓',
-    example: "Selon tes données, je recommande cette approche pour optimiser ton bien-être."
+    key: "professional",
+    label: "Professionnelle",
+    description: "Conseillère experte",
+    icon: "🎓",
+    example:
+      "Selon tes données, je recommande cette approche pour optimiser ton bien-être.",
   },
   {
-    key: 'inspiring',
-    label: 'Inspirante',
-    description: 'Guide motivante',
-    icon: '✨',
-    example: "Tu es une déesse cyclique ! Embrasse ta puissance naturelle et rayonne ✨"
-  }
+    key: "inspiring",
+    label: "Inspirante",
+    description: "Guide motivante",
+    icon: "✨",
+    example:
+      "Tu es une déesse cyclique ! Embrasse ta puissance naturelle et rayonne ✨",
+  },
 ];
 
 export default function AvatarScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const { preferences, updateMelune, calculateMelunePersonality } = useOnboardingStore();
-  
+  const { updateMelune } = useUserStore();
+
   const [selectedAvatarStyle, setSelectedAvatarStyle] = useState(null);
   const [selectedTone, setSelectedTone] = useState(null);
   const [step, setStep] = useState(1); // 1: avatar sélection, 2: avatar confirmation, 3: ton sélection, 4: ton confirmation, 5: aperçu final
-  
+
   // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
@@ -100,23 +115,10 @@ export default function AvatarScreen() {
   };
 
   const handleContinue = () => {
-    if (step === 2) {
-      // Confirmer le choix d'avatar et passer au ton
-      setStep(3);
-    } else if (step === 4) {
-      // Confirmer le choix de ton et passer à l'aperçu
-      setStep(5);
-    } else if (step === 5) {
-      // Sauvegarder et continuer
-      updateMelune({
-        avatarStyle: selectedAvatarStyle,
-        communicationTone: selectedTone
-      });
-      
-      setTimeout(() => {
-        router.push('/onboarding/700-paywall');
-      }, 300);
-    }
+    updateMelune({
+      avatarStyle: selectedAvatarStyle,
+    });
+    router.push("/onboarding/700-paywall");
   };
 
   const getMeluneMessage = () => {
@@ -125,15 +127,21 @@ export default function AvatarScreen() {
         return "Sous quelle forme veux-tu me voir ? Choisis le style qui résonne le plus avec toi 💜";
       case 2:
         if (selectedAvatarStyle) {
-          const styleData = AVATAR_STYLES.find(s => s.key === selectedAvatarStyle);
-          return `Parfait ! Le style ${styleData.label.toLowerCase()} te correspond bien. ${styleData.description} ✨`;
+          const styleData = AVATAR_STYLES.find(
+            (s) => s.key === selectedAvatarStyle
+          );
+          return `Parfait ! Le style ${styleData.label.toLowerCase()} te correspond bien. ${
+            styleData.description
+          } ✨`;
         }
         return "Comment te sens-tu avec ce style d'avatar ?";
       case 3:
         return "Maintenant, comment préfères-tu que je communique avec toi ?";
       case 4:
         if (selectedTone) {
-          const toneData = COMMUNICATION_TONES.find(t => t.key === selectedTone);
+          const toneData = COMMUNICATION_TONES.find(
+            (t) => t.key === selectedTone
+          );
           return `Excellente ! Une communication ${toneData.label.toLowerCase()}, ${toneData.description.toLowerCase()}. C'est noté ! 💜`;
         }
         return "Comment te sens-tu avec ce ton de communication ?";
@@ -145,7 +153,7 @@ export default function AvatarScreen() {
   };
 
   const getPreviewMessage = () => {
-    const tone = COMMUNICATION_TONES.find(t => t.key === selectedTone);
+    const tone = COMMUNICATION_TONES.find((t) => t.key === selectedTone);
     return tone ? tone.example : "Voici comment je te parlerai !";
   };
 
@@ -178,52 +186,51 @@ export default function AvatarScreen() {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-
-
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+    <ScreenContainer style={styles.container}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-          
           {/* Avatar Melune avec style sélectionné */}
           <View style={styles.avatarContainer}>
-            <MeluneAvatar 
-              phase="ovulatory" 
-              size="large" 
-              style={selectedAvatarStyle || 'classic'}
+            <MeluneAvatar
+              phase="ovulatory"
+              size="large"
+              style={selectedAvatarStyle || "classic"}
             />
             {selectedAvatarStyle && step >= 2 && (
               <View style={styles.avatarBadge}>
                 <BodyText style={styles.avatarBadgeText}>
-                  {AVATAR_STYLES.find(s => s.key === selectedAvatarStyle)?.label}
+                  {
+                    AVATAR_STYLES.find((s) => s.key === selectedAvatarStyle)
+                      ?.label
+                  }
                 </BodyText>
               </View>
             )}
           </View>
 
           {/* Message de Melune */}
-          <Animated.View 
+          <Animated.View
             style={[
               styles.messageContainer,
-              { transform: [{ translateY: slideAnim }] }
+              { transform: [{ translateY: slideAnim }] },
             ]}
           >
-            <ChatBubble 
-              message={getMeluneMessage()} 
-              isUser={false} 
-            />
+            <ChatBubble message={getMeluneMessage()} isUser={false} />
           </Animated.View>
 
           {/* Interface selon l'étape */}
-          <Animated.View 
+          <Animated.View
             style={[
               styles.interactionContainer,
-              { 
+              {
                 opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }] 
-              }
+                transform: [{ translateY: slideAnim }],
+              },
             ]}
           >
-            
             {/* Étape 1: Choix du style d'avatar */}
             {step === 1 && (
               <View style={styles.optionsContainer}>
@@ -235,17 +242,22 @@ export default function AvatarScreen() {
                     key={style.key}
                     style={[
                       styles.optionCard,
-                      selectedAvatarStyle === style.key && styles.optionCardSelected,
-                      { borderColor: style.color + '40' }
+                      selectedAvatarStyle === style.key &&
+                        styles.optionCardSelected,
+                      { borderColor: style.color + "40" },
                     ]}
                     onPress={() => handleAvatarStyleSelect(style.key)}
                     activeOpacity={0.8}
                   >
                     <View style={styles.optionHeader}>
-                      <BodyText style={[styles.optionIcon, { color: style.color }]}>
+                      <BodyText
+                        style={[styles.optionIcon, { color: style.color }]}
+                      >
                         {style.icon}
                       </BodyText>
-                      <BodyText style={[styles.optionLabel, { color: style.color }]}>
+                      <BodyText
+                        style={[styles.optionLabel, { color: style.color }]}
+                      >
                         {style.label}
                       </BodyText>
                     </View>
@@ -267,15 +279,26 @@ export default function AvatarScreen() {
               <View style={styles.summaryContainer}>
                 <BodyText style={styles.summaryTitle}>Tu as choisi</BodyText>
                 {(() => {
-                  const styleData = AVATAR_STYLES.find(s => s.key === selectedAvatarStyle);
+                  const styleData = AVATAR_STYLES.find(
+                    (s) => s.key === selectedAvatarStyle
+                  );
                   return (
                     <View style={styles.summaryItem}>
-                      <BodyText style={[styles.summaryIcon, { color: styleData.color }]}>
+                      <BodyText
+                        style={[styles.summaryIcon, { color: styleData.color }]}
+                      >
                         {styleData.icon}
                       </BodyText>
                       <View style={styles.summaryTexts}>
-                        <BodyText style={styles.summaryLabel}>Style d'avatar:</BodyText>
-                        <BodyText style={[styles.summaryValue, { color: styleData.color }]}>
+                        <BodyText style={styles.summaryLabel}>
+                          Style d'avatar:
+                        </BodyText>
+                        <BodyText
+                          style={[
+                            styles.summaryValue,
+                            { color: styleData.color },
+                          ]}
+                        >
                           {styleData.label}
                         </BodyText>
                         <BodyText style={styles.summaryDescription}>
@@ -296,15 +319,13 @@ export default function AvatarScreen() {
                     key={tone.key}
                     style={[
                       styles.optionCard,
-                      selectedTone === tone.key && styles.optionCardSelected
+                      selectedTone === tone.key && styles.optionCardSelected,
                     ]}
                     onPress={() => handleToneSelect(tone.key)}
                     activeOpacity={0.8}
                   >
                     <View style={styles.optionHeader}>
-                      <BodyText style={styles.optionIcon}>
-                        {tone.icon}
-                      </BodyText>
+                      <BodyText style={styles.optionIcon}>{tone.icon}</BodyText>
                       <BodyText style={styles.optionLabel}>
                         {tone.label}
                       </BodyText>
@@ -327,14 +348,18 @@ export default function AvatarScreen() {
               <View style={styles.summaryContainer}>
                 <BodyText style={styles.summaryTitle}>Tu as choisi</BodyText>
                 {(() => {
-                  const toneData = COMMUNICATION_TONES.find(t => t.key === selectedTone);
+                  const toneData = COMMUNICATION_TONES.find(
+                    (t) => t.key === selectedTone
+                  );
                   return (
                     <View style={styles.summaryItem}>
                       <BodyText style={styles.summaryIcon}>
                         {toneData.icon}
                       </BodyText>
                       <View style={styles.summaryTexts}>
-                        <BodyText style={styles.summaryLabel}>Ton de communication:</BodyText>
+                        <BodyText style={styles.summaryLabel}>
+                          Ton de communication:
+                        </BodyText>
                         <BodyText style={styles.summaryValue}>
                           {toneData.label}
                         </BodyText>
@@ -345,12 +370,17 @@ export default function AvatarScreen() {
                     </View>
                   );
                 })()}
-                
+
                 <View style={styles.exampleContainer}>
-                  <BodyText style={styles.exampleLabel}>Exemple de message:</BodyText>
+                  <BodyText style={styles.exampleLabel}>
+                    Exemple de message:
+                  </BodyText>
                   <View style={styles.exampleBubble}>
                     <BodyText style={styles.exampleText}>
-                      {COMMUNICATION_TONES.find(t => t.key === selectedTone)?.example}
+                      {
+                        COMMUNICATION_TONES.find((t) => t.key === selectedTone)
+                          ?.example
+                      }
                     </BodyText>
                   </View>
                 </View>
@@ -360,34 +390,54 @@ export default function AvatarScreen() {
             {/* Étape 5: Aperçu final */}
             {step === 5 && (
               <View style={styles.previewContainer}>
-                <BodyText style={styles.previewTitle}>Aperçu de notre relation</BodyText>
-                
+                <BodyText style={styles.previewTitle}>
+                  Aperçu de notre relation
+                </BodyText>
+
                 <View style={styles.previewItem}>
-                  <BodyText style={styles.previewLabel}>Style d'avatar:</BodyText>
+                  <BodyText style={styles.previewLabel}>
+                    Style d'avatar:
+                  </BodyText>
                   <View style={styles.previewValue}>
                     <BodyText style={styles.previewIcon}>
-                      {AVATAR_STYLES.find(s => s.key === selectedAvatarStyle)?.icon}
+                      {
+                        AVATAR_STYLES.find((s) => s.key === selectedAvatarStyle)
+                          ?.icon
+                      }
                     </BodyText>
                     <BodyText style={styles.previewText}>
-                      {AVATAR_STYLES.find(s => s.key === selectedAvatarStyle)?.label}
+                      {
+                        AVATAR_STYLES.find((s) => s.key === selectedAvatarStyle)
+                          ?.label
+                      }
                     </BodyText>
                   </View>
                 </View>
 
                 <View style={styles.previewItem}>
-                  <BodyText style={styles.previewLabel}>Ton de communication:</BodyText>
+                  <BodyText style={styles.previewLabel}>
+                    Ton de communication:
+                  </BodyText>
                   <View style={styles.previewValue}>
                     <BodyText style={styles.previewIcon}>
-                      {COMMUNICATION_TONES.find(t => t.key === selectedTone)?.icon}
+                      {
+                        COMMUNICATION_TONES.find((t) => t.key === selectedTone)
+                          ?.icon
+                      }
                     </BodyText>
                     <BodyText style={styles.previewText}>
-                      {COMMUNICATION_TONES.find(t => t.key === selectedTone)?.label}
+                      {
+                        COMMUNICATION_TONES.find((t) => t.key === selectedTone)
+                          ?.label
+                      }
                     </BodyText>
                   </View>
                 </View>
 
                 <View style={styles.exampleContainer}>
-                  <BodyText style={styles.exampleLabel}>Exemple de message:</BodyText>
+                  <BodyText style={styles.exampleLabel}>
+                    Exemple de message:
+                  </BodyText>
                   <View style={styles.exampleBubble}>
                     <BodyText style={styles.exampleText}>
                       {getPreviewMessage()}
@@ -396,13 +446,12 @@ export default function AvatarScreen() {
                 </View>
               </View>
             )}
-
           </Animated.View>
 
           {/* Bouton de continuation */}
           {canContinue() && (
-            <TouchableOpacity 
-              style={styles.continueButton} 
+            <TouchableOpacity
+              style={styles.continueButton}
               onPress={handleContinue}
               activeOpacity={0.8}
             >
@@ -411,10 +460,9 @@ export default function AvatarScreen() {
               </BodyText>
             </TouchableOpacity>
           )}
-
         </Animated.View>
       </ScrollView>
-    </View>
+    </ScreenContainer>
   );
 }
 
@@ -431,10 +479,10 @@ const styles = StyleSheet.create({
     paddingBottom: theme.spacing.xl,
   },
   avatarContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: theme.spacing.xl,
     marginBottom: theme.spacing.l,
-    position: 'relative',
+    position: "relative",
   },
   avatarBadge: {
     backgroundColor: theme.colors.primary,
@@ -449,7 +497,7 @@ const styles = StyleSheet.create({
     fontFamily: theme.fonts.bodyBold,
   },
   messageContainer: {
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
     marginBottom: theme.spacing.xl,
   },
   interactionContainer: {
@@ -461,10 +509,10 @@ const styles = StyleSheet.create({
     gap: theme.spacing.m,
   },
   helpText: {
-    textAlign: 'center',
+    textAlign: "center",
     color: theme.colors.textLight,
     fontSize: 14,
-    fontStyle: 'italic',
+    fontStyle: "italic",
     lineHeight: 20,
     marginBottom: theme.spacing.l,
   },
@@ -473,8 +521,8 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.medium,
     padding: theme.spacing.l,
     borderWidth: 2,
-    borderColor: theme.colors.primary + '20',
-    shadowColor: '#000',
+    borderColor: theme.colors.primary + "20",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -482,7 +530,7 @@ const styles = StyleSheet.create({
   },
   optionCardSelected: {
     borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary + '10',
+    backgroundColor: theme.colors.primary + "10",
     shadowColor: theme.colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
@@ -490,8 +538,8 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   optionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: theme.spacing.s,
   },
   optionIcon: {
@@ -506,19 +554,19 @@ const styles = StyleSheet.create({
   optionDescription: {
     fontSize: 14,
     color: theme.colors.textLight,
-    fontStyle: 'italic',
+    fontStyle: "italic",
     lineHeight: 20,
   },
   selectedIndicator: {
-    position: 'absolute',
+    position: "absolute",
     top: theme.spacing.s,
     right: theme.spacing.s,
     width: 28,
     height: 28,
     borderRadius: 14,
     backgroundColor: theme.colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   selectedIcon: {
     color: theme.getTextColorOn(theme.colors.primary),
@@ -528,7 +576,7 @@ const styles = StyleSheet.create({
 
   // Styles du résumé (comme dans l'écran âge)
   summaryContainer: {
-    backgroundColor: theme.colors.primary + '10',
+    backgroundColor: theme.colors.primary + "10",
     borderRadius: theme.borderRadius.medium,
     padding: theme.spacing.l,
     borderLeftWidth: 4,
@@ -539,11 +587,11 @@ const styles = StyleSheet.create({
     fontFamily: theme.fonts.bodyBold,
     color: theme.colors.primary,
     marginBottom: theme.spacing.m,
-    textAlign: 'center',
+    textAlign: "center",
   },
   summaryItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: theme.spacing.m,
   },
   summaryIcon: {
@@ -567,12 +615,12 @@ const styles = StyleSheet.create({
   summaryDescription: {
     fontSize: 13,
     color: theme.colors.textLight,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
 
   // Styles de l'aperçu
   previewContainer: {
-    backgroundColor: theme.colors.primary + '10',
+    backgroundColor: theme.colors.primary + "10",
     borderRadius: theme.borderRadius.medium,
     padding: theme.spacing.l,
     borderLeftWidth: 4,
@@ -583,12 +631,12 @@ const styles = StyleSheet.create({
     fontFamily: theme.fonts.bodyBold,
     color: theme.colors.primary,
     marginBottom: theme.spacing.l,
-    textAlign: 'center',
+    textAlign: "center",
   },
   previewItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: theme.spacing.m,
   },
   previewLabel: {
@@ -597,10 +645,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   previewValue: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   previewIcon: {
     fontSize: 16,
@@ -624,13 +672,13 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.medium,
     padding: theme.spacing.m,
     borderWidth: 1,
-    borderColor: theme.colors.primary + '30',
+    borderColor: theme.colors.primary + "30",
   },
   exampleText: {
     fontSize: 14,
     color: theme.colors.text,
     lineHeight: 20,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
 
   // Bouton de continuation
@@ -639,7 +687,7 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.m,
     paddingHorizontal: theme.spacing.xl,
     borderRadius: theme.borderRadius.large,
-    alignItems: 'center',
+    alignItems: "center",
     shadowColor: theme.colors.primary,
     shadowOffset: {
       width: 0,
@@ -654,6 +702,6 @@ const styles = StyleSheet.create({
     color: theme.getTextColorOn(theme.colors.primary),
     fontFamily: theme.fonts.bodyBold,
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
-}); 
+});

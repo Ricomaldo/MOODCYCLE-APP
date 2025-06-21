@@ -1,10 +1,11 @@
-import React from 'react';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import NotebookScreen from '../../../components/Notebook/NotebookScreen';
-
-export default function NotebookRoute() {
-  const insets = useSafeAreaInsets();
-  
-  return <NotebookScreen insets={insets} />;
-}
-
+//
+// ─────────────────────────────────────────────────────────
+// 📄 Fichier : app/(tabs)/notebook/index.jsx
+// 🧩 Type : Route d’écran (Screen Route)
+// 📚 Description : Route d’accès à la vue principale du carnet (NotebookView)
+// 🕒 Version : 3.0 - 2025-06-21
+// 🧭 Utilisé dans : navigation carnet (onglet)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//
+import NotebookView from "./NotebookView";
+export default NotebookView;

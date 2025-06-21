@@ -1,17 +1,26 @@
+//
+// ─────────────────────────────────────────────────────────
+// 📄 Fichier : app/onboarding/700-paywall.jsx
+// 🧩 Type : Composant Écran (Screen)
+// 📚 Description : Écran de présentation de l'offre premium et gestion de l'abonnement
+// 🕒 Version : 3.0 - 2025-06-21
+// 🧭 Utilisé dans : onboarding flow (étape 9)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, Animated, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Heading1, Heading2, BodyText } from '../../components/Typography';
-import { useOnboardingStore } from '../../stores/useOnboardingStore';
-import { theme } from '../../config/theme';
+import ScreenContainer from '../../src/core/layout/ScreenContainer';
+import { Heading1, Heading2, BodyText } from '../../src/core/ui/Typography';
+import { useUserStore } from '../../src/stores/useUserStore';
+import { theme } from '../../src/config/theme';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function PaywallScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
-  const { updateSubscriptionInfo, userInfo } = useOnboardingStore();
-  
+  const { updateProfile, profile } = useUserStore();
+  // SafeArea managed by ScreenContainer
+
   // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -51,36 +60,40 @@ export default function PaywallScreen() {
 
   const handleStartTrial = () => {
     // Marquer que l'utilisatrice a initié l'essai
-    updateSubscriptionInfo({
-      trialStarted: true,
-      trialStartDate: new Date().toLocaleString('fr-FR', {timeZone: 'Europe/Paris'})
-,
-      planSelected: 'monthly'
+    updateProfile({
+      subscriptionStatus: 'paid',
+      planSelected: 'monthly',
     });
-    
+
     // Navigation vers l'écran cadeau pour recevoir l'insight personnalisé
     router.push('/onboarding/800-cadeau');
   };
 
   const handleRestore = () => {
     // Logique de restauration d'achat à implémenter
-    console.log('Restauration d\'achat...');
+    console.log("Restauration d'achat...");
   };
 
   const handleBack = () => {
     router.back();
   };
 
+  const handleSkip = () => {
+    updateProfile({
+      subscriptionStatus: 'free',
+    });
+    router.push("/onboarding/800-cadeau");
+  };
+
   const subscriptionFeatures = [
-    `Ton insight personnalisé avec ton prénom${userInfo.prenom ? ` (${userInfo.prenom})` : ''}`,
+    `Ton insight personnalisé avec ton prénom${profile.prenom ? ` (${profile.prenom})` : ''}`,
     'Conseils quotidiens adaptés à ta phase',
     'Conversation avec Melune sans restriction',
-    'Tous les secrets de ton cycle révélés'
+    'Tous les secrets de ton cycle révélés',
   ];
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-      
+    <ScreenContainer style={styles.container}>
       {/* Header */}
       <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
@@ -90,35 +103,32 @@ export default function PaywallScreen() {
         <View style={styles.headerSpacer} />
       </Animated.View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.scrollContainer}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View 
+        <Animated.View
           style={[
-            styles.content, 
-            { 
+            styles.content,
+            {
               opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }
+              transform: [{ translateY: slideAnim }],
+            },
           ]}
         >
-          
           {/* Message personnalisé avec prénom */}
-          {userInfo.prenom && (
+          {profile.prenom && (
             <View style={styles.personalMessage}>
               <BodyText style={styles.personalText}>
-                {userInfo.prenom}, ton insight personnalisé t'attend... ✨
+                {profile.prenom}, ton insight personnalisé t'attend... ✨
               </BodyText>
             </View>
           )}
 
           {/* Trial Banner */}
           <View style={styles.trialBanner}>
-            <BodyText style={styles.trialText}>
-              7 jours d'essai gratuit
-            </BodyText>
+            <BodyText style={styles.trialText}>7 jours d'essai gratuit</BodyText>
           </View>
 
           {/* Subscription Card */}
@@ -148,42 +158,32 @@ export default function PaywallScreen() {
             <View style={styles.dot} />
             <View style={styles.dot} />
           </View>
-
         </Animated.View>
       </ScrollView>
 
       {/* Bottom Actions */}
-      <Animated.View 
+      <Animated.View
         style={[
           styles.bottomActions,
-          { 
+          {
             opacity: fadeAnim,
-            transform: [{ scale: pulseAnim }]
-          }
+            transform: [{ scale: pulseAnim }],
+          },
         ]}
       >
-        <TouchableOpacity 
-          style={styles.trialButton} 
-          onPress={handleStartTrial}
-          activeOpacity={0.9}
-        >
+        <TouchableOpacity style={styles.trialButton} onPress={handleStartTrial} activeOpacity={0.9}>
           <BodyText style={styles.trialButtonText}>
-            {userInfo.prenom ? `Déverrouiller mon insight, ${userInfo.prenom} ! 🎁` : 'Commencer l\'essai gratuit'}
+            {profile.prenom
+              ? `Déverrouiller mon insight, ${profile.prenom} ! 🎁`
+              : "Commencer l'essai gratuit"}
           </BodyText>
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.restoreButton} 
-          onPress={handleRestore}
-          activeOpacity={0.7}
-        >
-          <BodyText style={styles.restoreText}>
-            Restaurer un achat
-          </BodyText>
+        <TouchableOpacity style={styles.restoreButton} onPress={handleRestore} activeOpacity={0.7}>
+          <BodyText style={styles.restoreText}>Restaurer un achat</BodyText>
         </TouchableOpacity>
       </Animated.View>
-
-    </View>
+    </ScreenContainer>
   );
 }
 
@@ -369,4 +369,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textDecorationLine: 'underline',
   },
-}); 
+});
