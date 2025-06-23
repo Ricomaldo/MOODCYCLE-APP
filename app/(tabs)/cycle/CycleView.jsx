@@ -1,168 +1,135 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 Fichier : app/(tabs)/cycle/CycleView.jsx
-// 🧩 Type : Composant Écran
-// 📚 Description : Composant affichant l'écran principal
-// 🕒 Version : 3.0 - 2025-06-21
-// 🧭 Utilisé dans : /notebook cycle route
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 📄 File: app/(tabs)/cycle/CycleView.jsx - INTÉGRATION VIGNETTES
+// 🧩 Type: Écran Principal Cycle
+// 📚 Description: Page d'accueil cycle avec vignettes contextuelles
+// 🕒 Version: 2.0 - 2025-06-21 - VIGNETTES INTÉGRÉES
+// ─────────────────────────────────────────────────────────
 //
-import { useState, useEffect } from 'react';
-import { View, StyleSheet, TouchableOpacity, Alert, ActionSheetIOS, Platform } from 'react-native';
+import React from 'react';
+import { View, ScrollView, StyleSheet, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { Feather } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
 import { theme } from '../../../src/config/theme';
-import CycleWheel from '../../../src/features/cycle/CycleWheel';
-import CalendarView from '../../../src/features/cycle/CalendarView';
-import { Heading, BodyText, Caption } from '../../../src/core/ui/Typography';
-import DevNavigation from '../../../src/core/dev/DevNavigation';
-import { useUserStore } from '../../../src/stores/useUserStore';
-import EntryDetailModal from '../../../src/features/shared/EntryDetailModal';
-import phases from '../../../src/data/phases.json';
+import { Heading, BodyText } from '../../../src/core/ui/Typography';
 import ScreenContainer from '../../../src/core/layout/ScreenContainer';
+import CycleWheel from '../../../src/features/cycle/CycleWheel';
+import { VignettesContainer } from '../../../src/features/shared/VignetteCard';
 import { useCycle } from '../../../src/hooks/useCycle';
-import { CYCLE_DEFAULTS } from '../../../src/config/cycleConstants';
-import { useRenderMonitoring } from '../../../src/hooks/usePerformanceMonitoring';
+import { useVignettes } from '../../../src/hooks/useVignettes';
+import { usePersona } from '../../../src/hooks/usePersona';
+import { useUserStore } from '../../../src/stores/useUserStore';
 
-export default function CycleScreen() {
+
+export default function CycleView() {
   const insets = useSafeAreaInsets();
-  const router = useRouter();
-  const [viewMode, setViewMode] = useState('wheel'); // 'wheel' | 'calendar'
-  const [selectedEntry, setSelectedEntry] = useState(null);
+  const { currentPhase, currentDay, phaseInfo, hasData } = useCycle();
+  const { current: persona } = usePersona();
+  const { profile } = useUserStore();
+  
+  // ✅ HOOK VIGNETTES INTÉGRÉ
+  const { 
+    vignettes, 
+    loading: vignettesLoading, 
+    refresh: refreshVignettes,
+    trackEngagement 
+  } = useVignettes();
 
-  // Utilisation du store unifié
-  const { profile, cycle } = useUserStore();
-  const { currentPhase, currentDay, phaseInfo, startNewPeriod } = useCycle();
+  const [refreshing, setRefreshing] = React.useState(false);
 
-  const cycleLength = cycle.length || CYCLE_DEFAULTS.LENGTH;
-  const prenom = profile.prenom || 'Utilisatrice';
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await refreshVignettes();
+    setRefreshing(false);
+  }, [refreshVignettes]);
 
-  const phasesData = phases;
-
-  // 📊 Monitoring de performance
-  const renderCount = useRenderMonitoring('CycleScreen');
-
-  const navigateToPhase = (phaseId) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push(`/cycle/phases/${phaseId}`);
+  // ✅ HANDLER VIGNETTE PRESS
+  const handleVignettePress = (vignette) => {
+    trackEngagement(vignette);
+    // Navigation automatique gérée par VignetteCard
   };
 
-  const toggleView = () => {
-    setViewMode((prev) => (prev === 'wheel' ? 'calendar' : 'wheel'));
-  };
-
-  const handleStartNewPeriod = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          title: '🩸 Mes règles ont commencé',
-          message: 'Confirmer le début de tes règles aujourd\'hui ?',
-          options: ['Annuler', 'Confirmer'],
-          cancelButtonIndex: 0,
-          userInterfaceStyle: 'light',
-        },
-        (buttonIndex) => {
-          if (buttonIndex === 1) {
-            startNewPeriod();
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            
-            // Success ActionSheet
-            ActionSheetIOS.showActionSheetWithOptions(
-              {
-                title: '✨ Merci !',
-                message: 'Je m\'adapte à ton rythme unique. Ton cycle est maintenant à jour ! 🌙',
-                options: ['Parfait'],
-                userInterfaceStyle: 'light',
-              },
-              () => {}
-            );
-          }
-        }
-      );
-    }
-  };
+  if (!hasData) {
+    return (
+      <ScreenContainer style={styles.container} hasTabs={true}>
+        <View style={styles.centerContent}>
+          <BodyText style={styles.setupText}>
+            Configure ton cycle pour commencer ton voyage avec Melune
+          </BodyText>
+        </View>
+      </ScreenContainer>
+    );
+  }
 
   return (
     <ScreenContainer style={styles.container} hasTabs={true}>
-      <DevNavigation />
-
-      {/* Header avec toggle */}
-      <View style={styles.header}>
-        <Heading style={styles.title}>Mon Cycle</Heading>
-        <TouchableOpacity style={styles.toggleButton} onPress={toggleView}>
-          <Feather
-            name={viewMode === 'wheel' ? 'calendar' : 'circle'}
-            size={24}
-            color={theme.colors.primary}
+      
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={theme.colors.primary}
           />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.infoContainer}>
-        <Caption>
-          Jour {currentDay} sur {cycleLength}
-        </Caption>
-        <Heading style={styles.phaseTitle}>{phasesData[currentPhase].name}</Heading>
-        <BodyText style={styles.phaseDescription}>{phasesData[currentPhase].description}</BodyText>
-      </View>
-
-      {/* Bouton "Mes règles ont commencé" */}
-      <TouchableOpacity style={styles.periodButton} onPress={handleStartNewPeriod}>
-        <View style={styles.periodButtonContent}>
-          <BodyText style={styles.periodButtonText}>🩸 Mes règles ont commencé</BodyText>
-          <Caption style={styles.periodButtonSubtext}>Mettre à jour mon cycle</Caption>
+        }
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <Heading style={styles.title}>Mon Cycle</Heading>
+          <BodyText style={styles.subtitle}>
+            Jour {currentDay} • Phase {phaseInfo.name}
+          </BodyText>
         </View>
-      </TouchableOpacity>
 
-      {/* Vue conditionnelle */}
-      {viewMode === 'wheel' ? (
-        <View style={styles.wheelViewContainer}>
-          <View style={styles.wheelContainer}>
-            <CycleWheel
-              currentPhase={currentPhase}
-              cycleDay={currentDay}
-              userName={prenom}
-              size={250}
-              onPhasePress={navigateToPhase}
-            />
-          </View>
-
-          <View style={styles.legendContainer}>
-            {Object.entries(phasesData).map(([phase, info]) => (
-              <TouchableOpacity
-                key={phase}
-                style={styles.legendItem}
-                onPress={() => navigateToPhase(phase)}
-              >
-                <View style={[styles.colorDot, { backgroundColor: theme.colors.phases[phase] }]} />
-                <Caption>{info.name}</Caption>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      ) : (
-        <View style={styles.calendarContainer}>
-          <CalendarView
+        {/* Roue du cycle */}
+        <View style={styles.wheelContainer}>
+          <CycleWheel 
             currentPhase={currentPhase}
             cycleDay={currentDay}
-            cycleLength={cycleLength}
-            lastPeriodDate={cycle.lastPeriodDate}
-            onPhasePress={navigateToPhase}
-            onDatePress={(date, entries) => {
-              // Afficher toutes les entrées du jour dans la modale
-              if (entries.length > 0) {
-                setSelectedEntry(entries[0]);
-              }
-            }}
+            cycleLength={28}
+            userName={profile?.prenom || 'Emma'}
           />
         </View>
-      )}
 
-      <EntryDetailModal entry={selectedEntry} onClose={() => setSelectedEntry(null)} />
+        {/* Phase info */}
+        <View style={styles.phaseInfoContainer}>
+          <BodyText style={styles.phaseTitle}>
+            {phaseInfo.emoji} {phaseInfo.name}
+          </BodyText>
+          <BodyText style={styles.phaseDescription}>
+            {phaseInfo.description}
+          </BodyText>
+        </View>
+
+        {/* ✅ VIGNETTES CONTEXTUELLES */}
+        <View style={styles.vignettesSection}>
+          <Heading style={styles.sectionTitle}>Pour toi aujourd'hui</Heading>
+          
+          {vignettesLoading ? (
+            <View style={styles.loadingVignettes}>
+              <BodyText style={styles.loadingText}>Personnalisation...</BodyText>
+            </View>
+          ) : (
+            <VignettesContainer
+              vignettes={vignettes}
+              onVignettePress={handleVignettePress}
+              maxVisible={3}
+              showCategories={false}
+            />
+          )}
+          
+          {vignettes.length === 0 && !vignettesLoading && (
+            <BodyText style={styles.noVignettesText}>
+              Aucune suggestion disponible pour le moment
+            </BodyText>
+          )}
+        </View>
+
+        {/* Espacement bottom pour tab bar */}
+        <View style={{ height: insets.bottom + 20 }} />
+      </ScrollView>
     </ScreenContainer>
   );
 }
@@ -171,95 +138,94 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  content: {
     padding: theme.spacing.l,
   },
-  header: {
-    height: 60, // Hauteur standardisée
-    flexDirection: 'row',
-    justifyContent: 'center', // Centrer le titre
+  centerContent: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 0, // Pas de margin pour alignement
-    position: 'relative', // Pour positionner le bouton toggle
+    padding: theme.spacing.xl,
+  },
+  setupText: {
+    textAlign: 'center',
+    color: theme.colors.textLight,
+    fontSize: 16,
+  },
+  
+  // Header
+  header: {
+    alignItems: 'center',
+    marginBottom: theme.spacing.xl,
   },
   title: {
-    textAlign: 'center',
-    fontSize: 20, // Taille standardisée
-    fontWeight: '600',
-  },
-  toggleButton: {
-    position: 'absolute',
-    right: 0,
-    padding: theme.spacing.s,
-  },
-  infoContainer: {
-    alignItems: 'center',
-    marginBottom: theme.spacing.l,
-  },
-  phaseTitle: {
-    color: theme.colors.phases.follicular,
-    marginVertical: theme.spacing.s,
-  },
-  phaseDescription: {
-    textAlign: 'center',
-    marginBottom: theme.spacing.m,
-  },
-  wheelViewContainer: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.medium,
-    padding: theme.spacing.m,
-    marginTop: theme.spacing.m,
-  },
-  wheelContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: theme.spacing.m,
-  },
-  calendarContainer: {
-    flex: 1,
-    marginTop: theme.spacing.m,
-  },
-  legendContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: theme.spacing.l,
-    flexWrap: 'wrap',
-  },
-  legendItem: {
-    flex: 1,
-    flexBasis: '50%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: theme.spacing.s,
-  },
-  colorDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: theme.spacing.xs,
-  },
-  periodButton: {
-    backgroundColor: theme.colors.phases.menstrual,
-    borderRadius: theme.borderRadius.medium,
-    padding: theme.spacing.m,
-    marginVertical: theme.spacing.m,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  periodButtonContent: {
-    alignItems: 'center',
-  },
-  periodButtonText: {
-    color: 'white',
-    fontWeight: '600',
-    fontSize: 16,
+    fontSize: 24,
+    fontWeight: '700',
     marginBottom: theme.spacing.xs,
   },
-  periodButtonSubtext: {
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: 12,
+  subtitle: {
+    fontSize: 16,
+    color: theme.colors.textLight,
+  },
+  
+  // Roue
+  wheelContainer: {
+    alignItems: 'center',
+    marginBottom: theme.spacing.xl,
+  },
+  
+  // Phase info
+  phaseInfoContainer: {
+    backgroundColor: 'white',
+    borderRadius: theme.borderRadius.l,
+    padding: theme.spacing.l,
+    marginBottom: theme.spacing.xl,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  phaseTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: theme.spacing.s,
+    textAlign: 'center',
+  },
+  phaseDescription: {
+    fontSize: 15,
+    color: theme.colors.textLight,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  
+  // ✅ Section vignettes
+  vignettesSection: {
+    marginBottom: theme.spacing.xl,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: theme.spacing.l,
+    color: theme.colors.text,
+  },
+  loadingVignettes: {
+    alignItems: 'center',
+    padding: theme.spacing.xl,
+  },
+  loadingText: {
+    color: theme.colors.textLight,
+    fontSize: 14,
+  },
+  noVignettesText: {
+    textAlign: 'center',
+    color: theme.colors.textLight,
+    fontSize: 14,
+    fontStyle: 'italic',
+    padding: theme.spacing.l,
   },
 });

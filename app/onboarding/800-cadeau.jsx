@@ -1,406 +1,478 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 Fichier : app/onboarding/800-cadeau.jsx
-// 🧩 Type : Composant Écran (Screen)
-// 📚 Description : Écran final de l'onboarding, remise d'un insight personnalisé à l'utilisatrice
-// 🕒 Version : 4.0 - 2025-06-21 (Migration vers useOnboardingInsight)
-// 🧭 Utilisé dans : onboarding flow (étape 10)
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 📄 File: app/onboarding/800-cadeau.jsx
+// 🧩 Type: Onboarding Screen
+// 📚 Description: Premier cadeau + ACTIVATION INTELLIGENCE COMPLÈTE
+// 🕒 Version: 2.0 - Intelligence Activée
+// 🧭 Used in: Onboarding flow - Étape 4/4 "Prête !"
+// ─────────────────────────────────────────────────────────
 //
-import React, { useState, useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, Animated, ScrollView } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { router } from 'expo-router';
+import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
+import { getPersonalizedInsight } from '../../src/services/InsightsEngine';
+import VignettesService from '../../src/services/VignettesService';
 import ScreenContainer from '../../src/core/layout/ScreenContainer';
-import { Heading2, BodyText } from '../../src/core/ui/Typography';
-import { useUserStore } from '../../src/stores/useUserStore';
-import { theme } from '../../src/config/theme';
+import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
-import ChatBubble from '../../src/features/chat/ChatBubble';
-
-// 🌟 NOUVEAU : Import du hook d'insight personnalisé pour onboarding
-import { useOnboardingInsight } from '../../src/hooks/usePersonalizedInsight';
-import { useCycle } from '../../src/hooks/useCycle';
+import VignetteCard from '../../src/features/shared/VignetteCard';
+import { BodyText } from '../../src/core/ui/Typography';
+import { theme } from '../../src/config/theme';
 
 export default function CadeauScreen() {
-  const router = useRouter();
-  const { profile, melune, completeProfile } = useUserStore();
-  const { currentPhase } = useCycle();
+  // 🧠 INTELLIGENCE HOOK
+  const intelligence = useOnboardingIntelligence('800-cadeau');
   
-  // 🎯 NOUVEAU : Utilisation du hook spécialisé onboarding
-  const { content: personalizedInsight, loading: insightLoading, generate } = useOnboardingInsight();
-
-  const [showInsight, setShowInsight] = useState(false);
-
-  // Animations
+  // 🎨 Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
-  const celebrationAnim = useRef(new Animated.Value(0)).current;
   const sparkleAnim = useRef(new Animated.Value(0)).current;
+  const vignetteAnim = useRef(new Animated.Value(0)).current;
+  
+  const [isLoading, setIsLoading] = useState(true);
+  const [personalizedInsight, setPersonalizedInsight] = useState(null);
+  const [firstVignette, setFirstVignette] = useState(null);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    // Animation d'entrée
-    Animated.parallel([
+    // Animation entrée
+    Animated.sequence([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 600,
+        duration: 500,
         useNativeDriver: true,
       }),
+      Animated.delay(400),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 800,
+        duration: 600,
         useNativeDriver: true,
       }),
     ]).start();
 
-    // Générer l'insight personnalisé après animation
-    setTimeout(() => {
-      if (!personalizedInsight && !insightLoading) {
-        generate(); // Déclencher la génération
-      }
-    }, 1000);
-  }, []);
-
-  // Effet pour afficher l'insight quand il est prêt
-  useEffect(() => {
-    if (personalizedInsight && !showInsight) {
-      setShowInsight(true);
-      startCelebrationAnimation();
-    }
-  }, [personalizedInsight, showInsight]);
-
-  const startCelebrationAnimation = () => {
-    // Animation de scintillement continu
+    // Animation sparkle continue
     Animated.loop(
       Animated.sequence([
         Animated.timing(sparkleAnim, {
           toValue: 1,
-          duration: 1000,
+          duration: 2000,
           useNativeDriver: true,
         }),
         Animated.timing(sparkleAnim, {
           toValue: 0,
-          duration: 1000,
+          duration: 2000,
           useNativeDriver: true,
         }),
       ])
     ).start();
 
-    // Animation de célébration principale
-    Animated.timing(celebrationAnim, {
-      toValue: 1,
-      duration: 800,
-      useNativeDriver: true,
-    }).start();
-  };
+    // 🧠 GÉNÉRATION INTELLIGENCE
+    generatePersonalizedContent();
+  }, []);
 
-  const handleComplete = () => {
-    console.log('🎯 Finalisation onboarding...');
-    completeProfile();
-    console.log('✅ Onboarding marqué comme terminé');
-
-    console.log('🚀 Navigation vers app principale...');
+  const generatePersonalizedContent = async () => {
     try {
-      router.replace("/(tabs)");
+      setIsLoading(true);
+      
+      // 🧠 1. Récupérer données complètes
+      const userContext = {
+        phase: intelligence.userProfile.currentPhase || 'menstrual',
+        persona: intelligence.currentPersona || 'emma',
+        preferences: intelligence.userProfile.preferences,
+        melune: { tone: 'friendly' },
+        profile: intelligence.userProfile
+      };
+
+      // 🧠 2. Générer insight personnalisé
+      const insightResult = await getPersonalizedInsight(userContext, {
+        enrichWithContext: true,
+        usedInsights: []
+      });
+      
+      setPersonalizedInsight(insightResult);
+
+      // 🧠 3. Récupérer vignettes pour phase + persona
+      const vignettes = await VignettesService.getVignettes(
+        userContext.phase,
+        userContext.persona
+      );
+      
+      if (vignettes && vignettes.length > 0) {
+        // Enrichir première vignette avec intelligence
+        const enrichedVignette = {
+          ...vignettes[0],
+          isFirstTime: true,
+          welcomeMessage: `Bienvenue ${intelligence.userProfile.prenom || ''} !`,
+          confidence: intelligence.userProfile.personaConfidence || 0.8
+        };
+        setFirstVignette(enrichedVignette);
+      }
+
+      // 🧠 4. Marquer profil comme complété
+      intelligence.updateProfile({ 
+        completed: true,
+        onboardingCompletedAt: Date.now()
+      });
+      
+      // 🧠 5. Track completion avec toutes les métriques
+      intelligence.trackAction('onboarding_completed', {
+        duration: Date.now() - (intelligence.userProfile.startDate || Date.now()),
+        persona: intelligence.currentPersona,
+        phase: userContext.phase,
+        insightGenerated: !!insightResult.content,
+        vignetteGenerated: !!vignettes.length
+      });
+
+      setIsLoading(false);
+      
+      // Animation vignette après chargement
+      setTimeout(() => {
+        Animated.timing(vignetteAnim, {
+          toValue: 1,
+          duration: 600,
+          useNativeDriver: true,
+        }).start();
+      }, 300);
+      
     } catch (error) {
-      console.error('❌ Erreur navigation:', error);
-      router.replace("/(tabs)");
+      console.error('🚨 Erreur génération contenu:', error);
+      setError(true);
+      setIsLoading(false);
+      
+      // Fallback
+      setPersonalizedInsight({
+        content: "Bienvenue dans ton voyage cyclique ! ✨",
+        source: 'fallback'
+      });
     }
   };
 
-  // Message d'insight avec fallback si pas encore généré
-  const displayInsight = personalizedInsight || (
-    profile.prenom 
-      ? `${profile.prenom}, bienvenue dans ton voyage cyclique ! ✨ Je sens en toi une belle énergie prête à s'épanouir.`
-      : "Bienvenue dans ton voyage cyclique ! ✨ Je sens en toi une belle énergie prête à s'épanouir."
-  );
+  const handleFinishOnboarding = () => {
+    // 🧠 Préparer contexte pour app principale
+    const transitionData = {
+      isFirstLaunch: true,
+      welcomeInsight: personalizedInsight,
+      firstVignette: firstVignette,
+      onboardingCompletedAt: Date.now()
+    };
+    
+    // 🧠 Track transition
+    intelligence.trackAction('transition_to_app', {
+      hasPersonalizedContent: !!personalizedInsight && !error,
+      persona: intelligence.currentPersona
+    });
+    
+    // Navigation avec remplacement (pas de retour possible)
+    router.replace({
+      pathname: '/(tabs)/cycle',
+      params: transitionData
+    });
+  };
 
-  return (
-    <ScreenContainer style={styles.container}>
-      {/* Particules de célébration */}
-      <Animated.View
-        style={[
-          styles.sparklesContainer,
-          {
-            opacity: sparkleAnim,
-            transform: [
-              {
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <Animated.View
+            style={{
+              opacity: sparkleAnim,
+              transform: [{
                 scale: sparkleAnim.interpolate({
                   inputRange: [0, 1],
                   outputRange: [0.8, 1.2],
-                }),
-              },
-            ],
-          },
-        ]}
-      >
-        <BodyText style={[styles.sparkle, { top: '15%', left: '20%' }]}>✨</BodyText>
-        <BodyText style={[styles.sparkle, { top: '25%', right: '15%' }]}>🌟</BodyText>
-        <BodyText style={[styles.sparkle, { top: '45%', left: '10%' }]}>💫</BodyText>
-        <BodyText style={[styles.sparkle, { top: '60%', right: '25%' }]}>⭐</BodyText>
-        <BodyText style={[styles.sparkle, { top: '75%', left: '30%' }]}>✨</BodyText>
-        <BodyText style={[styles.sparkle, { top: '35%', right: '35%' }]}>🌙</BodyText>
-      </Animated.View>
+                })
+              }]
+            }}
+          >
+            <BodyText style={styles.sparkle}>✨</BodyText>
+          </Animated.View>
+          <BodyText style={styles.loadingText}>
+            Je prépare ton expérience personnalisée...
+          </BodyText>
+        </View>
+      );
+    }
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-          {/* Avatar Melune avec style personnalisé */}
-          <Animated.View
+    return (
+      <>
+        {/* Insight personnalisé */}
+        {personalizedInsight && (
+          <Animated.View 
             style={[
-              styles.avatarContainer,
+              styles.insightContainer,
               {
-                transform: [
-                  { translateY: slideAnim },
-                  {
-                    scale: celebrationAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [1, 1.1],
-                    }),
-                  },
-                ],
-              },
+                opacity: vignetteAnim,
+                transform: [{
+                  translateY: vignetteAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [20, 0],
+                  })
+                }]
+              }
             ]}
           >
-            <MeluneAvatar
-              phase="ovulation"
-              size="medium"
-              style={melune?.avatarStyle || 'classic'}
+            <BodyText style={styles.insightLabel}>
+              Ton premier conseil personnalisé :
+            </BodyText>
+            <View style={styles.insightBubble}>
+              <BodyText style={styles.insightText}>
+                {personalizedInsight.content}
+              </BodyText>
+              {personalizedInsight.source !== 'fallback' && (
+                <BodyText style={styles.insightMeta}>
+                  Personnalisé pour {intelligence.currentPersona} en phase {intelligence.userProfile.currentPhase || 'menstruelle'}
+                </BodyText>
+              )}
+            </View>
+          </Animated.View>
+        )}
+
+        {/* Première vignette si disponible */}
+        {firstVignette && (
+          <Animated.View 
+            style={[
+              styles.vignetteContainer,
+              {
+                opacity: vignetteAnim,
+                transform: [{
+                  translateY: vignetteAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [30, 0],
+                  })
+                }]
+              }
+            ]}
+          >
+            <BodyText style={styles.vignetteLabel}>
+              Ta première action suggérée :
+            </BodyText>
+            <VignetteCard
+              vignette={firstVignette}
+              onPress={() => console.log('Preview vignette')}
+              disabled={true}
+              style={styles.vignettePreview}
             />
           </Animated.View>
+        )}
 
-          {/* Message d'introduction */}
+        {/* CTA Final */}
+        <TouchableOpacity
+          style={styles.finishButton}
+          onPress={handleFinishOnboarding}
+          activeOpacity={0.7}
+        >
+          <BodyText style={styles.finishButtonText}>
+            Commencer mon voyage ✨
+          </BodyText>
+        </TouchableOpacity>
+      </>
+    );
+  };
+
+  return (
+    <ScreenContainer edges={['top', 'bottom']}>
+      <OnboardingNavigation currentScreen="800-cadeau" canGoBack={false} />
+      
+      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+        
+        {/* TopSection */}
+        <View style={styles.topSection}>
+          <Animated.View style={{ opacity: fadeAnim }}>
+            <MeluneAvatar 
+              phase="ovulatory" 
+              size="medium" 
+              style="classic"
+              animated={true}
+            />
+          </Animated.View>
           <Animated.View
             style={[
               styles.messageContainer,
               {
-                opacity: fadeAnim,
                 transform: [{ translateY: slideAnim }],
+                opacity: slideAnim.interpolate({
+                  inputRange: [-20, 0],
+                  outputRange: [0, 1],
+                }),
               },
             ]}
           >
-            <ChatBubble
-              message={
-                profile.prenom
-                  ? `Félicitations ${profile.prenom} ! Tu as débloqué ton insight personnalisé premium... 🎁✨`
-                  : "Félicitations ! Notre connexion est maintenant établie. J'ai un cadeau spécial pour toi... 🎁"
+            <BodyText style={styles.meluneMessage}>
+              {isLoading ? 
+                "Un instant, je personnalise ton expérience..." :
+                `${intelligence.userProfile.prenom || 'Ma belle'}, ton voyage commence maintenant !`
               }
-              isUser={false}
-            />
+            </BodyText>
           </Animated.View>
+        </View>
 
-          {/* Insight personnalisé */}
-          {(showInsight || insightLoading) && (
-            <Animated.View
-              style={[
-                styles.insightContainer,
-                {
-                  opacity: celebrationAnim,
-                  transform: [
-                    {
-                      translateY: celebrationAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [30, 0],
-                      }),
-                    },
-                  ],
-                },
-              ]}
-            >
-              <View style={styles.giftBox}>
-                <BodyText style={styles.giftIcon}>🎁</BodyText>
-                <BodyText style={styles.giftTitle}>
-                  {profile.prenom
-                    ? `${profile.prenom}, voici ton insight premium personnalisé`
-                    : 'Ton premier insight personnalisé'}
-                </BodyText>
-              </View>
-
-              <View style={styles.insightCard}>
-                {insightLoading ? (
-                  <BodyText style={styles.loadingText}>Génération de ton insight personnalisé... ✨</BodyText>
-                ) : (
-                  <BodyText style={styles.insightText}>{displayInsight}</BodyText>
-                )}
-              </View>
-
-              <View style={styles.celebrationMessage}>
-                <BodyText style={styles.celebrationText}>
-                  {profile.prenom
-                    ? `Bienvenue dans ton univers premium, ${profile.prenom} ! 🌸`
-                    : 'Bienvenue dans ton univers MoodCycle ! 🌸'}
-                </BodyText>
-                <BodyText style={styles.celebrationSubtext}>
-                  Cette sagesse premium n'est que le début de notre voyage ensemble...
-                </BodyText>
-              </View>
-            </Animated.View>
-          )}
-
-          {/* Bouton de finalisation */}
-          {(showInsight || personalizedInsight) && (
-            <Animated.View
-              style={[
-                styles.buttonContainer,
-                {
-                  opacity: celebrationAnim,
-                  transform: [
-                    {
-                      translateY: celebrationAnim.interpolate({
-                        inputRange: [0, 1],
-                        outputRange: [50, 0],
-                      }),
-                    },
-                  ],
-                },
-              ]}
-            >
-              <TouchableOpacity
-                style={styles.completeButton}
-                onPress={handleComplete}
-                activeOpacity={0.8}
-              >
-                <BodyText style={styles.completeButtonText}>Découvrir mon univers ✨</BodyText>
-              </TouchableOpacity>
-            </Animated.View>
-          )}
+        {/* MainSection */}
+        <View style={styles.mainSection}>
+          {renderContent()}
+        </View>
+        
+        {/* Sparkles décoratifs */}
+        <Animated.View
+          style={[
+            styles.sparkleContainer,
+            { opacity: sparkleAnim }
+          ]}
+        >
+          <BodyText style={[styles.sparkleDecor, styles.sparkle1]}>✨</BodyText>
+          <BodyText style={[styles.sparkleDecor, styles.sparkle2]}>✨</BodyText>
+          <BodyText style={[styles.sparkleDecor, styles.sparkle3]}>✨</BodyText>
         </Animated.View>
-      </ScrollView>
+        
+      </Animated.View>
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  scrollView: {
-    flex: 1,
-  },
   content: {
+    flex: 1,
     paddingHorizontal: theme.spacing.l,
-    paddingBottom: theme.spacing.xl,
   },
-
-  // Animation des particules
-  sparklesContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1,
-  },
-  sparkle: {
-    position: 'absolute',
-    fontSize: 20,
-    color: theme.colors.primary,
-  },
-
-  // Avatar
-  avatarContainer: {
+  
+  topSection: {
     alignItems: 'center',
-    marginTop: theme.spacing.m,
-    marginBottom: theme.spacing.s,
-    zIndex: 2,
+    paddingTop: theme.spacing.l,
+    marginBottom: theme.spacing.xl,
   },
-
-  // Messages
+  
   messageContainer: {
-    alignItems: 'flex-start',
-    marginBottom: theme.spacing.s,
-    zIndex: 2,
+    marginTop: theme.spacing.l,
+    paddingHorizontal: theme.spacing.m,
   },
-
-  // Insight personnalisé
-  insightContainer: {
-    marginBottom: theme.spacing.s,
-    alignItems: 'center',
-    zIndex: 2,
-  },
-  giftBox: {
-    alignItems: 'center',
-    marginBottom: theme.spacing.s,
-  },
-  giftIcon: {
-    fontSize: 32,
-    marginBottom: theme.spacing.xs,
-  },
-  giftTitle: {
-    fontSize: 18,
-    fontFamily: theme.fonts.bodyBold,
-    color: theme.colors.primary,
-    textAlign: 'center',
-  },
-  insightCard: {
-    backgroundColor: theme.colors.primary + '15',
-    borderRadius: theme.borderRadius.large,
-    padding: theme.spacing.m,
-    marginVertical: theme.spacing.s,
-    borderLeftWidth: 5,
-    borderLeftColor: theme.colors.primary,
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  insightText: {
+  
+  meluneMessage: {
     fontSize: 16,
-    lineHeight: 24,
-    color: theme.colors.text,
-    textAlign: 'center',
-    fontStyle: 'italic',
-  },
-  loadingText: {
-    fontSize: 16,
-    lineHeight: 24,
     color: theme.colors.textLight,
     textAlign: 'center',
+    lineHeight: 24,
     fontStyle: 'italic',
   },
-  celebrationMessage: {
+  
+  mainSection: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingBottom: theme.spacing.xxl,
+  },
+  
+  loadingContainer: {
     alignItems: 'center',
-    marginTop: theme.spacing.s,
+    justifyContent: 'center',
+    paddingVertical: theme.spacing.xxl,
   },
-  celebrationText: {
-    fontSize: 20,
-    fontFamily: theme.fonts.bodyBold,
-    color: theme.colors.primary,
+  
+  sparkle: {
+    fontSize: 48,
+    marginBottom: theme.spacing.l,
+  },
+  
+  loadingText: {
+    fontSize: 16,
+    color: theme.colors.textLight,
     textAlign: 'center',
-    marginBottom: theme.spacing.s,
   },
-  celebrationSubtext: {
+  
+  insightContainer: {
+    marginBottom: theme.spacing.xl,
+  },
+  
+  insightLabel: {
     fontSize: 14,
     color: theme.colors.textLight,
     textAlign: 'center',
+    marginBottom: theme.spacing.m,
+  },
+  
+  insightBubble: {
+    backgroundColor: theme.colors.primary + '10',
+    padding: theme.spacing.l,
+    borderRadius: theme.borderRadius.large,
+    alignItems: 'center',
+  },
+  
+  insightText: {
+    fontSize: 18,
+    color: theme.colors.text,
+    textAlign: 'center',
+    lineHeight: 26,
+    fontFamily: theme.fonts.body,
+  },
+  
+  insightMeta: {
+    fontSize: 12,
+    color: theme.colors.textLight,
+    textAlign: 'center',
+    marginTop: theme.spacing.m,
     fontStyle: 'italic',
   },
-
-  // Bouton de finalisation
-  buttonContainer: {
-    alignItems: 'center',
-    zIndex: 2,
+  
+  vignetteContainer: {
+    marginBottom: theme.spacing.xl,
   },
-  completeButton: {
+  
+  vignetteLabel: {
+    fontSize: 14,
+    color: theme.colors.textLight,
+    textAlign: 'center',
+    marginBottom: theme.spacing.m,
+  },
+  
+  vignettePreview: {
+    opacity: 0.9,
+  },
+  
+  finishButton: {
     backgroundColor: theme.colors.primary,
     paddingVertical: theme.spacing.l,
     paddingHorizontal: theme.spacing.xl,
     borderRadius: theme.borderRadius.large,
     alignItems: 'center',
     shadowColor: theme.colors.primary,
-    shadowOffset: {
-      width: 0,
-      height: 6,
-    },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 12,
-    minWidth: 250,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    marginTop: theme.spacing.xl,
   },
-  completeButtonText: {
+  
+  finishButtonText: {
     color: theme.getTextColorOn(theme.colors.primary),
     fontFamily: theme.fonts.bodyBold,
-    fontSize: 18,
-    textAlign: 'center',
+    fontSize: 16,
+  },
+  
+  sparkleContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    pointerEvents: 'none',
+  },
+  
+  sparkleDecor: {
+    position: 'absolute',
+    fontSize: 20,
+    color: theme.colors.primary,
+  },
+  
+  sparkle1: {
+    top: '10%',
+    left: '10%',
+  },
+  
+  sparkle2: {
+    top: '80%',
+    right: '15%',
+  },
+  
+  sparkle3: {
+    bottom: '20%',
+    left: '80%',
   },
 });

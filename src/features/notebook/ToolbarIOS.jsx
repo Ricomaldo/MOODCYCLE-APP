@@ -10,7 +10,7 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MaterialIcons, Feather } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { theme } from '../../config/theme';
 import { BodyText } from '../../core/ui/Typography';
@@ -47,7 +47,8 @@ export default function ToolbarIOS({ onWritePress, onTrackPress }) {
           onPress={handleTrackPress}
           activeOpacity={0.8}
         >
-          <MaterialIcons name="bar-chart" size={20} color={theme.colors.primary} />
+          <Feather name="bar-chart-2" size={20} color={theme.colors.primary} />
+
           <BodyText style={styles.trackButtonText}>Tracker</BodyText>
         </TouchableOpacity>
       </View>

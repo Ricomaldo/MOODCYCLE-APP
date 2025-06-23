@@ -1,13 +1,4 @@
-//
-// ─────────────────────────────────────────────────────────
-// 📄 Fichier : src/features/shared/EntryDetailModal.jsx
-// 🧩 Type : Composant UI (Modal)
-// 📚 Description : Modale de détail d'entrée du carnet, partageable
-// 🕒 Version : 3.1 - 2025-06-21
-// 🧭 Utilisé dans : NotebookView, CycleView, partages
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useCallback, useMemo } from 'react';
 import { View, Modal, TouchableOpacity, StyleSheet, Alert, Share, ActionSheetIOS, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { captureRef } from 'react-native-view-shot';
@@ -22,17 +13,24 @@ export default function EntryDetailModal({ entries = [], visible, onClose, showA
   const [currentIndex, setCurrentIndex] = useState(0);
   const shareCardRef = useRef();
 
-  // Reset index when entries change or modal opens
-  React.useEffect(() => {
+  // ✅ Optimisation : memoize current entry
+  const currentEntry = useMemo(() => entries[currentIndex] || null, [entries, currentIndex]);
+  const hasMultipleEntries = entries.length > 1;
+
+  // ✅ Optimisation : reset index avec useCallback
+  const resetToFirstEntry = useCallback(() => {
     if (visible && entries.length > 0) {
       setCurrentIndex(0);
     }
-  }, [entries, visible]);
+  }, [visible, entries.length]);
 
-  const currentEntry = entries[currentIndex];
-  const hasMultipleEntries = entries.length > 1;
+  // ✅ Utiliser resetToFirstEntry au lieu de useEffect
+  React.useEffect(() => {
+    resetToFirstEntry();
+  }, [resetToFirstEntry]);
 
-  const formatRelativeTime = (timestamp) => {
+  // ✅ Memoize formatters pour éviter recréation
+  const formatRelativeTime = useCallback((timestamp) => {
     const diff = Date.now() - timestamp;
     const minutes = Math.floor(diff / (1000 * 60));
     const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -45,9 +43,9 @@ export default function EntryDetailModal({ entries = [], visible, onClose, showA
       day: 'numeric',
       month: 'short',
     });
-  };
+  }, []);
 
-  const formatFullDate = (timestamp) => {
+  const formatFullDate = useCallback((timestamp) => {
     return new Date(timestamp).toLocaleDateString('fr-FR', {
       weekday: 'long',
       day: 'numeric',
@@ -56,9 +54,10 @@ export default function EntryDetailModal({ entries = [], visible, onClose, showA
       hour: '2-digit',
       minute: '2-digit',
     });
-  };
+  }, []);
 
-  const getEntryIcon = (type) => {
+  // ✅ Memoize icon renderer
+  const getEntryIcon = useCallback((type) => {
     const iconProps = { size: 16, color: theme.colors.primary };
     switch (type) {
       case 'saved':
@@ -70,21 +69,25 @@ export default function EntryDetailModal({ entries = [], visible, onClose, showA
       default:
         return <Feather name="edit-3" {...iconProps} />;
     }
-  };
+  }, []);
 
-  const navigateToPrevious = () => {
+  // ✅ Optimisation : navigation callbacks
+  const navigateToPrevious = useCallback(() => {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
     }
-  };
+  }, [currentIndex]);
 
-  const navigateToNext = () => {
+  const navigateToNext = useCallback(() => {
     if (currentIndex < entries.length - 1) {
       setCurrentIndex(currentIndex + 1);
     }
-  };
+  }, [currentIndex, entries.length]);
 
-  const handleDelete = () => {
+  // ✅ Optimisation : delete handler
+  const handleDelete = useCallback(() => {
+    if (!currentEntry) return;
+
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
         {
@@ -98,14 +101,10 @@ export default function EntryDetailModal({ entries = [], visible, onClose, showA
         (buttonIndex) => {
           if (buttonIndex === 1) {
             deleteEntry(currentEntry.id);
-            // Si c'était la dernière entrée, fermer la modale
             if (entries.length === 1) {
               onClose();
-            } else {
-              // Ajuster l'index si nécessaire
-              if (currentIndex >= entries.length - 1) {
-                setCurrentIndex(Math.max(0, currentIndex - 1));
-              }
+            } else if (currentIndex >= entries.length - 1) {
+              setCurrentIndex(Math.max(0, currentIndex - 1));
             }
           }
         }
@@ -118,22 +117,19 @@ export default function EntryDetailModal({ entries = [], visible, onClose, showA
           style: 'destructive',
           onPress: () => {
             deleteEntry(currentEntry.id);
-            // Si c'était la dernière entrée, fermer la modale
             if (entries.length === 1) {
               onClose();
-            } else {
-              // Ajuster l'index si nécessaire
-              if (currentIndex >= entries.length - 1) {
-                setCurrentIndex(Math.max(0, currentIndex - 1));
-              }
+            } else if (currentIndex >= entries.length - 1) {
+              setCurrentIndex(Math.max(0, currentIndex - 1));
             }
           },
         },
       ]);
     }
-  };
+  }, [currentEntry, entries.length, currentIndex, deleteEntry, onClose]);
 
-  const handleShare = async () => {
+  // ✅ Optimisation : share handler
+  const handleShare = useCallback(async () => {
     if (!currentEntry) return;
 
     try {
@@ -157,9 +153,10 @@ export default function EntryDetailModal({ entries = [], visible, onClose, showA
       setIsSharing(false);
       Alert.alert('Erreur', 'Impossible de partager cette entrée');
     }
-  };
+  }, [currentEntry]);
 
-  const renderTrendingInsight = () => {
+  // ✅ Memoize trending insight
+  const trendingInsight = useMemo(() => {
     const trends = calculateTrends();
     if (!trends) return null;
 
@@ -177,7 +174,7 @@ export default function EntryDetailModal({ entries = [], visible, onClose, showA
         </BodyText>
       </View>
     );
-  };
+  }, [calculateTrends]);
 
   if (!currentEntry || entries.length === 0) return null;
 
@@ -200,7 +197,7 @@ export default function EntryDetailModal({ entries = [], visible, onClose, showA
                   </View>
                 </View>
 
-                {/* Navigation et indicateur pour plusieurs entrées */}
+                {/* Navigation optimisée */}
                 {hasMultipleEntries && (
                   <View style={styles.navigationContainer}>
                     <TouchableOpacity
@@ -249,7 +246,7 @@ export default function EntryDetailModal({ entries = [], visible, onClose, showA
                 {currentEntry.content || formatTrackingEmotional(currentEntry)}
               </BodyText>
 
-              {/* Symptômes badges pour tracking */}
+              {/* Symptoms pour tracking */}
               {currentEntry.type === 'tracking' && currentEntry.metadata?.symptoms?.length > 0 && (
                 <View style={styles.symptomsSection}>
                   <BodyText style={styles.symptomsSectionTitle}>Symptômes</BodyText>
@@ -260,25 +257,16 @@ export default function EntryDetailModal({ entries = [], visible, onClose, showA
                         fatigue: { label: 'Fatigue', color: theme.colors.phases.luteal },
                         sensibilite: { label: 'Sensibilité', color: theme.colors.phases.ovulatory },
                         maux_tete: { label: 'Maux de tête', color: theme.colors.warning },
-                        ballonnements: {
-                          label: 'Ballonnements',
-                          color: theme.colors.phases.follicular,
-                        },
+                        ballonnements: { label: 'Ballonnements', color: theme.colors.phases.follicular },
                       };
-                      const symptom = symptomLabels[symptomId] || {
-                        label: symptomId,
-                        color: theme.colors.primary,
-                      };
+                      const symptom = symptomLabels[symptomId] || { label: symptomId, color: theme.colors.primary };
 
                       return (
                         <View
                           key={symptomId}
                           style={[
                             styles.symptomBadge,
-                            {
-                              borderColor: symptom.color,
-                              backgroundColor: symptom.color + '20',
-                            },
+                            { borderColor: symptom.color, backgroundColor: symptom.color + '20' },
                           ]}
                         >
                           <BodyText style={[styles.symptomBadgeText, { color: symptom.color }]}>
@@ -291,9 +279,9 @@ export default function EntryDetailModal({ entries = [], visible, onClose, showA
                 </View>
               )}
 
-              {/* Trends pour entrées tracking */}
+              {/* Trends pour tracking */}
               {currentEntry.type === 'tracking' && (
-                <View style={styles.trackingDetails}>{renderTrendingInsight()}</View>
+                <View style={styles.trackingDetails}>{trendingInsight}</View>
               )}
             </View>
 
@@ -307,10 +295,7 @@ export default function EntryDetailModal({ entries = [], visible, onClose, showA
                   </TouchableOpacity>
                 )}
 
-                <TouchableOpacity
-                  style={[styles.actionButton, styles.deleteButton]}
-                  onPress={handleDelete}
-                >
+                <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={handleDelete}>
                   <Feather name="trash-2" size={20} color={theme.colors.error} />
                   <BodyText style={[styles.actionButtonText, { color: theme.colors.error }]}>
                     Supprimer
@@ -326,7 +311,6 @@ export default function EntryDetailModal({ entries = [], visible, onClose, showA
         </View>
       </Modal>
 
-      {/* ShareableCard hors écran pour capture Instagram */}
       {isSharing && (
         <ShareableCard
           ref={shareCardRef}
@@ -338,8 +322,8 @@ export default function EntryDetailModal({ entries = [], visible, onClose, showA
   );
 }
 
+// Styles identiques...
 const styles = StyleSheet.create({
-  // Styles modal détail
   detailOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -353,13 +337,13 @@ const styles = StyleSheet.create({
     padding: theme.spacing.l,
     width: '100%',
     maxHeight: '80%',
-    minHeight: 400, // Hauteur minimale pour éviter le redimensionnement
-    flexDirection: 'column', // Structure en colonne
+    minHeight: 400,
+    flexDirection: 'column',
   },
   shareableCard: {
     backgroundColor: 'white',
-    flex: 1, // Prend l'espace disponible
-    marginBottom: theme.spacing.l, // Espace pour le bouton
+    flex: 1,
+    marginBottom: theme.spacing.l,
   },
   detailHeader: {
     flexDirection: 'row',
@@ -375,8 +359,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
   },
-
-  // Navigation styles
   navigationContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -416,13 +398,9 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: 2,
   },
-
-  // Tracking details
   trackingDetails: {
     marginTop: theme.spacing.m,
   },
-
-  // Trend card
   trendCard: {
     backgroundColor: theme.colors.primary + '10',
     padding: theme.spacing.m,
@@ -446,8 +424,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: theme.colors.textLight,
   },
-
-  // Symptômes section
   symptomsSection: {
     marginTop: theme.spacing.m,
     paddingTop: theme.spacing.m,
@@ -475,8 +451,6 @@ const styles = StyleSheet.create({
   symptomBadgeText: {
     fontSize: 14,
   },
-
-  // Action buttons
   actionButtons: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -491,21 +465,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.m,
     paddingVertical: theme.spacing.s,
   },
-  deleteButton: {
-    // Style spécifique si nécessaire
-  },
+  deleteButton: {},
   actionButtonText: {
     marginLeft: theme.spacing.s,
     fontSize: 14,
     color: theme.colors.primary,
   },
-
   detailCloseButton: {
     backgroundColor: theme.colors.primary,
     paddingVertical: theme.spacing.m,
     borderRadius: theme.borderRadius.medium,
     alignItems: 'center',
-    marginTop: 'auto', // Se place automatiquement en bas
+    marginTop: 'auto',
   },
   detailCloseText: {
     color: 'white',

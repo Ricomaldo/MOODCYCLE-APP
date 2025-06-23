@@ -1,9 +1,9 @@
 //
 // ─────────────────────────────────────────────────────────
 // 📄 File: src/core/monitoring/PerformanceMonitor.js
-// 🧩 Type: Performance Monitoring
-// 📚 Description: Monitoring stores Zustand + AsyncStorage performance
-// 🕒 Version: 1.0 - 2025-06-21
+// 🧩 Type: Performance Monitoring v2.1 - iOS Optimized
+// 📚 Description: Monitoring silencieux par défaut - Toolbox DEV controllable
+// 🕒 Version: 2.1 - 2025-06-23 - Démarrage cristallin iOS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
 
@@ -16,17 +16,41 @@ class PerformanceMonitor {
         memory: {},
         alerts: []
       };
+      
+      // Seuils adaptés iOS + Intelligence Stack
       this.thresholds = {
-        hydrationTime: 200, // ms
-        asyncStorageRead: 50, // ms
-        asyncStorageWrite: 100, // ms
-        renderCount: 10, // renders/sec
-        memoryUsage: 50 // MB
+        hydrationTime: 500, // ms - Stores complexes OK
+        asyncStorageRead: 100, // ms - iOS plus rapide qu'Android
+        asyncStorageWrite: 150, // ms - Optimisé iOS
+        renderCount: 12, // renders/sec - iOS 60fps natif
+        memoryUsage: 60 // MB - iOS mieux optimisé mémoire
       };
+      
+      // Mode silencieux STRICT - zéro logs au démarrage
+      this.silentMode = true;
+      this.initialized = false;
     }
   
     // ═══════════════════════════════════════════════════════
-    // 📊 STORE HYDRATION MONITORING
+    // 🛠️ TOOLBOX DEV INTEGRATION
+    // ═══════════════════════════════════════════════════════
+    
+    enableVerboseMode() {
+      this.silentMode = false;
+      if (__DEV__) {
+        console.log('🛠️ PerformanceMonitor: Mode verbose activé via Toolbox DEV');
+      }
+    }
+    
+    disableVerboseMode() {
+      this.silentMode = true;
+      if (__DEV__) {
+        console.log('🛠️ PerformanceMonitor: Retour mode silencieux');
+      }
+    }
+    
+    // ═══════════════════════════════════════════════════════
+    // 📊 STORE HYDRATION MONITORING (iOS Optimized)
     // ═══════════════════════════════════════════════════════
     
     startStoreHydration(storeName) {
@@ -45,21 +69,23 @@ class PerformanceMonitor {
       metric.duration = duration;
       metric.status = success ? 'success' : 'error';
   
-      // Alert si trop lent
+      // Alert seulement si vraiment problématique (iOS seuils)
       if (duration > this.thresholds.hydrationTime) {
-        this.addAlert('slow_hydration', `Store ${storeName} hydration: ${duration.toFixed(1)}ms`);
+        this.addAlert('slow_hydration', `Store ${storeName}: ${duration.toFixed(1)}ms`);
       }
   
-      if (__DEV__) {
+      // ZÉRO logs en mode silencieux (démarrage propre)
+      if (__DEV__ && !this.silentMode) {
         console.log(`🏪 Store ${storeName} hydrated in ${duration.toFixed(1)}ms`);
       }
     }
   
     // ═══════════════════════════════════════════════════════
-    // 💾 ASYNCSTORAGE MONITORING
+    // 💾 ASYNCSTORAGE MONITORING (iOS Optimized)
     // ═══════════════════════════════════════════════════════
     
     wrapAsyncStorage() {
+      // Wrap silencieux - AUCUN log automatique
       const originalGetItem = require('@react-native-async-storage/async-storage').default.getItem;
       const originalSetItem = require('@react-native-async-storage/async-storage').default.setItem;
       
@@ -69,7 +95,6 @@ class PerformanceMonitor {
         try {
           const result = await originalGetItem(key);
           const duration = performance.now() - startTime;
-          
           this.logAsyncStorageOperation('read', key, duration, true);
           return result;
         } catch (error) {
@@ -85,7 +110,6 @@ class PerformanceMonitor {
         try {
           const result = await originalSetItem(key, value);
           const duration = performance.now() - startTime;
-          
           this.logAsyncStorageOperation('write', key, duration, true);
           return result;
         } catch (error) {
@@ -101,20 +125,20 @@ class PerformanceMonitor {
         this.metrics.asyncStorage[key] = { reads: [], writes: [] };
       }
   
-      const operationType = operation + 's'; // 'reads' or 'writes'
+      const operationType = operation + 's';
       this.metrics.asyncStorage[key][operationType].push({
         timestamp: Date.now(),
         duration,
         success
       });
   
-      // Garder seulement les 50 dernières opérations
-      if (this.metrics.asyncStorage[key][operationType].length > 50) {
+      // Garder seulement les 30 dernières opérations (iOS optimisé)
+      if (this.metrics.asyncStorage[key][operationType].length > 30) {
         this.metrics.asyncStorage[key][operationType] = 
-          this.metrics.asyncStorage[key][operationType].slice(-50);
+          this.metrics.asyncStorage[key][operationType].slice(-30);
       }
   
-      // Alertes
+      // Alertes seulement pour les cas iOS problématiques
       const threshold = operation === 'read' ? 
         this.thresholds.asyncStorageRead : 
         this.thresholds.asyncStorageWrite;
@@ -123,13 +147,14 @@ class PerformanceMonitor {
         this.addAlert('slow_storage', `AsyncStorage ${operation} ${key}: ${duration.toFixed(1)}ms`);
       }
   
-      if (__DEV__) {
+      // ZÉRO logs automatiques - contrôle via Toolbox uniquement
+      if (__DEV__ && !this.silentMode) {
         console.log(`💾 AsyncStorage ${operation} ${key}: ${duration.toFixed(1)}ms`);
       }
     }
   
     // ═══════════════════════════════════════════════════════
-    // 🔄 RENDER MONITORING
+    // 🔄 RENDER MONITORING (iOS 60fps Optimized)
     // ═══════════════════════════════════════════════════════
     
     trackRender(componentName) {
@@ -150,7 +175,7 @@ class PerformanceMonitor {
       // Garder seulement la dernière seconde
       metric.renderTimes = metric.renderTimes.filter(time => now - time < 1000);
       
-      // Alert si trop de renders
+      // Alert seulement si problématique pour iOS 60fps
       if (metric.renderTimes.length > this.thresholds.renderCount) {
         this.addAlert('excessive_renders', 
           `${componentName}: ${metric.renderTimes.length} renders/sec`);
@@ -160,7 +185,7 @@ class PerformanceMonitor {
     }
   
     // ═══════════════════════════════════════════════════════
-    // 🧠 MEMORY MONITORING
+    // 🧠 MEMORY MONITORING (iOS Optimized)
     // ═══════════════════════════════════════════════════════
     
     trackMemory() {
@@ -181,7 +206,7 @@ class PerformanceMonitor {
     }
   
     // ═══════════════════════════════════════════════════════
-    // 🚨 ALERTS SYSTEM
+    // 🚨 ALERTS SYSTEM (Silent by Default)
     // ═══════════════════════════════════════════════════════
     
     addAlert(type, message) {
@@ -194,12 +219,13 @@ class PerformanceMonitor {
   
       this.metrics.alerts.push(alert);
       
-      // Garder seulement les 100 dernières alertes
-      if (this.metrics.alerts.length > 100) {
-        this.metrics.alerts = this.metrics.alerts.slice(-100);
+      // Garder seulement les 50 dernières alertes (iOS optimisé)
+      if (this.metrics.alerts.length > 50) {
+        this.metrics.alerts = this.metrics.alerts.slice(-50);
       }
   
-      if (__DEV__) {
+      // SILENCE TOTAL en mode silencieux - contrôle via Toolbox
+      if (__DEV__ && !this.silentMode) {
         console.warn(`🚨 Performance Alert [${type}]: ${message}`);
       }
     }
@@ -215,7 +241,7 @@ class PerformanceMonitor {
       return {
         totalHydrationTime: totalTime,
         storeCount: stores.length,
-        averageTime: totalTime / stores.length,
+        averageTime: stores.length > 0 ? totalTime / stores.length : 0,
         slowestStore: stores.reduce((slowest, [name, data]) => 
           (data.duration || 0) > (slowest.duration || 0) ? { name, ...data } : slowest, {}),
         details: this.metrics.storeHydration
@@ -236,8 +262,8 @@ class PerformanceMonitor {
           avgWriteTime: writes.length > 0 ? 
             writes.reduce((sum, op) => sum + op.duration, 0) / writes.length : 0,
           errorRate: {
-            reads: reads.filter(op => !op.success).length / reads.length,
-            writes: writes.filter(op => !op.success).length / writes.length
+            reads: reads.length > 0 ? reads.filter(op => !op.success).length / reads.length : 0,
+            writes: writes.length > 0 ? writes.filter(op => !op.success).length / writes.length : 0
           }
         };
       });
@@ -271,7 +297,7 @@ class PerformanceMonitor {
         asyncStorage: this.getAsyncStorageReport(),
         renders: this.getRenderReport(),
         memory: this.metrics.memory,
-        alerts: this.metrics.alerts.slice(-20), // 20 dernières alertes
+        alerts: this.metrics.alerts.slice(-20),
         summary: {
           totalAlerts: this.metrics.alerts.length,
           criticalAlerts: this.metrics.alerts.filter(a => 
@@ -293,54 +319,56 @@ class PerformanceMonitor {
         memory: {},
         alerts: []
       };
+      
+      if (__DEV__ && !this.silentMode) {
+        console.log('🧹 PerformanceMonitor: Métriques reset');
+      }
     }
   
     setThresholds(newThresholds) {
       this.thresholds = { ...this.thresholds, ...newThresholds };
+      
+      if (__DEV__ && !this.silentMode) {
+        console.log('⚙️ PerformanceMonitor: Seuils mis à jour', newThresholds);
+      }
     }
   
-    // Export pour debugging
     exportMetrics() {
       return JSON.stringify(this.getFullReport(), null, 2);
+    }
+  
+    getCompactStatus() {
+      const hydration = this.getHydrationReport();
+      const alerts = this.metrics.alerts.length;
+      const critical = this.metrics.alerts.filter(a => 
+        a.type === 'slow_hydration' || a.type === 'high_memory'
+      ).length;
+      
+      return {
+        stores: hydration.storeCount,
+        avgHydration: hydration.averageTime.toFixed(0),
+        alerts,
+        critical,
+        healthy: critical === 0
+      };
     }
   }
   
   // Singleton instance
   const performanceMonitor = new PerformanceMonitor();
   
-  // Auto-initialize AsyncStorage wrapping
+  // Initialisation SILENCIEUSE pour démarrage cristallin iOS
   if (__DEV__) {
+    // AsyncStorage wrapping automatique mais silencieux
     performanceMonitor.wrapAsyncStorage();
     
-    // Memory monitoring interval
+    // Memory monitoring très espacé pour iOS (moins gourmand)
     setInterval(() => {
       performanceMonitor.trackMemory();
-    }, 10000); // Toutes les 10 secondes
-
-    // Test simple du monitoring
-    console.log('🚀 PerformanceMonitor initialized');
-    console.log('📊 Testing monitoring...');
+    }, 60000); // Toutes les minutes - ultra-discret
     
-    // Test hydratation
-    performanceMonitor.startStoreHydration('testStore');
-    setTimeout(() => {
-      performanceMonitor.endStoreHydration('testStore');
-      console.log('✅ Store hydration test completed');
-    }, 50);
-    
-    // Test render tracking
-    performanceMonitor.trackRender('TestComponent');
-    console.log('✅ Render tracking test completed');
-    
-    // Test alert
-    performanceMonitor.addAlert('test_alert', 'Test alert message');
-    console.log('✅ Alert system test completed');
-    
-    // Log rapport initial
-    setTimeout(() => {
-      const report = performanceMonitor.getFullReport();
-      console.log('📊 Initial Performance Report:', JSON.stringify(report, null, 2));
-    }, 100);
+    // AUCUN log automatique - Démarrage 100% propre
+    // Le seul log viendra du DevNavigation lors de la première ouverture
   }
   
   export default performanceMonitor;

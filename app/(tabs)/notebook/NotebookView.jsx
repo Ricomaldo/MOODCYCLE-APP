@@ -1,19 +1,20 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 Fichier : app/(tabs)/notebook/NotebookView.jsx
+// 📄 Fichier : app/(tabs)/notebook/NotebookView.jsx - MODIFIÉ NAVIGATION
 // 🧩 Type : Composant Écran
-// 📚 Description : Composant affichant l'écran principal
-// 🕒 Version : 3.0 - 2025-06-21
-// 🧭 Utilisé dans : /notebook notebook route
+// 📚 Description : Carnet personnel + Navigation vignettes intégrée
+// 🕒 Version : 4.0 - 2025-06-21 - NAVIGATION INTÉGRÉE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { View, FlatList, TouchableOpacity, StyleSheet, Alert, Share, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MaterialIcons, Feather } from '@expo/vector-icons';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
 import { theme } from '../../../src/config/theme';
 import { Heading, BodyText, Caption } from '../../../src/core/ui/Typography';
 import { useNotebookStore } from '../../../src/stores/useNotebookStore';
+import { useCycle } from '../../../src/hooks/useCycle';
 import QuickTrackingModal from '../../../src/features/notebook/QuickTrackingModal';
 import FreeWritingModal from '../../../src/features/notebook/FreeWritingModal';
 import EntryDetailModal from '../../../src/features/shared/EntryDetailModal';
@@ -25,8 +26,6 @@ import {
   EntryLoadingSkeleton,
 } from '../../../src/core/ui/AnimatedComponents';
 import ScreenContainer from '../../../src/core/layout/ScreenContainer';
-import DevNavigation from '../../../src/core/dev/DevNavigation';
-
 
 const FILTER_PILLS = [
   { id: 'all', label: 'Tout', icon: 'layers' },
@@ -44,6 +43,10 @@ const PHASE_FILTERS = [
 
 export default function NotebookView() {
   const insets = useSafeAreaInsets();
+  
+  // ✅ NAVIGATION PARAMS - Nouveau
+  const params = useLocalSearchParams();
+  
   const {
     entries,
     searchEntries,
@@ -52,7 +55,11 @@ export default function NotebookView() {
     getPopularTags,
     availableTags,
     deleteEntry,
+    addEntry,
+    addPersonalNote,
   } = useNotebookStore();
+
+  const { currentPhase } = useCycle();
 
   // États filtres et modales
   const [filter, setFilter] = useState('all');
@@ -66,72 +73,152 @@ export default function NotebookView() {
   const [showFreeWriting, setShowFreeWriting] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState(null);
   
+  // ✅ ÉTAT VIGNETTE NAVIGATION
+  const [vignetteContext, setVignetteContext] = useState(null);
+  
   // Refresh state
   const [refreshing, setRefreshing] = useState(false);
 
-  // ✅ Filtrage intelligent avec nouvelle logique
+  // ✅ GESTION NAVIGATION VIGNETTES
+  useFocusEffect(
+    useCallback(() => {
+      // Traitement params navigation vignettes
+      if (params.context === 'vignette') {
+        handleVignetteNavigation();
+      }
+      
+      return () => {
+        setVignetteContext(null);
+      };
+    }, [params])
+  );
+
+  // ✅ NAVIGATION DEPUIS VIGNETTES
+  const handleVignetteNavigation = useCallback(() => {
+    const { initialPrompt, sourcePhase, sourcePersona, vignetteId, mode } = params;
+    
+    if (mode === 'write' && initialPrompt) {
+      // Mode écriture guidée
+      setVignetteContext({
+        prompt: initialPrompt,
+        phase: sourcePhase,
+        persona: sourcePersona,
+        vignetteId,
+        suggestedTags: [
+          `#${sourcePhase}`,
+          '#vignette',
+          '#guidé'
+        ]
+      });
+      
+      // Ouvrir directement le modal d'écriture
+      setShowFreeWriting(true);
+    } else if (mode === 'track') {
+      // Mode tracking guidé
+      setVignetteContext({
+        phase: sourcePhase,
+        persona: sourcePersona,
+        vignetteId,
+        suggestedTags: [
+          `#${sourcePhase}`,
+          '#tracking',
+          '#vignette'
+        ]
+      });
+      
+      setShowQuickTracking(true);
+    } else if (sourcePhase) {
+      // Navigation simple avec contexte
+      setVignetteContext({
+        phase: sourcePhase,
+        persona: sourcePersona,
+        vignetteId
+      });
+      
+      // Filtrer automatiquement par phase source
+      setPhaseFilter(sourcePhase);
+    }
+  }, [params]);
+
+  // ✅ Filtres memoized séparément
+  const filters = useMemo(() => ({
+    type: filter !== 'all' ? filter : null,
+    phase: phaseFilter,
+    tags: selectedTags.length > 0 ? selectedTags : null,
+  }), [filter, phaseFilter, selectedTags]);
+
+  // ✅ Filtrage optimisé
   const filteredEntries = useMemo(() => {
-    const filters = {
-      type: filter !== 'all' ? filter : null,
-      phase: phaseFilter,
-      tags: selectedTags.length > 0 ? selectedTags : null,
-    };
-
     return searchEntries(searchQuery, filters);
-  }, [entries, filter, phaseFilter, searchQuery, selectedTags, searchEntries]);
+  }, [searchQuery, filters, entries]);
 
-  // ✅ Stats pour insights
-  const tagStats = useMemo(() => getPopularTags(), [entries]);
+  // ✅ Stats memoized
+  const tagStats = useMemo(() => 
+    getPopularTags()
+  , [entries]);
 
-  // ✅ Pull to refresh function
-  const onRefresh = async () => {
+  // ✅ Formatters memoized
+  const formatters = useMemo(() => ({
+    getEntryIcon: (type) => {
+      const iconProps = { size: 16, color: theme.colors.primary };
+      switch (type) {
+        case 'saved': return <Feather name="bookmark" {...iconProps} />;
+        case 'personal': return <Feather name="edit-3" {...iconProps} />;
+        case 'tracking': return <Feather name="bar-chart-2" {...iconProps} />;
+        default: return <Feather name="edit-3" {...iconProps} />;
+      }
+    },
+    
+    formatRelativeTime: (timestamp) => {
+      const diff = Date.now() - timestamp;
+      const minutes = Math.floor(diff / (1000 * 60));
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+      if (minutes < 60) return `${minutes}min`;
+      if (hours < 24) return `${hours}h`;
+      if (days < 7) return `${days}j`;
+      return new Date(timestamp).toLocaleDateString('fr-FR', {
+        day: 'numeric', month: 'short',
+      });
+    },
+
+    getEntryTags: (entry) => [...(entry.autoTags || []), ...(entry.metadata?.tags || [])]
+  }), []);
+
+  // ✅ Handlers optimisés
+  const handleTagFilter = useCallback((tag) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  }, []);
+
+  const handleFilterChange = useCallback((newFilter) => {
+    setFilter(newFilter);
+  }, []);
+
+  const handlePhaseFilter = useCallback((phaseId) => {
+    setPhaseFilter(current => current === phaseId ? null : phaseId);
+  }, []);
+
+  // ✅ Refresh optimisé
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    // Simule refresh (peut trigger recalcul trends)
     await new Promise(resolve => setTimeout(resolve, 1000));
     setRefreshing(false);
-  };
+  }, []);
 
-  const getEntryIcon = (type) => {
-    const iconProps = { size: 16, color: theme.colors.primary };
-    switch (type) {
-      case 'saved':
-        return <Feather name="bookmark" {...iconProps} />;
-      case 'personal':
-        return <Feather name="edit-3" {...iconProps} />;
-      case 'tracking':
-        return <Feather name="bar-chart-2" {...iconProps} />;
-      default:
-        return <Feather name="edit-3" {...iconProps} />;
+  // ✅ TOOLBAR VIGNETTE-AWARE
+  const handleToolbarAction = useCallback((action) => {
+    if (action === 'write') {
+      setShowFreeWriting(true);
+    } else if (action === 'track') {
+      setShowQuickTracking(true);
     }
-  };
+  }, []);
 
-  const formatRelativeTime = (timestamp) => {
-    const diff = Date.now() - timestamp;
-    const minutes = Math.floor(diff / (1000 * 60));
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    if (minutes < 60) return `${minutes}min`;
-    if (hours < 24) return `${hours}h`;
-    if (days < 7) return `${days}j`;
-    return new Date(timestamp).toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'short',
-    });
-  };
-
-  // ✅ Tags d'une entrée (auto + manuels)
-  const getEntryTags = (entry) => {
-    return [...(entry.autoTags || []), ...(entry.metadata?.tags || [])];
-  };
-
-  const toggleTagFilter = (tag) => {
-    setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
-    );
-  };
-
-  const renderTrendingInsight = () => {
+  // ✅ Trending insight memoized
+  const trendingInsight = useMemo(() => {
     const trends = calculateTrends();
     if (!trends) return null;
 
@@ -149,31 +236,48 @@ export default function NotebookView() {
         </BodyText>
       </View>
     );
-  };
+  }, [calculateTrends]);
 
-  // ✅ NOUVEAU renderEntry avec SwipeableEntryIOS
-  const renderEntry = ({ item, index }) => (
+  // ✅ renderEntry optimisé
+  const renderEntry = useCallback(({ item }) => (
     <SwipeableEntryIOS
       item={item}
       onPress={() => setSelectedEntry(item)}
       formatTrackingEmotional={formatTrackingEmotional}
-      formatRelativeTime={formatRelativeTime}
-      getEntryIcon={getEntryIcon}
-      getEntryTags={getEntryTags}
+      formatRelativeTime={formatters.formatRelativeTime}
+      getEntryIcon={formatters.getEntryIcon}
+      getEntryTags={formatters.getEntryTags}
     />
-  );
+  ), [formatTrackingEmotional, formatters, setSelectedEntry]);
+
+  // ✅ INDICATEUR CONTEXTE VIGNETTE
+  const renderVignetteContext = () => {
+    if (!vignetteContext) return null;
+    
+    return (
+      <View style={styles.vignetteContext}>
+        <Feather name="compass" size={16} color={theme.colors.primary} />
+        <BodyText style={styles.vignetteContextText}>
+          Guidance {vignetteContext.phase}
+          {vignetteContext.prompt && ` • ${vignetteContext.prompt.slice(0, 30)}...`}
+        </BodyText>
+      </View>
+    );
+  };
 
   // État vide
   if (entries.length === 0) {
     return (
       <ScreenContainer style={styles.container} hasTabs={true}>
-        <DevNavigation />
         <View style={styles.header}>
           <Heading style={styles.title}>Mon Carnet</Heading>
           <TouchableOpacity onPress={() => setShowSearch(!showSearch)} style={styles.searchToggle}>
             <Feather name="search" size={24} color={theme.colors.primary} />
           </TouchableOpacity>
         </View>
+        
+        {renderVignetteContext()}
+        
         <View style={styles.emptyContent}>
           <BodyText style={styles.description}>
             Sauvegarde tes moments avec Melune, écris tes ressentis, note tes observations.
@@ -183,21 +287,31 @@ export default function NotebookView() {
             <BodyText style={styles.startButtonText}>Commencer à écrire</BodyText>
           </TouchableOpacity>
         </View>
-        <FreeWritingModal visible={showFreeWriting} onClose={() => setShowFreeWriting(false)} />
+        
+        {/* ✅ MODALES AVEC CONTEXTE VIGNETTE */}
+        <FreeWritingModal 
+          visible={showFreeWriting} 
+          onClose={() => setShowFreeWriting(false)}
+          initialPrompt={vignetteContext?.prompt}
+          suggestedTags={vignetteContext?.suggestedTags}
+        />
       </ScreenContainer>
     );
   }
 
   return (
     <ScreenContainer style={styles.container} hasTabs={true}>
-      <DevNavigation />
+      
       {/* Header avec recherche */}
-              <View style={styles.header}>
-          <Heading style={styles.title}>Mon Carnet</Heading>
-          <TouchableOpacity onPress={() => setShowSearch(!showSearch)} style={styles.searchToggle}>
-            <Feather name="search" size={24} color={theme.colors.primary} />
-          </TouchableOpacity>
-        </View>
+      <View style={styles.header}>
+        <Heading style={styles.title}>Mon Carnet</Heading>
+        <TouchableOpacity onPress={() => setShowSearch(!showSearch)} style={styles.searchToggle}>
+          <Feather name="search" size={24} color={theme.colors.primary} />
+        </TouchableOpacity>
+      </View>
+
+      {/* ✅ CONTEXTE VIGNETTE */}
+      {renderVignetteContext()}
 
       {/* Barre de recherche */}
       <AnimatedSearchBar
@@ -217,7 +331,7 @@ export default function NotebookView() {
           renderItem={({ item }) => (
             <TouchableOpacity
               style={[styles.filterPill, filter === item.id && styles.filterPillActive]}
-              onPress={() => setFilter(item.id)}
+              onPress={() => handleFilterChange(item.id)}
             >
               <Feather
                 name={item.icon}
@@ -248,7 +362,7 @@ export default function NotebookView() {
                   backgroundColor: item.color + '20',
                 },
               ]}
-              onPress={() => setPhaseFilter(phaseFilter === item.id ? null : item.id)}
+              onPress={() => handlePhaseFilter(item.id)}
             >
               <BodyText
                 style={[
@@ -276,7 +390,7 @@ export default function NotebookView() {
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={[styles.tagFilter, selectedTags.includes(item.tag) && styles.tagFilterActive]}
-                onPress={() => toggleTagFilter(item.tag)}
+                onPress={() => handleTagFilter(item.tag)}
               >
                 <BodyText
                   style={[
@@ -307,7 +421,7 @@ export default function NotebookView() {
             titleColor={theme.colors.textLight}
           />
         }
-        ListHeaderComponent={renderTrendingInsight}
+        ListHeaderComponent={trendingInsight}
         ListEmptyComponent={() => (
           <View style={styles.emptyState}>
             <BodyText style={styles.emptyText}>Aucune entrée trouvée pour ces filtres</BodyText>
@@ -315,17 +429,25 @@ export default function NotebookView() {
         )}
       />
 
-      {/* FAB Animé */}
       {/* ToolbarIOS pour ajouter des entrées */}
       <ToolbarIOS
-        onWritePress={() => setShowFreeWriting(true)}
-        onTrackPress={() => setShowQuickTracking(true)}
+        onWritePress={() => handleToolbarAction('write')}
+        onTrackPress={() => handleToolbarAction('track')}
       />
 
-      {/* Modales */}
-      <QuickTrackingModal visible={showQuickTracking} onClose={() => setShowQuickTracking(false)} />
+      {/* ✅ MODALES AVEC CONTEXTE VIGNETTE */}
+      <QuickTrackingModal 
+        visible={showQuickTracking} 
+        onClose={() => setShowQuickTracking(false)}
+        defaultTags={vignetteContext?.suggestedTags}
+      />
 
-      <FreeWritingModal visible={showFreeWriting} onClose={() => setShowFreeWriting(false)} />
+      <FreeWritingModal 
+        visible={showFreeWriting} 
+        onClose={() => setShowFreeWriting(false)}
+        initialPrompt={vignetteContext?.prompt}
+        suggestedTags={vignetteContext?.suggestedTags}
+      />
 
       <EntryDetailModal
         entries={selectedEntry ? [selectedEntry] : []}
@@ -344,20 +466,16 @@ const styles = StyleSheet.create({
     padding: theme.spacing.l,
   },
   header: {
-    height: 60, // Hauteur standardisée
+    height: 60,
     flexDirection: 'row',
-    justifyContent: 'center', // Centrer le titre
+    justifyContent: 'center',
     alignItems: 'center',
     marginBottom: theme.spacing.l,
-    position: 'relative', // Pour positionner le bouton de recherche
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    position: 'relative',
   },
   title: {
     textAlign: 'center',
-    fontSize: 20, // Taille standardisée
+    fontSize: 20,
     fontWeight: '600',
   },
   searchToggle: {
@@ -365,9 +483,24 @@ const styles = StyleSheet.create({
     right: 0,
     padding: theme.spacing.s,
   },
-
-  // Recherche (maintenant dans AnimatedSearchBar)
-  // Supprimé - géré par le composant animé
+  
+  // ✅ NOUVEAU - Contexte vignette
+  vignetteContext: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary + '10',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginBottom: 16,
+    borderRadius: 8,
+    gap: 8,
+  },
+  vignetteContextText: {
+    fontSize: 14,
+    color: theme.colors.primary,
+    fontWeight: '500',
+    flex: 1,
+  },
 
   // Filtres
   filtersContainer: {
@@ -467,9 +600,6 @@ const styles = StyleSheet.create({
     color: theme.colors.textLight,
   },
 
-  // Entries
-
-
   // États
   emptyContent: {
     flex: 1,
@@ -508,42 +638,4 @@ const styles = StyleSheet.create({
   list: {
     flex: 1,
   },
-
-  // FAB
-  fabContainer: {
-    position: 'absolute',
-    right: theme.spacing.l,
-    alignItems: 'center',
-  },
-  fabOptions: {
-    marginBottom: theme.spacing.m,
-    gap: theme.spacing.s,
-  },
-  fabOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.pill,
-    paddingHorizontal: theme.spacing.m,
-    paddingVertical: theme.spacing.s,
-    gap: theme.spacing.xs,
-  },
-  fabOptionText: {
-    color: 'white',
-    fontSize: 12,
-  },
-  fab: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: theme.colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
 });
-

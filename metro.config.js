@@ -22,4 +22,9 @@ config.resolver.nodeModulesPaths = [
 // 3. Force Metro to resolve (sub)dependencies only from the `nodeModulesPaths`
 config.resolver.disableHierarchicalLookup = true;
 
+// 4. Gesture handler resolver
+config.resolver.alias = {
+  'react-native-gesture-handler': 'react-native-gesture-handler/src',
+};
+
 module.exports = config; 

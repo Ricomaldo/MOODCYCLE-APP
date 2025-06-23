@@ -2,14 +2,15 @@
 // ─────────────────────────────────────────────────────────
 // 📄 File: src/core/dev/PerformanceDashboard.jsx
 // 🧩 Type: Dev Component
-// 📚 Description: Dashboard performance monitoring pour développement
-// 🕒 Version: 1.0 - 2025-06-21
+// 📚 Description: Dashboard performance monitoring v2.0 - Toolbox DEV intégré
+// 🕒 Version: 2.0 - 2025-06-23
 // 🧭 Used in: DevNavigation (mode développement uniquement)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { usePerformanceDashboard, usePerformanceAlerts } from '../../hooks/usePerformanceMonitoring';
+import performanceMonitor from '../monitoring/PerformanceMonitor';
 
 export default function PerformanceDashboard() {
   const { metrics, refreshing, refreshMetrics, criticalAlerts, isHealthy } = usePerformanceDashboard();
@@ -29,6 +30,35 @@ export default function PerformanceDashboard() {
       );
       console.log('📊 Performance Metrics Export:', exportData);
     }
+  };
+
+  const handleToggleVerbose = () => {
+    if (performanceMonitor.silentMode) {
+      performanceMonitor.enableVerboseMode();
+      Alert.alert('🛠️ Mode Verbose', 'Logs détaillés activés');
+    } else {
+      performanceMonitor.disableVerboseMode();
+      Alert.alert('🛠️ Mode Silencieux', 'Logs minimaux activés');
+    }
+  };
+
+  const handleResetMetrics = () => {
+    Alert.alert(
+      '🧹 Reset Métriques',
+      'Effacer toutes les métriques de performance ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { 
+          text: 'Reset', 
+          style: 'destructive',
+          onPress: () => {
+            performanceMonitor.reset();
+            refreshMetrics();
+            Alert.alert('✅ Reset Complet', 'Métriques effacées');
+          }
+        }
+      ]
+    );
   };
 
   const getHealthColor = () => {
@@ -183,10 +213,26 @@ export default function PerformanceDashboard() {
         </TouchableOpacity>
         
         <TouchableOpacity 
+          style={[styles.button, { backgroundColor: performanceMonitor.silentMode ? '#4CAF50' : '#FF9800' }]}
+          onPress={handleToggleVerbose}
+        >
+          <Text style={styles.buttonText}>
+            {performanceMonitor.silentMode ? '🔊 Verbose' : '🔇 Silencieux'}
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
           style={styles.button}
           onPress={handleExportMetrics}
         >
-          <Text style={styles.buttonText}>📤 Exporter</Text>
+          <Text style={styles.buttonText}>📤 Export</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#f44336' }]}
+          onPress={handleResetMetrics}
+        >
+          <Text style={styles.buttonText}>🧹 Reset</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -292,18 +338,20 @@ const styles = StyleSheet.create({
     borderBottomColor: '#eee',
   },
   storageKey: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 'bold',
     color: '#333',
     flex: 1,
+    flexWrap: 'wrap',
   },
   storageMetrics: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
   },
   storageText: {
-    fontSize: 11,
+    fontSize: 10,
     color: '#666',
-    marginLeft: 8,
+    marginLeft: 6,
   },
   renderItem: {
     flexDirection: 'row',
@@ -312,18 +360,20 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   componentName: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 'bold',
     color: '#333',
     flex: 1,
+    flexWrap: 'wrap',
   },
   renderMetrics: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
   },
   renderText: {
-    fontSize: 10,
+    fontSize: 9,
     color: '#666',
-    marginLeft: 6,
+    marginLeft: 4,
   },
   memoryBar: {
     height: 20,
@@ -343,23 +393,26 @@ const styles = StyleSheet.create({
   },
   actions: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-around',
-    padding: 20,
+    padding: 15,
+    gap: 8,
   },
   button: {
     backgroundColor: '#007AFF',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderRadius: 8,
-    flex: 1,
-    marginHorizontal: 5,
+    minWidth: 70,
+    alignItems: 'center',
   },
   buttonDisabled: {
-    backgroundColor: '#ccc',
+    backgroundColor: '#cccccc',
   },
   buttonText: {
     color: 'white',
-    textAlign: 'center',
+    fontSize: 11,
     fontWeight: 'bold',
+    textAlign: 'center',
   },
 }); 

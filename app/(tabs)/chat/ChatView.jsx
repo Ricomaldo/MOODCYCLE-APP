@@ -1,13 +1,12 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 Fichier : app/(tabs)/chat/ChatView.jsx
+// 📄 Fichier : app/(tabs)/chat/ChatView.jsx - MODIFIÉ NAVIGATION
 // 🧩 Type : Composant Écran (Screen)
-// 📚 Description : Chat moderne iPhone 2025 avec Melune
-// 🕒 Version : 4.0 - 2025-06-21
-// 🧭 Utilisé dans : navigation chat (onglet)
+// 📚 Description : Chat moderne iPhone 2025 avec Melune + Navigation vignettes
+// 🕒 Version : 5.0 - 2025-06-21 - NAVIGATION INTÉGRÉE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, memo } from "react";
 import {
   View,
   StyleSheet,
@@ -19,18 +18,19 @@ import {
   ActionSheetIOS,
   Animated,
   RefreshControl,
+  Alert,
 } from "react-native";
 import * as Haptics from 'expo-haptics';
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Feather } from "@expo/vector-icons";
 import ChatBubble from "../../../src/features/chat/ChatBubble";
 import { theme } from "../../../src/config/theme";
-import { Heading } from "../../../src/core/ui/Typography";
+import { Heading, BodyText } from "../../../src/core/ui/Typography";
 import ChatService from "../../../src/services/ChatService";
-import DevNavigation from "../../../src/core/dev/DevNavigation";
 import ScreenContainer from "../../../src/core/layout/ScreenContainer";
 import { useUserStore } from "../../../src/stores/useUserStore";
+import { useChatStore } from "../../../src/stores/useChatStore";
 import { useNotebookStore } from "../../../src/stores/useNotebookStore";
 import { useCycle } from '../../../src/hooks/useCycle';
 import { usePersona } from '../../../src/hooks/usePersona';
@@ -45,7 +45,6 @@ function TypingIndicator() {
   const dot3Anim = useRef(new Animated.Value(0.4)).current;
 
   useEffect(() => {
-    // Animation séquentielle iOS-like avec courbes naturelles
     const animateSequence = () => {
       Animated.sequence([
         Animated.timing(dot1Anim, {
@@ -97,34 +96,70 @@ function TypingIndicator() {
       </View>
     </View>
   );
-} 
+}
+
+const MemoizedTypingIndicator = memo(TypingIndicator);
 
 export default function ChatScreen() {
-  // 📊 Monitoring de performance
-  const renderCount = useRenderMonitoring('ChatScreen');
+  // 📊 Monitoring de performance - DÉSACTIVÉ TEMPORAIREMENT
+  // const renderCount = useRenderMonitoring('ChatScreen');
   
   const insets = useSafeAreaInsets();
   const scrollViewRef = useRef(null);
+  
+  // ✅ NAVIGATION PARAMS - Stabilisé
+  const params = useLocalSearchParams();
+  const { initialMessage, sourcePhase, sourcePersona, vignetteId, context, autoSend } = params;
+  
+  // ✅ TRACKER SI LA VIGNETTE A DÉJÀ ÉTÉ TRAITÉE
+  const processedVignetteRef = useRef(null);
+  
+  // États chat
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  
+  // Stores
   const { profile, melune } = useUserStore();
+  const { addMessage } = useChatStore();
   const { currentPhase, phaseInfo } = useCycle();
-
   const { addEntry } = useNotebookStore();
+  
   const phase = currentPhase;
   const prenom = profile.prenom;
 
+  // ✅ GESTION NAVIGATION VIGNETTES - CORRIGÉE
   useFocusEffect(
     useCallback(() => {
       setShowMessages(true);
+      
+      // Traitement params navigation vignettes - UNE SEULE FOIS
+      if (initialMessage && processedVignetteRef.current !== vignetteId) {
+        handleVignetteNavigation();
+        processedVignetteRef.current = vignetteId;
+      }
+      
       return () => setShowMessages(false);
-    }, [])
+    }, [initialMessage, vignetteId]) // ✅ Dépendances stables
   );
+
+  // ✅ NAVIGATION DEPUIS VIGNETTES - CORRIGÉE
+  const handleVignetteNavigation = useCallback(() => {
+    if (initialMessage) {
+      // Pré-remplir l'input avec le prompt de la vignette
+      setInput(initialMessage);
+      
+      // Optionnel : Envoyer automatiquement le message
+      if (autoSend === 'true') {
+        setTimeout(() => {
+          handleSend(initialMessage);
+          setInput('');
+        }, 1000);
+      }
+    }
+  }, [initialMessage, autoSend]); // ✅ Dépendances mises à jour
 
   // Message d'accueil personnalisé
   const generateWelcomeMessage = () => {
@@ -167,7 +202,6 @@ export default function ChatScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    // Recharger historique conversation
     await new Promise(resolve => setTimeout(resolve, 1000));
     setRefreshing(false);
   };
@@ -185,7 +219,9 @@ export default function ChatScreen() {
         },
         (buttonIndex) => {
           if (buttonIndex === 1) {
-            addEntry(message, 'saved', [`#${currentPhase}`, '#conseil']);
+            // ✅ INTÉGRATION STORES - Nouveau
+            const vignetteContext = sourcePhase ? [`#${sourcePhase}`] : [];
+            addEntry(message, 'saved', [`#${currentPhase}`, '#conseil', '#melune', ...vignetteContext]);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           }
         }
@@ -193,14 +229,22 @@ export default function ChatScreen() {
     }
   };
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+  // ✅ HANDLE SEND MODIFIÉ
+  const handleSend = async (messageText = null) => {
+    const currentInput = messageText || input.trim();
+    if (!currentInput || isLoading) return;
 
-    const currentInput = input.trim();
     const userMessage = { id: Date.now(), text: currentInput, isUser: true };
     
     setMessages((prev) => [...prev, userMessage]);
-    setInput("");
+    
+    // ✅ SAUVEGARDE DANS CHATSTORE
+    addMessage('user', currentInput, {
+      sourceVignette: vignetteId || null,
+      sourcePhase: sourcePhase || currentPhase
+    });
+    
+    if (!messageText) setInput("");
     setIsLoading(true);
     scrollToBottom();
 
@@ -214,6 +258,13 @@ export default function ChatScreen() {
           source: response.source,
         };
         setMessages((prev) => [...prev, meluneMessage]);
+        
+        // ✅ SAUVEGARDE RÉPONSE MELUNE
+        addMessage('melune', response.message, {
+          source: response.source,
+          responseToVignette: vignetteId || null
+        });
+        
         scrollToBottom();
       } else {
         throw new Error("Erreur service ChatService");
@@ -233,14 +284,30 @@ export default function ChatScreen() {
     }
   };
 
+  // ✅ INDICATEUR CONTEXTE VIGNETTE
+  const renderVignetteContext = () => {
+    if (context !== 'vignette' || !sourcePhase) return null;
+    
+    return (
+      <View style={styles.vignetteContext}>
+        <Feather name="compass" size={16} color={theme.colors.primary} />
+        <BodyText style={styles.vignetteContextText}>
+          Guidance {sourcePhase}
+        </BodyText>
+      </View>
+    );
+  };
+
   return (
     <ScreenContainer style={styles.container} hasTabs={true}>
-      <DevNavigation />
       
       {/* Header aligné avec les autres pages */}
       <View style={styles.header}>
         <Heading style={styles.title}>Melune</Heading>
       </View>
+
+      {/* ✅ CONTEXTE VIGNETTE */}
+      {renderVignetteContext()}
 
       <KeyboardAvoidingView
         style={styles.flexContainer}
@@ -275,7 +342,7 @@ export default function ChatScreen() {
             />
           ))}
           
-          {isLoading && <TypingIndicator />}
+          {isLoading && <MemoizedTypingIndicator />}
         </ScrollView>
 
         {/* Input collé à la tabbar */}
@@ -290,12 +357,12 @@ export default function ChatScreen() {
               multiline
               maxHeight={120}
               returnKeyType="send"
-              onSubmitEditing={handleSend}
+              onSubmitEditing={() => handleSend()}
               blurOnSubmit={false}
             />
             <TouchableOpacity
               style={[styles.sendButton, !input.trim() && styles.sendButtonDisabled]}
-              onPress={handleSend}
+              onPress={() => handleSend()}
               disabled={!input.trim() || isLoading}
             >
               <Feather
@@ -324,12 +391,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: theme.spacing.l,
-    marginBottom: 0, // Pas de margin pour alignement
+    marginBottom: 0,
   },
   title: {
     textAlign: 'center',
-    fontSize: 20, // Taille standardisée
+    fontSize: 20,
     fontWeight: '600',
+  },
+  // ✅ NOUVEAU - Contexte vignette
+  vignetteContext: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary + '10',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: 8,
+    gap: 8,
+  },
+  vignetteContextText: {
+    fontSize: 14,
+    color: theme.colors.primary,
+    fontWeight: '500',
   },
   messagesContent: {
     paddingHorizontal: 16,
@@ -371,7 +455,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    minHeight: 44, // Hauteur minimale iOS
+    minHeight: 44,
   },
   input: {
     flex: 1,

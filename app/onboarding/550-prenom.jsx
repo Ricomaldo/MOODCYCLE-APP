@@ -1,297 +1,511 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 Fichier : app/onboarding/550-prenom.jsx
-// 🧩 Type : Composant Écran (Screen)
-// 📚 Description : Écran de saisie du prénom de l'utilisatrice
-// 🕒 Version : 3.0 - 2025-06-21
-// 🧭 Utilisé dans : onboarding flow (étape 7)
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 📄 File: app/onboarding/550-prenom.jsx
+// 🧩 Type: Onboarding Screen
+// 📚 Description: Relation personnalisée + finalisation persona
+// 🕒 Version: 2.0 - Intelligence Intégrée
+// 🧭 Used in: Onboarding flow - Étape 3/4 "Ton style"
+// ─────────────────────────────────────────────────────────
 //
-import React, { useEffect, useRef, useState } from "react";
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  Animated,
-  TextInput,
-  KeyboardAvoidingView,
-  Platform,
-} from "react-native";
-import { useRouter } from "expo-router";
-import ScreenContainer from "../../src/core/layout/ScreenContainer";
-import { Heading1, Heading2, BodyText } from "../../src/core/ui/Typography";
-import { useUserStore } from "../../src/stores/useUserStore";
-import { theme } from "../../src/config/theme";
-import MeluneAvatar from "../../src/features/shared/MeluneAvatar";
-import ChatBubble from "../../src/features/chat/ChatBubble";
+import React, { useEffect, useRef, useState } from 'react';
+import { View, TouchableOpacity, StyleSheet, Animated, ScrollView, TextInput, Keyboard } from 'react-native';
+import { router } from 'expo-router';
+import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
+import ScreenContainer from '../../src/core/layout/ScreenContainer';
+import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
+import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
+import { BodyText } from '../../src/core/ui/Typography';
+import { theme } from '../../src/config/theme';
 
 export default function PrenomScreen() {
-  const router = useRouter();
-  const { updateProfile, profile } = useUserStore();
-
-  const [prenom, setPrenom] = useState("");
-  const [showValidation, setShowValidation] = useState(false);
-
-  // Animations
+  // 🧠 INTELLIGENCE HOOK
+  const intelligence = useOnboardingIntelligence('550-prenom');
+  
+  // 🎨 Animations Standard
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
   const heartAnim = useRef(new Animated.Value(1)).current;
+  
+  // État du formulaire
+  const [prenom, setPrenom] = useState('');
+  const [isValid, setIsValid] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const inputRef = useRef(null);
 
   useEffect(() => {
-    // Animation d'entrée douce
-    Animated.parallel([
+    // 🎨 Séquence animations
+    Animated.sequence([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 600,
+        duration: 500,
         useNativeDriver: true,
       }),
+      Animated.delay(400),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 800,
+        duration: 600,
         useNativeDriver: true,
       }),
     ]).start();
 
-    // Animation du cœur qui bat
+    // Animation cœur battant continue
     Animated.loop(
       Animated.sequence([
         Animated.timing(heartAnim, {
-          toValue: 1.2,
-          duration: 1200,
+          toValue: 1.1,
+          duration: 800,
           useNativeDriver: true,
         }),
         Animated.timing(heartAnim, {
           toValue: 1,
-          duration: 1200,
+          duration: 800,
           useNativeDriver: true,
         }),
       ])
     ).start();
+
+    // Auto-focus sur l'input
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 1000);
   }, []);
 
+  // Validation du prénom
+  useEffect(() => {
+    const trimmedPrenom = prenom.trim();
+    setIsValid(trimmedPrenom.length >= 2 && trimmedPrenom.length <= 12);
+  }, [prenom]);
+
   const handlePrenomChange = (text) => {
-    setPrenom(text);
-    setShowValidation(text.length >= 2);
+    // Nettoyer l'input (lettres + espaces uniquement)
+    const cleanText = text.replace(/[^a-zA-ZÀ-ÿ\s]/g, '');
+    setPrenom(cleanText);
   };
 
-  const handleContinue = () => {
-    if (prenom.trim().length > 0) {
-      updateProfile({
-        prenom: prenom.trim(),
-      });
-      router.push("/onboarding/600-avatar");
+  const handleSubmit = async () => {
+    if (!isValid || isProcessing) return;
+    
+    setIsProcessing(true);
+    Keyboard.dismiss();
+    
+    const trimmedPrenom = prenom.trim();
+    
+    // 🔧 Sauvegarde prénom
+    intelligence.updateProfile({
+      prenom: trimmedPrenom,
+    });
+    
+    // 🧠 INTELLIGENCE : Finalisation persona
+    const finalPersona = intelligence.currentPersona || intelligence.userProfile.suggestedPersona || 'emma';
+    
+    intelligence.updateProfile({
+      assignedPersona: finalPersona,
+      relationshipInitialized: true,
+      personaConfidence: 0.9 // Haute confidence avec prénom
+    });
+    
+    // 🧠 Track finalisation relation
+    intelligence.trackAction('relationship_initialized', {
+      prenom: trimmedPrenom,
+      finalPersona,
+      confidence: 0.9
+    });
+
+    // Délai pour feedback
+    setTimeout(() => {
+      router.push('/onboarding/600-avatar');
+    }, 1500);
+  };
+
+  const generatePersonalizedPreview = () => {
+    if (!prenom.trim()) {
+      return "Bonjour, comment vas-tu aujourd'hui ?";
     }
+    
+    const persona = intelligence.currentPersona || intelligence.userProfile.suggestedPersona || 'emma';
+    const phase = intelligence.userProfile.currentPhase || 'follicular';
+    
+    const previews = {
+      emma: {
+        menstrual: `Coucou ${prenom.trim()} ! Comment tu te sens dans cette phase cocooning ? 🌙`,
+        follicular: `Hey ${prenom.trim()} ! Je sens que ton énergie remonte ! ✨`,
+        ovulatory: `Bonjour ma belle ${prenom.trim()} ! Tu rayonnes aujourd'hui ! 💫`,
+        luteal: `Salut ${prenom.trim()}, comment tu gères cette phase d'automne ? 🍂`
+      },
+      laure: {
+        menstrual: `Bonjour ${prenom.trim()}. Comment organisez-vous votre repos aujourd'hui ?`,
+        follicular: `${prenom.trim()}, quels sont vos objectifs pour cette phase créative ?`,
+        ovulatory: `${prenom.trim()}, comment optimisez-vous cette période de pic énergétique ?`,
+        luteal: `${prenom.trim()}, comment finalisez-vous vos projets en cours ?`
+      },
+      clara: {
+        menstrual: `Salut ${prenom.trim()} ! Ready pour du self-care de compétition ? 🛁`,
+        follicular: `Hey ${prenom.trim()} ! On recharge les batteries à fond ! ⚡`,
+        ovulatory: `YESS ${prenom.trim()} ! Tu es au TOP ! Qu'est-ce qu'on fait de génial ? 🚀`,
+        luteal: `Hello ${prenom.trim()} ! Comment on transforme cette phase en force ? 💪`
+      },
+      sylvie: {
+        menstrual: `Bonjour ma douce ${prenom.trim()}, comment honores-tu ton besoin de repos ?`,
+        follicular: `${prenom.trim()}, quelle belle énergie je ressens... Comment la cultives-tu ?`,
+        ovulatory: `Ma chère ${prenom.trim()}, tu es radieuse ! Comment savoures-tu cette plénitude ?`,
+        luteal: `${prenom.trim()}, comment accueilles-tu cette sagesse d'automne ?`
+      },
+      christine: {
+        menstrual: `Bonjour ${prenom.trim()}, comment prenez-vous soin de vous aujourd'hui ?`,
+        follicular: `${prenom.trim()}, cette belle énergie qui renaît... Comment l'accompagnez-vous ?`,
+        ovulatory: `${prenom.trim()}, vous rayonnez de sérénité. Comment cultivez-vous cela ?`,
+        luteal: `${prenom.trim()}, comment honorez-vous cette phase de transition ?`
+      }
+    };
+    
+    return previews[persona]?.[phase] || previews[persona]?.follicular || previews.emma.follicular;
   };
 
   return (
-    <ScreenContainer style={styles.container}>
-      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-        {/* Avatar Melune avec expression douce */}
-        <Animated.View
-          style={[
-            styles.avatarContainer,
-            { transform: [{ translateY: slideAnim }] },
-          ]}
-        >
-          <MeluneAvatar phase="ovulatory" size="medium" />
-        </Animated.View>
-
-        {/* Messages intimes de Melune */}
-        <Animated.View
-          style={[
-            styles.messagesContainer,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <View style={styles.messageWrapper}>
-            <ChatBubble
-              message="Nous avons déjà partagé tant de choses ensemble... ✨"
-              isUser={false}
-            />
-          </View>
-
-          <View style={styles.messageWrapper}>
-            <ChatBubble
-              message="Pour que notre connexion soit vraiment personnelle, comment puis-je t'appeler ?"
-              isUser={false}
-            />
-          </View>
-        </Animated.View>
-
-        {/* Section prénom avec cœur animé */}
-        <Animated.View
-          style={[
-            styles.prenomSection,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <View style={styles.prenomHeader}>
-            <Animated.View style={{ transform: [{ scale: heartAnim }] }}>
-              <BodyText style={styles.heartIcon}>💙</BodyText>
-            </Animated.View>
-            <Heading2 style={styles.prenomTitle}>Mon prénom est...</Heading2>
-          </View>
-
-          <TextInput
-            style={styles.prenomInput}
-            value={prenom}
-            onChangeText={handlePrenomChange}
-            placeholder="Tape ton prénom ici"
-            placeholderTextColor={theme.colors.textLight}
-            maxLength={12}
-            autoCapitalize="words"
-            autoFocus={true}
-            returnKeyType="done"
-            onSubmitEditing={handleContinue}
-          />
-
-          <BodyText style={styles.helpText}>
-            Juste ton prénom, pour que nos échanges soient plus chaleureux ✨
-          </BodyText>
-        </Animated.View>
-
-        {/* Validation et bouton */}
-        {showValidation && (
-          <Animated.View
-            style={[
-              styles.validationContainer,
-              {
+    <ScreenContainer edges={['top', 'bottom']}>
+      <OnboardingNavigation currentScreen="550-prenom" />
+      
+      <ScrollView 
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+          
+          {/* TopSection - Avatar + Message */}
+          <View style={styles.topSection}>
+            <Animated.View 
+              style={{ 
                 opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }],
-              },
-            ]}
-          >
-            <View style={styles.previewContainer}>
-              <BodyText style={styles.previewText}>
-                "Ravie de te connaître, {prenom} ! 🌸"
-              </BodyText>
-            </View>
-
-            <TouchableOpacity
-              style={styles.continueButton}
-              onPress={handleContinue}
-              activeOpacity={0.8}
+                transform: [{ scale: heartAnim }]
+              }}
             >
-              <BodyText style={styles.continueButtonText}>
-                Parfait, continue ! ✨
+              <MeluneAvatar 
+                phase="ovulatory" 
+                size="medium" 
+                style="classic"
+                animated={true}
+              />
+            </Animated.View>
+            
+            <Animated.View
+              style={[
+                styles.messageContainer,
+                {
+                  transform: [{ translateY: slideAnim }],
+                  opacity: slideAnim.interpolate({
+                    inputRange: [-20, 0],
+                    outputRange: [0, 1],
+                    extrapolate: 'clamp',
+                  }),
+                },
+              ]}
+            >
+              <BodyText style={styles.meluneMessage}>
+                {intelligence.meluneMessage}
+              </BodyText>
+            </Animated.View>
+          </View>
+
+          {/* MainSection - Input + Preview */}
+          <View style={styles.mainSection}>
+            <Animated.View
+              style={[
+                styles.formContainer,
+                {
+                  transform: [{ translateY: slideAnim }],
+                  opacity: slideAnim.interpolate({
+                    inputRange: [-20, 0],
+                    outputRange: [0, 1],
+                    extrapolate: 'clamp',
+                  }),
+                },
+              ]}
+            >
+              <BodyText style={styles.question}>
+                Comment aimerais-tu que je t'appelle ?
+              </BodyText>
+              
+              <BodyText style={styles.subtext}>
+                Créons notre lien personnel et unique ❤️
+              </BodyText>
+
+              {/* Input prénom */}
+              <View style={styles.inputContainer}>
+                <TextInput
+                  ref={inputRef}
+                  style={[
+                    styles.prenomInput,
+                    isValid && styles.prenomInputValid,
+                    !isValid && prenom.length > 0 && styles.prenomInputInvalid
+                  ]}
+                  value={prenom}
+                  onChangeText={handlePrenomChange}
+                  onSubmitEditing={handleSubmit}
+                  placeholder="Ton prénom..."
+                  placeholderTextColor={theme.colors.textLight}
+                  maxLength={12}
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                  returnKeyType="done"
+                  blurOnSubmit={false}
+                />
+                
+                {/* Indication validation */}
+                <View style={styles.validationContainer}>
+                  {prenom.length > 0 && (
+                    <BodyText style={[
+                      styles.validationText,
+                      isValid ? styles.validationValid : styles.validationInvalid
+                    ]}>
+                      {isValid ? '✓ Parfait !' : `${prenom.trim().length < 2 ? 'Trop court' : 'Trop long'}`}
+                    </BodyText>
+                  )}
+                </View>
+              </View>
+
+              {/* Preview relation personnalisée */}
+              {prenom.trim().length >= 2 && (
+                <Animated.View
+                  style={[
+                    styles.previewContainer,
+                    {
+                      opacity: fadeAnim,
+                      transform: [{ translateY: slideAnim }],
+                    },
+                  ]}
+                >
+                  <BodyText style={styles.previewLabel}>
+                    💬 Aperçu de notre relation :
+                  </BodyText>
+                  <View style={styles.previewBubble}>
+                    <BodyText style={styles.previewText}>
+                      {generatePersonalizedPreview()}
+                    </BodyText>
+                  </View>
+                </Animated.View>
+              )}
+            </Animated.View>
+          </View>
+
+          {/* BottomSection - CTA */}
+          <View style={styles.bottomSection}>
+            <TouchableOpacity
+              style={[
+                styles.continueButton,
+                isValid && !isProcessing && styles.continueButtonActive,
+                isProcessing && styles.continueButtonProcessing
+              ]}
+              onPress={handleSubmit}
+              activeOpacity={0.8}
+              disabled={!isValid || isProcessing}
+            >
+              <BodyText style={[
+                styles.continueButtonText,
+                isValid && !isProcessing && styles.continueButtonTextActive
+              ]}>
+                {isProcessing ? 
+                  '💕 Initialisation de notre relation...' : 
+                  isValid ? 
+                    '💖 Parfait, continuons !' : 
+                    'Dis-moi ton prénom'
+                }
               </BodyText>
             </TouchableOpacity>
-          </Animated.View>
-        )}
-      </Animated.View>
+          </View>
+          
+        </Animated.View>
+      </ScrollView>
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  scrollView: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
+  
+  scrollContent: {
+    flexGrow: 1,
+  },
+  
   content: {
     flex: 1,
     paddingHorizontal: theme.spacing.l,
   },
-  avatarContainer: {
-    alignItems: "center",
-    marginTop: theme.spacing.xl,
+  
+  topSection: {
+    alignItems: 'center',
+    paddingTop: theme.spacing.l,
     marginBottom: theme.spacing.l,
+    minHeight: '25%',
   },
-  messagesContainer: {
-    marginBottom: theme.spacing.xl,
+  
+  messageContainer: {
+    marginTop: theme.spacing.l,
+    paddingHorizontal: theme.spacing.m,
   },
-  messageWrapper: {
-    alignItems: "flex-start",
+  
+  meluneMessage: {
+    fontSize: 16,
+    color: theme.colors.textLight,
+    textAlign: 'center',
+    lineHeight: 24,
+    fontStyle: 'italic',
+  },
+  
+  mainSection: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  
+  formContainer: {
+    alignItems: 'center',
+  },
+  
+  question: {
+    fontSize: 20,
+    textAlign: 'center',
     marginBottom: theme.spacing.m,
+    color: theme.colors.text,
+    lineHeight: 28,
+    fontFamily: theme.fonts.body,
+    fontWeight: '600',
   },
-  prenomSection: {
+  
+  subtext: {
+    fontSize: 15,
+    textAlign: 'center',
+    color: theme.colors.textLight,
     marginBottom: theme.spacing.xl,
+    lineHeight: 22,
   },
-  prenomHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+  
+  inputContainer: {
+    width: '100%',
+    alignItems: 'center',
     marginBottom: theme.spacing.l,
   },
-  heartIcon: {
-    fontSize: 24,
-    marginRight: theme.spacing.s,
-  },
-  prenomTitle: {
-    color: theme.colors.primary,
-    fontSize: 18,
-    fontStyle: "italic",
-  },
+  
   prenomInput: {
-    backgroundColor: theme.colors.background,
-    borderWidth: 2,
-    borderColor: theme.colors.primary + "40",
-    borderRadius: theme.borderRadius.medium,
-    paddingVertical: theme.spacing.m,
-    paddingHorizontal: theme.spacing.l,
     fontSize: 18,
-    fontFamily: theme.fonts.body,
+    textAlign: 'center',
+    paddingVertical: theme.spacing.l,
+    paddingHorizontal: theme.spacing.xl,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.large,
+    borderWidth: 2,
+    borderColor: theme.colors.border,
     color: theme.colors.text,
-    textAlign: "center",
-    shadowColor: theme.colors.primary,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    fontFamily: theme.fonts.body,
+    width: '80%',
+    shadowColor: theme.colors.text,
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 2,
   },
-  helpText: {
-    textAlign: "center",
-    color: theme.colors.textLight,
-    fontSize: 13,
-    fontStyle: "italic",
-    marginTop: theme.spacing.s,
-    lineHeight: 18,
+  
+  prenomInputValid: {
+    borderColor: theme.colors.success,
+    backgroundColor: theme.colors.success + '08',
   },
+  
+  prenomInputInvalid: {
+    borderColor: theme.colors.error,
+    backgroundColor: theme.colors.error + '08',
+  },
+  
   validationContainer: {
-    alignItems: "center",
+    height: 20,
+    marginTop: theme.spacing.s,
+    justifyContent: 'center',
   },
+  
+  validationText: {
+    fontSize: 14,
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  
+  validationValid: {
+    color: theme.colors.success,
+  },
+  
+  validationInvalid: {
+    color: theme.colors.error,
+  },
+  
   previewContainer: {
-    backgroundColor: theme.colors.secondary + "20",
-    borderRadius: theme.borderRadius.medium,
-    paddingVertical: theme.spacing.m,
-    paddingHorizontal: theme.spacing.l,
-    marginBottom: theme.spacing.l,
-    borderLeftWidth: 4,
-    borderLeftColor: theme.colors.secondary,
+    width: '100%',
+    marginTop: theme.spacing.xl,
+    alignItems: 'center',
   },
+  
+  previewLabel: {
+    fontSize: 14,
+    color: theme.colors.textLight,
+    marginBottom: theme.spacing.m,
+    fontWeight: '500',
+  },
+  
+  previewBubble: {
+    backgroundColor: theme.colors.primary + '10',
+    padding: theme.spacing.l,
+    borderRadius: theme.borderRadius.large,
+    borderWidth: 1,
+    borderColor: theme.colors.primary + '30',
+    maxWidth: '90%',
+  },
+  
   previewText: {
     fontSize: 16,
-    color: theme.colors.text,
-    fontStyle: "italic",
-    textAlign: "center",
+    color: theme.colors.primary,
+    textAlign: 'center',
+    lineHeight: 22,
+    fontFamily: theme.fonts.body,
   },
+  
+  bottomSection: {
+    paddingBottom: theme.spacing.xl,
+    minHeight: '20%',
+    justifyContent: 'flex-end',
+  },
+  
   continueButton: {
-    backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.m,
+    backgroundColor: theme.colors.border,
+    paddingVertical: theme.spacing.l,
     paddingHorizontal: theme.spacing.xl,
     borderRadius: theme.borderRadius.large,
+    shadowColor: theme.colors.text,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  
+  continueButtonActive: {
+    backgroundColor: theme.colors.primary,
     shadowColor: theme.colors.primary,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
   },
+  
+  continueButtonProcessing: {
+    opacity: 0.7,
+  },
+  
   continueButtonText: {
-    color: theme.getTextColorOn(theme.colors.primary),
-    fontFamily: theme.fonts.bodyBold,
     fontSize: 16,
-    textAlign: "center",
+    fontWeight: '600',
+    textAlign: 'center',
+    fontFamily: theme.fonts.body,
+    color: theme.colors.textLight,
+  },
+  
+  continueButtonTextActive: {
+    color: 'white',
   },
 });

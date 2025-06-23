@@ -3,7 +3,7 @@
 // 📄 Fichier : src/features/cycle/CycleWheel.jsx
 // 🧩 Type : Composant Vue Cycle
 // 📚 Description : Roue graphique représentant les phases du cycle
-// 🕒 Version : 3.0 - 2025-06-21
+// 🕒 Version : 3.1 - 2025-06-23 - Enrichie avec émojis + légende
 // 🧭 Utilisé dans : CycleView, NotebookView
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
@@ -11,6 +11,14 @@ import { View, StyleSheet, Pressable } from 'react-native';
 import Svg, { Circle, Path, G, Line, Text } from 'react-native-svg';
 import { theme } from '../../config/theme';
 import { CYCLE_DEFAULTS, PHASE_NAMES, WHEEL_CONSTANTS } from '../../config/cycleConstants';
+
+// 🎭 Métadonnées des phases avec émojis
+const PHASE_METADATA = {
+  menstrual: { emoji: "🌙", name: "Menstruelle" },
+  follicular: { emoji: "🌱", name: "Folliculaire" },
+  ovulatory: { emoji: "☀️", name: "Ovulatoire" },
+  luteal: { emoji: "🔮", name: "Lutéale" }
+};
 
 export default function CycleWheel({
   currentPhase = PHASE_NAMES.MENSTRUAL,
@@ -158,13 +166,38 @@ export default function CycleWheel({
         y1={innerPoint.y}
         x2={outerPoint.x}
         y2={outerPoint.y}
-        stroke="#000000"
-        strokeWidth="2"
-        strokeDasharray="4,3"
-        opacity="0.4"
+        stroke="#FFFFFF"
+        strokeWidth="3"
+        strokeDasharray="0"
+        opacity="0.8"
       />
     );
   }
+
+  // 🏷️ Génération des étiquettes émojis des phases
+  const phaseLabels = phases.map((phase, index) => {
+    const angle = index * 90 + 45 + rotationAngle; // Centre de chaque phase
+    const labelRadius = radius - strokeWidth * 1.5;
+    const angleRad = ((angle - 90) * Math.PI) / 180;
+    const x = adjustedCenterX + labelRadius * Math.cos(angleRad);
+    const y = adjustedCenterY + labelRadius * Math.sin(angleRad);
+    
+    return (
+      <Text 
+        key={`label-${phase}`} 
+        x={x} 
+        y={y} 
+        textAnchor="middle" 
+        alignmentBaseline="middle"
+        fontSize="16" 
+        fill="white" 
+        fontWeight="bold"
+        style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}
+      >
+        {PHASE_METADATA[phase]?.emoji || '●'}
+      </Text>
+    );
+  });
 
   // Position du marqueur fixe en haut
   const markerX = adjustedCenterX;
@@ -181,6 +214,9 @@ export default function CycleWheel({
           {arcs}
           {separatorLines}
         </G>
+
+        {/* 🏷️ Étiquettes des phases */}
+        {phaseLabels}
 
         {/* Cercle central avec couleur de background */}
         <Circle
@@ -206,6 +242,22 @@ export default function CycleWheel({
         {/* Marqueur de position fixe en haut */}
         <Circle cx={markerX} cy={markerY} r={WHEEL_CONSTANTS.MARKER_RADIUS} fill="white" stroke="#333" strokeWidth={2} />
       </Svg>
+
+      {/* 🏷️ Légende des phases */}
+      <View style={styles.legend}>
+        {phases.map((phase, index) => (
+          <Pressable 
+            key={phase} 
+            style={styles.legendItem}
+            onPress={() => onPhasePress(phase)}
+          >
+            <View style={[styles.legendDot, { backgroundColor: colors[index] }]} />
+            <Text style={styles.legendText}>
+              {PHASE_METADATA[phase]?.emoji} {PHASE_METADATA[phase]?.name}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
     </View>
   );
 }
@@ -215,5 +267,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     margin: theme.spacing.m,
+  },
+  // 🏷️ Styles pour la légende
+  legend: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    marginTop: theme.spacing.m,
+    paddingHorizontal: theme.spacing.s,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: theme.spacing.xs,
+    marginVertical: theme.spacing.xs / 2,
+    paddingHorizontal: theme.spacing.xs,
+    paddingVertical: theme.spacing.xs / 2,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  legendDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: theme.spacing.xs / 2,
+  },
+  legendText: {
+    fontSize: 12,
+    color: theme.colors.text,
+    fontWeight: '500',
   },
 });

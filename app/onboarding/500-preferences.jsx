@@ -1,345 +1,407 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 Fichier : app/onboarding/500-preferences.jsx
-// 🧩 Type : Composant Écran (Screen)
-// 📚 Description : Écran de sélection des préférences de conseils (symptômes, humeurs, rituels, etc.)
-// 🕒 Version : 3.0 - 2025-06-21
-// 🧭 Utilisé dans : onboarding flow (étape 6)
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 📄 File: app/onboarding/500-preferences.jsx
+// 🧩 Type: Onboarding Screen
+// 📚 Description: Matrice thérapeutique 6D + Intelligence temps réel
+// 🕒 Version: 2.0 - Intelligence Intégrée
+// 🧭 Used in: Onboarding flow - Étape 3/4 "Ton style"
+// ─────────────────────────────────────────────────────────
 //
-import React, { useState, useEffect, useRef } from "react";
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  Animated,
-  ScrollView,
-} from "react-native";
-import { useRouter } from "expo-router";
-import ScreenContainer from "../../src/core/layout/ScreenContainer";
-import { Heading2, BodyText } from "../../src/core/ui/Typography";
-import { useUserStore } from "../../src/stores/useUserStore";
-import { theme } from "../../src/config/theme";
-import MeluneAvatar from "../../src/features/shared/MeluneAvatar";
-import ChatBubble from "../../src/features/chat/ChatBubble";
+import React, { useEffect, useRef, useState } from 'react';
+import { View, TouchableOpacity, StyleSheet, Animated, ScrollView } from 'react-native';
+import { router } from 'expo-router';
+import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
+import ScreenContainer from '../../src/core/layout/ScreenContainer';
+import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
+import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
+import { BodyText } from '../../src/core/ui/Typography';
+import { theme } from '../../src/config/theme';
 
-const PREFERENCES_CONFIG = [
+// 🎨 Dimensions thérapeutiques avec couleurs
+const THERAPEUTIC_DIMENSIONS = [
   {
-    key: "symptoms",
-    label: "Symptômes physiques",
-    description: "Conseils sur douleurs, énergie, bien-être corporel",
-    icon: "💪",
-    color: "#E53E3E",
+    key: 'symptoms',
+    title: 'Symptômes physiques',
+    description: 'Conseils douleurs, énergie, bien-être',
+    icon: '🌸',
+    color: '#FF6B8A'
   },
   {
-    key: "moods",
-    label: "Humeurs",
-    description: "Compréhension émotionnelle et gestion des ressentis",
-    icon: "💭",
-    color: "#9F7AEA",
+    key: 'moods',
+    title: 'Gestion émotionnelle',
+    description: 'Compréhension ressentis, équilibre',
+    icon: '💫',
+    color: '#8B5CF6'
   },
   {
-    key: "phyto",
-    label: "Phyto/HE",
-    description: "Plantes, huiles essentielles, remèdes naturels",
-    icon: "🌿",
-    color: "#38A169",
+    key: 'phyto',
+    title: 'Phytothérapie',
+    description: 'Plantes, huiles essentielles, naturel',
+    icon: '🌿',
+    color: '#10B981'
   },
   {
-    key: "phases",
-    label: "Énergie des phases",
-    description: "Sagesse cyclique, rythmes féminins",
-    icon: "🌙",
-    color: "#3182CE",
+    key: 'phases',
+    title: 'Énergie cyclique',
+    description: 'Sagesse phases, rythmes féminins',
+    icon: '🌙',
+    color: '#3B82F6'
   },
   {
-    key: "lithotherapy",
-    label: "Lithothérapie",
-    description: "Cristaux, pierres, énergies subtiles",
-    icon: "💎",
-    color: "#D53F8C",
+    key: 'lithotherapy',
+    title: 'Lithothérapie',
+    description: 'Cristaux, pierres, énergies subtiles',
+    icon: '💎',
+    color: '#F59E0B'
   },
   {
-    key: "rituals",
-    label: "Rituels bien-être",
-    description: "Pratiques, méditation, soins personnels",
-    icon: "🧘‍♀️",
-    color: "#DD6B20",
-  },
+    key: 'rituals',
+    title: 'Rituels bien-être',
+    description: 'Méditation, soins, pratiques',
+    icon: '🕯️',
+    color: '#EC4899'
+  }
 ];
 
+const SLIDER_LABELS = ['Pas du tout', 'Un peu', 'Moyennement', 'Beaucoup', 'Passionnément'];
+
 export default function PreferencesScreen() {
-  const router = useRouter();
-  // insets handled by ScreenContainer
-  const { updatePreferences } = useUserStore();
-
-  // États des préférences (0-5 pour chaque dimension)
-  const [preferences, setPreferences] = useState({
-    symptoms: 3,
-    moods: 3,
-    phyto: 3,
-    phases: 3,
-    lithotherapy: 3,
-    rituals: 3,
-  });
-
-  const [step, setStep] = useState(1); // 1: intro, 2: ajustements, 3: validation
-  const [lastChanged, setLastChanged] = useState(null);
-
-  // Animations
+  // 🧠 INTELLIGENCE HOOK
+  const intelligence = useOnboardingIntelligence('500-preferences');
+  
+  // 🎨 Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
+  const slidersAnim = useRef(new Animated.Value(0)).current;
+  
+  // 📊 État préférences (initialisé avec les valeurs du store)
+  const [preferences, setPreferences] = useState(
+    intelligence.userProfile.preferences || {
+      symptoms: 3,
+      moods: 3,
+      phyto: 3,
+      phases: 3,
+      lithotherapy: 3,
+      rituals: 3
+    }
+  );
+  
+  const [currentStep, setCurrentStep] = useState(1); // 1: intro, 2: sliders, 3: résumé
+  const [dynamicMessage, setDynamicMessage] = useState(intelligence.meluneMessage);
 
   useEffect(() => {
-    Animated.parallel([
+    Animated.sequence([
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 500,
         useNativeDriver: true,
       }),
+      Animated.delay(400),
       Animated.timing(slideAnim, {
         toValue: 0,
         duration: 600,
         useNativeDriver: true,
       }),
+      Animated.delay(300),
+      Animated.timing(slidersAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
     ]).start();
-  }, [step]);
+  }, []);
 
   const handlePreferenceChange = (key, value) => {
-    setPreferences((prev) => ({ ...prev, [key]: value }));
-    setLastChanged(key);
-
-    // Passer à l'étape ajustements si on était à l'intro
-    if (step === 1) {
-      setStep(2);
-    }
-  };
-
-  const handleContinue = () => {
-    updatePreferences(preferences);
-    router.push("/onboarding/550-prenom");
-  };
-
-  const getMeluneMessage = () => {
-    if (step === 1) {
-      return "Comment préfères-tu que je t'accompagne ? Ajuste chaque dimension selon tes besoins 💜";
-    } else if (step === 2 && lastChanged) {
-      const config = PREFERENCES_CONFIG.find((p) => p.key === lastChanged);
-      const value = preferences[lastChanged];
-
-      if (value >= 4) {
-        return `Parfait ! Tu aimes ${config.label.toLowerCase()}, je te donnerai plein de conseils dans ce domaine ✨`;
-      } else if (value <= 1) {
-        return `Très bien ! Je respecterai ton choix de limiter ${config.label.toLowerCase()} dans mes conseils 🤗`;
-      } else {
-        return `C'est noté ! Un équilibre parfait pour ${config.label.toLowerCase()} 👌`;
+    const newPrefs = { ...preferences, [key]: value };
+    setPreferences(newPrefs);
+    
+    // 🧠 Message adaptatif selon modification
+    const dimension = THERAPEUTIC_DIMENSIONS.find(d => d.key === key);
+    const persona = intelligence.currentPersona || 'emma';
+    
+    const contextualMessages = {
+      emma: {
+        high: `Super ! Tu kiffes ${dimension.title.toLowerCase()} ! ✨`,
+        medium: `Cool, ${dimension.title.toLowerCase()} t'intéresse 😊`,
+        low: `Ok, ${dimension.title.toLowerCase()} n'est pas ta priorité.`
+      },
+      laure: {
+        high: `Excellent choix pour ${dimension.title.toLowerCase()}.`,
+        medium: `${dimension.title} : niveau d'intérêt équilibré.`,
+        low: `${dimension.title} : priorité faible notée.`
+      },
+      clara: {
+        high: `Yaass ! ${dimension.title} va transformer ton expérience ! 🔥`,
+        medium: `${dimension.title} fait partie de ton voyage !`,
+        low: `Pas de souci, ${dimension.title} restera en arrière-plan.`
+      },
+      sylvie: {
+        high: `${dimension.title} résonne profondément en toi.`,
+        medium: `${dimension.title} fait partie de ton équilibre.`,
+        low: `${dimension.title} n'est pas essentiel pour toi.`
+      },
+      christine: {
+        high: `${dimension.title} : une sagesse importante pour vous.`,
+        medium: `${dimension.title} : un intérêt mesuré.`,
+        low: `${dimension.title} : ce n'est pas votre priorité.`
       }
-    } else if (step === 3) {
-      return `Magnifique ! Je connais maintenant tes préférences. Je vais personnaliser tous mes conseils selon ton profil unique 🌟`;
-    }
-    return "Ajuste les curseurs selon tes préférences !";
+    };
+    
+    const level = value >= 4 ? 'high' : value >= 2 ? 'medium' : 'low';
+    const message = contextualMessages[persona]?.[level] || contextualMessages.emma[level];
+    setDynamicMessage(message);
+    
+    // 🧠 Track préférence
+    intelligence.trackAction('preference_adjusted', { 
+      dimension: key, 
+      value, 
+      persona
+    });
   };
 
-  const getContinueText = () => {
-    switch (step) {
+  const getDominantDimensions = (prefs) => {
+    return Object.entries(prefs)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 3)
+      .map(([key]) => key);
+  };
+
+  const handleStepContinue = () => {
+    if (currentStep < 3) {
+      setCurrentStep(currentStep + 1);
+      
+      if (currentStep === 1) {
+        setDynamicMessage("Parfait ! Ajuste l'intensité de chaque dimension selon tes envies.");
+      } else if (currentStep === 2) {
+        const dominant = getDominantDimensions(preferences);
+        const persona = intelligence.currentPersona || 'emma';
+        
+        const summaryMessages = {
+          emma: `Génial ! Tes priorités : ${dominant.map(d => THERAPEUTIC_DIMENSIONS.find(td => td.key === d)?.title).join(', ')} ✨`,
+          laure: `Profil défini. Focus : ${dominant.map(d => THERAPEUTIC_DIMENSIONS.find(td => td.key === d)?.title).join(', ')}.`,
+          clara: `Wow ! Ton profil unique est prêt ! 🚀`,
+          sylvie: `Tes préférences reflètent ta sagesse intérieure.`,
+          christine: `Votre profil thérapeutique est établi avec sagesse.`
+        };
+        
+        setDynamicMessage(summaryMessages[persona] || summaryMessages.emma);
+      }
+    } else {
+      handleFinalize();
+    }
+  };
+
+  const handleFinalize = () => {
+    // 🔧 Sauvegarde matrice
+    intelligence.updatePreferences(preferences);
+    
+    // 🧠 Profil thérapeutique complet
+    const therapeuticProfile = {
+      dominantDimensions: getDominantDimensions(preferences),
+      averageIntensity: Object.values(preferences).reduce((a, b) => a + b, 0) / 6,
+      specializations: Object.entries(preferences)
+        .filter(([, value]) => value >= 4)
+        .map(([key]) => key),
+      avoidances: Object.entries(preferences)
+        .filter(([, value]) => value <= 1)
+        .map(([key]) => key)
+    };
+    
+    intelligence.updateProfile({ therapeuticProfile });
+    
+    // 🧠 Track profil complet
+    intelligence.trackAction('therapeutic_profile_complete', {
+      profile: therapeuticProfile,
+      dominantCount: therapeuticProfile.dominantDimensions.length,
+      averageScore: therapeuticProfile.averageIntensity
+    });
+    
+    setTimeout(() => {
+      router.push('/onboarding/550-prenom');
+    }, 500);
+  };
+
+  const renderSlider = (dimension) => {
+    const value = preferences[dimension.key];
+    
+    return (
+      <View key={dimension.key} style={styles.sliderContainer}>
+        <View style={styles.sliderHeader}>
+          <View style={styles.sliderTitleRow}>
+            <BodyText style={styles.sliderIcon}>{dimension.icon}</BodyText>
+            <BodyText style={styles.sliderTitle}>{dimension.title}</BodyText>
+          </View>
+          <BodyText style={styles.sliderValue}>{value}</BodyText>
+        </View>
+        
+        <BodyText style={styles.sliderDescription}>{dimension.description}</BodyText>
+        
+        <View style={styles.sliderTrack}>
+          {[0, 1, 2, 3, 4, 5].map(step => (
+            <TouchableOpacity
+              key={step}
+              style={[
+                styles.sliderStep,
+                { backgroundColor: step <= value ? dimension.color : theme.colors.border }
+              ]}
+              onPress={() => handlePreferenceChange(dimension.key, step)}
+              activeOpacity={0.7}
+            />
+          ))}
+        </View>
+        
+        <View style={styles.sliderLabels}>
+          <BodyText style={styles.sliderLabel}>{SLIDER_LABELS[0]}</BodyText>
+          <BodyText style={styles.sliderLabel}>{SLIDER_LABELS[4]}</BodyText>
+        </View>
+      </View>
+    );
+  };
+
+  const renderCurrentStep = () => {
+    switch (currentStep) {
       case 1:
-        return "Commencer les ajustements";
+        return (
+          <View style={styles.stepContainer}>
+            <BodyText style={styles.stepTitle}>Ton style d'accompagnement</BodyText>
+            <BodyText style={styles.stepDescription}>
+              Chaque femme est unique. Dis-moi ce qui t'inspire pour que je personnalise ton expérience.
+            </BodyText>
+            
+            <View style={styles.dimensionsPreview}>
+              {THERAPEUTIC_DIMENSIONS.map(dimension => (
+                <View key={dimension.key} style={styles.dimensionPreview}>
+                  <BodyText style={styles.dimensionIcon}>{dimension.icon}</BodyText>
+                  <BodyText style={styles.dimensionTitle}>{dimension.title}</BodyText>
+                </View>
+              ))}
+            </View>
+          </View>
+        );
+        
       case 2:
-        return "Voir le résumé";
+        return (
+          <View style={styles.stepContainer}>
+            <ScrollView style={styles.slidersScroll} showsVerticalScrollIndicator={false}>
+              {THERAPEUTIC_DIMENSIONS.map(dimension => renderSlider(dimension))}
+            </ScrollView>
+          </View>
+        );
+        
       case 3:
-        return "Configurer mon avatar";
+        const dominant = getDominantDimensions(preferences);
+        return (
+          <View style={styles.stepContainer}>
+            <BodyText style={styles.stepTitle}>Ton profil unique</BodyText>
+            
+            <View style={styles.summaryContainer}>
+              <BodyText style={styles.summaryTitle}>Tes priorités :</BodyText>
+              {dominant.map((key, index) => {
+                const dimension = THERAPEUTIC_DIMENSIONS.find(d => d.key === key);
+                return (
+                  <View key={key} style={styles.summaryRow}>
+                    <BodyText style={styles.summaryIcon}>{dimension.icon}</BodyText>
+                    <BodyText style={styles.summaryText}>
+                      {dimension.title} ({preferences[key]}/5)
+                    </BodyText>
+                  </View>
+                );
+              })}
+            </View>
+            
+            <View style={styles.profileInsight}>
+              <BodyText style={styles.insightText}>
+                Melune va adapter tous ses conseils selon tes préférences !
+              </BodyText>
+            </View>
+          </View>
+        );
+        
       default:
-        return "Continuer";
+        return null;
     }
-  };
-
-  const getIntensityLabel = (value) => {
-    const labels = [
-      "Pas du tout",
-      "Très peu",
-      "Un peu",
-      "Modérément",
-      "Beaucoup",
-      "Énormément",
-    ];
-    return labels[value] || "Modérément";
   };
 
   return (
-    <ScreenContainer style={styles.container}>
-      <ScrollView
+    <ScreenContainer edges={['top', 'bottom']}>
+      <OnboardingNavigation currentScreen="500-preferences" />
+      
+      <ScrollView 
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
       >
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-          {/* Avatar Melune */}
-          <View style={styles.avatarContainer}>
-            <MeluneAvatar phase="menstrual" size="medium" />
+          
+          {/* TopSection */}
+          <View style={styles.topSection}>
+            <Animated.View style={{ opacity: fadeAnim }}>
+              <MeluneAvatar 
+                phase="ovulatory" 
+                size="medium" 
+                style="classic"
+                animated={true}
+              />
+            </Animated.View>
+            <Animated.View
+              style={[
+                styles.messageContainer,
+                {
+                  transform: [{ translateY: slideAnim }],
+                  opacity: slideAnim.interpolate({
+                    inputRange: [-20, 0],
+                    outputRange: [0, 1],
+                  }),
+                },
+              ]}
+            >
+              <BodyText style={styles.meluneMessage}>
+                {dynamicMessage}
+              </BodyText>
+            </Animated.View>
           </View>
 
-          {/* Message de Melune */}
-          <Animated.View
+          {/* MainSection */}
+          <Animated.View 
             style={[
-              styles.messageContainer,
-              { transform: [{ translateY: slideAnim }] },
-            ]}
-          >
-            <ChatBubble message={getMeluneMessage()} isUser={false} />
-          </Animated.View>
-
-          {/* Interface selon l'étape */}
-          <Animated.View
-            style={[
-              styles.interactionContainer,
+              styles.mainSection,
               {
-                opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }],
-              },
+                opacity: slidersAnim,
+                transform: [{
+                  translateY: slidersAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [20, 0],
+                  })
+                }]
+              }
             ]}
           >
-            {/* Étape 1 & 2: Sliders des préférences */}
-            {(step === 1 || step === 2) && (
-              <View style={styles.preferencesContainer}>
-                {PREFERENCES_CONFIG.map((config) => (
-                  <View key={config.key} style={styles.preferenceItem}>
-                    <View style={styles.preferenceHeader}>
-                      <View style={styles.preferenceLabelContainer}>
-                        <BodyText style={styles.preferenceIcon}>
-                          {config.icon}
-                        </BodyText>
-                        <View style={styles.preferenceTexts}>
-                          <BodyText style={styles.preferenceLabel}>
-                            {config.label}
-                          </BodyText>
-                          <BodyText style={styles.preferenceDescription}>
-                            {config.description}
-                          </BodyText>
-                        </View>
-                      </View>
-                      <BodyText style={styles.preferenceValue}>
-                        {getIntensityLabel(preferences[config.key])}
-                      </BodyText>
-                    </View>
-
-                    {/* Slider custom */}
-                    <View style={styles.sliderContainer}>
-                      <View style={styles.sliderButtons}>
-                        <TouchableOpacity
-                          style={styles.sliderButton}
-                          onPress={() =>
-                            handlePreferenceChange(
-                              config.key,
-                              Math.max(0, preferences[config.key] - 1)
-                            )
-                          }
-                        >
-                          <BodyText style={styles.sliderButtonText}>-</BodyText>
-                        </TouchableOpacity>
-
-                        <View
-                          style={[
-                            styles.sliderTrack,
-                            { backgroundColor: config.color + "30" },
-                          ]}
-                        >
-                          <View
-                            style={[
-                              styles.sliderIndicator,
-                              {
-                                left: `${(preferences[config.key] / 5) * 100}%`,
-                                backgroundColor: config.color,
-                              },
-                            ]}
-                          />
-                        </View>
-
-                        <TouchableOpacity
-                          style={styles.sliderButton}
-                          onPress={() =>
-                            handlePreferenceChange(
-                              config.key,
-                              Math.min(5, preferences[config.key] + 1)
-                            )
-                          }
-                        >
-                          <BodyText style={styles.sliderButtonText}>+</BodyText>
-                        </TouchableOpacity>
-                      </View>
-
-                      {/* Points indicateurs */}
-                      <View style={styles.sliderDots}>
-                        {[0, 1, 2, 3, 4, 5].map((i) => (
-                          <View
-                            key={i}
-                            style={[
-                              styles.sliderDot,
-                              preferences[config.key] === i && {
-                                backgroundColor: config.color,
-                              },
-                            ]}
-                          />
-                        ))}
-                      </View>
-                    </View>
-                  </View>
-                ))}
-              </View>
-            )}
-
-            {/* Étape 3: Résumé des préférences */}
-            {step === 3 && (
-              <View style={styles.summaryContainer}>
-                <BodyText style={styles.summaryTitle}>
-                  Ton profil de préférences
-                </BodyText>
-
-                {PREFERENCES_CONFIG.map((config) => {
-                  const value = preferences[config.key];
-                  return (
-                    <View key={config.key} style={styles.summaryItem}>
-                      <View style={styles.summaryLeft}>
-                        <BodyText style={styles.summaryIcon}>
-                          {config.icon}
-                        </BodyText>
-                        <BodyText style={styles.summaryLabel}>
-                          {config.label}
-                        </BodyText>
-                      </View>
-                      <View style={styles.summaryRight}>
-                        <BodyText
-                          style={[styles.summaryValue, { color: config.color }]}
-                        >
-                          {getIntensityLabel(value)}
-                        </BodyText>
-                        <View style={styles.summaryBar}>
-                          <View
-                            style={[
-                              styles.summaryBarFill,
-                              {
-                                width: `${(value / 5) * 100}%`,
-                                backgroundColor: config.color,
-                              },
-                            ]}
-                          />
-                        </View>
-                      </View>
-                    </View>
-                  );
-                })}
-              </View>
-            )}
+            {renderCurrentStep()}
+            
+            <TouchableOpacity
+              style={styles.continueButton}
+              onPress={handleStepContinue}
+              activeOpacity={0.7}
+            >
+              <BodyText style={styles.continueText}>
+                {currentStep === 3 ? 'Finaliser mon profil' : 'Continuer'}
+              </BodyText>
+            </TouchableOpacity>
+            
+            {/* Progress */}
+            <View style={styles.progressDots}>
+              {[1, 2, 3].map(step => (
+                <View 
+                  key={step}
+                  style={[
+                    styles.dot,
+                    step <= currentStep && styles.dotActive
+                  ]}
+                />
+              ))}
+            </View>
           </Animated.View>
-
-          {/* Bouton de continuation */}
-          <TouchableOpacity
-            style={styles.continueButton}
-            onPress={handleContinue}
-            activeOpacity={0.8}
-          >
-            <BodyText style={styles.continueButtonText}>
-              {getContinueText()}
-            </BodyText>
-          </TouchableOpacity>
+          
         </Animated.View>
       </ScrollView>
     </ScreenContainer>
@@ -347,221 +409,238 @@ export default function PreferencesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
   scrollView: {
     flex: 1,
   },
-  content: {
-    paddingHorizontal: theme.spacing.l,
-    paddingBottom: theme.spacing.xl,
+  
+  scrollContent: {
+    flexGrow: 1,
   },
-  avatarContainer: {
-    alignItems: "center",
-    marginTop: theme.spacing.xl,
+  
+  content: {
+    flex: 1,
+    paddingHorizontal: theme.spacing.l,
+  },
+  
+  topSection: {
+    alignItems: 'center',
+    paddingTop: theme.spacing.l,
+    marginBottom: theme.spacing.l,
+    minHeight: '20%',
+  },
+  
+  messageContainer: {
+    marginTop: theme.spacing.l,
+    paddingHorizontal: theme.spacing.m,
+  },
+  
+  meluneMessage: {
+    fontSize: 16,
+    color: theme.colors.textLight,
+    textAlign: 'center',
+    lineHeight: 24,
+    fontStyle: 'italic',
+  },
+  
+  mainSection: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  
+  stepContainer: {
+    flex: 1,
+  },
+  
+  stepTitle: {
+    fontSize: 20,
+    textAlign: 'center',
+    marginBottom: theme.spacing.m,
+    color: theme.colors.text,
+    fontWeight: '600',
+  },
+  
+  stepDescription: {
+    fontSize: 15,
+    textAlign: 'center',
+    color: theme.colors.textLight,
+    lineHeight: 22,
     marginBottom: theme.spacing.l,
   },
-  messageContainer: {
-    alignItems: "flex-start",
-    marginBottom: theme.spacing.xl,
+  
+  dimensionsPreview: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: theme.spacing.m,
   },
-  interactionContainer: {
-    marginBottom: theme.spacing.xl,
+  
+  dimensionPreview: {
+    alignItems: 'center',
+    width: '30%',
   },
-
-  // Styles des préférences
-  preferencesContainer: {
-    gap: theme.spacing.l,
-  },
-  preferenceItem: {
-    backgroundColor: theme.colors.background,
-    borderRadius: theme.borderRadius.medium,
-    padding: theme.spacing.m,
-    borderWidth: 1,
-    borderColor: theme.colors.primary + "20",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  preferenceHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: theme.spacing.m,
-  },
-  preferenceLabelContainer: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    flex: 1,
-  },
-  preferenceIcon: {
-    fontSize: 20,
-    marginRight: theme.spacing.s,
-    marginTop: 2,
-  },
-  preferenceTexts: {
-    flex: 1,
-  },
-  preferenceLabel: {
-    fontSize: 16,
-    fontFamily: theme.fonts.bodyBold,
-    color: theme.colors.text,
+  
+  dimensionIcon: {
+    fontSize: 24,
     marginBottom: theme.spacing.xs,
   },
-  preferenceDescription: {
-    fontSize: 13,
-    color: theme.colors.textLight,
-    lineHeight: 18,
-    fontStyle: "italic",
+  
+  dimensionTitle: {
+    fontSize: 12,
+    textAlign: 'center',
+    color: theme.colors.text,
   },
-  preferenceValue: {
-    fontSize: 13,
-    fontFamily: theme.fonts.bodyBold,
-    color: theme.colors.primary,
-    textAlign: "right",
-    minWidth: 80,
+  
+  slidersScroll: {
+    flex: 1,
   },
-
-  // Styles des sliders
+  
   sliderContainer: {
-    alignItems: "center",
+    marginBottom: theme.spacing.xl,
   },
-  sliderButtons: {
-    flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
+  
+  sliderHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: theme.spacing.s,
   },
-  sliderButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: theme.colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  sliderButtonText: {
-    color: theme.getTextColorOn(theme.colors.primary),
-    fontSize: 16,
-    fontFamily: theme.fonts.bodyBold,
-  },
-  sliderTrack: {
-    flex: 1,
-    height: 4,
-    borderRadius: 2,
-    marginHorizontal: theme.spacing.m,
-    position: "relative",
-  },
-  sliderIndicator: {
-    position: "absolute",
-    top: -6,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  sliderDots: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "80%",
-    marginTop: theme.spacing.xs,
-  },
-  sliderDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: theme.colors.textLight + "40",
-  },
-
-  // Styles du résumé
-  summaryContainer: {
-    backgroundColor: theme.colors.primary + "10",
-    borderRadius: theme.borderRadius.medium,
-    padding: theme.spacing.l,
-    borderLeftWidth: 4,
-    borderLeftColor: theme.colors.primary,
-  },
-  summaryTitle: {
-    fontSize: 18,
-    fontFamily: theme.fonts.bodyBold,
-    color: theme.colors.primary,
-    marginBottom: theme.spacing.l,
-    textAlign: "center",
-  },
-  summaryItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: theme.spacing.m,
-  },
-  summaryLeft: {
-    flexDirection: "row",
-    alignItems: "center",
+  
+  sliderTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
   },
-  summaryIcon: {
-    fontSize: 16,
+  
+  sliderIcon: {
+    fontSize: 20,
     marginRight: theme.spacing.s,
   },
-  summaryLabel: {
+  
+  sliderTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+  },
+  
+  sliderValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: theme.colors.primary,
+    minWidth: 20,
+    textAlign: 'center',
+  },
+  
+  sliderDescription: {
+    fontSize: 13,
+    color: theme.colors.textLight,
+    marginBottom: theme.spacing.m,
+    marginLeft: 28,
+  },
+  
+  sliderTrack: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.s,
+  },
+  
+  sliderStep: {
+    width: 40,
+    height: 8,
+    borderRadius: 4,
+  },
+  
+  sliderLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  
+  sliderLabel: {
+    fontSize: 11,
+    color: theme.colors.textLight,
+  },
+  
+  summaryContainer: {
+    backgroundColor: theme.colors.surface,
+    padding: theme.spacing.l,
+    borderRadius: theme.borderRadius.large,
+    marginVertical: theme.spacing.l,
+  },
+  
+  summaryTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: theme.spacing.m,
+    textAlign: 'center',
+  },
+  
+  summaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: theme.spacing.s,
+  },
+  
+  summaryIcon: {
+    fontSize: 18,
+    marginRight: theme.spacing.m,
+  },
+  
+  summaryText: {
     fontSize: 14,
     color: theme.colors.text,
-    flex: 1,
   },
-  summaryRight: {
-    alignItems: "flex-end",
-    flex: 1,
+  
+  profileInsight: {
+    backgroundColor: theme.colors.primary + '10',
+    padding: theme.spacing.m,
+    borderRadius: theme.borderRadius.medium,
+    alignItems: 'center',
   },
-  summaryValue: {
-    fontSize: 12,
-    fontFamily: theme.fonts.bodyBold,
-    marginBottom: theme.spacing.xs,
+  
+  insightText: {
+    fontSize: 14,
+    color: theme.colors.primary,
+    textAlign: 'center',
+    fontWeight: '500',
   },
-  summaryBar: {
-    width: 60,
-    height: 4,
-    backgroundColor: theme.colors.textLight + "30",
-    borderRadius: 2,
-  },
-  summaryBarFill: {
-    height: "100%",
-    borderRadius: 2,
-  },
-
-  // Bouton de continuation
+  
   continueButton: {
     backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.m,
+    paddingVertical: theme.spacing.l,
     paddingHorizontal: theme.spacing.xl,
     borderRadius: theme.borderRadius.large,
-    alignItems: "center",
+    alignItems: 'center',
+    marginVertical: theme.spacing.l,
     shadowColor: theme.colors.primary,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
-    marginTop: theme.spacing.l,
   },
-  continueButtonText: {
+  
+  continueText: {
     color: theme.getTextColorOn(theme.colors.primary),
     fontFamily: theme.fonts.bodyBold,
     fontSize: 16,
-    textAlign: "center",
+  },
+  
+  progressDots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: theme.spacing.s,
+    marginBottom: theme.spacing.l,
+  },
+  
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: theme.colors.border,
+  },
+  
+  dotActive: {
+    backgroundColor: theme.colors.primary,
   },
 });

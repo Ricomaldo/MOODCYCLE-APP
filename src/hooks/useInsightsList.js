@@ -61,8 +61,6 @@ export function useInsightsList() {
 // 📄 Hook: useContext (utilitaire contexte API)
 // ─────────────────────────────────────────────────────────
 
-import { useUserStore } from '../stores/useUserStore';
-
 export function useContext() {
   const user = useUserStore();
   const { currentPhase, phaseInfo, currentDay, hasData } = useCycle();

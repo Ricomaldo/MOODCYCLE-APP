@@ -128,7 +128,7 @@ export function EntryLoadingSkeleton() {
   const pulseAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.loop(
+    const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
           toValue: 1,
@@ -141,7 +141,12 @@ export function EntryLoadingSkeleton() {
           useNativeDriver: true,
         }),
       ])
-    ).start();
+    );
+    animation.start();
+
+    return () => {
+      animation.stop();
+    };
   }, []);
 
   const opacity = pulseAnim.interpolate({

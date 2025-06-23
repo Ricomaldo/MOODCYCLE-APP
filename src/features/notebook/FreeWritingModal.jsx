@@ -18,6 +18,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons, Feather } from '@expo/vector-icons';
 import { theme } from '../../config/theme';
 import { Heading2, BodyText, Caption } from '../../core/ui/Typography';
@@ -49,6 +50,7 @@ const PROMPTS_BY_PHASE = {
 };
 
 export default function FreeWritingModal({ visible, onClose }) {
+  const insets = useSafeAreaInsets();
   const { addEntry } = useNotebookStore();
   const { currentPhase } = useCycle();
 
@@ -120,6 +122,7 @@ export default function FreeWritingModal({ visible, onClose }) {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}
+        keyboardVerticalOffset={insets.top}
       >
         <View style={styles.overlay}>
           <View style={styles.modal}>

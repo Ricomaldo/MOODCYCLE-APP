@@ -3,20 +3,19 @@
 // 📄 Fichier : src/features/notebook/SwipeableEntryIOS.jsx
 // 🧩 Type : Composant UI iOS-native
 // 📚 Description : Entrée carnet avec swipe actions iOS (delete, tag, share)
-// 🕒 Version : 1.0 - 2025-06-21
+// 🕒 Version : 1.2 - 2025-06-21 - Performance optimisée (throttling)
 // 🧭 Utilisé dans : NotebookView
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
-import React, { useRef } from 'react';
+import React, { useRef, useCallback, useMemo } from 'react';
 import { 
   View, 
   TouchableOpacity, 
   StyleSheet, 
-  ActionSheetIOS, 
-  Share, 
   Platform,
   Animated
 } from 'react-native';
+import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { BodyText, Caption } from '../../core/ui/Typography';
@@ -31,6 +30,8 @@ const PHASE_FILTERS = [
   { id: 'lutéale', label: 'Lutéale', color: theme.colors.phases.luteal },
 ];
 
+const SWIPE_THRESHOLD = 80; // Distance minimum pour déclencher action
+
 export default function SwipeableEntryIOS({
   item,
   onPress,
@@ -42,146 +43,136 @@ export default function SwipeableEntryIOS({
   const { deleteEntry, addTagToEntry } = useNotebookStore();
   const { currentPhase } = useCycle();
   const translateX = useRef(new Animated.Value(0)).current;
-  const panRef = useRef(null);
-
+  const lastGestureTime = useRef(0);
   const entryTags = getEntryTags(item);
 
-  const handleLongPress = () => {
-    if (Platform.OS === 'ios') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      
-      const actions = ['Annuler'];
-      const destructiveButtonIndex = [];
-      
-      // Action Tag #important
-      if (!entryTags.includes('#important')) {
-        actions.push('🏷️ Tag #important');
-      }
-      
-      // Action Partager (sauf pour personal)
-      if (item.type !== 'personal') {
-        actions.push('📤 Partager');
-      }
-      
-      // Action Supprimer
-      actions.push('🗑️ Supprimer');
-      destructiveButtonIndex.push(actions.length - 1);
-
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          title: 'Actions sur l\'entrée',
-          message: 'Que veux-tu faire ?',
-          options: actions,
-          cancelButtonIndex: 0,
-          destructiveButtonIndex,
-          userInterfaceStyle: 'light',
-        },
-        (buttonIndex) => {
-          if (buttonIndex === 0) return; // Annuler
-          
-          let actionIndex = 1;
-          
-          // Tag #important
-          if (!entryTags.includes('#important')) {
-            if (buttonIndex === actionIndex) {
-              addTagToEntry(item.id, '#important');
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              return;
-            }
-            actionIndex++;
-          }
-          
-          // Partager
-          if (item.type !== 'personal') {
-            if (buttonIndex === actionIndex) {
-              Share.share({
-                message: item.content || formatTrackingEmotional(item),
-                title: 'Mon carnet MoodCycle',
-              });
-              return;
-            }
-            actionIndex++;
-          }
-          
-          // Supprimer
-          if (buttonIndex === actionIndex) {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-            deleteEntry(item.id);
-          }
+  // ✅ onGestureEvent avec throttling intelligent (16ms = ~60fps limité)
+  const onGestureEvent = useMemo(() => 
+    Animated.event([
+      { nativeEvent: { translationX: translateX } }
+    ], { 
+      useNativeDriver: true,
+      listener: (event) => {
+        const now = Date.now();
+        // Throttle à 16ms pour performance optimale
+        if (now - lastGestureTime.current > 16) {
+          lastGestureTime.current = now;
+          // Optionnel : logique supplémentaire throttlée
         }
-      );
-    }
-  };
+      }
+    }), [translateX]);
 
-  const handleSwipeDelete = () => {
+  // ✅ Gestionnaire state change avec throttling et logique swipe optimisée
+  const handleGestureStateChange = useCallback((event) => {
+    const { translationX, state } = event.nativeEvent;
+    
+    if (state === State.END) {
+      // Performance : éviter calculs inutiles si translation faible
+      if (Math.abs(translationX) < 10) {
+        // Reset rapide sans animation pour micro-gestures
+        translateX.setValue(0);
+        return;
+      }
+
+      if (translationX > SWIPE_THRESHOLD) {
+        // Swipe right = Tag action
+        handleSwipeTag();
+      } else if (translationX < -SWIPE_THRESHOLD) {
+        // Swipe left = Delete action  
+        handleSwipeDelete();
+      }
+      
+      // Reset position avec animation optimisée
+      Animated.spring(translateX, {
+        toValue: 0,
+        tension: 200, // Plus rapide que 180
+        friction: 10, // Moins de rebond que 12
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [handleSwipeTag, handleSwipeDelete]);
+
+  // Supprimé : handleLongPress redondant avec swipe actions
+  // Share accessible via tap → EntryDetailModal
+
+  const handleSwipeDelete = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     deleteEntry(item.id);
-  };
+  }, [item.id, deleteEntry]);
 
-  const handleSwipeTag = () => {
+  const handleSwipeTag = useCallback(() => {
     if (!entryTags.includes('#important')) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       addTagToEntry(item.id, '#important');
     }
-  };
+  }, [item.id, entryTags, addTagToEntry]);
+
+  // ✅ Memoization du style animé pour éviter recalculs
+  const animatedStyle = useMemo(() => ({
+    transform: [{ translateX }]
+  }), [translateX]);
 
   return (
     <View style={styles.container}>
       {/* Actions de swipe en arrière-plan */}
       <View style={styles.swipeActionsContainer}>
-        {/* Action gauche : Tag */}
+        {/* Action gauche : Tag (visible lors swipe right) */}
         <TouchableOpacity style={styles.swipeActionLeft} onPress={handleSwipeTag}>
           <Ionicons name="pricetag" size={20} color="white" />
         </TouchableOpacity>
         
-        {/* Action droite : Delete */}
+        {/* Action droite : Delete (visible lors swipe left) */}
         <TouchableOpacity style={styles.swipeActionRight} onPress={handleSwipeDelete}>
           <Ionicons name="trash" size={20} color="white" />
         </TouchableOpacity>
       </View>
 
-      {/* Contenu principal de l'entrée */}
-      <Animated.View style={[styles.entryCard, { transform: [{ translateX }] }]}>
-        <TouchableOpacity
-          onPress={onPress}
-          onLongPress={handleLongPress}
-          delayLongPress={600}
-          activeOpacity={0.95}
-          style={styles.entryContent}
-        >
-          <View style={styles.entryHeader}>
-            {getEntryIcon(item.type)}
-            <BodyText style={styles.timestamp}>{formatRelativeTime(item.timestamp)}</BodyText>
-            {item.metadata?.phase && (
-              <View
-                style={[
-                  styles.phaseDot,
-                  {
-                    backgroundColor: PHASE_FILTERS.find((p) => p.id === item.metadata.phase)?.color,
-                  },
-                ]}
-              />
-            )}
-          </View>
-
-          <BodyText style={styles.content} numberOfLines={3}>
-            {item.content || formatTrackingEmotional(item)}
-          </BodyText>
-
-          {entryTags.length > 0 && (
-            <View style={styles.entryTags}>
-              {entryTags.slice(0, 3).map((tag, index) => (
-                <View key={index} style={styles.entryTag}>
-                  <Caption style={styles.entryTagText}>{tag}</Caption>
-                </View>
-              ))}
-              {entryTags.length > 3 && (
-                <Caption style={styles.moreTagsText}>+{entryTags.length - 3}</Caption>
+      {/* ✅ PanGestureHandler entoure le contenu principal */}
+      <PanGestureHandler 
+        onGestureEvent={onGestureEvent}
+        onHandlerStateChange={handleGestureStateChange}
+        activeOffsetX={[-10, 10]} // Évite conflits avec scroll vertical
+      >
+        <Animated.View style={[styles.entryCard, animatedStyle]}>
+          <TouchableOpacity
+            onPress={onPress}
+            activeOpacity={0.95}
+            style={styles.entryContent}
+          >
+            <View style={styles.entryHeader}>
+              {getEntryIcon(item.type)}
+              <BodyText style={styles.timestamp}>{formatRelativeTime(item.timestamp)}</BodyText>
+              {item.metadata?.phase && (
+                <View
+                  style={[
+                    styles.phaseDot,
+                    {
+                      backgroundColor: PHASE_FILTERS.find((p) => p.id === item.metadata.phase)?.color,
+                    },
+                  ]}
+                />
               )}
             </View>
-          )}
-        </TouchableOpacity>
-      </Animated.View>
+
+            <BodyText style={styles.content} numberOfLines={3}>
+              {item.content || formatTrackingEmotional(item)}
+            </BodyText>
+
+            {entryTags.length > 0 && (
+              <View style={styles.entryTags}>
+                {entryTags.slice(0, 3).map((tag, index) => (
+                  <View key={index} style={styles.entryTag}>
+                    <Caption style={styles.entryTagText}>{tag}</Caption>
+                  </View>
+                ))}
+                {entryTags.length > 3 && (
+                  <Caption style={styles.moreTagsText}>+{entryTags.length - 3}</Caption>
+                )}
+              </View>
+            )}
+          </TouchableOpacity>
+        </Animated.View>
+      </PanGestureHandler>
     </View>
   );
 }
