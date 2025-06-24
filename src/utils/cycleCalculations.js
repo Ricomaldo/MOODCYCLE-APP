@@ -19,14 +19,21 @@ import { CYCLE_DEFAULTS } from '../config/cycleConstants';
  * ✅ FIX: Gestion dates invalides
  */
 export const getDaysSinceLastPeriod = (lastPeriodDate) => {
-  if (!lastPeriodDate) return 0;
+  if (!lastPeriodDate) {
+    return 0;
+  }
   
   const lastDate = new Date(lastPeriodDate);
-  if (isNaN(lastDate.getTime())) return 0; // ✅ Date invalide
   
-  return Math.floor(
+  if (isNaN(lastDate.getTime())) {
+    return 0; // ✅ Date invalide
+  }
+  
+  const result = Math.floor(
     (Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24)
   );
+  
+  return result;
 };
 
 /**
@@ -53,7 +60,9 @@ export const getCurrentCycleDay = (lastPeriodDate, cycleLength = CYCLE_DEFAULTS.
  * ✅ FIX: Logique phases adaptée cycles longs + validation
  */
 export const getCurrentPhase = (lastPeriodDate, cycleLength = CYCLE_DEFAULTS.LENGTH, periodDuration = CYCLE_DEFAULTS.PERIOD_DURATION) => {
-  if (!lastPeriodDate) return 'menstrual';
+  if (!lastPeriodDate) {
+    return 'menstrual';
+  }
   
   // ✅ Sanitize params
   const sanitizedCycleLength = Math.max(CYCLE_DEFAULTS.MIN_LENGTH, 
@@ -64,21 +73,31 @@ export const getCurrentPhase = (lastPeriodDate, cycleLength = CYCLE_DEFAULTS.LEN
   const daysSince = getDaysSinceLastPeriod(lastPeriodDate);
   
   // ✅ FIX: Dates futures = menstrual
-  if (daysSince < 0) return 'menstrual';
+  if (daysSince < 0) {
+    return 'menstrual';
+  }
   
   const currentDay = (daysSince % sanitizedCycleLength) + 1;
   
   // ✅ FIX: Logique phases corrigée pour cycles variables
-  if (currentDay <= sanitizedPeriodDuration) return 'menstrual';
+  if (currentDay <= sanitizedPeriodDuration) {
+    return 'menstrual';
+  }
   
   // Folliculaire: après règles jusqu'à jour 13 (ou 40% du cycle si court)
   const follicularEnd = Math.max(13, Math.floor(sanitizedCycleLength * 0.4));
-  if (currentDay <= follicularEnd) return 'follicular';
+  
+  if (currentDay <= follicularEnd) {
+    return 'follicular';
+  }
   
   // Ovulatoire: ~3 jours autour de l'ovulation 
   const ovulatoryStart = follicularEnd + 1;
   const ovulatoryEnd = Math.min(ovulatoryStart + 2, Math.floor(sanitizedCycleLength * 0.6));
-  if (currentDay <= ovulatoryEnd) return 'ovulatory';
+  
+  if (currentDay <= ovulatoryEnd) {
+    return 'ovulatory';
+  }
   
   return 'luteal';
 };
@@ -156,62 +175,74 @@ export const getNextPeriodDate = (lastPeriodDate, cycleLength = CYCLE_DEFAULTS.L
   const nextDate = new Date(lastDate);
   nextDate.setDate(lastDate.getDate() + sanitizedCycleLength);
   
-  return nextDate;
+  return nextDate.toISOString();
 };
 
 /**
- * Jours restants jusqu'aux prochaines règles
- * ✅ FIX: Validation + gestion edge cases
+ * Calcule les jours restants jusqu'aux prochaines règles
+ * ✅ FIX: Gestion cycles dépassés + validation
  */
 export const getDaysUntilNextPeriod = (lastPeriodDate, cycleLength = CYCLE_DEFAULTS.LENGTH) => {
-  const nextDate = getNextPeriodDate(lastPeriodDate, cycleLength);
-  if (!nextDate) return null;
+  const nextPeriodDate = getNextPeriodDate(lastPeriodDate, cycleLength);
+  if (!nextPeriodDate) return null;
   
+  const nextDate = new Date(nextPeriodDate);
   const today = new Date();
-  const diffTime = nextDate.getTime() - today.getTime();
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   
-  return Math.max(0, diffDays);
+  return Math.ceil((nextDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 };
 
 // ═══════════════════════════════════════════════════════
-// 🎯 VALIDATION
+// ✅ VALIDATION
 // ═══════════════════════════════════════════════════════
 
 /**
- * Valide si les données cycle sont cohérentes
- * ✅ FIX: Validation dates + edge cases
+ * Valide les données de cycle
+ * ✅ FIX: Protection undefined + validation stricte
  */
 export const validateCycleData = (cycleData) => {
+  if (!cycleData) {
+    return {
+      isValid: false,
+      errors: ['Données de cycle manquantes']
+    };
+  }
+
   const { lastPeriodDate, length, periodDuration } = cycleData;
   
   const errors = [];
-  
+
+  // Validation date
   if (!lastPeriodDate) {
-    errors.push('Date dernières règles manquante');
+    errors.push('Date de dernières règles requise');
   } else {
     const date = new Date(lastPeriodDate);
     if (isNaN(date.getTime())) {
-      errors.push('Date dernières règles invalide');
-    }
-    // ✅ Vérifier date future
-    if (date.getTime() > Date.now() + 24 * 60 * 60 * 1000) { // +1 jour tolérance
-      errors.push('Date dernières règles dans le futur');
+      errors.push('Date de dernières règles invalide');
+    } else if (date > new Date()) {
+      errors.push('Date de dernières règles ne peut pas être dans le futur');
     }
   }
-  
-  if (length < CYCLE_DEFAULTS.MIN_LENGTH || length > CYCLE_DEFAULTS.MAX_LENGTH) {
-    errors.push(`Durée cycle invalide (${CYCLE_DEFAULTS.MIN_LENGTH}-${CYCLE_DEFAULTS.MAX_LENGTH} jours)`);
+
+  // Validation longueur cycle
+  if (!length) {
+    errors.push('Longueur de cycle requise');
+  } else if (length < CYCLE_DEFAULTS.MIN_LENGTH || length > CYCLE_DEFAULTS.MAX_LENGTH) {
+    errors.push(`Longueur de cycle doit être entre ${CYCLE_DEFAULTS.MIN_LENGTH} et ${CYCLE_DEFAULTS.MAX_LENGTH} jours`);
   }
-  
-  if (periodDuration < CYCLE_DEFAULTS.MIN_PERIOD_DURATION || periodDuration > CYCLE_DEFAULTS.MAX_PERIOD_DURATION) {
-    errors.push(`Durée règles invalide (${CYCLE_DEFAULTS.MIN_PERIOD_DURATION}-${CYCLE_DEFAULTS.MAX_PERIOD_DURATION} jours)`);
+
+  // Validation durée règles
+  if (!periodDuration) {
+    errors.push('Durée des règles requise');
+  } else if (periodDuration < CYCLE_DEFAULTS.MIN_PERIOD_DURATION || periodDuration > CYCLE_DEFAULTS.MAX_PERIOD_DURATION) {
+    errors.push(`Durée des règles doit être entre ${CYCLE_DEFAULTS.MIN_PERIOD_DURATION} et ${CYCLE_DEFAULTS.MAX_PERIOD_DURATION} jours`);
   }
-  
-  if (periodDuration >= length) {
-    errors.push('Durée règles supérieure au cycle');
+
+  // Validation cohérence
+  if (length && periodDuration && periodDuration >= length) {
+    errors.push('Durée des règles ne peut pas être supérieure ou égale à la longueur du cycle');
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors
@@ -219,40 +250,37 @@ export const validateCycleData = (cycleData) => {
 };
 
 // ═══════════════════════════════════════════════════════
-// 🧪 HELPERS DE TEST
+// 🛠️ UTILITAIRES TESTING
 // ═══════════════════════════════════════════════════════
 
 /**
- * Crée des données cycle pour tests
+ * Crée des données de cycle factices pour testing
+ * ✅ FIX: Params optionnels + dates cohérentes
  */
 export const createMockCycleData = (daysAgo = 0, cycleLength = CYCLE_DEFAULTS.LENGTH) => {
-  const mockDate = new Date();
-  mockDate.setDate(mockDate.getDate() - daysAgo);
+  const lastPeriodDate = new Date();
+  lastPeriodDate.setDate(lastPeriodDate.getDate() - daysAgo);
   
   return {
-    lastPeriodDate: mockDate.toISOString(),
+    lastPeriodDate: lastPeriodDate.toISOString(),
     length: cycleLength,
     periodDuration: CYCLE_DEFAULTS.PERIOD_DURATION,
-    isRegular: true
+    isRegular: true,
+    trackingExperience: 'intermediate'
   };
 };
 
 /**
- * Simule un cycle à une phase donnée
- * ✅ FIX: Calculs adaptés nouvelle logique
+ * Crée un cycle positionné sur une phase spécifique
  */
 export const createCycleAtPhase = (targetPhase, cycleLength = CYCLE_DEFAULTS.LENGTH) => {
-  const sanitizedCycleLength = Math.max(CYCLE_DEFAULTS.MIN_LENGTH, 
-    Math.min(CYCLE_DEFAULTS.MAX_LENGTH, cycleLength));
-  
-  // ✅ Calculs adaptés à la nouvelle logique phases
-  const phaseDays = {
-    menstrual: Math.floor(CYCLE_DEFAULTS.PERIOD_DURATION / 2), // Milieu règles
-    follicular: Math.floor(sanitizedCycleLength * 0.3), // Milieu folliculaire
-    ovulatory: Math.floor(sanitizedCycleLength * 0.5), // Milieu ovulatoire  
-    luteal: Math.floor(sanitizedCycleLength * 0.8) // Milieu lutéal
+  const phaseStartDays = {
+    'menstrual': 0,
+    'follicular': CYCLE_DEFAULTS.PERIOD_DURATION + 1,
+    'ovulatory': Math.floor(cycleLength * 0.4),
+    'luteal': Math.floor(cycleLength * 0.6)
   };
   
-  const daysAgo = phaseDays[targetPhase] || 0;
-  return createMockCycleData(daysAgo, sanitizedCycleLength);
+  const daysAgo = phaseStartDays[targetPhase] || 0;
+  return createMockCycleData(daysAgo, cycleLength);
 };

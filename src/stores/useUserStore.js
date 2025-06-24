@@ -151,17 +151,24 @@ export const useUserStore = create(
         const state = get();
         const { getCurrentPhase } = require("../utils/cycleCalculations");
         
+        // ✅ Protection contre cycle undefined
+        const safeCycle = state.cycle || {
+          lastPeriodDate: null,
+          length: 28,
+          periodDuration: 5
+        };
+        
         const phase = getCurrentPhase(
-          state.cycle.lastPeriodDate, 
-          state.cycle.length, 
-          state.cycle.periodDuration
+          safeCycle.lastPeriodDate, 
+          safeCycle.length, 
+          safeCycle.periodDuration
         );
         
         return {
-          persona: state.persona.assigned,
+          persona: state.persona?.assigned,
           phase, // ✅ Phase dynamique calculée
-          preferences: state.preferences,
-          profile: state.profile,
+          preferences: state.preferences || {},
+          profile: state.profile || {},
         };
       },
 
@@ -169,9 +176,9 @@ export const useUserStore = create(
       hasMinimumData: () => {
         const { profile, preferences } = get();
         return !!(
-          profile.ageRange &&
-          profile.journeyChoice &&
-          Object.keys(preferences).length > 0
+          profile?.ageRange &&
+          profile?.journeyChoice &&
+          preferences && Object.keys(preferences).length > 0
         );
       },
 

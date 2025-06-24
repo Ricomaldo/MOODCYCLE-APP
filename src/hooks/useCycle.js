@@ -28,44 +28,46 @@ import {
 export const useCycle = () => {
   const { cycle, updateCycle } = useUserStore();
 
+  // ✅ Protection contre cycle undefined pendant l'hydratation
+  const safeCycle = cycle || {
+    lastPeriodDate: null,
+    length: CYCLE_DEFAULTS.LENGTH,
+    periodDuration: CYCLE_DEFAULTS.PERIOD_DURATION,
+    isRegular: null,
+    trackingExperience: null
+  };
+
   // ═══════════════════════════════════════════════════════
   // 🧮 CALCULS MEMOIZÉS
   // ═══════════════════════════════════════════════════════
   
-  const currentPhase = useMemo(() => 
-    getCurrentPhase(cycle.lastPeriodDate, cycle.length, cycle.periodDuration),
-    [cycle.lastPeriodDate, cycle.length, cycle.periodDuration]
-  );
+  const currentPhase = useMemo(() => {
+    return getCurrentPhase(safeCycle.lastPeriodDate, safeCycle.length, safeCycle.periodDuration);
+  }, [safeCycle.lastPeriodDate, safeCycle.length, safeCycle.periodDuration]);
 
-  const currentDay = useMemo(() =>
-    getCurrentCycleDay(cycle.lastPeriodDate, cycle.length),
-    [cycle.lastPeriodDate, cycle.length]
-  );
+  const currentDay = useMemo(() => {
+    return getCurrentCycleDay(safeCycle.lastPeriodDate, safeCycle.length);
+  }, [safeCycle.lastPeriodDate, safeCycle.length]);
 
-  const phaseInfo = useMemo(() =>
-    getCurrentPhaseInfo(cycle.lastPeriodDate, cycle.length, cycle.periodDuration),
-    [cycle.lastPeriodDate, cycle.length, cycle.periodDuration]
-  );
+  const phaseInfo = useMemo(() => {
+    return getCurrentPhaseInfo(safeCycle.lastPeriodDate, safeCycle.length, safeCycle.periodDuration);
+  }, [safeCycle.lastPeriodDate, safeCycle.length, safeCycle.periodDuration]);
 
-  const daysSinceLastPeriod = useMemo(() =>
-    getDaysSinceLastPeriod(cycle.lastPeriodDate),
-    [cycle.lastPeriodDate]
-  );
+  const daysSinceLastPeriod = useMemo(() => {
+    return getDaysSinceLastPeriod(safeCycle.lastPeriodDate);
+  }, [safeCycle.lastPeriodDate]);
 
-  const nextPeriodDate = useMemo(() =>
-    getNextPeriodDate(cycle.lastPeriodDate, cycle.length),
-    [cycle.lastPeriodDate, cycle.length]
-  );
+  const nextPeriodDate = useMemo(() => {
+    return getNextPeriodDate(safeCycle.lastPeriodDate, safeCycle.length);
+  }, [safeCycle.lastPeriodDate, safeCycle.length]);
 
-  const daysUntilNextPeriod = useMemo(() =>
-    getDaysUntilNextPeriod(cycle.lastPeriodDate, cycle.length),
-    [cycle.lastPeriodDate, cycle.length]
-  );
+  const daysUntilNextPeriod = useMemo(() => {
+    return getDaysUntilNextPeriod(safeCycle.lastPeriodDate, safeCycle.length);
+  }, [safeCycle.lastPeriodDate, safeCycle.length]);
 
-  const validation = useMemo(() =>
-    validateCycleData(cycle),
-    [cycle]
-  );
+  const validation = useMemo(() => {
+    return validateCycleData(safeCycle);
+  }, [safeCycle]);
 
   // ═══════════════════════════════════════════════════════
   // 🎯 ACTIONS
@@ -101,44 +103,37 @@ export const useCycle = () => {
 
   const getPhaseProgress = () => {
     const phaseRanges = {
-      menstrual: [1, cycle.periodDuration],
-      follicular: [cycle.periodDuration + 1, Math.floor(cycle.length * 0.4)],
-      ovulatory: [Math.floor(cycle.length * 0.4) + 1, Math.floor(cycle.length * 0.6)],
-      luteal: [Math.floor(cycle.length * 0.6) + 1, cycle.length]
+      menstrual: [1, safeCycle.periodDuration],
+      follicular: [safeCycle.periodDuration + 1, Math.floor(safeCycle.length * 0.4)],
+      ovulatory: [Math.floor(safeCycle.length * 0.4) + 1, Math.floor(safeCycle.length * 0.6)],
+      luteal: [Math.floor(safeCycle.length * 0.6) + 1, safeCycle.length]
     };
 
     const [start, end] = phaseRanges[currentPhase] || [1, 1];
     const progress = Math.min(100, ((currentDay - start) / (end - start)) * 100);
-    
     return Math.max(0, progress);
   };
 
   const hasMinimumData = () => {
-    return !!(cycle.lastPeriodDate && cycle.length);
+    return !!(safeCycle.lastPeriodDate && safeCycle.length);
   };
 
   // ═══════════════════════════════════════════════════════
-  // 📊 RETOUR API
+  // 🎯 RETOUR
   // ═══════════════════════════════════════════════════════
 
-  return {
-    // Données brutes
-    cycle,
-    
-    // Calculs principaux
+  const returnObject = {
+    // État du cycle
+    cycle: safeCycle,
     currentPhase,
     currentDay,
     phaseInfo,
     daysSinceLastPeriod,
-    
-    // Prédictions
     nextPeriodDate,
     daysUntilNextPeriod,
-    
-    // Métadonnées
     phaseMetadata: PHASE_METADATA,
     validation,
-    
+
     // Actions
     updateCycle,
     startNewPeriod,
@@ -146,39 +141,37 @@ export const useCycle = () => {
     updatePeriodDuration,
     setCycleRegularity,
     setTrackingExperience,
-    
+
     // Helpers
     isInPhase,
     getPhaseProgress,
     hasMinimumData,
-    
+
     // États dérivés
     isValid: validation.isValid,
     hasData: hasMinimumData(),
-    isLate: daysUntilNextPeriod !== null && daysUntilNextPeriod < 0,
+    isLate: daysUntilNextPeriod < 0
   };
+
+  return returnObject;
 };
 
+// ═══════════════════════════════════════════════════════
+// 🔗 HOOKS DÉRIVÉS (optionnels, pour rétrocompatibilité)
+// ═══════════════════════════════════════════════════════
+
 /**
- * Hook léger pour phase actuelle uniquement
+ * Hook simplifié pour récupérer juste la phase actuelle
  */
 export const useCurrentPhase = () => {
-  const { cycle } = useUserStore();
-  
-  return useMemo(() => 
-    getCurrentPhase(cycle.lastPeriodDate, cycle.length, cycle.periodDuration),
-    [cycle.lastPeriodDate, cycle.length, cycle.periodDuration]
-  );
+  const { currentPhase } = useCycle();
+  return currentPhase;
 };
 
 /**
- * Hook pour infos phase enrichies
+ * Hook simplifié pour récupérer les infos de phase
  */
 export const usePhaseInfo = () => {
-  const { cycle } = useUserStore();
-  
-  return useMemo(() =>
-    getCurrentPhaseInfo(cycle.lastPeriodDate, cycle.length, cycle.periodDuration),
-    [cycle.lastPeriodDate, cycle.length, cycle.periodDuration]
-  );
+  const { phaseInfo } = useCycle();
+  return phaseInfo;
 };

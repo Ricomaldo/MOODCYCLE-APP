@@ -177,6 +177,32 @@ export function useAdaptiveInterface() {
   const { persona } = useUserStore();
   const { learning } = useUserIntelligence();
   
+  // ✅ Protection contre l'hydratation
+  if (!maturity || !persona || !metrics) {
+    return {
+      layout: {
+        config: INTERFACE_CONFIGS.discovery,
+        persona: PERSONA_ADAPTATIONS.emma,
+        limitVignettes: (v) => v.slice(0, INTERFACE_CONFIGS.discovery.maxVignettesPerPhase)
+      },
+      features: {
+        available: {},
+        pending: {},
+        isUnlocked: () => false
+      },
+      engagement: {
+        score: 0,
+        maturity: 'discovery',
+        confidence: 0,
+        nextMilestone: null
+      },
+      persona: {
+        assigned: 'emma',
+        adaptations: PERSONA_ADAPTATIONS.emma
+      }
+    };
+  }
+  
   // ✅ Extraction des valeurs primitives pour optimiser les deps
   const maturityLevel = maturity.current;
   const maturityConfidence = maturity.confidence;

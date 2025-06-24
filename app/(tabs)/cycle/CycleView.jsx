@@ -8,7 +8,6 @@
 //
 import React from 'react';
 import { View, ScrollView, StyleSheet, RefreshControl, TouchableOpacity } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { theme } from '../../../src/config/theme';
 import { Heading, BodyText } from '../../../src/core/ui/Typography';
@@ -22,21 +21,21 @@ import { usePersona } from '../../../src/hooks/usePersona';
 import { useUserStore } from '../../../src/stores/useUserStore';
 
 export default function CycleView() {
-  const insets = useSafeAreaInsets();
-  const { currentPhase, currentDay, phaseInfo, hasData, lastPeriodDate, cycleLength } = useCycle();
+  const { currentPhase, currentDay, phaseInfo, hasData, cycle } = useCycle();
   const { current: persona } = usePersona();
   const { profile } = useUserStore();
+  
+  // ✅ Protection contre profile undefined pendant l'hydratation
+  const safeProfile = profile || { prenom: null };
   
   // ✅ STATE POUR TOGGLE VUE
   const [viewMode, setViewMode] = React.useState('wheel'); // 'wheel' ou 'calendar'
   
-  // ✅ HOOK VIGNETTES INTÉGRÉ
-  const { 
-    vignettes, 
-    loading: vignettesLoading, 
-    refresh: refreshVignettes,
-    trackEngagement 
-  } = useVignettes();
+  // TEMPORAIRE - Désactiver vignettes
+  const vignettes = [];
+  const vignettesLoading = false;
+  const refreshVignettes = () => {};
+  const trackEngagement = () => {};
 
   const [refreshing, setRefreshing] = React.useState(false);
 
@@ -119,8 +118,8 @@ export default function CycleView() {
               <CycleWheel 
                 currentPhase={currentPhase}
                 cycleDay={currentDay}
-                cycleLength={cycleLength || 28}
-                userName={profile?.prenom || 'Emma'}
+                cycleLength={cycle?.length || 28}
+                userName={safeProfile.prenom || 'Emma'}
               />
             </View>
           ) : (
@@ -154,14 +153,14 @@ export default function CycleView() {
             </View>
           ) : (
             <VignettesContainer
-              vignettes={vignettes}
+              vignettes={vignettes || []}
               onVignettePress={handleVignettePress}
               maxVisible={3}
               showCategories={false}
             />
           )}
           
-          {vignettes.length === 0 && !vignettesLoading && (
+          {(vignettes?.length === 0 || !vignettes) && !vignettesLoading && (
             <BodyText style={styles.noVignettesText}>
               Aucune suggestion disponible pour le moment
             </BodyText>
@@ -169,7 +168,7 @@ export default function CycleView() {
         </View>
 
         {/* Espacement bottom pour tab bar */}
-        <View style={{ height: insets.bottom + 20 }} />
+        <View style={{ height: 20 }} />
       </ScrollView>
     </ScreenContainer>
   );

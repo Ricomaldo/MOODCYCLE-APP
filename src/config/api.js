@@ -13,12 +13,20 @@
  */
 const API_CONFIG = {
   development: {
-    baseURL: "https://moodcycle.irimwebforge.com", // Supprimé /api pour éviter le double /api
-    timeout: 10000,
+    baseURL: "https://moodcycle.irimwebforge.com", // Sans /api (Nginx le gère)
+    endpoints: {
+      chat: '/api/chat',  // Nginx proxy /api/* vers Express
+      health: '/api/health',
+    },
+      timeout: 10000,
     retries: 2,
   },
   production: {
     baseURL: "https://moodcycle.irimwebforge.com",
+    endpoints: {
+      chat: '/api/chat',
+      health: '/api/health',
+    },
     timeout: 15000,
     retries: 3,
   },
@@ -47,6 +55,22 @@ export const getApiUrl = () => {
 };
 
 /**
+ * 🎯 RÉCUPÉRATION URL ENDPOINT SPÉCIFIQUE
+ * Combine baseURL + endpoint spécifique
+ */
+export const getEndpointUrl = (endpointName) => {
+  const config = getApiConfig();
+  const endpoint = config.endpoints?.[endpointName];
+  
+  if (!endpoint) {
+    console.warn(`⚠️ Endpoint '${endpointName}' non trouvé dans la config`);
+    return `${config.baseURL}/api/${endpointName}`;
+  }
+  
+  return `${config.baseURL}${endpoint}`;
+};
+
+/**
  * ⚙️ CONFIGURATION COMPLÈTE
  * Headers, timeout, etc. pour les appels
  */
@@ -55,6 +79,7 @@ export const getApiRequestConfig = (deviceId) => {
 
   return {
     baseURL: config.baseURL,
+    endpoints: config.endpoints,
     timeout: config.timeout,
     headers: {
       "Content-Type": "application/json",
@@ -69,5 +94,6 @@ export const getApiRequestConfig = (deviceId) => {
 export default {
   getApiConfig,
   getApiUrl,
+  getEndpointUrl,
   getApiRequestConfig,
 };

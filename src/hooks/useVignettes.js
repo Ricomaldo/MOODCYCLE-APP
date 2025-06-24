@@ -17,16 +17,20 @@ export function useVignettes(forcePhase = null, forcePersona = null) {
 
   // Stores & hooks
   const { persona } = useUserStore();
-  const { currentPhase: cycleCurrentPhase } = useCycle();
+  const cycleData = forcePhase ? null : useCycle();
+  const cycleCurrentPhase = cycleData?.currentPhase || 'follicular';
+  const currentPhase = forcePhase || cycleCurrentPhase;
   const { trackAction } = useEngagementStore();
   const { layout } = useAdaptiveInterface();
   const suggestions = useSmartSuggestions();
 
-  // Données contextuelles avec extraction primitive pour optimisation
-  const currentPhase = forcePhase || cycleCurrentPhase;
-  const currentPersona = forcePersona || persona.assigned || 'emma';
-  const adaptiveVignettesLimit = layout.config?.adaptiveVignettes || 3;
-  const firstSuggestionAction = suggestions.contextualActions?.[0];
+  // ✅ Protection contre l'hydratation et les valeurs undefined
+  const safePersona = persona || { assigned: 'emma' };
+  const currentPersona = forcePersona || safePersona.assigned;
+
+  // Assurer que layout et layout.config existent avant de les utiliser
+  const adaptiveVignettesLimit = layout?.config?.adaptiveVignettes || 3;
+  const firstSuggestionAction = suggestions?.contextualActions?.[0];
 
   // ──────────────────────────────────────────────────────
   // 🔄 CHARGEMENT VIGNETTES
@@ -46,17 +50,22 @@ export function useVignettes(forcePhase = null, forcePersona = null) {
         currentPersona
       );
       
-      // Filtrage adaptatif selon maturité
-      const adaptedVignettes = layout.limitVignettes(rawVignettes);
+      // ✅ Filtrage adaptatif sécurisé
+      const adaptedVignettes = layout?.limitVignettes 
+        ? layout.limitVignettes(rawVignettes) 
+        : (Array.isArray(rawVignettes) ? rawVignettes.slice(0, adaptiveVignettesLimit) : []);
       
       setVignettes(adaptedVignettes);
     } catch (err) {
       console.error('🚨 useVignettes error:', err);
       setError(err);
       
-      // Fallback emergency
+      // ✅ Fallback emergency sécurisé
       const emergencyVignettes = VignettesService.getEmergencyVignettes(currentPhase);
-      setVignettes(layout.limitVignettes(emergencyVignettes));
+      const limitedEmergency = layout?.limitVignettes 
+        ? layout.limitVignettes(emergencyVignettes)
+        : (Array.isArray(emergencyVignettes) ? emergencyVignettes.slice(0, adaptiveVignettesLimit) : []);
+      setVignettes(limitedEmergency);
     } finally {
       setLoading(false);
     }
@@ -67,7 +76,7 @@ export function useVignettes(forcePhase = null, forcePersona = null) {
   // ──────────────────────────────────────────────────────
   
   const enrichedVignettes = useMemo(() => {
-    const baseVignettes = [...vignettes];
+    const baseVignettes = Array.isArray(vignettes) ? [...vignettes] : [];
     
     // Ajouter suggestions intelligentes comme vignettes
     if (firstSuggestionAction) {
@@ -140,7 +149,7 @@ export function useVignettes(forcePhase = null, forcePersona = null) {
     
     // Métadonnées
     hasSmartSuggestions: !!firstSuggestionAction,
-    totalAvailable: vignettes.length,
+    totalAvailable: Array.isArray(vignettes) ? vignettes.length : 0,
     maxDisplayed: adaptiveVignettesLimit,
     
     // Debug

@@ -116,6 +116,8 @@ function TypingIndicator() {
 const MemoizedTypingIndicator = memo(TypingIndicator);
 
 export default function ChatScreen() {
+  console.log('🎬 [DEBUG] ChatScreen component mounting...');
+  
   // 📊 Monitoring de performance - DÉSACTIVÉ TEMPORAIREMENT
   // const renderCount = useRenderMonitoring('ChatScreen');
   
@@ -168,53 +170,132 @@ export default function ChatScreen() {
   const { currentPhase, phaseInfo } = useCycle();
   const { addEntry } = useNotebookStore();
   
+  // ✅ DEBUG STORES INITIALIZATION
+  useEffect(() => {
+    console.log('🔍 [DEBUG] Stores initialized:', {
+      profile: !!profile,
+      melune: !!melune,
+      addMessage: typeof addMessage,
+      currentPhase,
+      addEntry: typeof addEntry,
+      prenom: profile?.prenom
+    });
+  }, [profile, melune, addMessage, currentPhase, addEntry]);
+  
   const phase = currentPhase;
   const prenom = profile.prenom;
 
   // ✅ HANDLERS MEMOIZÉS
   const memoizedHandlers = useMemo(() => ({
     handleSend: async (messageText = null) => {
-      const currentInput = messageText || input.trim();
-      if (!currentInput || isLoading || !refs.mounted.current) return;
-
-      const userMessage = { id: Date.now(), text: currentInput, isUser: true };
-      setMessages((prev) => [...prev, userMessage]);
+      console.log('🚀 [DEBUG] handleSend START:', { messageText, input, isLoading });
       
+      const currentInput = messageText || input.trim();
+      if (!currentInput || isLoading || !refs.mounted.current) {
+        console.log('🚨 [DEBUG] handleSend EARLY RETURN:', { 
+          currentInput: !!currentInput, 
+          isLoading, 
+          mounted: refs.mounted.current 
+        });
+        return;
+      }
+
+      console.log('🔄 [DEBUG] Creating user message...');
+      const userMessage = { id: Date.now(), text: currentInput, isUser: true };
+      setMessages((prev) => {
+        console.log('📝 [DEBUG] Adding user message to local state');
+        return [...prev, userMessage];
+      });
+      
+      console.log('🧠 [DEBUG] Building conversation context...');
       // Contexte conversation (3-4 derniers messages)
       const conversationContext = messages.slice(-3).map(m => ({
         role: m.isUser ? 'user' : 'assistant',
         content: m.text
       }));
       
+      console.log('💾 [DEBUG] Adding message to store...');
       addMessage('user', currentInput, {
         sourceVignette: vignetteId || null,
         sourcePhase: sourcePhase || currentPhase,
         conversationContext // ✅ Contexte pour l'API
       });
       
+      console.log('🔧 [DEBUG] Clearing input and setting loading...');
       if (!messageText) setInput("");
       setIsLoading(true);
       memoizedHandlers.scrollToBottom();
 
       try {
-        const response = await ChatService.sendMessage(currentInput, conversationContext);
+        console.log('📡 [DEBUG] Calling ChatService.sendMessage...');
+        console.log('📊 [DEBUG] Context data:', { 
+          conversationContextLength: conversationContext.length,
+          currentPhase,
+          vignetteId 
+        });
+        
+        // ✅ TEST REAL API CALL WITH DETAILED ERROR HANDLING
+        let response;
+        try {
+          response = await ChatService.sendMessage(currentInput, conversationContext);
+          console.log('✅ [DEBUG] Real API call successful:', response);
+        } catch (apiError) {
+          console.error('🚨 [DEBUG] ChatService.sendMessage specific error:', {
+            message: apiError.message,
+            stack: apiError.stack,
+            name: apiError.name,
+            cause: apiError.cause
+          });
+          
+          // Fallback en cas d'erreur API
+          response = {
+            success: true,
+            message: "Désolée, j'ai un petit souci technique. Peux-tu réessayer dans un moment ?",
+            source: "fallback_error"
+          };
+        }
+        
+        console.log('✅ [DEBUG] ChatService response received:', { 
+          success: response.success, 
+          messageLength: response.message?.length,
+          source: response.source 
+        });
+        
         if (response.success && refs.mounted.current) {
+          console.log('🎉 [DEBUG] Creating Melune message...');
           const meluneMessage = {
             id: Date.now() + 1,
             text: response.message,
             isUser: false,
             source: response.source,
           };
+          
+          console.log('📝 [DEBUG] Adding Melune message to local state...');
           setMessages((prev) => [...prev, meluneMessage]);
+          
+          console.log('💾 [DEBUG] Adding Melune message to store...');
           addMessage('melune', response.message, {
             source: response.source,
             responseToVignette: vignetteId || null
           });
+          
+          console.log('⬇️ [DEBUG] Scrolling to bottom...');
           memoizedHandlers.scrollToBottom();
+        } else {
+          console.log('❌ [DEBUG] Response not successful or component unmounted:', {
+            success: response.success,
+            mounted: refs.mounted.current
+          });
         }
       } catch (error) {
-        console.error("🚨 Erreur handleSend:", error);
+        console.error("🚨 [DEBUG] handleSend Error Details:", {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        });
+        
         if (refs.mounted.current) {
+          console.log('🔄 [DEBUG] Adding error message...');
           const errorMessage = {
             id: Date.now() + 1,
             text: "Désolée, je rencontre un petit souci technique. Peux-tu réessayer ?",
@@ -224,10 +305,14 @@ export default function ChatScreen() {
           setMessages((prev) => [...prev, errorMessage]);
         }
       } finally {
+        console.log('🏁 [DEBUG] handleSend FINALLY block');
         if (refs.mounted.current) {
+          console.log('🔧 [DEBUG] Setting loading to false');
           setIsLoading(false);
         }
       }
+      
+      console.log('🏁 [DEBUG] handleSend END');
     },
     
     handleSaveMessage: (message) => {
@@ -279,6 +364,7 @@ export default function ChatScreen() {
   // ✅ FOCUS EFFECT OPTIMISÉ
   useFocusEffect(
     useCallback(() => {
+      refs.mounted.current = true; // ✅ FIX: Réactiver le composant au focus
       setShowMessages(true);
       
       if (initialMessage && refs.processedVignette.current !== vignetteId) {
@@ -293,6 +379,7 @@ export default function ChatScreen() {
           clearTimeout(refs.timer.current);
           refs.timer.current = null;
         }
+        // ✅ NE PAS désactiver mounted ici - seulement au unmount complet
       };
     }, [initialMessage, vignetteId, memoizedHandlers])
   );

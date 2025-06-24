@@ -8,16 +8,24 @@ import { useUserStore } from '../stores/useUserStore';
 export function usePersona() {
   const user = useUserStore();
   
+  // ✅ Protection contre persona undefined pendant l'hydratation
+  const safePersona = user.persona || {
+    assigned: null,
+    confidence: 0,
+    lastCalculated: null,
+    scores: {}
+  };
+  
   const calculate = useCallback(() => {
     return user.calculatePersona();
   }, [user]);
 
   return {
-    current: user.persona.assigned,
-    confidence: user.persona.confidence,
-    isAssigned: !!user.persona.assigned,
-    lastCalculated: user.persona.lastCalculated,
-    scores: user.persona.scores,
+    current: safePersona.assigned,
+    confidence: safePersona.confidence,
+    isAssigned: !!safePersona.assigned,
+    lastCalculated: safePersona.lastCalculated,
+    scores: safePersona.scores,
     calculate,
     set: user.setPersona
   };

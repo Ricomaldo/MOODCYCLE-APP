@@ -11,7 +11,7 @@ import { useUserStore } from '../stores/useUserStore.js';
 import { useChatStore } from '../stores/useChatStore.js';
 import { useEngagementStore } from '../stores/useEngagementStore.js';
 import { useUserIntelligence } from '../stores/useUserIntelligence.js';
-import { getApiRequestConfig } from '../config/api.js';
+import { getApiRequestConfig, getEndpointUrl } from '../config/api.js';
 import { getCurrentPhase } from '../utils/cycleCalculations.js';
 import NetworkQueue from './NetworkQueue.js';
 
@@ -273,6 +273,20 @@ class ChatService {
       
       const response = await this.callChatAPI(message, finalContext);
       
+      // ✅ Vérification que response n'est pas null
+      if (!response) {
+        console.log('🔄 API returned null, using fallback response');
+        const fallbackResponse = this.getSmartFallbackResponse(message);
+        
+        console.log('💾 Fallback response used:', {
+          fallbackUsed: true,
+          persona: fallbackResponse.persona,
+          source: fallbackResponse.source
+        });
+        
+        return fallbackResponse;
+      }
+      
       // ✅ APPRENTISSAGE PATTERNS
       this.learnFromResponse(message, response, finalContext);
       
@@ -330,56 +344,104 @@ class ChatService {
 
   // ✅ NOUVEAU : Contexte enrichi
   async buildEnrichedContext(message) {
-    const userStore = useUserStore.getState();
-    const chatStore = useChatStore.getState();
-    const engagementStore = useEngagementStore.getState();
+    console.log('🧠 [DEBUG] Building enriched context...');
     
-    // Contexte de base
-    const baseContext = userStore.getContextForAPI();
-    
-    // Phase actuelle calculée
-    const currentPhase = getCurrentPhase(
-      userStore.cycle.lastPeriodDate,
-      userStore.cycle.length,
-      userStore.cycle.periodDuration
-    );
-
-    // ✅ LOG PHASE DYNAMIQUE
-    console.log('🌙 Dynamic Phase Context:', {
-      lastPeriodDate: userStore.cycle.lastPeriodDate,
-      cycleLength: userStore.cycle.length,
-      currentPhase: currentPhase,
-      persona: userStore.persona.assigned,
-      cycleDayCalculated: userStore.cycle.lastPeriodDate ? 
-        Math.floor((new Date() - new Date(userStore.cycle.lastPeriodDate)) / (1000 * 60 * 60 * 24)) % userStore.cycle.length + 1 
-        : null
-    });
-    
-    // Intelligence contextuelle
-    const intelligence = {
-      conversationLength: chatStore.messages.length,
-      recentTopics: this.conversationContext.topics,
-      userEngagement: engagementStore.getEngagementLevel?.() || 'medium',
-      patterns: engagementStore.getPatterns?.() || {},
-      timeOfDay: new Date().getHours(),
-      daysSinceFirstUse: engagementStore.metrics?.daysUsed || 1
-    };
-    
-    // Suggestions contextuelles
-    const suggestions = chatStore.getContextualSuggestions();
-    
-    return {
-      ...baseContext,
-      phase: currentPhase,
-      intelligence,
-      suggestions,
-      conversationContext: this.conversationContext,
-      messageMetadata: {
-        isFirstMessage: chatStore.messages.length === 0,
-        isReturningUser: intelligence.daysSinceFirstUse > 1,
-        hasUsedVignettes: engagementStore.metrics?.vignetteEngagements > 0
+    try {
+      const userStore = useUserStore.getState();
+      const chatStore = useChatStore.getState();
+      const engagementStore = useEngagementStore.getState();
+      
+      console.log('🔍 [DEBUG] Stores retrieved:', {
+        userStore: !!userStore,
+        chatStore: !!chatStore,
+        engagementStore: !!engagementStore,
+        hasGetContextForAPI: typeof userStore.getContextForAPI
+      });
+      
+      // Contexte de base avec protection
+      let baseContext;
+      try {
+        baseContext = userStore.getContextForAPI();
+        console.log('✅ [DEBUG] baseContext retrieved:', baseContext);
+      } catch (contextError) {
+        console.error('🚨 [DEBUG] Error getting baseContext:', contextError);
+        // Fallback context
+        baseContext = {
+          persona: userStore.persona?.assigned || 'emma',
+          phase: 'menstrual',
+          preferences: userStore.preferences || {},
+          profile: userStore.profile || {}
+        };
       }
-    };
+      
+      // Phase actuelle calculée
+      const currentPhase = getCurrentPhase(
+        userStore.cycle.lastPeriodDate,
+        userStore.cycle.length,
+        userStore.cycle.periodDuration
+      );
+
+      // ✅ LOG PHASE DYNAMIQUE
+      console.log('🌙 Dynamic Phase Context:', {
+        lastPeriodDate: userStore.cycle.lastPeriodDate,
+        cycleLength: userStore.cycle.length,
+        currentPhase: currentPhase,
+        persona: userStore.persona.assigned,
+        cycleDayCalculated: userStore.cycle.lastPeriodDate ? 
+          Math.floor((new Date() - new Date(userStore.cycle.lastPeriodDate)) / (1000 * 60 * 60 * 24)) % userStore.cycle.length + 1 
+          : null
+      });
+      
+      // Intelligence contextuelle
+      const intelligence = {
+        conversationLength: chatStore.messages.length,
+        recentTopics: this.conversationContext.topics,
+        userEngagement: engagementStore.getEngagementLevel?.() || 'medium',
+        patterns: engagementStore.getPatterns?.() || {},
+        timeOfDay: new Date().getHours(),
+        daysSinceFirstUse: engagementStore.metrics?.daysUsed || 1
+      };
+      
+      // Suggestions contextuelles
+      const suggestions = chatStore.getContextualSuggestions();
+      
+      return {
+        ...baseContext,
+        phase: currentPhase,
+        intelligence,
+        suggestions,
+        conversationContext: this.conversationContext,
+        messageMetadata: {
+          isFirstMessage: chatStore.messages.length === 0,
+          isReturningUser: intelligence.daysSinceFirstUse > 1,
+          hasUsedVignettes: engagementStore.metrics?.vignetteEngagements > 0
+        }
+      };
+    } catch (error) {
+      console.error('🚨 [DEBUG] buildEnrichedContext error:', error);
+      // Return minimal context as fallback
+      return {
+        persona: 'emma',
+        phase: 'menstrual',
+        preferences: {},
+        profile: {},
+        intelligence: {
+          conversationLength: 0,
+          recentTopics: [],
+          userEngagement: 'medium',
+          patterns: {},
+          timeOfDay: new Date().getHours(),
+          daysSinceFirstUse: 1
+        },
+        suggestions: [],
+        conversationContext: this.conversationContext,
+        messageMetadata: {
+          isFirstMessage: true,
+          isReturningUser: false,
+          hasUsedVignettes: false
+        }
+      };
+    }
   }
 
   // ✅ NOUVEAU : Tracking engagement
@@ -407,6 +469,12 @@ class ChatService {
   // ✅ NOUVEAU : Apprentissage patterns
   learnFromResponse(message, response, context) {
     try {
+      // ✅ Vérification que response n'est pas null
+      if (!response) {
+        console.log('🔄 Skipping learning from null response');
+        return;
+      }
+      
       const userIntelligence = useUserIntelligence.getState();
       
       userIntelligence.recordInteraction?.({
@@ -458,7 +526,11 @@ class ChatService {
 
     console.log('📊 Payload size:', JSON.stringify(payload).length, 'chars');
 
-    const response = await fetch(`${apiConfig.baseURL}/api/chat`, {
+    // ✅ Utiliser la nouvelle fonction pour récupérer l'URL complète
+    const chatEndpointUrl = getEndpointUrl('chat');
+    console.log('🔗 Chat endpoint URL:', chatEndpointUrl);
+
+    const response = await fetch(chatEndpointUrl, {
       method: 'POST',
       headers: apiConfig.headers,
       body: JSON.stringify(payload),
@@ -472,6 +544,13 @@ class ChatService {
         phase: context.phase,
         persona: context.persona
       });
+      
+      // ✅ Pour 404/503, utiliser directement les fallbacks au lieu de throw
+      if (response.status === 404 || response.status === 503) {
+        console.log('🔄 API indisponible, utilisation des fallbacks intelligents');
+        return null; // Signal pour utiliser les fallbacks
+      }
+      
       throw new Error(`API Error: ${response.status}`);
     }
 
