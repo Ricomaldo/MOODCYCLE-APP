@@ -28,6 +28,7 @@ import {
 } from '../../../src/core/ui/AnimatedComponents';
 import ScreenContainer from '../../../src/core/layout/ScreenContainer';
 import { formatTrendSummary } from '../../../src/utils/trackingFormatters';
+import ParametresButton from '../../../src/features/shared/ParametresButton';
 
 const FILTER_PILLS = [
   { id: 'all', label: 'Tout', icon: 'layers' },
@@ -383,6 +384,10 @@ export default function NotebookView() {
           }
         ]}
       >
+        <ParametresButton 
+          color={theme.colors.primary}
+          style={styles.parametresButton}
+        />
         <Heading style={styles.title}>Mon Carnet</Heading>
         <TouchableOpacity onPress={() => setShowSearch(!showSearch)} style={styles.searchToggle}>
           <Feather name="search" size={24} color={theme.colors.primary} />
@@ -596,6 +601,10 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.l,
     paddingHorizontal: theme.spacing.l,
     position: 'relative',
+  },
+  parametresButton: {
+    position: 'absolute',
+    left: theme.spacing.l,
   },
   title: {
     textAlign: 'center',

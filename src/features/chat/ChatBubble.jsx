@@ -12,6 +12,7 @@ import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { BodyText } from '../../core/ui/Typography';
 import { theme } from '../../config/theme';
 import MeluneAvatar from '../shared/MeluneAvatar';
+import { useUserStore } from '../../stores/useUserStore';
 
 export default function ChatBubble({ 
   message, 
@@ -20,6 +21,7 @@ export default function ChatBubble({
   onSave,
   delay = 0
 }) {
+  const { melune } = useUserStore();
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const translateYAnim = useRef(new Animated.Value(5)).current;
 
@@ -71,7 +73,7 @@ export default function ChatBubble({
         delayLongPress={600}
         activeOpacity={0.9}
       >
-        <MeluneAvatar phase={phase} size="small" style="classic" />
+        <MeluneAvatar phase={phase} size="small" />
         <View style={[styles.meluneBubble, { backgroundColor: theme.colors.phases[phase] }]}>
           <BodyText style={[styles.meluneText, { color: theme.getTextColorOnPhase(phase) }]}>
             {message}

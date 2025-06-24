@@ -19,6 +19,7 @@ import { useCycle } from '../../../src/hooks/useCycle';
 import { useVignettes } from '../../../src/hooks/useVignettes';
 import { usePersona } from '../../../src/hooks/usePersona';
 import { useUserStore } from '../../../src/stores/useUserStore';
+import ParametresButton from '../../../src/features/shared/ParametresButton';
 
 export default function CycleView() {
   const { currentPhase, currentDay, phaseInfo, hasData, cycle } = useCycle();
@@ -87,9 +88,15 @@ export default function CycleView() {
           />
         }
       >
-        {/* Header avec toggle */}
+        {/* Header avec toggle et paramètres */}
         <View style={styles.header}>
           <View style={styles.headerTop}>
+            {/* Bouton paramètres à gauche */}
+            <ParametresButton 
+              color={theme.colors.primary}
+              style={styles.parametresButton}
+            />
+            
             <Heading style={styles.title}>Mon Cycle</Heading>
             
             {/* ✅ TOGGLE BUTTON */}
@@ -215,12 +222,26 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
   },
+  parametresButton: {
+    // Style pour le bouton paramètres
+  },
   toggleButton: {
-    padding: theme.spacing.s,
-    borderRadius: theme.borderRadius.m,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.primary,
+    borderWidth: 1.5,
+    borderColor: theme.colors.primary + '30',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: theme.colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   subtitle: {
     fontSize: 16,

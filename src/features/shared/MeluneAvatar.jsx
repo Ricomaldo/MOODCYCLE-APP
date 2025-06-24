@@ -7,19 +7,24 @@
 // 🧭 Utilisé dans : NotebookView, CycleView, partages, onboarding
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { View, Image, StyleSheet, Animated, Text } from 'react-native';
 import { theme } from '../../config/theme';
 import { BodyText } from '../../core/ui/Typography';
+import { useUserStore } from '../../stores/useUserStore';
 
-export default function MeluneAvatar({ phase = 'menstrual', size = 'large', style = 'classic', animated = true }) {
+export default function MeluneAvatar({ phase = 'menstrual', size = 'large', style, animated = true }) {
+  // Récupération du style depuis le store avec fallback sur la prop
+  const { melune } = useUserStore();
+  const avatarStyle = style || melune?.avatarStyle || 'classic';
+
   // Animations iOS-like
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
-  // Sélection de l'image selon le style choisi - Version robuste
-  const getSource = () => {
+  // Sélection de l'image selon le style choisi - Version reactive avec useMemo
+  const imageSource = useMemo(() => {
     const imagePaths = {
       classic: require('../../assets/images/melune/melune-classic.png'),
       modern: require('../../assets/images/melune/melune-modern.png'),
@@ -27,16 +32,16 @@ export default function MeluneAvatar({ phase = 'menstrual', size = 'large', styl
     };
 
     try {
-      return imagePaths[style] || imagePaths.classic;
+      return imagePaths[avatarStyle] || imagePaths.classic;
     } catch (error) {
       console.warn('MeluneAvatar: Erreur chargement image', {
-        style,
+        style: avatarStyle,
         availableStyles: Object.keys(imagePaths),
         error: error.message
       });
       return null;
     }
-  };
+  }, [avatarStyle]);
 
   const sizeValue = size === 'large' ? 160 : size === 'medium' ? 120 : 80;
   const borderColor = theme.colors.phases?.[phase] || theme.colors.primary;
@@ -81,7 +86,7 @@ export default function MeluneAvatar({ phase = 'menstrual', size = 'large', styl
 
       return () => pulseAnimation.stop();
     }
-  }, [animated, style]); // Ajout de 'style' dans les dépendances pour re-animer lors du changement
+  }, [animated, avatarStyle]); // Ajout de 'avatarStyle' dans les dépendances pour re-animer lors du changement
 
   const animatedStyle = animated ? {
     opacity: opacityAnim,
@@ -90,8 +95,6 @@ export default function MeluneAvatar({ phase = 'menstrual', size = 'large', styl
     ],
   } : {};
 
-  const imageSource = getSource();
-  
   if (!imageSource) {
     // Fallback si aucune image disponible
     return (

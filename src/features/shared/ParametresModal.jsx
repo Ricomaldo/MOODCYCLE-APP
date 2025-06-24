@@ -28,7 +28,7 @@ import { useCycle } from '../../hooks/useCycle';
 // Import des onglets
 import ProfilTab from './tabs/ProfilTab';
 import PreferencesTab from './tabs/PreferencesTab';
-import PersonaTab from './tabs/PersonaTab';
+import MeluneTab from './tabs/MeluneTab';
 import LegalTab from './tabs/LegalTab';
 
 const { width } = Dimensions.get('window');
@@ -36,7 +36,7 @@ const { width } = Dimensions.get('window');
 const TABS = [
   { id: 'profil', name: 'Profil', icon: 'user' },
   { id: 'preferences', name: 'Préférences', icon: 'sliders' },
-  { id: 'persona', name: 'Persona', icon: 'heart' },
+  { id: 'melune', name: 'Melune', icon: 'heart' },
   { id: 'legal', name: 'Légal', icon: 'shield' }
 ];
 
@@ -139,8 +139,8 @@ export default function ParametresModal({ visible, onClose }) {
         return <ProfilTab {...commonProps} />;
       case 'preferences':
         return <PreferencesTab {...commonProps} />;
-      case 'persona':
-        return <PersonaTab {...commonProps} />;
+      case 'melune':
+        return <MeluneTab {...commonProps} />;
       case 'legal':
         return <LegalTab {...commonProps} />;
       default:

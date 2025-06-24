@@ -35,6 +35,7 @@ import { useNotebookStore } from "../../../src/stores/useNotebookStore";
 import { useCycle } from '../../../src/hooks/useCycle';
 import { usePersona } from '../../../src/hooks/usePersona';
 import { useRenderMonitoring } from '../../../src/hooks/usePerformanceMonitoring';
+import ParametresButton from '../../../src/features/shared/ParametresButton';
 
 const HEADER_HEIGHT = 60;
 
@@ -418,6 +419,10 @@ export default function ChatScreen() {
       
       {/* Header aligné avec les autres pages */}
       <View style={styles.header}>
+        <ParametresButton 
+          color={theme.colors.primary}
+          style={styles.parametresButton}
+        />
         <Heading style={styles.title}>Melune</Heading>
       </View>
 
@@ -507,6 +512,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: theme.spacing.l,
     marginBottom: 0,
+    position: 'relative',
+  },
+  parametresButton: {
+    position: 'absolute',
+    left: theme.spacing.l,
   },
   title: {
     textAlign: 'center',

@@ -424,4 +424,6 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 11,
     color: theme.colors.textLight,
+  },
+});
  
