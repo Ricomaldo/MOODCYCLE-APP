@@ -53,11 +53,11 @@ export default function CycleView() {
 
   // ✅ HANDLERS POUR LE CALENDRIER
   const handlePhasePress = React.useCallback((phase) => {
-    console.log('Phase pressed:', phase);
+    // Handler pour les phases
   }, []);
   
   const handleDatePress = React.useCallback((dateString, entries) => {
-    console.log('Date pressed:', dateString, entries);
+    // Handler pour les dates
   }, []);
 
   if (!hasData) {

@@ -344,27 +344,17 @@ class ChatService {
 
   // ✅ NOUVEAU : Contexte enrichi
   async buildEnrichedContext(message) {
-    console.log('🧠 [DEBUG] Building enriched context...');
-    
     try {
       const userStore = useUserStore.getState();
       const chatStore = useChatStore.getState();
       const engagementStore = useEngagementStore.getState();
       
-      console.log('🔍 [DEBUG] Stores retrieved:', {
-        userStore: !!userStore,
-        chatStore: !!chatStore,
-        engagementStore: !!engagementStore,
-        hasGetContextForAPI: typeof userStore.getContextForAPI
-      });
-      
       // Contexte de base avec protection
       let baseContext;
       try {
         baseContext = userStore.getContextForAPI();
-        console.log('✅ [DEBUG] baseContext retrieved:', baseContext);
       } catch (contextError) {
-        console.error('🚨 [DEBUG] Error getting baseContext:', contextError);
+        console.error('🚨 Error getting baseContext:', contextError);
         // Fallback context
         baseContext = {
           persona: userStore.persona?.assigned || 'emma',
@@ -418,7 +408,7 @@ class ChatService {
         }
       };
     } catch (error) {
-      console.error('🚨 [DEBUG] buildEnrichedContext error:', error);
+      console.error('🚨 buildEnrichedContext error:', error);
       // Return minimal context as fallback
       return {
         persona: 'emma',

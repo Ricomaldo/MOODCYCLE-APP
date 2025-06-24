@@ -389,41 +389,43 @@ export default function NotebookView() {
         </TouchableOpacity>
       </Animated.View>
 
-      {/* Badge filtres actifs en position absolue */}
+      {/* Badge filtres actifs compact */}
       {getActiveFiltersCount() > 0 && (
-        <Animated.View 
+        <TouchableOpacity
+          onPress={() => {
+            setNotebookFilter('type', 'all');
+            setNotebookFilter('phase', null);
+            setNotebookFilter('tags', []);
+          }}
           style={[
-            styles.filterBadge,
+            styles.compactFilterBadge,
             {
               position: 'absolute',
-              top: 70,
-              right: theme.spacing.l,
+              top: 15,
+              right: 50,
               zIndex: 10,
-              opacity: headerAnim,
-              transform: [{
-                scale: headerAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.8, 1]
-                })
-              }]
             }
           ]}
         >
-          <Feather name="filter" size={14} color={theme.colors.primary} />
-          <BodyText style={styles.filterBadgeText}>
-            {getActiveFiltersCount()} filtre{getActiveFiltersCount() > 1 ? 's' : ''} actif{getActiveFiltersCount() > 1 ? 's' : ''}
-          </BodyText>
-          <TouchableOpacity 
-            onPress={() => {
-              setNotebookFilter('type', 'all');
-              setNotebookFilter('phase', null);
-              setNotebookFilter('tags', []);
-            }}
-            style={styles.clearFilters}
+          <Animated.View 
+            style={[
+              styles.compactFilterBadgeInner,
+              {
+                opacity: headerAnim,
+                transform: [{
+                  scale: headerAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.8, 1]
+                  })
+                }]
+              }
+            ]}
           >
-            <Feather name="x" size={14} color={theme.colors.primary} />
-          </TouchableOpacity>
-        </Animated.View>
+            <BodyText style={styles.compactFilterBadgeText}>
+              {getActiveFiltersCount()}
+            </BodyText>
+          </Animated.View>
+        </TouchableOpacity>
       )}
 
       {renderVignetteContext()}
@@ -628,29 +630,28 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // Badge filtres amélioré
-  filterBadge: {
-    flexDirection: 'row',
+  // Badge filtres compact
+  compactFilterBadge: {
+    // Conteneur touchable transparent
+  },
+  compactFilterBadgeInner: {
+    width: 20,
+    height: 20,
+    backgroundColor: theme.colors.primary,
+    borderRadius: 10,
     alignItems: 'center',
-    backgroundColor: theme.colors.primary + '10',
-    borderColor: theme.colors.primary + '30',
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginHorizontal: theme.spacing.l,
-    marginBottom: 12,
-    borderRadius: 20,
-    gap: 6,
-    alignSelf: 'flex-start',
+    justifyContent: 'center',
+    shadowColor: theme.colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  filterBadgeText: {
-    fontSize: 13,
-    color: theme.colors.primary,
-    fontWeight: '600',
-  },
-  clearFilters: {
-    marginLeft: 4,
-    padding: 2,
+  compactFilterBadgeText: {
+    fontSize: 12,
+    color: 'white',
+    fontWeight: '700',
+    textAlign: 'center',
   },
 
   // Filtres design premium
