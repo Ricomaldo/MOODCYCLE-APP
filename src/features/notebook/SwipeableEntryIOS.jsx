@@ -24,10 +24,10 @@ import { useNotebookStore } from '../../stores/useNotebookStore';
 import { useCycle } from '../../hooks/useCycle';
 
 const PHASE_FILTERS = [
-  { id: 'menstruelle', label: 'Mens.', color: theme.colors.phases.menstrual },
-  { id: 'folliculaire', label: 'Foll.', color: theme.colors.phases.follicular },
-  { id: 'ovulatoire', label: 'Ovu.', color: theme.colors.phases.ovulatory },
-  { id: 'lutéale', label: 'Lutéale', color: theme.colors.phases.luteal },
+  { id: 'menstrual', label: 'Mens.', color: theme.colors.phases.menstrual },
+  { id: 'follicular', label: 'Foll.', color: theme.colors.phases.follicular },
+  { id: 'ovulatory', label: 'Ovu.', color: theme.colors.phases.ovulatory },
+  { id: 'luteal', label: 'Lutéale', color: theme.colors.phases.luteal },
 ];
 
 const SWIPE_THRESHOLD = 80; // Distance minimum pour déclencher action
@@ -39,6 +39,7 @@ export default function SwipeableEntryIOS({
   formatRelativeTime,
   getEntryIcon,
   getEntryTags,
+  phase,
 }) {
   const { deleteEntry, addTagToEntry } = useNotebookStore();
   const { currentPhase } = useCycle();
@@ -140,14 +141,16 @@ export default function SwipeableEntryIOS({
             style={styles.entryContent}
           >
             <View style={styles.entryHeader}>
-              {getEntryIcon(item.type)}
+              <View style={styles.iconContainer}>
+                {getEntryIcon(item.type, item.phase)}
+              </View>
               <BodyText style={styles.timestamp}>{formatRelativeTime(item.timestamp)}</BodyText>
-              {item.metadata?.phase && (
+              {item.phase && (
                 <View
                   style={[
                     styles.phaseDot,
                     {
-                      backgroundColor: PHASE_FILTERS.find((p) => p.id === item.metadata.phase)?.color,
+                      backgroundColor: PHASE_FILTERS.find((p) => p.id === item.phase)?.color,
                     },
                   ]}
                 />
@@ -221,6 +224,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: theme.spacing.s,
+  },
+  iconContainer: {
+    marginRight: theme.spacing.xs,
   },
   timestamp: {
     marginLeft: theme.spacing.s,

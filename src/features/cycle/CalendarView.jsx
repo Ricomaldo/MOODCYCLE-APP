@@ -1,13 +1,13 @@
 //
 // ─────────────────────────────────────────────────────────
 // 📄 Fichier : src/features/cycle/CalendarView.jsx
-// 🧩 Type : Composant Vue Cycle
+// 🧩 Type : Composant Vue Cycle - OPTIMISÉ
 // 📚 Description : Vue calendrier du cycle menstruel et des entrées carnet
-// 🕒 Version : 3.0 - 2025-06-21
+// 🕒 Version : 4.0 - 2025-06-21 - OPTIMISATIONS PERFORMANCE
 // 🧭 Utilisé dans : CycleView, NotebookView
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
-import { useState } from 'react';
+import { useState, useMemo, memo, useRef, useEffect, Profiler } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { theme } from '../../config/theme';
@@ -21,7 +21,27 @@ import {
   getPhasePosition 
 } from '../../config/cycleConstants';
 
-export default function CalendarView({
+// ✅ 1. Memoize phase calculations
+const usePhaseCalculations = (lastPeriodDate, cycleLength) => {
+  return useMemo(() => {
+    if (!lastPeriodDate) return null;
+    
+    const periodStart = new Date(lastPeriodDate);
+    const phaseRanges = [];
+    
+    // Pre-calculate all phase boundaries for the month
+    for (let i = 0; i < 45; i++) { // Cover ~1.5 cycles
+      const dayInCycle = (i % cycleLength) + 1;
+      const phase = getPhaseFromCycleDay(dayInCycle);
+      phaseRanges.push({ day: i, phase, cycleDay: dayInCycle });
+    }
+    
+    return { periodStart, phaseRanges };
+  }, [lastPeriodDate, cycleLength]);
+};
+
+// ✅ 2. Memoize calendar days generation
+const CalendarView = memo(function CalendarView({
   currentPhase = 'menstrual',
   cycleDay = 1,
   cycleLength = 28,
@@ -32,10 +52,33 @@ export default function CalendarView({
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
+  // ✅ Render counter for profiling
+  const renderCount = useRef(0);
+  useEffect(() => {
+    renderCount.current++;
+    if (__DEV__) {
+      console.log('🔄 Calendar render #', renderCount.current);
+    }
+  });
+
   // Hooks
   const { getEntriesGroupedByDate } = useNotebookStore();
-  const { getCurrentCycleDay } = useCycle();
   const notebookEntries = getEntriesGroupedByDate();
+  
+  // ✅ Use memoized calculations
+  const phaseCalcs = usePhaseCalculations(lastPeriodDate, cycleLength);
+
+  // ✅ Memoize static indicators function
+  const getEntryIndicators = useMemo(() => (entries) => {
+    if (!entries.length) return [];
+    const typeColors = {
+      saved: theme.colors.primary,
+      personal: theme.colors.secondary,
+      tracking: theme.colors.phases.ovulatory,
+    };
+    const uniqueTypes = [...new Set(entries.map((e) => e.type))];
+    return uniqueTypes.map((type) => typeColors[type] || theme.colors.primary);
+  }, []);
 
   // Navigation mensuelle
   const goToPreviousMonth = () => {
@@ -56,88 +99,15 @@ export default function CalendarView({
     }
   };
 
-  // Obtenir le mois actuel
-  const today = new Date();
-
-  // Calculs du calendrier
-  const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
-  const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
-  const firstDayWeekday = firstDayOfMonth.getDay(); // 0 = dimanche
-  const daysInMonth = lastDayOfMonth.getDate();
-
-  // Noms des jours et mois depuis les constantes
-  const { DAYS_OF_WEEK: dayNames, MONTHS: monthNames } = CALENDAR_CONSTANTS;
-
-  // Fonction pour calculer le jour de cycle à partir d'une date
-  const getCycleDayForDate = (date) => {
-    if (!lastPeriodDate) return null;
-
-    const periodStart = new Date(lastPeriodDate);
-    const daysDiff = Math.floor((date - periodStart) / (1000 * 60 * 60 * 24));
-
-    if (daysDiff < 0) return null; // Avant le dernier cycle
-
-    return (daysDiff % cycleLength) + 1;
-  };
-
-  // Fonction pour obtenir le style d'un jour
-  const getDayStyle = (date, dayNumber) => {
-    const dayDate = new Date(currentYear, currentMonth, dayNumber);
-    const cycleDayForDate = getCycleDayForDate(dayDate);
-
-    if (!cycleDayForDate) {
-      return {
-        backgroundColor: 'transparent',
-        opacity: 0.3,
-        phase: null,
-      };
-    }
-
-    const phase = getPhaseFromCycleDay(cycleDayForDate);
-    const baseColor = theme.colors.phases[phase];
-
-    // Opacity basée sur la position dans la phase (plus intense au centre)
-    const phasePosition = getPhasePosition(cycleDayForDate);
-    const opacity = CALENDAR_STYLES.PHASE_OPACITY.MIN + phasePosition * CALENDAR_STYLES.PHASE_OPACITY.MULTIPLIER;
-
-    const isToday = dayDate.toDateString() === today.toDateString();
-
-    return {
-      backgroundColor: baseColor,
-      opacity: opacity,
-      borderWidth: isToday ? 2 : 0,
-      borderColor: isToday ? baseColor : 'transparent',
-      phase: phase,
-    };
-  };
-
-
-
-  // Obtenir les entrées du carnet pour une date
-  const getEntriesForDate = (dayNumber) => {
-    const dateString = new Date(currentYear, currentMonth, dayNumber).toISOString().split('T')[0];
-    return notebookEntries[dateString] || [];
-  };
-
-  // Obtenir les indicateurs d'entrées pour un jour
-  const getEntryIndicators = (entries) => {
-    if (!entries.length) return [];
-
-    const typeColors = {
-      saved: theme.colors.primary, // Rose pour sauvegardé
-      personal: theme.colors.secondary, // Citron vert pour personnel
-      tracking: theme.colors.phases.ovulatory, // Bleu pour tracking
-    };
-
-    const uniqueTypes = [...new Set(entries.map((e) => e.type))];
-    return uniqueTypes.map((type) => typeColors[type] || theme.colors.primary);
-  };
-
-  // Générer la grille des jours
-  const generateCalendarDays = () => {
+  // ✅ 3. Memoize calendar grid
+  const calendarDays = useMemo(() => {
     const days = [];
+    const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+    const firstDayWeekday = firstDayOfMonth.getDay();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const today = new Date();
 
-    // Jours vides avant le premier jour du mois
+    // Empty cells before first day
     for (let i = 0; i < firstDayWeekday; i++) {
       days.push(
         <View key={`empty-${i}`} style={styles.dayCell}>
@@ -146,15 +116,41 @@ export default function CalendarView({
       );
     }
 
-    // Jours du mois
+    // Optimize: batch DOM operations
+    const dayElements = [];
+    
     for (let day = 1; day <= daysInMonth; day++) {
-      const dayStyle = getDayStyle(null, day);
       const dayDate = new Date(currentYear, currentMonth, day);
-      const cycleDayForDate = getCycleDayForDate(dayDate);
-      const dayEntries = getEntriesForDate(day);
+      const dateString = dayDate.toISOString().split('T')[0];
+      
+      // ✅ Use pre-calculated phase data
+      let dayStyle = { backgroundColor: 'transparent', opacity: 0.3 };
+      let cycleDayForDate = null;
+      
+      if (phaseCalcs) {
+        const daysSince = Math.floor((dayDate - phaseCalcs.periodStart) / (1000 * 60 * 60 * 24));
+        if (daysSince >= 0 && daysSince < phaseCalcs.phaseRanges.length) {
+          const phaseData = phaseCalcs.phaseRanges[daysSince];
+          cycleDayForDate = phaseData.cycleDay;
+          const phase = phaseData.phase;
+          const baseColor = theme.colors.phases[phase];
+          const phasePosition = getPhasePosition(cycleDayForDate);
+          const opacity = CALENDAR_STYLES.PHASE_OPACITY.MIN + 
+            phasePosition * CALENDAR_STYLES.PHASE_OPACITY.MULTIPLIER;
+          
+          dayStyle = {
+            backgroundColor: baseColor,
+            opacity: opacity,
+            phase: phase,
+          };
+        }
+      }
+
+      const isToday = dayDate.toDateString() === today.toDateString();
+      const dayEntries = notebookEntries[dateString] || [];
       const entryIndicators = getEntryIndicators(dayEntries);
 
-      days.push(
+      dayElements.push(
         <TouchableOpacity
           key={day}
           style={[
@@ -162,66 +158,64 @@ export default function CalendarView({
             {
               backgroundColor: dayStyle.backgroundColor,
               opacity: dayStyle.opacity,
-              borderWidth: dayStyle.borderWidth,
-              borderColor: dayStyle.borderColor,
+              borderWidth: isToday ? 2 : 0,
+              borderColor: isToday ? dayStyle.backgroundColor : 'transparent',
             },
           ]}
           onPress={() => {
             if (dayEntries.length > 0) {
-              onDatePress(dayDate.toISOString().split('T')[0], dayEntries);
+              onDatePress(dateString, dayEntries);
             } else if (dayStyle.phase) {
               onPhasePress(dayStyle.phase);
             }
           }}
         >
           <Text style={styles.dayText}>{day}</Text>
-
-          {/* Indicateurs d'entrées du carnet */}
           {entryIndicators.length > 0 && (
             <View style={styles.entryIndicatorsContainer}>
-              {entryIndicators.slice(0, CALENDAR_STYLES.ENTRY_INDICATORS.MAX_VISIBLE).map((color, index) => (
+              {entryIndicators.slice(0, 3).map((color, index) => (
                 <View key={index} style={[styles.entryIndicator, { backgroundColor: color }]} />
               ))}
-              {entryIndicators.length > CALENDAR_STYLES.ENTRY_INDICATORS.MAX_VISIBLE && <Text style={styles.moreIndicator}>+</Text>}
+              {entryIndicators.length > 3 && <Text style={styles.moreIndicator}>+</Text>}
             </View>
           )}
         </TouchableOpacity>
       );
     }
 
-    return days;
-  };
+    return [...days, ...dayElements];
+  }, [currentMonth, currentYear, phaseCalcs, notebookEntries, onPhasePress, onDatePress]);
 
   return (
     <View style={styles.container}>
       {/* Header du mois avec navigation */}
       <View style={styles.monthNavigationHeader}>
-        <TouchableOpacity onPress={goToPreviousMonth} style={styles.navButton}>
+        <TouchableOpacity onPress={goToPreviousMonth} style={styles.navButton} testID="nav-prev">
           <Feather name="chevron-left" size={24} color={theme.colors.primary} />
         </TouchableOpacity>
 
         <Text style={styles.monthHeader}>
-          {monthNames[currentMonth]} {currentYear}
+          {CALENDAR_CONSTANTS.MONTHS[currentMonth]} {currentYear}
         </Text>
 
-        <TouchableOpacity onPress={goToNextMonth} style={styles.navButton}>
+        <TouchableOpacity onPress={goToNextMonth} style={styles.navButton} testID="nav-next">
           <Feather name="chevron-right" size={24} color={theme.colors.primary} />
         </TouchableOpacity>
       </View>
 
-      {/* Noms des jours */}
+      {/* Week days */}
       <View style={styles.weekHeader}>
-        {dayNames.map((day) => (
+        {CALENDAR_CONSTANTS.DAYS_OF_WEEK.map((day) => (
           <View key={day} style={styles.weekDayCell}>
             <Caption style={styles.weekDayText}>{day}</Caption>
           </View>
         ))}
       </View>
 
-      {/* Grille des jours */}
-      <View style={styles.daysGrid}>{generateCalendarDays()}</View>
+      {/* Memoized calendar grid */}
+      <View style={styles.daysGrid}>{calendarDays}</View>
 
-      {/* Légende */}
+      {/* Legend */}
       <View style={styles.legend}>
         <Caption style={styles.legendText}>Intensité des couleurs = position dans la phase</Caption>
         <View style={styles.legendRow}>
@@ -241,7 +235,27 @@ export default function CalendarView({
       </View>
     </View>
   );
+});
+
+// ✅ Profiler wrapper for development monitoring
+function ProfiledCalendarView(props) {
+  const onRenderCallback = (id, phase, actualDuration) => {
+    if (__DEV__) {
+      console.log(`📊 Calendar ${phase}:`, {
+        duration: actualDuration.toFixed(2) + 'ms',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  return (
+    <Profiler id="CalendarView" onRender={onRenderCallback}>
+      <CalendarView {...props} />
+    </Profiler>
+  );
 }
+
+export default ProfiledCalendarView;
 
 const styles = StyleSheet.create({
   container: {

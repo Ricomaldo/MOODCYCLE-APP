@@ -24,6 +24,7 @@ export const useChatStore = create(
       messages: [],
       isTyping: false,
       isWaitingResponse: false,
+      pendingMessages: [], // Messages en attente d'envoi
 
       // Suggestions contextuelles simples
       suggestions: [
@@ -72,6 +73,29 @@ export const useChatStore = create(
       setTyping: (isTyping) => set({ isTyping }),
 
       setWaitingResponse: (isWaiting) => set({ isWaitingResponse: isWaiting }),
+
+      // ═══════════════════════════════════════════════════════
+      // 📤 GESTION MESSAGES EN ATTENTE
+      // ═══════════════════════════════════════════════════════
+      addPendingMessage: (text) => {
+        const message = {
+          id: `pending-${Date.now()}`,
+          type: 'user',
+          content: text,
+          timestamp: Date.now(),
+          status: 'pending'
+        };
+        set(state => ({
+          pendingMessages: [...state.pendingMessages, message]
+        }));
+        return message.id;
+      },
+
+      markMessageSent: (pendingId) => {
+        set(state => ({
+          pendingMessages: state.pendingMessages.filter(m => m.id !== pendingId)
+        }));
+      },
 
       // ═══════════════════════════════════════════════════════
       // 🎯 SUGGESTIONS DYNAMIQUES
@@ -188,6 +212,7 @@ export const useChatStore = create(
           messages: [],
           isTyping: false,
           isWaitingResponse: false,
+          pendingMessages: [],
         }),
 
       deleteMessage: (messageId) =>
@@ -206,6 +231,7 @@ export const useChatStore = create(
           messages: [],
           isTyping: false,
           isWaitingResponse: false,
+          pendingMessages: [],
           suggestions: [
             "Comment je me sens aujourd'hui ?",
             "Conseils pour ma phase actuelle",

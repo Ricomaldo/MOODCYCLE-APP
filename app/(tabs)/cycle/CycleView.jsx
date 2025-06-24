@@ -1,30 +1,34 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 File: app/(tabs)/cycle/CycleView.jsx - INTÉGRATION VIGNETTES
+// 📄 File: app/(tabs)/cycle/CycleView.jsx - TOGGLE VUE CYCLE/CALENDRIER
 // 🧩 Type: Écran Principal Cycle
-// 📚 Description: Page d'accueil cycle avec vignettes contextuelles
-// 🕒 Version: 2.0 - 2025-06-21 - VIGNETTES INTÉGRÉES
+// 📚 Description: Page d'accueil cycle avec toggle vue roue/calendrier
+// 🕒 Version: 3.0 - 2025-06-23 - TOGGLE VUE RESTAURÉ
 // ─────────────────────────────────────────────────────────
 //
 import React from 'react';
-import { View, ScrollView, StyleSheet, RefreshControl } from 'react-native';
+import { View, ScrollView, StyleSheet, RefreshControl, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
 import { theme } from '../../../src/config/theme';
 import { Heading, BodyText } from '../../../src/core/ui/Typography';
 import ScreenContainer from '../../../src/core/layout/ScreenContainer';
 import CycleWheel from '../../../src/features/cycle/CycleWheel';
+import CalendarView from '../../../src/features/cycle/CalendarView';
 import { VignettesContainer } from '../../../src/features/shared/VignetteCard';
 import { useCycle } from '../../../src/hooks/useCycle';
 import { useVignettes } from '../../../src/hooks/useVignettes';
 import { usePersona } from '../../../src/hooks/usePersona';
 import { useUserStore } from '../../../src/stores/useUserStore';
 
-
 export default function CycleView() {
   const insets = useSafeAreaInsets();
-  const { currentPhase, currentDay, phaseInfo, hasData } = useCycle();
+  const { currentPhase, currentDay, phaseInfo, hasData, lastPeriodDate, cycleLength } = useCycle();
   const { current: persona } = usePersona();
   const { profile } = useUserStore();
+  
+  // ✅ STATE POUR TOGGLE VUE
+  const [viewMode, setViewMode] = React.useState('wheel'); // 'wheel' ou 'calendar'
   
   // ✅ HOOK VIGNETTES INTÉGRÉ
   const { 
@@ -47,6 +51,15 @@ export default function CycleView() {
     trackEngagement(vignette);
     // Navigation automatique gérée par VignetteCard
   };
+
+  // ✅ HANDLERS POUR LE CALENDRIER
+  const handlePhasePress = React.useCallback((phase) => {
+    console.log('Phase pressed:', phase);
+  }, []);
+  
+  const handleDatePress = React.useCallback((dateString, entries) => {
+    console.log('Date pressed:', dateString, entries);
+  }, []);
 
   if (!hasData) {
     return (
@@ -75,22 +88,54 @@ export default function CycleView() {
           />
         }
       >
-        {/* Header */}
+        {/* Header avec toggle */}
         <View style={styles.header}>
-          <Heading style={styles.title}>Mon Cycle</Heading>
+          <View style={styles.headerTop}>
+            <Heading style={styles.title}>Mon Cycle</Heading>
+            
+            {/* ✅ TOGGLE BUTTON */}
+            <TouchableOpacity 
+              style={styles.toggleButton}
+              onPress={() => setViewMode(viewMode === 'wheel' ? 'calendar' : 'wheel')}
+            >
+              <Feather 
+                name={viewMode === 'wheel' ? 'calendar' : 'target'} 
+                size={20} 
+                color={theme.colors.primary} 
+              />
+            </TouchableOpacity>
+          </View>
+          
           <BodyText style={styles.subtitle}>
             Jour {currentDay} • Phase {phaseInfo.name}
           </BodyText>
         </View>
 
-        {/* Roue du cycle */}
-        <View style={styles.wheelContainer}>
-          <CycleWheel 
-            currentPhase={currentPhase}
-            cycleDay={currentDay}
-            cycleLength={28}
-            userName={profile?.prenom || 'Emma'}
-          />
+        {/* ✅ VUE CONDITIONNELLE AVEC HAUTEUR FIXE */}
+        <View style={styles.viewContainer}>
+          {viewMode === 'wheel' ? (
+            /* Roue du cycle */
+            <View style={styles.wheelContainer}>
+              <CycleWheel 
+                currentPhase={currentPhase}
+                cycleDay={currentDay}
+                cycleLength={cycleLength || 28}
+                userName={profile?.prenom || 'Emma'}
+              />
+            </View>
+          ) : (
+            /* Vue calendaire */
+            <View style={styles.calendarContainer}>
+              <CalendarView
+                currentPhase={currentPhase}
+                cycleDay={currentDay}
+                cycleLength={cycleLength || 28}
+                lastPeriodDate={lastPeriodDate}
+                onPhasePress={handlePhasePress}
+                onDatePress={handleDatePress}
+              />
+            </View>
+          )}
         </View>
 
         {/* Phase info */}
@@ -157,25 +202,52 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   
-  // Header
+  // Header avec toggle
   header: {
     alignItems: 'center',
     marginBottom: theme.spacing.xl,
   },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: theme.spacing.xs,
+  },
   title: {
     fontSize: 24,
     fontWeight: '700',
-    marginBottom: theme.spacing.xs,
+    flex: 1,
+    textAlign: 'center',
+  },
+  toggleButton: {
+    padding: theme.spacing.s,
+    borderRadius: theme.borderRadius.m,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
   },
   subtitle: {
     fontSize: 16,
     color: theme.colors.textLight,
   },
   
-  // Roue
+  // Conteneur fixe pour éviter les sauts
+  viewContainer: {
+    height: 320, // ✅ Hauteur fixe pour éviter les sauts
+    marginBottom: theme.spacing.xl,
+    justifyContent: 'center',
+  },
+  
+  // Conteneurs de vue
   wheelContainer: {
     alignItems: 'center',
-    marginBottom: theme.spacing.xl,
+    justifyContent: 'center',
+    height: '100%',
+  },
+  calendarContainer: {
+    height: '100%',
+    justifyContent: 'center',
   },
   
   // Phase info

@@ -13,6 +13,7 @@ import { useEngagementStore } from '../stores/useEngagementStore.js';
 import { useUserIntelligence } from '../stores/useUserIntelligence.js';
 import { getApiRequestConfig } from '../config/api.js';
 import { getCurrentPhase } from '../utils/cycleCalculations.js';
+import NetworkQueue from './NetworkQueue.js';
 
 const DEVICE_ID_KEY = 'device_id_v1';
 
@@ -67,11 +68,26 @@ class ChatService {
       // ✅ INITIALISER CONTEXTE INTELLIGENCE
       this.loadConversationContext();
       
-      console.log('🚀 ChatService initialisé avec Device ID:', this.deviceId);
+      // ✅ LOG INITIALISATION DÉTAILLÉE
+      console.log('🚀 ChatService Initialized:', {
+        deviceId: this.deviceId,
+        timestamp: new Date().toISOString(),
+        conversationContext: this.conversationContext,
+        environment: __DEV__ ? 'development' : 'production'
+      });
     } catch (error) {
-      console.error('🚨 Erreur initialisation ChatService:', error);
+      console.error('🚨 ChatService Initialization Error:', {
+        error: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
       this.deviceId = 'fallback-device-id';
       this.isInitialized = true;
+      
+      console.log('🔄 ChatService Fallback Initialized:', {
+        deviceId: this.deviceId,
+        fallback: true
+      });
     }
   }
 
@@ -132,33 +148,182 @@ class ChatService {
     return [...new Set(topics)];
   }
 
-  async sendMessage(message) {
+  // ✅ NOUVEAU: Préparer contexte optimisé (3-4 messages)
+  prepareConversationContext(currentMessage, previousMessages = []) {
+    // Garder seulement 3 derniers échanges (6 messages max)
+    const recentMessages = previousMessages.slice(-6);
+    
+    // Formatter pour l'API Claude
+    const formattedContext = recentMessages.map(msg => ({
+      role: msg.isUser ? 'user' : 'assistant',
+      content: msg.text,
+      // Métadonnées légères
+      metadata: {
+        timestamp: msg.timestamp,
+        phase: msg.phase || null
+      }
+    }));
+    
+    return {
+      messages: formattedContext,
+      summary: this.generateContextSummary(recentMessages),
+      continuity: this.checkConversationContinuity(recentMessages)
+    };
+  }
+  
+  // ✅ Résumé intelligent pour économiser tokens
+  generateContextSummary(messages) {
+    const topics = new Set();
+    const emotions = new Set();
+    
+    messages.forEach(msg => {
+      if (msg.isUser) {
+        // Extraction basique topics/émotions
+        const content = msg.text.toLowerCase();
+        if (content.includes('douleur') || content.includes('mal')) topics.add('pain');
+        if (content.includes('fatigue')) topics.add('fatigue');
+        if (content.includes('stress')) emotions.add('stressed');
+        if (content.includes('bien')) emotions.add('good');
+      }
+    });
+    
+    return {
+      topics: Array.from(topics),
+      emotions: Array.from(emotions),
+      messageCount: messages.length
+    };
+  }
+  
+  // ✅ Vérifier continuité conversation
+  checkConversationContinuity(messages) {
+    if (messages.length < 2) return { isNew: true, gap: 0 };
+    
+    const lastMessage = messages[messages.length - 1];
+    const timeSinceLastMessage = Date.now() - (lastMessage.timestamp || Date.now());
+    const gapMinutes = Math.floor(timeSinceLastMessage / 60000);
+    
+    return {
+      isNew: gapMinutes > 30, // Nouvelle conversation après 30min
+      gap: gapMinutes,
+      shouldRecap: gapMinutes > 10 && gapMinutes < 30
+    };
+  }
+  
+  // ✅ Instructions contextuelles pour l'API
+  getContextualInstructions(context) {
+    const instructions = [];
+    
+    if (context.continuity.isNew) {
+      instructions.push("C'est une nouvelle conversation, accueille chaleureusement.");
+    } else if (context.continuity.shouldRecap) {
+      instructions.push("La conversation a eu une pause, fais un léger rappel si pertinent.");
+    }
+    
+    if (context.summary.topics.includes('pain')) {
+      instructions.push("Sois particulièrement empathique concernant la douleur mentionnée.");
+    }
+    
+    if (context.messages.length > 4) {
+      instructions.push("Continue naturellement la conversation en cours.");
+    }
+    
+    return instructions;
+  }
+
+  async sendMessage(message, conversationContext = []) {
     if (!this.isInitialized) {
       await this.initialize();
     }
 
+    // ✅ LOG DÉBUT - SendMessage
+    console.log('📝 SendMessage Start:', {
+      messagePreview: message.substring(0, 50) + (message.length > 50 ? '...' : ''),
+      messageLength: message.length,
+      conversationContextLength: conversationContext.length,
+      timestamp: new Date().toISOString()
+    });
+
     try {
+      // ✅ Préparer contexte optimisé
+      const optimizedContext = this.prepareConversationContext(message, conversationContext);
+      
       // ✅ NOUVEAU : Contexte enrichi depuis stores
       const enrichedContext = await this.buildEnrichedContext(message);
       
-      // ✅ TRACKING ENGAGEMENT
-      this.trackEngagement(message, enrichedContext);
+      // ✅ Fusionner contextes
+      const finalContext = {
+        ...enrichedContext,
+        conversation: optimizedContext,
+        // Instructions spéciales pour l'API
+        instructions: this.getContextualInstructions(optimizedContext)
+      };
       
-      const response = await this.callChatAPI(message, enrichedContext);
+      // ✅ LOG CONTEXTE ENRICHI
+      console.log('🧠 Enriched Context Built:', {
+        phase: finalContext.phase,
+        persona: finalContext.persona,
+        conversationLength: finalContext.intelligence?.conversationLength || 0,
+        optimizedMessagesCount: optimizedContext.messages.length,
+        continuityGap: optimizedContext.continuity.gap,
+        isFirstMessage: finalContext.messageMetadata?.isFirstMessage || false
+      });
+      
+      // ✅ TRACKING ENGAGEMENT
+      this.trackEngagement(message, finalContext);
+      
+      const response = await this.callChatAPI(message, finalContext);
       
       // ✅ APPRENTISSAGE PATTERNS
-      this.learnFromResponse(message, response, enrichedContext);
+      this.learnFromResponse(message, response, finalContext);
+      
+      // ✅ LOG SUCCÈS COMPLET
+      console.log('🎉 SendMessage Success:', {
+        phase: finalContext.phase,
+        persona: finalContext.persona,
+        responsePreview: response.substring(0, 50) + (response.length > 50 ? '...' : ''),
+        source: 'api'
+      });
       
       return {
         success: true,
         message: response,
         source: 'api',
-        context: enrichedContext.persona
+        context: finalContext.persona
       };
     } catch (error) {
-      console.error('🚨 Erreur sendMessage:', error);
+      console.error('🚨 SendMessage Error:', {
+        error: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
       
+      // Si offline, enqueue
+      if (error.message.includes('Network')) {
+        console.log('📡 Network Error Detected - Enqueueing message');
+        await NetworkQueue.enqueueChatMessage(message, enrichedContext, this.deviceId);
+        
+        const fallbackResponse = this.getSmartFallbackResponse(message);
+        
+        console.log('💾 Message Queued - Fallback response:', {
+          fallbackUsed: true,
+          queued: true,
+          persona: fallbackResponse.persona
+        });
+        
+        return {
+          ...fallbackResponse,
+          queued: true
+        };
+      }
+      
+      // ✅ LOG FALLBACK STANDARD
       const fallbackResponse = this.getSmartFallbackResponse(message);
+      console.log('🔄 Fallback Response:', {
+        fallbackUsed: true,
+        persona: fallbackResponse.persona,
+        source: fallbackResponse.source
+      });
+      
       return fallbackResponse;
     }
   }
@@ -178,6 +343,17 @@ class ChatService {
       userStore.cycle.length,
       userStore.cycle.periodDuration
     );
+
+    // ✅ LOG PHASE DYNAMIQUE
+    console.log('🌙 Dynamic Phase Context:', {
+      lastPeriodDate: userStore.cycle.lastPeriodDate,
+      cycleLength: userStore.cycle.length,
+      currentPhase: currentPhase,
+      persona: userStore.persona.assigned,
+      cycleDayCalculated: userStore.cycle.lastPeriodDate ? 
+        Math.floor((new Date() - new Date(userStore.cycle.lastPeriodDate)) / (1000 * 60 * 60 * 24)) % userStore.cycle.length + 1 
+        : null
+    });
     
     // Intelligence contextuelle
     const intelligence = {
@@ -250,28 +426,75 @@ class ChatService {
   }
 
   async callChatAPI(message, context) {
+    // ✅ LOG IMPORTANT - Request Context
+    console.log('🚀 API Request Context:', {
+      phase: context.phase,
+      persona: context.persona,
+      timestamp: new Date().toISOString(),
+      messageLength: message.length,
+      conversationLength: context.conversation?.messages?.length || 0,
+      deviceId: this.deviceId
+    });
+
     const apiConfig = getApiRequestConfig(this.deviceId);
+
+    // ✅ Payload optimisé
+    const payload = {
+      message,
+      context: {
+        // Données essentielles seulement
+        persona: context.persona,
+        phase: context.phase,
+        // Contexte conversation compact
+        conversation: context.conversation ? {
+          recent: context.conversation.messages.slice(-4), // 4 derniers max
+          summary: context.conversation.summary,
+          continuity: context.conversation.continuity
+        } : null,
+        // Instructions pour personnalisation
+        instructions: context.instructions
+      }
+    };
+
+    console.log('📊 Payload size:', JSON.stringify(payload).length, 'chars');
 
     const response = await fetch(`${apiConfig.baseURL}/api/chat`, {
       method: 'POST',
       headers: apiConfig.headers,
-      body: JSON.stringify({
-        message,
-        context,
-      }),
+      body: JSON.stringify(payload),
       timeout: apiConfig.timeout,
     });
 
     if (!response.ok) {
+      console.error('❌ API Response Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        phase: context.phase,
+        persona: context.persona
+      });
       throw new Error(`API Error: ${response.status}`);
     }
 
     const data = await response.json();
 
+    // ✅ LOG IMPORTANT - Response Success
+    console.log('✅ API Response Success:', {
+      success: !!data.response || !!data.message || !!data.data?.message,
+      phaseUsed: context.phase,
+      persona: context.persona,
+      responseLength: (data.response || data.message || data.data?.message || '').length,
+      timestamp: new Date().toISOString()
+    });
+
     if (data.response) return data.response;
     if (data.message) return data.message;
     if (data.data?.message) return data.data.message;
     
+    console.error('❌ API Response Format Error:', {
+      receivedKeys: Object.keys(data),
+      phase: context.phase,
+      persona: context.persona
+    });
     throw new Error('Format de réponse API non reconnu');
   }
 

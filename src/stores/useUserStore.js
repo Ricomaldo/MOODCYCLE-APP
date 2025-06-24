@@ -72,6 +72,14 @@ export const useUserStore = create(
       },
 
       // ═══════════════════════════════════════════════════════
+      // 🔄 MÉTADONNÉES DE SYNCHRONISATION
+      // ═══════════════════════════════════════════════════════
+      syncMetadata: {
+        lastSyncAt: null,
+        pendingSync: false
+      },
+
+      // ═══════════════════════════════════════════════════════
       // 🎯 ACTIONS - PROFIL
       // ═══════════════════════════════════════════════════════
       updateProfile: (data) =>
@@ -93,6 +101,10 @@ export const useUserStore = create(
         set((state) => ({
           melune: { ...state.melune, ...data },
         })),
+
+      updateSyncMetadata: (data) => set(state => ({
+        syncMetadata: { ...state.syncMetadata, ...data }
+      })),
 
       completeProfile: () =>
         set((state) => ({
@@ -137,10 +149,17 @@ export const useUserStore = create(
       // Export données pour services externes
       getContextForAPI: () => {
         const state = get();
-        // FIXME: Utiliser useCycle().currentPhase dans les composants
+        const { getCurrentPhase } = require("../utils/cycleCalculations");
+        
+        const phase = getCurrentPhase(
+          state.cycle.lastPeriodDate, 
+          state.cycle.length, 
+          state.cycle.periodDuration
+        );
+        
         return {
           persona: state.persona.assigned,
-          phase: 'menstrual', // Placeholder - utiliser useCycle
+          phase, // ✅ Phase dynamique calculée
           preferences: state.preferences,
           profile: state.profile,
         };
@@ -191,6 +210,10 @@ export const useUserStore = create(
             tone: "friendly",
             personalityMatch: null,
           },
+          syncMetadata: {
+            lastSyncAt: null,
+            pendingSync: false
+          },
         }),
     }),
     {
@@ -202,6 +225,7 @@ export const useUserStore = create(
         cycle: state.cycle,
         persona: state.persona,
         melune: state.melune,
+        syncMetadata: state.syncMetadata,
       }),
     }
   )

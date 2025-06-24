@@ -38,15 +38,16 @@ import { useRenderMonitoring } from '../../../src/hooks/usePerformanceMonitoring
 
 const HEADER_HEIGHT = 60;
 
-// Composant TypingIndicator avec animations iOS-like
+// Composant TypingIndicator avec animations iOS-like - FIXED MEMORY LEAK
 function TypingIndicator() {
   const dot1Anim = useRef(new Animated.Value(0.4)).current;
   const dot2Anim = useRef(new Animated.Value(0.4)).current;
   const dot3Anim = useRef(new Animated.Value(0.4)).current;
+  const animationRef = useRef(null);
 
   useEffect(() => {
     const animateSequence = () => {
-      Animated.sequence([
+      animationRef.current = Animated.sequence([
         Animated.timing(dot1Anim, {
           toValue: 1,
           duration: 400,
@@ -79,10 +80,24 @@ function TypingIndicator() {
             useNativeDriver: true,
           }),
         ]),
-      ]).start(() => animateSequence());
+      ]);
+      
+      animationRef.current.start((finished) => {
+        if (finished) {
+          animateSequence();
+        }
+      });
     };
 
     animateSequence();
+    
+    // ✅ CLEANUP - Fix memory leak
+    return () => {
+      if (animationRef.current) {
+        animationRef.current.stop();
+        animationRef.current = null;
+      }
+    };
   }, []);
 
   return (
@@ -104,15 +119,41 @@ export default function ChatScreen() {
   // 📊 Monitoring de performance - DÉSACTIVÉ TEMPORAIREMENT
   // const renderCount = useRenderMonitoring('ChatScreen');
   
+  // ✅ MEMORY MONITORING HELPER
+  useEffect(() => {
+    if (__DEV__) {
+      const startMemory = performance.memory?.usedJSHeapSize || 0;
+      console.log('💾 Chat Memory Start:', (startMemory / 1024 / 1024).toFixed(2), 'MB');
+      
+      const interval = setInterval(() => {
+        const currentMemory = performance.memory?.usedJSHeapSize || 0;
+        const delta = ((currentMemory - startMemory) / 1024 / 1024).toFixed(2);
+        console.log(`💾 Chat Memory: +${delta}MB depuis démarrage`);
+      }, 60000); // Log toutes les minutes
+      
+      return () => {
+        clearInterval(interval);
+        const endMemory = performance.memory?.usedJSHeapSize || 0;
+        const totalDelta = ((endMemory - startMemory) / 1024 / 1024).toFixed(2);
+        console.log('💾 Chat Memory End: Delta total =', totalDelta, 'MB');
+      };
+    }
+  }, []);
+  
   const insets = useSafeAreaInsets();
   const scrollViewRef = useRef(null);
+  
+  // ✅ REFS GROUPÉES POUR CLEANUP
+  const refs = {
+    timer: useRef(null),
+    processedVignette: useRef(null),
+    scrollView: scrollViewRef,
+    mounted: useRef(true)
+  };
   
   // ✅ NAVIGATION PARAMS - Stabilisé
   const params = useLocalSearchParams();
   const { initialMessage, sourcePhase, sourcePersona, vignetteId, context, autoSend } = params;
-  
-  // ✅ TRACKER SI LA VIGNETTE A DÉJÀ ÉTÉ TRAITÉE
-  const processedVignetteRef = useRef(null);
   
   // États chat
   const [messages, setMessages] = useState([]);
@@ -130,36 +171,159 @@ export default function ChatScreen() {
   const phase = currentPhase;
   const prenom = profile.prenom;
 
-  // ✅ GESTION NAVIGATION VIGNETTES - CORRIGÉE
+  // ✅ HANDLERS MEMOIZÉS
+  const memoizedHandlers = useMemo(() => ({
+    handleSend: async (messageText = null) => {
+      const currentInput = messageText || input.trim();
+      if (!currentInput || isLoading || !refs.mounted.current) return;
+
+      const userMessage = { id: Date.now(), text: currentInput, isUser: true };
+      setMessages((prev) => [...prev, userMessage]);
+      
+      // Contexte conversation (3-4 derniers messages)
+      const conversationContext = messages.slice(-3).map(m => ({
+        role: m.isUser ? 'user' : 'assistant',
+        content: m.text
+      }));
+      
+      addMessage('user', currentInput, {
+        sourceVignette: vignetteId || null,
+        sourcePhase: sourcePhase || currentPhase,
+        conversationContext // ✅ Contexte pour l'API
+      });
+      
+      if (!messageText) setInput("");
+      setIsLoading(true);
+      memoizedHandlers.scrollToBottom();
+
+      try {
+        const response = await ChatService.sendMessage(currentInput, conversationContext);
+        if (response.success && refs.mounted.current) {
+          const meluneMessage = {
+            id: Date.now() + 1,
+            text: response.message,
+            isUser: false,
+            source: response.source,
+          };
+          setMessages((prev) => [...prev, meluneMessage]);
+          addMessage('melune', response.message, {
+            source: response.source,
+            responseToVignette: vignetteId || null
+          });
+          memoizedHandlers.scrollToBottom();
+        }
+      } catch (error) {
+        console.error("🚨 Erreur handleSend:", error);
+        if (refs.mounted.current) {
+          const errorMessage = {
+            id: Date.now() + 1,
+            text: "Désolée, je rencontre un petit souci technique. Peux-tu réessayer ?",
+            isUser: false,
+            source: "error",
+          };
+          setMessages((prev) => [...prev, errorMessage]);
+        }
+      } finally {
+        if (refs.mounted.current) {
+          setIsLoading(false);
+        }
+      }
+    },
+    
+    handleSaveMessage: (message) => {
+      if (Platform.OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        ActionSheetIOS.showActionSheetWithOptions(
+          {
+            title: '💾 Sauvegarder ce conseil',
+            message: 'Ajouter à ton carnet pour le retrouver plus tard ?',
+            options: ['Annuler', '📝 Sauver dans mon carnet'],
+            cancelButtonIndex: 0,
+            userInterfaceStyle: 'light',
+          },
+          (buttonIndex) => {
+            if (buttonIndex === 1) {
+              const vignetteContext = sourcePhase ? [`#${sourcePhase}`] : [];
+              addEntry(message, 'saved', [`#${currentPhase}`, '#conseil', '#melune', ...vignetteContext]);
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            }
+          }
+        );
+      }
+    },
+    
+    handleVignetteNavigation: () => {
+      if (initialMessage && refs.mounted.current) {
+        setInput(initialMessage);
+        if (autoSend === 'true') {
+          if (refs.timer.current) clearTimeout(refs.timer.current);
+          refs.timer.current = setTimeout(() => {
+            if (refs.mounted.current) {
+              memoizedHandlers.handleSend(initialMessage);
+              setInput('');
+            }
+          }, 1000);
+        }
+      }
+    },
+    
+    scrollToBottom: () => {
+      if (refs.scrollView.current && refs.mounted.current) {
+        setTimeout(() => {
+          refs.scrollView.current?.scrollToEnd({ animated: true });
+        }, 100);
+      }
+    }
+  }), [input, isLoading, messages, initialMessage, autoSend, vignetteId, sourcePhase, currentPhase, addMessage, addEntry]);
+
+  // ✅ FOCUS EFFECT OPTIMISÉ
   useFocusEffect(
     useCallback(() => {
       setShowMessages(true);
       
-      // Traitement params navigation vignettes - UNE SEULE FOIS
-      if (initialMessage && processedVignetteRef.current !== vignetteId) {
-        handleVignetteNavigation();
-        processedVignetteRef.current = vignetteId;
+      if (initialMessage && refs.processedVignette.current !== vignetteId) {
+        memoizedHandlers.handleVignetteNavigation();
+        refs.processedVignette.current = vignetteId;
       }
       
-      return () => setShowMessages(false);
-    }, [initialMessage, vignetteId]) // ✅ Dépendances stables
+      return () => {
+        setShowMessages(false);
+        refs.processedVignette.current = false;
+        if (refs.timer.current) {
+          clearTimeout(refs.timer.current);
+          refs.timer.current = null;
+        }
+      };
+    }, [initialMessage, vignetteId, memoizedHandlers])
   );
 
-  // ✅ NAVIGATION DEPUIS VIGNETTES - CORRIGÉE
-  const handleVignetteNavigation = useCallback(() => {
-    if (initialMessage) {
-      // Pré-remplir l'input avec le prompt de la vignette
-      setInput(initialMessage);
+
+  // ✅ CLEANUP COMPLET AU UNMOUNT
+  useEffect(() => {
+    return () => {
+      refs.mounted.current = false;
       
-      // Optionnel : Envoyer automatiquement le message
-      if (autoSend === 'true') {
-        setTimeout(() => {
-          handleSend(initialMessage);
-          setInput('');
-        }, 1000);
+      // Cleanup tous les timers
+      if (refs.timer.current) {
+        clearTimeout(refs.timer.current);
       }
+      
+      // Cleanup toutes les refs
+      Object.keys(refs).forEach(key => {
+        if (refs[key] && refs[key].current) {
+          refs[key].current = null;
+        }
+      });
+    };
+  }, []);
+  
+  // ✅ LIMITATION MESSAGES EN MÉMOIRE
+  useEffect(() => {
+    // Garder seulement 50 derniers messages en mémoire locale
+    if (messages.length > 50) {
+      setMessages(prev => prev.slice(-50));
     }
-  }, [initialMessage, autoSend]); // ✅ Dépendances mises à jour
+  }, [messages.length]);
 
   // Message d'accueil personnalisé
   const generateWelcomeMessage = () => {
@@ -192,96 +356,10 @@ export default function ChatScreen() {
     initializeChatService();
   }, []);
 
-  const scrollToBottom = () => {
-    if (scrollViewRef.current) {
-      setTimeout(() => {
-        scrollViewRef.current.scrollToEnd({ animated: true });
-      }, 100);
-    }
-  };
-
   const onRefresh = async () => {
     setRefreshing(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
     setRefreshing(false);
-  };
-
-  const handleSaveMessage = (message) => {
-    if (Platform.OS === 'ios') {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          title: '💾 Sauvegarder ce conseil',
-          message: 'Ajouter à ton carnet pour le retrouver plus tard ?',
-          options: ['Annuler', '📝 Sauver dans mon carnet'],
-          cancelButtonIndex: 0,
-          userInterfaceStyle: 'light',
-        },
-        (buttonIndex) => {
-          if (buttonIndex === 1) {
-            // ✅ INTÉGRATION STORES - Nouveau
-            const vignetteContext = sourcePhase ? [`#${sourcePhase}`] : [];
-            addEntry(message, 'saved', [`#${currentPhase}`, '#conseil', '#melune', ...vignetteContext]);
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          }
-        }
-      );
-    }
-  };
-
-  // ✅ HANDLE SEND MODIFIÉ
-  const handleSend = async (messageText = null) => {
-    const currentInput = messageText || input.trim();
-    if (!currentInput || isLoading) return;
-
-    const userMessage = { id: Date.now(), text: currentInput, isUser: true };
-    
-    setMessages((prev) => [...prev, userMessage]);
-    
-    // ✅ SAUVEGARDE DANS CHATSTORE
-    addMessage('user', currentInput, {
-      sourceVignette: vignetteId || null,
-      sourcePhase: sourcePhase || currentPhase
-    });
-    
-    if (!messageText) setInput("");
-    setIsLoading(true);
-    scrollToBottom();
-
-    try {
-      const response = await ChatService.sendMessage(currentInput);
-      if (response.success) {
-        const meluneMessage = {
-          id: Date.now() + 1,
-          text: response.message,
-          isUser: false,
-          source: response.source,
-        };
-        setMessages((prev) => [...prev, meluneMessage]);
-        
-        // ✅ SAUVEGARDE RÉPONSE MELUNE
-        addMessage('melune', response.message, {
-          source: response.source,
-          responseToVignette: vignetteId || null
-        });
-        
-        scrollToBottom();
-      } else {
-        throw new Error("Erreur service ChatService");
-      }
-    } catch (error) {
-      console.error("🚨 Erreur handleSend:", error);
-      const errorMessage = {
-        id: Date.now() + 1,
-        text: "Désolée, je rencontre un petit souci technique. Peux-tu réessayer dans quelques instants ?",
-        isUser: false,
-        source: "error",
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-      scrollToBottom();
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   // ✅ INDICATEUR CONTEXTE VIGNETTE
@@ -338,7 +416,7 @@ export default function ChatScreen() {
               isUser={message.isUser}
               phase={phase}
               delay={index * 150}
-              onSave={!message.isUser ? () => handleSaveMessage(message.text) : undefined}
+              onSave={!message.isUser ? () => memoizedHandlers.handleSaveMessage(message.text) : undefined}
             />
           ))}
           
@@ -357,12 +435,12 @@ export default function ChatScreen() {
               multiline
               maxHeight={120}
               returnKeyType="send"
-              onSubmitEditing={() => handleSend()}
+              onSubmitEditing={() => memoizedHandlers.handleSend()}
               blurOnSubmit={false}
             />
             <TouchableOpacity
               style={[styles.sendButton, !input.trim() && styles.sendButtonDisabled]}
-              onPress={() => handleSend()}
+              onPress={() => memoizedHandlers.handleSend()}
               disabled={!input.trim() || isLoading}
             >
               <Feather

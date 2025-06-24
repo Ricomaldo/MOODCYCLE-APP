@@ -43,7 +43,7 @@ export default function DevNavigation() {
   const cycle = useCycle();
   const { profile, preferences, persona, melune, reset: resetUser, updateProfile, updatePreferences, updateMelune, setPersona } = useUserStore();
   const { devMode } = useAppStore();
-  const { messages, clearMessages, addUserMessage, addMeluneMessage, getMessagesCount } = useChatStore();
+  const { messages, clearMessages, getMessagesCount } = useChatStore();
   const { entries, reset: resetNotebook, addEntry, addQuickTracking, addPersonalNote } = useNotebookStore();
 
   // Services Intelligence (optionnels)
@@ -216,7 +216,8 @@ export default function DevNavigation() {
       const dayInCycle = phaseDays[targetPhase];
       const newDate = new Date();
       newDate.setDate(newDate.getDate() - dayInCycle);
-      cycle?.updateCycle({ lastPeriodDate: newDate.toISOString() });
+      const { updateCycle } = useUserStore.getState();
+      updateCycle({ lastPeriodDate: newDate.toISOString() });
       
       // 3. Generate contextual data
       await generateContextualData(personaId, targetPhase, maturityLevel);
@@ -261,8 +262,13 @@ export default function DevNavigation() {
     
     const messages = personaMessages[personaId];
     if (messages) {
-      addUserMessage(messages.user);
-      addMeluneMessage(messages.melune, { mood: 'supportive', persona: personaId });
+      const { addMessage } = useChatStore.getState();
+      addMessage(messages.user, 'user');
+      addMessage(messages.melune, 'assistant', { 
+        persona: personaId,
+        phase: phase,
+        context: 'simulation'
+      });
     }
     
     // Entrées carnet contextuelles
@@ -433,7 +439,8 @@ export default function DevNavigation() {
       const dayInCycle = phaseDays[targetPhase];
       const newDate = new Date();
       newDate.setDate(newDate.getDate() - dayInCycle);
-      cycle?.updateCycle({ lastPeriodDate: newDate.toISOString() });
+      const { updateCycle } = useUserStore.getState();
+      updateCycle({ lastPeriodDate: newDate.toISOString() });
       
       // Refresh vignettes pour nouvelle phase
       if (vignetteHook) {
@@ -450,9 +457,10 @@ export default function DevNavigation() {
   const generateSampleData = () => {
     try {
       // Chat samples contextuels
-      addMeluneMessage?.("Bonjour ! Comment te sens-tu dans ta phase actuelle ?", { mood: 'friendly' });
-      addUserMessage?.("Je me sens bien, j'observe mes ressentis plus finement maintenant");
-      addMeluneMessage?.("C'est merveilleux cette conscience cyclique qui grandit en toi ✨", { mood: 'supportive' });
+      const { addMessage } = useChatStore.getState();
+      addMessage("Bonjour ! Comment te sens-tu dans ta phase actuelle ?", 'assistant', { mood: 'friendly' });
+      addMessage("Je me sens bien, j'observe mes ressentis plus finement maintenant", 'user');
+      addMessage("C'est merveilleux cette conscience cyclique qui grandit en toi ✨", 'assistant', { mood: 'supportive' });
       
       // Notebook samples riches
       addEntry?.("Observation des patterns énergétiques selon ma phase", "personal", ["#observation", "#patterns"]);
@@ -522,7 +530,8 @@ export default function DevNavigation() {
           style: 'destructive',
           onPress: () => {
             try {
-              cycle?.updateCycle({
+              const { updateCycle } = useUserStore.getState();
+              updateCycle({
                 lastPeriodDate: null,
                 length: 28,
                 periodDuration: 5,
@@ -922,6 +931,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
     elevation: 8,
+    zIndex: 10000, // ✅ Fix z-index
+
   },
   
   closePerformance: {
