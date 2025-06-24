@@ -319,8 +319,10 @@ export default function QuickTrackingModal({ visible, onClose, defaultTags = [] 
               style={[styles.saveButton, { backgroundColor: getPhaseColor() }]} 
               onPress={handleSave}
             >
-              <Feather name="save" size={20} color="white" />
-              <BodyText style={styles.saveButtonText}>Sauvegarder</BodyText>
+              <Feather name="save" size={20} color={theme.getTextColorOnPhase(currentPhase)} />
+              <BodyText style={[styles.saveButtonText, { color: theme.getTextColorOnPhase(currentPhase) }]}>
+                Sauvegarder
+              </BodyText>
             </TouchableOpacity>
           </ScrollView>
         </Animated.View>

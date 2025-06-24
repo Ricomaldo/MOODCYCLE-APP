@@ -1,6 +1,24 @@
 // src/utils/trackingFormatters.js
 // Formatage élégant pour l'affichage des trackings
 
+// ✅ Constantes synchronisées avec QuickTrackingModal
+const MOOD_OPTIONS = [
+  { emoji: '😢', label: 'Maussade', value: 'sad' },
+  { emoji: '😐', label: 'Moyenne', value: 'neutral' },
+  { emoji: '😊', label: 'Bonne', value: 'good' },
+  { emoji: '😍', label: 'Très bonne', value: 'great' },
+  { emoji: '🤩', label: 'Excellente', value: 'amazing' },
+];
+
+const ENERGY_LEVELS = [
+  { level: 1, icon: '🔋', color: '#F44336' },
+  { level: 2, icon: '🔋', color: '#FF9800' },
+  { level: 3, icon: '⚡', color: '#FFC107' },
+  { level: 4, icon: '⚡', color: '#8BC34A' },
+  { level: 5, icon: '⚡', color: '#4CAF50' },
+];
+
+// Legacy pour compatibilité
 const MOOD_DISPLAY = {
     sad: { emoji: '😢', label: 'Maussade', color: '#9E9E9E' },
     neutral: { emoji: '😐', label: 'Moyenne', color: '#FF9800' },
@@ -10,13 +28,32 @@ const MOOD_DISPLAY = {
   };
   
   const ENERGY_DISPLAY = {
-    1: { icon: '🔋', label: 'Très faible', bars: '▪️▫️▫️▫️▫️' },
-    2: { icon: '🔋', label: 'Faible', bars: '▪️▪️▫️▫️▫️' },
-    3: { icon: '⚡', label: 'Modérée', bars: '▪️▪️▪️▫️▫️' },
-    4: { icon: '⚡', label: 'Bonne', bars: '▪️▪️▪️▪️▫️' },
-    5: { icon: '⚡', label: 'Excellente', bars: '▪️▪️▪️▪️▪️' }
+    1: { icon: '🔋', label: 'Très faible', bars: '●○○○○' },
+    2: { icon: '🔋', label: 'Faible', bars: '●●○○○' },
+    3: { icon: '⚡', label: 'Modérée', bars: '●●●○○' },
+    4: { icon: '⚡', label: 'Bonne', bars: '●●●●○' },
+    5: { icon: '⚡', label: 'Excellente', bars: '●●●●●' }
   };
   
+  // ✅ Symptômes synchronisés avec QuickTrackingModal
+  const SYMPTOMS_ALL = [
+    // Physiques
+    { id: 'crampes', label: 'Crampes', emoji: '🤕' },
+    { id: 'fatigue', label: 'Fatigue', emoji: '😴' },
+    { id: 'maux_tete', label: 'Maux de tête', emoji: '🤯' },
+    { id: 'ballonnements', label: 'Ballonnements', emoji: '🎈' },
+    { id: 'douleurs', label: 'Douleurs', emoji: '💢' },
+    { id: 'nausees', label: 'Nausées', emoji: '🤢' },
+    // Émotionnels
+    { id: 'sensibilite', label: 'Sensibilité', emoji: '🥺' },
+    { id: 'irritabilite', label: 'Irritabilité', emoji: '😤' },
+    { id: 'anxiete', label: 'Anxiété', emoji: '😰' },
+    { id: 'joie', label: 'Joie', emoji: '😊' },
+    { id: 'tristesse', label: 'Tristesse', emoji: '😢' },
+    { id: 'zen', label: 'Zen', emoji: '😌' },
+  ];
+
+  // Legacy pour compatibilité
   const SYMPTOM_EMOJIS = {
     crampes: '🤕',
     fatigue: '😴',
@@ -27,10 +64,15 @@ const MOOD_DISPLAY = {
     anxiete: '😰',
     insomnie: '🌙',
     douleurs: '💢',
-    nausees: '🤢'
+    nausees: '🤢',
+    // Ajout des symptômes émotionnels
+    joie: '😊',
+    tristesse: '😢',
+    zen: '😌'
   };
   
-  export const formatTrackingEmotional = (entry) => {
+  // ✅ NOUVEAU : Format résumé identique à QuickTrackingModal
+  export const formatTrackingModalStyle = (entry) => {
     if (entry.type !== "tracking") return entry.content;
     
     // Parser le contenu
@@ -42,25 +84,41 @@ const MOOD_DISPLAY = {
     const moodValue = moodMatch[1].trim();
     const energyValue = parseInt(energyMatch[1]);
     
-    const mood = MOOD_DISPLAY[moodValue] || { emoji: '😐', label: moodValue };
-    const energy = ENERGY_DISPLAY[energyValue] || { icon: '⚡', label: `${energyValue}/5` };
+    // Trouver les données exactes de la modale
+    const mood = MOOD_OPTIONS.find(o => o.value === moodValue);
+    const energy = ENERGY_LEVELS.find(l => l.level === energyValue);
+    
+    if (!mood || !energy) return entry.content;
     
     // Extraire les symptômes des tags
-    const symptoms = entry.tags
-      ?.filter(tag => tag.startsWith('#') && SYMPTOM_EMOJIS[tag.slice(1)])
+    const symptomTags = entry.tags?.filter(tag => tag.startsWith('#')) || [];
+    const symptoms = symptomTags
       .map(tag => {
-        const symptom = tag.slice(1);
-        return `${SYMPTOM_EMOJIS[symptom]} ${symptom}`;
-      }) || [];
+        const symptomId = tag.slice(1);
+        return SYMPTOMS_ALL.find(s => s.id === symptomId);
+      })
+      .filter(Boolean);
     
-    // Format élégant
-    let formatted = `${mood.emoji} ${mood.label} • ${energy.icon} ${energy.label}`;
+    // ✅ Format EXACT du résumé de la modale
+    let lines = [];
     
+    // Ligne humeur
+    lines.push(`${mood.emoji} ${mood.label}`);
+    
+    // Ligne énergie
+    lines.push(`${energy.icon} Énergie : ${energyValue}/5`);
+    
+    // Ligne symptômes si présents
     if (symptoms.length > 0) {
-      formatted += `\n${symptoms.join(' • ')}`;
+      lines.push(`${symptoms.length} symptôme${symptoms.length > 1 ? 's' : ''}`);
     }
     
-    return formatted;
+    return lines.join('\n');
+  };
+
+  // Legacy function - utilise maintenant le nouveau format
+  export const formatTrackingEmotional = (entry) => {
+    return formatTrackingModalStyle(entry);
   };
   
   export const formatTrackingCompact = (entry) => {

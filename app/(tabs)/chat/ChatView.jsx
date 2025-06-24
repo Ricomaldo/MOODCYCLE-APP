@@ -6,7 +6,7 @@
 // 🕒 Version : 5.0 - 2025-06-21 - NAVIGATION INTÉGRÉE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
-import { useState, useEffect, useRef, useCallback, memo } from "react";
+import { useState, useEffect, useRef, useCallback, memo, useMemo } from "react";
 import {
   View,
   StyleSheet,

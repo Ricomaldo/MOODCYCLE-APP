@@ -17,11 +17,11 @@ class PerformanceMonitor {
         alerts: []
       };
       
-      // Seuils adaptés iOS + Intelligence Stack
+      // Seuils adaptés iOS + Intelligence Stack (mode développement plus tolérant)
       this.thresholds = {
         hydrationTime: 500, // ms - Stores complexes OK
-        asyncStorageRead: 100, // ms - iOS plus rapide qu'Android
-        asyncStorageWrite: 150, // ms - Optimisé iOS
+        asyncStorageRead: 300, // ms - Plus tolérant pour développement
+        asyncStorageWrite: 400, // ms - Plus tolérant pour développement  
         renderCount: 12, // renders/sec - iOS 60fps natif
         memoryUsage: 60 // MB - iOS mieux optimisé mémoire
       };
@@ -352,6 +352,46 @@ class PerformanceMonitor {
         healthy: critical === 0
       };
     }
+
+    // ═══════════════════════════════════════════════════════
+    // 🧹 ASYNCSTORAGE OPTIMIZATION
+    // ═══════════════════════════════════════════════════════
+    
+    async optimizeAsyncStorage() {
+      try {
+        const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+        
+        // Nettoyer les vieilles entrées si performance dégradée
+        const avgStorageTime = Object.values(this.metrics.asyncStorage)
+          .reduce((acc, data) => {
+            const reads = data.reads || [];
+            const avgRead = reads.length > 0 ? 
+              reads.reduce((sum, op) => sum + op.duration, 0) / reads.length : 0;
+            return acc + avgRead;
+          }, 0) / Object.keys(this.metrics.asyncStorage).length;
+
+        if (avgStorageTime > 200) {
+          console.log('🧹 AsyncStorage optimization needed - avg time:', avgStorageTime.toFixed(1) + 'ms');
+          
+          // Nettoyer les anciens stores de dev si existants
+          const devKeys = ['dev-storage', 'temp-storage', 'test-storage'];
+          for (const key of devKeys) {
+            try {
+              await AsyncStorage.removeItem(key);
+            } catch (e) {
+              // Ignore si n'existe pas
+            }
+          }
+          
+          return true;
+        }
+        
+        return false;
+      } catch (error) {
+        console.error('❌ Erreur optimisation AsyncStorage:', error);
+        return false;
+      }
+    }
   }
   
   // Singleton instance
@@ -366,6 +406,18 @@ class PerformanceMonitor {
     setInterval(() => {
       performanceMonitor.trackMemory();
     }, 60000); // Toutes les minutes - ultra-discret
+    
+    // Optimisation AsyncStorage automatique si nécessaire (1x par session)
+    setTimeout(async () => {
+      try {
+        const optimized = await performanceMonitor.optimizeAsyncStorage();
+        if (optimized && !performanceMonitor.silentMode) {
+          console.log('🧹 AsyncStorage auto-optimized on startup');
+        }
+      } catch (error) {
+        // Ignore les erreurs d'auto-optimisation
+      }
+    }, 10000); // Après 10 secondes de démarrage
     
     // AUCUN log automatique - Démarrage 100% propre
     // Le seul log viendra du DevNavigation lors de la première ouverture

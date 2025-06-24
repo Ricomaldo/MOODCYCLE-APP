@@ -42,10 +42,6 @@ const usePhaseCalculations = (lastPeriodDate, cycleLength) => {
 
 // ✅ 2. Memoize calendar days generation
 const CalendarView = memo(function CalendarView({
-  currentPhase = 'menstrual',
-  cycleDay = 1,
-  cycleLength = 28,
-  lastPeriodDate,
   onPhasePress = () => {},
   onDatePress = () => {},
 }) {
@@ -61,12 +57,13 @@ const CalendarView = memo(function CalendarView({
     }
   });
 
-  // Hooks
+  // ✅ Hooks - utiliser les vraies données du store
+  const { currentPhase, currentDay, cycle } = useCycle();
   const { getEntriesGroupedByDate } = useNotebookStore();
   const notebookEntries = getEntriesGroupedByDate();
   
-  // ✅ Use memoized calculations
-  const phaseCalcs = usePhaseCalculations(lastPeriodDate, cycleLength);
+  // ✅ Use memoized calculations avec les vraies données
+  const phaseCalcs = usePhaseCalculations(cycle.lastPeriodDate, cycle.length);
 
   // ✅ Memoize static indicators function
   const getEntryIndicators = useMemo(() => (entries) => {
@@ -170,13 +167,21 @@ const CalendarView = memo(function CalendarView({
             }
           }}
         >
-          <Text style={styles.dayText}>{day}</Text>
+          <Text style={[
+            styles.dayText, 
+            dayStyle.phase && { color: theme.getTextColorOnPhase(dayStyle.phase) }
+          ]}>{day}</Text>
           {entryIndicators.length > 0 && (
             <View style={styles.entryIndicatorsContainer}>
               {entryIndicators.slice(0, 3).map((color, index) => (
                 <View key={index} style={[styles.entryIndicator, { backgroundColor: color }]} />
               ))}
-              {entryIndicators.length > 3 && <Text style={styles.moreIndicator}>+</Text>}
+              {entryIndicators.length > 3 && (
+                <Text style={[
+                  styles.moreIndicator,
+                  dayStyle.phase && { color: theme.getTextColorOnPhase(dayStyle.phase) }
+                ]}>+</Text>
+              )}
             </View>
           )}
         </TouchableOpacity>

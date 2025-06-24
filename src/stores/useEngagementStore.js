@@ -219,7 +219,14 @@ export const useEngagementStore = create(
       storage: createJSONStorage(() => AsyncStorage),
       // Optimisation : ne persist que les métriques, pas les fonctions
       partialize: (state) => ({
-        metrics: state.metrics,
+        metrics: {
+          // Persister seulement les métriques essentielles
+          daysUsed: state.metrics.daysUsed,
+          sessionsCount: state.metrics.sessionsCount,
+          lastActiveDate: state.metrics.lastActiveDate,
+          cyclesCompleted: state.metrics.cyclesCompleted,
+          autonomySignals: state.metrics.autonomySignals,
+        },
         maturity: state.maturity
       })
     }

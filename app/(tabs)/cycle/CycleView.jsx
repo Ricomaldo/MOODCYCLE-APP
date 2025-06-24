@@ -127,10 +127,6 @@ export default function CycleView() {
             /* Vue calendaire */
             <View style={styles.calendarContainer}>
               <CalendarView
-                currentPhase={currentPhase}
-                cycleDay={currentDay}
-                cycleLength={cycleLength || 28}
-                lastPeriodDate={lastPeriodDate}
                 onPhasePress={handlePhasePress}
                 onDatePress={handleDatePress}
               />

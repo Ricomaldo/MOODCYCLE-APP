@@ -244,7 +244,7 @@ export const useChatStore = create(
       name: "chat-storage",
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
-        messages: state.messages.slice(-50), // Persister seulement 50 derniers
+        messages: state.messages.slice(-20), // Réduire à 20 messages pour optimiser AsyncStorage
       }),
     }
   )

@@ -94,28 +94,28 @@ export const PHASE_METADATA = {
   menstrual: {
     name: 'Menstruelle',
     emoji: '🌙',
-    color: '#F44336', // Grenat Doux - sync avec theme.js
+    color: '#E53935', // Grenat Doux - sync avec theme.js - optimisé pour contraste
     energy: 'repos',
     description: 'Phase de régénération et introspection'
   },
   follicular: {
     name: 'Folliculaire', 
     emoji: '🌱',
-    color: '#FFC107', // Miel Doré - sync avec theme.js
+    color: '#F57C00', // Miel Doré - sync avec theme.js - optimisé pour contraste
     energy: 'croissance',
     description: 'Nouvelle énergie et créativité'
   },
   ovulatory: {
     name: 'Ovulatoire',
     emoji: '☀️', 
-    color: '#00BCD4', // Lagune Calme - sync avec theme.js
+    color: '#0097A7', // Lagune Calme - sync avec theme.js - optimisé pour contraste
     energy: 'pic',
     description: 'Énergie et confiance maximales'
   },
   luteal: {
     name: 'Lutéale',
     emoji: '🍂',
-    color: '#673AB7', // Lavande Mystique - sync avec theme.js
+    color: '#673AB7', // Lavande Mystique - sync avec theme.js - parfait tel quel
     energy: 'déclin',
     description: 'Préparation et ralentissement'
   }

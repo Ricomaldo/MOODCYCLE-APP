@@ -73,7 +73,7 @@ export default function ChatBubble({
       >
         <MeluneAvatar phase={phase} size="small" style="classic" />
         <View style={[styles.meluneBubble, { backgroundColor: theme.colors.phases[phase] }]}>
-          <BodyText style={[styles.meluneText, { color: theme.getTextColorOn(theme.colors.phases[phase]) }]}>
+          <BodyText style={[styles.meluneText, { color: theme.getTextColorOnPhase(phase) }]}>
             {message}
           </BodyText>
         </View>

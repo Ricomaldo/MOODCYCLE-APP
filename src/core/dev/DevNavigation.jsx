@@ -28,6 +28,7 @@ import PerformanceDashboard from './PerformanceDashboard';
 
 // Intelligence Services
 import VignettesService from '../../services/VignettesService';
+import performanceMonitor from '../monitoring/PerformanceMonitor';
 
 export default function DevNavigation() {
   const router = useRouter();
@@ -550,6 +551,35 @@ export default function DevNavigation() {
   };
 
   // ═══════════════════════════════════════════════════════
+  // 🧹 OPTIMISATION ASYNCSTORAGE
+  // ═══════════════════════════════════════════════════════
+  
+  const optimizeAsyncStorage = async () => {
+    try {
+      Alert.alert('🧹 Optimisation en cours...', 'Nettoyage AsyncStorage');
+      
+      const optimized = await performanceMonitor.optimizeAsyncStorage();
+      
+      if (optimized) {
+        Alert.alert(
+          '✅ Storage Optimisé', 
+          'AsyncStorage nettoyé !\nLes performances devraient s\'améliorer.',
+          [
+            { text: 'Vérifier', onPress: () => setActivePanel('performance') },
+            { text: 'OK' }
+          ]
+        );
+      } else {
+        Alert.alert('ℹ️ Storage OK', 'AsyncStorage déjà optimisé\nPerformances normales');
+      }
+      
+    } catch (error) {
+      console.error('❌ Erreur optimisation:', error);
+      Alert.alert('❌ Optimisation Failed', `Erreur: ${error.message}`);
+    }
+  };
+
+  // ═══════════════════════════════════════════════════════
   // 🎨 RENDU INTELLIGENCE LAB
   // ═══════════════════════════════════════════════════════
 
@@ -661,6 +691,10 @@ export default function DevNavigation() {
               <Text style={styles.actionButtonText}>📈 Performance</Text>
             </TouchableOpacity>
             
+            <TouchableOpacity style={[styles.actionButton, {backgroundColor: '#FF9500'}]} onPress={optimizeAsyncStorage}>
+              <Text style={styles.actionButtonText}>🧹 Optimiser Storage</Text>
+            </TouchableOpacity>
+            
             {/* 📊 INTELLIGENCE STATS */}
             <View style={styles.intelligenceStats}>
               <Text style={styles.statsText}>💬 {getMessagesCount?.()?.total || 0} messages</Text>
@@ -682,13 +716,15 @@ export default function DevNavigation() {
       {/* Performance Dashboard */}
       {activePanel === 'performance' && (
         <View style={styles.performanceModal}>
-          <TouchableOpacity 
-            style={styles.closePerformance}
-            onPress={() => setActivePanel(null)}
-          >
-            <Text style={styles.closeText}>✕</Text>
-          </TouchableOpacity>
-          <PerformanceDashboard />
+          <View style={styles.performanceContent}>
+            <TouchableOpacity 
+              style={styles.closePerformance}
+              onPress={() => setActivePanel(null)}
+            >
+              <Text style={styles.closeText}>✕</Text>
+            </TouchableOpacity>
+            <PerformanceDashboard />
+          </View>
         </View>
       )}
     </View>
@@ -705,6 +741,9 @@ const styles = StyleSheet.create({
     top: 0,
     right: 0,
     zIndex: 9999,
+    width: '100%',
+    height: '100%',
+    pointerEvents: 'box-none',
   },
   
   // Toggle Button - Intelligence Lab Style
@@ -919,10 +958,19 @@ const styles = StyleSheet.create({
   // Performance Modal
   performanceModal: {
     position: 'absolute',
-    top: 100,
-    right: 20,
-    left: 20,
-    bottom: 100,
+    top: 0,
+    right: 0,
+    left: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    zIndex: 20000,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  performanceContent: {
+    width: '90%',
+    height: '80%',
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 16,
@@ -931,8 +979,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
     elevation: 8,
-    zIndex: 10000, // ✅ Fix z-index
-
   },
   
   closePerformance: {
@@ -945,7 +991,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f44336',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 10,
+    zIndex: 21000,
   },
   
   closeText: {

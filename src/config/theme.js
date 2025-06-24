@@ -26,10 +26,10 @@ export const theme = {
     error: "#F44336", // Rouge erreur
     backgroundSecondary: "#F5F5F5", // Fond secondaire
     phases: {
-      menstrual: "#F44336", // Grenat Doux
-      follicular: "#FFC107", // Miel Doré
-      ovulatory: "#00BCD4", // Lagune Calme
-      luteal: "#673AB7", // Lavande Mystique
+      menstrual: "#E53935", // Grenat Doux - légèrement plus foncé pour meilleur contraste
+      follicular: "#F57C00", // Miel Doré - orange plus foncé au lieu du jaune pour meilleur contraste
+      ovulatory: "#0097A7", // Lagune Calme - cyan plus foncé pour meilleur contraste
+      luteal: "#673AB7", // Lavande Mystique - parfait tel quel
     },
   },
   fonts: {
@@ -153,6 +153,42 @@ theme.isDarkColor = (color) => {
 // Obtenir la couleur de texte optimale pour un fond donné
 theme.getTextColorOn = (backgroundColor) => {
   return theme.isLightColor(backgroundColor) ? theme.colors.text : "#FFFFFF";
+};
+
+// ✅ NOUVELLES FONCTIONS UTILITAIRES POUR LES PHASES
+// Obtenir la couleur de texte optimale pour une phase donnée
+theme.getTextColorOnPhase = (phase) => {
+  const phaseColor = theme.colors.phases[phase];
+  if (!phaseColor) return theme.colors.text;
+  
+  // Règles spécifiques basées sur les couleurs des phases
+  switch (phase) {
+    case 'menstrual':   // #F44336 (rouge) - couleur claire
+    case 'follicular':  // #FFC107 (jaune) - couleur claire
+    case 'ovulatory':   // #00BCD4 (cyan) - couleur claire
+      return theme.colors.text; // Texte noir
+    case 'luteal':      // #673AB7 (violet) - couleur foncée
+      return "#FFFFFF"; // Texte blanc
+    default:
+      return theme.getTextColorOn(phaseColor);
+  }
+};
+
+// Vérifier si une phase nécessite du texte blanc
+theme.phaseNeedsWhiteText = (phase) => {
+  return phase === 'luteal';
+};
+
+// Vérifier si une phase nécessite du texte noir
+theme.phaseNeedsBlackText = (phase) => {
+  return ['menstrual', 'follicular', 'ovulatory'].includes(phase);
+};
+
+// Obtenir le style de texte complet pour une phase
+theme.getPhaseTextStyle = (phase) => {
+  return {
+    color: theme.getTextColorOnPhase(phase)
+  };
 };
 
 // Créer des styles avec accès au thème

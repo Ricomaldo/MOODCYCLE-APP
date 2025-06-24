@@ -158,7 +158,7 @@ export default function SwipeableEntryIOS({
             </View>
 
             <BodyText style={styles.content} numberOfLines={3}>
-              {item.content || formatTrackingEmotional(item)}
+              {item.type === 'tracking' ? formatTrackingEmotional(item) : item.content}
             </BodyText>
 
             {entryTags.length > 0 && (

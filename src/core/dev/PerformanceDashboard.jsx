@@ -61,6 +61,31 @@ export default function PerformanceDashboard() {
     );
   };
 
+  const handleOptimizeStorage = async () => {
+    try {
+      const optimized = await performanceMonitor.optimizeAsyncStorage();
+      if (optimized) {
+        Alert.alert('✅ Storage Optimisé', 'AsyncStorage nettoyé avec succès');
+        refreshMetrics();
+      } else {
+        Alert.alert('ℹ️ Storage OK', 'Aucune optimisation nécessaire');
+      }
+    } catch (error) {
+      Alert.alert('❌ Erreur', `Optimisation échouée: ${error.message}`);
+    }
+  };
+
+  const getStorageHealthStatus = () => {
+    if (!metrics?.asyncStorage) return 'unknown';
+    
+    const avgTimes = Object.values(metrics.asyncStorage).map(data => data.avgReadTime);
+    const overallAvg = avgTimes.reduce((sum, time) => sum + time, 0) / avgTimes.length;
+    
+    if (overallAvg > 250) return 'critical';
+    if (overallAvg > 150) return 'warning';
+    return 'good';
+  };
+
   const getHealthColor = () => {
     if (criticalAlerts > 5) return '#F44336'; // Rouge
     if (criticalAlerts > 2) return '#FF9800'; // Orange
@@ -137,7 +162,16 @@ export default function PerformanceDashboard() {
 
           {/* AsyncStorage */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>💾 AsyncStorage</Text>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>💾 AsyncStorage</Text>
+              <Text style={[styles.healthBadge, {
+                backgroundColor: getStorageHealthStatus() === 'critical' ? '#F44336' :
+                                getStorageHealthStatus() === 'warning' ? '#FF9800' : '#4CAF50'
+              }]}>
+                {getStorageHealthStatus() === 'critical' ? '🔴 Critique' :
+                 getStorageHealthStatus() === 'warning' ? '🟡 Lent' : '🟢 OK'}
+              </Text>
+            </View>
             {Object.entries(metrics.asyncStorage).map(([key, data]) => (
               <View key={key} style={styles.storageItem}>
                 <Text style={styles.storageKey}>{key}</Text>
@@ -229,6 +263,13 @@ export default function PerformanceDashboard() {
         </TouchableOpacity>
         
         <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#FF9500' }]}
+          onPress={handleOptimizeStorage}
+        >
+          <Text style={styles.buttonText}>🧹 Optimiser</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
           style={[styles.button, { backgroundColor: '#f44336' }]}
           onPress={handleResetMetrics}
         >
@@ -274,6 +315,20 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
     color: '#333',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  healthBadge: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: 'white',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   metricsGrid: {
     flexDirection: 'row',
