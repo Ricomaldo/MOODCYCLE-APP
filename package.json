@@ -13,7 +13,20 @@
     "format": "prettier . --write"
   },
   "jest": {
-    "preset": "jest-expo"
+    "preset": "jest-expo",
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup.js"
+    ],
+    "transformIgnorePatterns": [
+      "node_modules/(?!(react-native|@react-native|expo|@expo|@react-navigation|react-native-safe-area-context|@react-native-async-storage|expo-modules-core)/)"
+    ],
+    "moduleNameMapper": {
+      "^@react-native-async-storage/async-storage$": "<rootDir>/__tests__/__mocks__/asyncStorage.js"
+    },
+    "transform": {
+      "^.+\\.(js|jsx|ts|tsx)$": "babel-jest"
+    },
+    "testEnvironment": "node"
   },
   "dependencies": {
     "@expo-google-fonts/quicksand": "^0.3.0",
@@ -54,7 +67,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
-    "@testing-library/react-hooks": "^8.0.1",
+    "@testing-library/jest-native": "^5.4.3",
     "@testing-library/react-native": "^13.2.0",
     "@types/react": "~19.0.10",
     "eslint": "^9.29.0",

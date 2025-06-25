@@ -21,6 +21,18 @@ class ContentManager {
     };
   }
 
+  /**
+   * Récupère les insights depuis l'API ou le cache
+   * @returns {Promise<Array>} Liste des insights
+   * 
+   * Cette méthode fait appel à getContent() avec :
+   * - type='insights' : pour gérer le cache des insights
+   * - endpoint='/api/admin/insights' : endpoint API 
+   * - localInsights : données de fallback si l'API échoue
+   * 
+   * Le cache des insights expire après 2h car ce sont des données
+   * qui changent régulièrement (voir constructor)
+   */
   async getInsights() {
     return this.getContent('insights', '/api/admin/insights', localInsights);
   }

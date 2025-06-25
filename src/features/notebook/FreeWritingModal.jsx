@@ -19,7 +19,7 @@ import {
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { MaterialIcons, Feather } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../hooks/useTheme';
 import { Heading2, BodyText, Caption } from '../../core/ui/Typography';
 import { useNotebookStore } from '../../stores/useNotebookStore';

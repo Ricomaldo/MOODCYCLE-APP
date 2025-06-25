@@ -350,12 +350,12 @@ export default function NotebookView() {
   const styles = getStyles(theme);
   
   // Phase filters avec accès au thème (déplacé dans le composant)
-  const PHASE_FILTERS = [
-    { id: 'menstrual', label: 'Mens.', color: theme.colors.phases.menstrual },
-    { id: 'follicular', label: 'Foll.', color: theme.colors.phases.follicular },
-    { id: 'ovulatory', label: 'Ovu.', color: theme.colors.phases.ovulatory },
-    { id: 'luteal', label: 'Lutéale', color: theme.colors.phases.luteal },
-  ];
+  const PHASE_FILTERS = useMemo(() => [
+    { id: 'menstrual', label: 'Mens.', color: theme?.colors?.phases?.menstrual || '#E53935' },
+    { id: 'follicular', label: 'Foll.', color: theme?.colors?.phases?.follicular || '#F57C00' },
+    { id: 'ovulatory', label: 'Ovu.', color: theme?.colors?.phases?.ovulatory || '#0097A7' },
+    { id: 'luteal', label: 'Lutéale', color: theme?.colors?.phases?.luteal || '#673AB7' },
+  ], [theme]);
   
   const {
     entries,

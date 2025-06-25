@@ -1,188 +1,183 @@
 // ═══════════════════════════════════════════════════════════
-// 🧠 PersonalizationEngine.js - Service Intelligence Contextuelle
+// 🧠 PersonalizationEngine.js - Version Propre & Compatible
 // ═══════════════════════════════════════════════════════════
 
-// Import des données de phases
-import phasesData from '../data/phases.json';
+import ContentManager from './ContentManager.js';
 
 // ───────────────────────────────────────────────────────────
-// 🎯 PROMPTS PERSONNALISÉS PAR CONTEXTE
+// 📊 DONNÉES STATIQUES OPTIMISÉES
 // ───────────────────────────────────────────────────────────
 
-const CONTEXTUAL_PROMPTS = {
-  // Par phase cyclique
-  phases: {
-    menstrual: {
-      emma: [
-        "Comment honorer ton besoin de repos aujourd'hui ? 🌙",
-        "Que ressent ton corps pendant tes règles ?",
-        "Comment transformer cette période en moment cocooning ?"
-      ],
-      laure: [
-        "Comment adapter ton planning pendant tes règles ?",
-        "Quelle organisation optimise ton énergie actuelle ?",
-        "Comment maintenir ta productivité en respectant ton corps ?"
-      ],
-      clara: [
-        "Comment transformer l'énergie de tes règles en force ?",
-        "Quel superpouvoir découvres-tu pendant cette phase ?",
-        "Comment utiliser cette introspection pour grandir ?"
-      ]
-    },
-    
-    follicular: {
-      emma: [
-        "Comment canaliser cette énergie qui remonte ? ✨",
-        "Quels nouveaux projets t'inspirent ?",
-        "Comment explorer cette renaissance énergétique ?"
-      ],
-      laure: [
-        "Comment structurer tes objectifs pour cette phase ?",
-        "Quels projets lancer avec cette énergie montante ?",
-        "Comment planifier pour maximiser cette phase ?"
-      ],
-      clara: [
-        "Comment exploiter au max cette phase de création ?",
-        "Quel potentiel débloquer avec cette énergie ?",
-        "Comment transformer cette énergie en résultats ?"
-      ]
-    }
-  },
-  
-  // Par préférence dominante
-  preferences: {
-    symptoms: [
-      "Comment soulager naturellement tes symptômes ?",
-      "Quels signaux ton corps t'envoie-t-il ?",
-      "Comment interpréter ces sensations physiques ?"
+const PERSONA_PROMPTS = {
+  menstrual: {
+    emma: [
+      "Comment honorer ton besoin de repos aujourd'hui ? 🌙",
+      "Que ressent ton corps pendant tes règles ?",
+      "Comment transformer cette période en moment cocooning ?"
     ],
-    moods: [
-      "Comment accueillir tes émotions cycliques ?",
-      "Que révèlent tes changements d'humeur ?",
-      "Comment transformer l'intensité émotionnelle ?"
+    laure: [
+      "Comment adapter ton planning pendant tes règles ?",
+      "Quelle organisation optimise ton énergie actuelle ?",
+      "Comment maintenir ta productivité en respectant ton corps ?"
     ],
-    phyto: [
-      "Quelles plantes peuvent t'accompagner ?",
-      "Comment la nature peut-elle soutenir ton cycle ?",
-      "Quels remèdes naturels explorer ?"
+    clara: [
+      "Comment transformer l'énergie de tes règles en force ?",
+      "Quel superpouvoir découvres-tu pendant cette phase ?",
+      "Comment utiliser cette introspection pour grandir ?"
+    ],
+    sylvie: [
+      "Comment m'offrir la douceur dont j'ai besoin ?",
+      "Qu'est-ce que mon corps me demande vraiment ?",
+      "Comment honorer cette sagesse que mon corps partage ?"
+    ],
+    christine: [
+      "Comment transformer ce moment en rituel de ressourcement ?",
+      "Quelle sagesse mon corps me transmet-il dans cette phase ?",
+      "Comment honorer cette période sacrée ?"
     ]
   },
-  
-  // Par moment de la journée
-  timeContext: {
-    morning: [
-      "Comment commencer cette journée cyclique ?",
-      "Quelle intention poser ce matin ?",
-      "Comment ton corps se réveille-t-il ?"
+  follicular: {
+    emma: [
+      "Comment canaliser cette énergie qui remonte ? ✨",
+      "Quels nouveaux projets t'inspirent ?",
+      "Comment explorer cette renaissance énergétique ?"
     ],
-    evening: [
-      "Comment ta journée a-t-elle honoré ton cycle ?",
-      "Que retenir de tes ressentis aujourd'hui ?",
-      "Comment préparer un repos réparateur ?"
+    laure: [
+      "Comment structurer tes objectifs pour cette phase énergétique ?",
+      "Quelles initiatives vais-je lancer avec cette énergie montante ?",
+      "Comment planifier pour maximiser cette phase ?"
+    ],
+    clara: [
+      "Comment exploiter au max cette phase de création ?",
+      "Comment transformer cette énergie en résultats concrets ?",
+      "Quel potentiel débloquer avec cette énergie ?"
+    ],
+    sylvie: [
+      "Comment cultiver mes aspirations avec douceur ?",
+      "Quelles graines vais-je planter pour mon épanouissement ?",
+      "Comment nourrir mes rêves naissants ?"
+    ],
+    christine: [
+      "Comment harmoniser cette renaissance avec ma sagesse ?",
+      "Quelle vision sage émerge de cette énergie créatrice ?",
+      "Comment éveiller mon potentiel avec grâce ?"
+    ]
+  },
+  ovulatory: {
+    emma: [
+      "Comment utiliser cette énergie communicative ? 🌟",
+      "Qu'est-ce que j'ai envie d'exprimer au monde ?",
+      "Comment rayonner pleinement aujourd'hui ?"
+    ],
+    laure: [
+      "Comment optimiser mes interactions et présentations ?",
+      "Comment maximiser mon impact relationnel aujourd'hui ?",
+      "Comment communiquer efficacement avec cette énergie ?"
+    ],
+    clara: [
+      "Comment exploiter cette confiance ultime ?",
+      "Comment transformer cette énergie en leadership ?",
+      "Comment dominer mes interactions aujourd'hui ?"
+    ],
+    sylvie: [
+      "Comment rayonner ma bienveillance naturelle ?",
+      "Comment utiliser cette énergie pour nourrir mes relations ?",
+      "Comment partager ma lumière avec le monde ?"
+    ],
+    christine: [
+      "Comment partager mes apprentissages avec grâce ?",
+      "Quelle sagesse puis-je offrir avec cette énergie rayonnante ?",
+      "Comment transmettre ma sagesse aujourd'hui ?"
+    ]
+  },
+  luteal: {
+    emma: [
+      "Comment mieux respecter mes limites ? 🍂",
+      "Qu'est-ce que j'ai appris sur moi ce cycle ?",
+      "Comment écouter mon intuition profonde ?"
+    ],
+    laure: [
+      "Comment structurer mes priorités avec cette énergie focus ?",
+      "Quelles améliorations vais-je implémenter ?",
+      "Comment organiser et finaliser mes projets ?"
+    ],
+    clara: [
+      "Comment transformer cette intensité en superpouvoir ?",
+      "Quels insights révèlent mes patterns lutéaux ?",
+      "Comment maîtriser les défis de cette phase ?"
+    ],
+    sylvie: [
+      "Comment accueillir cette sensibilité avec tendresse ?",
+      "Quelle sagesse ce cycle m'a-t-il apportée ?",
+      "Comment câliner mes émotions intenses ?"
+    ],
+    christine: [
+      "Comment honorer cette phase de transformation intérieure ?",
+      "Quelles vérités profondes émergent de cette introspection ?",
+      "Comment savourer cette profondeur cyclique ?"
     ]
   }
 };
 
-// ───────────────────────────────────────────────────────────
-// 🎨 VARIATIONS TONALES PAR PERSONA
-// ───────────────────────────────────────────────────────────
-
-const TONAL_VARIATIONS = {
-  emma: {
-    prefix: ["Hey ! ", "Coucou ✨ ", "Alors, "],
-    style: "exploratrice",
-    emojis: true,
-    enthusiasm: "high"
-  },
-  laure: {
-    prefix: ["", "Concentrons-nous : ", "Analysons : "],
-    style: "professionnelle",
-    emojis: false,
-    enthusiasm: "measured"
-  },
-  clara: {
-    prefix: ["Tu sais quoi ? ", "Écoute ! ", "Ready ? "],
-    style: "énergique",
-    emojis: true,
-    enthusiasm: "maximum"
-  },
-  sylvie: {
-    prefix: ["Prenons le temps... ", "En douceur, ", "Ensemble, "],
-    style: "bienveillante",
-    emojis: false,
-    enthusiasm: "gentle"
-  },
-  christine: {
-    prefix: ["Avec sagesse, ", "Réfléchissons : ", ""],
-    style: "sage",
-    emojis: false,
-    enthusiasm: "serene"
-  }
+const PREFERENCE_PROMPTS = {
+  symptoms: [
+    "Comment soulager naturellement tes symptômes ?",
+    "Quels signaux ton corps t'envoie-t-il ?",
+    "Comment interpréter ces sensations physiques ?"
+  ],
+  moods: [
+    "Comment accueillir tes émotions cycliques ?",
+    "Que révèlent tes changements d'humeur ?",
+    "Comment transformer l'intensité émotionnelle ?"
+  ],
+  phyto: [
+    "Quelles plantes peuvent t'accompagner ?",
+    "Comment la nature peut-elle soutenir ton cycle ?",
+    "Quels remèdes naturels explorer ?"
+  ],
+  phases: [
+    "Comment optimiser cette phase cyclique ?",
+    "Quelle énergie cette phase t'offre-t-elle ?",
+    "Comment honorer cette période unique ?"
+  ],
+  rituals: [
+    "Quels rituels honorer aujourd'hui ?",
+    "Comment créer un moment sacré pour toi ?",
+    "Comment transformer cette journée en rituel ?"
+  ]
 };
 
-// ───────────────────────────────────────────────────────────
-// 🎯 FONCTION CONTEXTUELLE AUTONOME
-// ───────────────────────────────────────────────────────────
-
-/**
- * Récupère un message contextuel personnalisé selon la phase, persona, journey et préférences
- * @param {string} phase - Phase cyclique (menstrual, follicular, ovulatory, luteal)
- * @param {string} persona - Persona utilisateur (emma, laure, clara, sylvie, christine)
- * @param {string} journey - Parcours utilisateur (body_disconnect, emotional_control, hiding_nature)
- * @param {Array} preferences - Tableau des préférences ordonnées par priorité
- * @returns {string} Message contextuel personnalisé
- */
-export const getContextualMessage = (phase, persona, journey, preferences) => {
-  // Récupération des données de phase
-  const phaseData = phasesData[phase];
-  if (!phaseData) {
-    return "Explorons ensemble cette période de ton cycle.";
-  }
-
-  // Vérification de l'existence des enrichissements contextuels
-  const enrichments = phaseData.contextualEnrichments;
-  if (!enrichments || enrichments.length === 0) {
-    return phaseData.description;
-  }
-
-  // Scoring de chaque enrichissement
-  let bestEnrichment = null;
-  let bestScore = -1;
-
-  for (const enrichment of enrichments) {
-    let score = 0;
-
-    // +100 si targetPersona match
-    if (enrichment.targetPersona === persona) {
-      score += 100;
+const ACTION_CONFIG = {
+  chat: {
+    icons: { menstrual: '💭', follicular: '🌱', ovulatory: '💬', luteal: '🔮' },
+    titles: {
+      emma: 'Explore tes ressentis',
+      laure: 'Optimise ta communication', 
+      clara: 'Exprime ta puissance',
+      sylvie: 'Partage tes émotions',
+      christine: 'Transmets ta sagesse'
     }
-
-    // +50 si targetJourney match
-    if (enrichment.targetJourney === journey) {
-      score += 50;
+  },
+  notebook: {
+    icons: { menstrual: '✍️', follicular: '💡', ovulatory: '🎨', luteal: '📚' },
+    titles: {
+      emma: 'Note tes découvertes',
+      laure: 'Structure tes observations',
+      clara: 'Capture tes insights', 
+      sylvie: 'Recueille tes ressentis',
+      christine: 'Consigne ta sagesse'
     }
-
-    // +25 si targetPreferences[0] dans preferences
-    if (preferences && preferences.length > 0 && 
-        enrichment.targetPreferences && enrichment.targetPreferences.length > 0) {
-      if (preferences.includes(enrichment.targetPreferences[0])) {
-        score += 25;
-      }
-    }
-
-    // Mise à jour du meilleur enrichissement
-    if (score > bestScore) {
-      bestScore = score;
-      bestEnrichment = enrichment;
+  },
+  phase_detail: {
+    icons: { menstrual: '🌙', follicular: '🌸', ovulatory: '☀️', luteal: '🍂' },
+    titles: {
+      emma: 'Découvre cette phase',
+      laure: 'Maîtrise cette phase',
+      clara: 'Conquiers cette phase',
+      sylvie: 'Comprends cette phase', 
+      christine: 'Explore le mystère'
     }
   }
-
-  // Retour du meilleur message ou fallback
-  if (bestEnrichment && bestEnrichment.contextualText) {
-    return bestEnrichment.contextualText;
-  }
-
-  return phaseData.description;
 };
 
 // ───────────────────────────────────────────────────────────
@@ -190,292 +185,210 @@ export const getContextualMessage = (phase, persona, journey, preferences) => {
 // ───────────────────────────────────────────────────────────
 
 export const createPersonalizationEngine = (intelligenceData, preferences, currentPhase, persona) => {
-
+  
   // ──────────────────────────────────────────────────────
   // 🧠 GÉNÉRATION PROMPTS PERSONNALISÉS
   // ──────────────────────────────────────────────────────
   
-  const generatePersonalizedPrompts = (phase, persona, preferences, learningData) => {
+  const generatePersonalizedPrompts = () => {
     const prompts = [];
     
-    // 1. Prompts basés sur phase + persona
-    const phasePrompts = CONTEXTUAL_PROMPTS.phases[phase]?.[persona] || [];
-    prompts.push(...phasePrompts);
+    // 1. Prompts persona + phase (priorité haute)
+    const phasePrompts = PERSONA_PROMPTS[currentPhase]?.[persona] || [];
+    prompts.push(...phasePrompts.slice(0, 2));
     
-    // 2. Prompts basés sur préférence dominante
+    // 2. Prompts préférence dominante
     const dominantPref = getDominantPreference(preferences);
-    const prefPrompts = CONTEXTUAL_PROMPTS.preferences[dominantPref] || [];
-    prompts.push(...prefPrompts.slice(0, 2));
-    
-    // 3. Prompts basés sur apprentissage
-    if (learningData.confidence > 30) {
-      const learnedPrompts = learningData.successfulPrompts || [];
-      prompts.push(...learnedPrompts.slice(-2));
+    if (dominantPref && PREFERENCE_PROMPTS[dominantPref]) {
+      prompts.push(PREFERENCE_PROMPTS[dominantPref][0]);
     }
     
-    // 4. Prompts contextuels temporels
-    const timeContext = getTimeContext();
-    const timePrompts = CONTEXTUAL_PROMPTS.timeContext[timeContext] || [];
-    prompts.push(...timePrompts.slice(0, 1));
+    // 3. Prompts apprentissage (si confidence > 30)
+    if (intelligenceData.learning.confidence > 30) {
+      const learnedPrompts = getLearnedPrompts();
+      prompts.push(...learnedPrompts.slice(0, 1));
+    }
     
-    return applyTonalVariations(prompts, persona).slice(0, 5);
+    // 4. Fallback si pas assez de prompts
+    if (prompts.length < 3) {
+      prompts.push("Comment te sens-tu en ce moment ?");
+    }
+    
+    return prompts.slice(0, 3);
   };
 
   // ──────────────────────────────────────────────────────
-  // 🎭 APPLICATION VARIATIONS TONALES
+  // 🎯 GÉNÉRATION ACTIONS CONTEXTUELLES  
   // ──────────────────────────────────────────────────────
   
-  const applyTonalVariations = (prompts, persona) => {
-    const variations = TONAL_VARIATIONS[persona] || TONAL_VARIATIONS.emma;
-    
-    return prompts.map(prompt => {
-      const prefix = variations.prefix[Math.floor(Math.random() * variations.prefix.length)];
-      let adaptedPrompt = prefix + prompt;
-      
-      // Adaptations stylistiques
-      switch (variations.style) {
-        case 'professionnelle':
-          adaptedPrompt = adaptedPrompt.replace(/tu/g, 'vous').replace(/ton/g, 'votre');
-          break;
-        case 'énergique':
-          adaptedPrompt = adaptedPrompt.replace(/Comment/g, 'Comment est-ce que tu peux');
-          if (variations.emojis) adaptedPrompt += ' 🚀';
-          break;
-        case 'sage':
-          adaptedPrompt = adaptedPrompt.replace(/Comment/g, 'De quelle manière');
-          break;
-      }
-      
-      return adaptedPrompt;
-    });
-  };
-
-  // ──────────────────────────────────────────────────────
-  // 🎯 SUGGESTIONS ACTIONS CONTEXTUELLES
-  // ──────────────────────────────────────────────────────
-  
-  const generateContextualActions = (phase, persona, preferences, intelligence) => {
+  const generateContextualActions = () => {
     const actions = [];
     
-    // Action 1: Toujours chat personnalisé
-    const personalizedPrompts = generatePersonalizedPrompts(phase, persona, preferences, intelligence);
+    // Action 1: Chat toujours disponible
+    const chatPrompts = generatePersonalizedPrompts();
     actions.push({
       type: 'chat',
       priority: 'high',
-      title: getActionTitle('chat', persona, phase),
-      prompt: personalizedPrompts[0],
-      confidence: Math.min(intelligence.confidence + 30, 100)
+      title: ACTION_CONFIG.chat.titles[persona],
+      label: ACTION_CONFIG.chat.titles[persona], // Pour useSmartSuggestions
+      prompt: chatPrompts[0],
+      icon: ACTION_CONFIG.chat.icons[currentPhase],
+      confidence: Math.min(intelligenceData.learning.confidence + 30, 100)
     });
     
-    // Action 2: Notebook si patterns émotionnels
-    if (preferences.moods >= 4 || intelligence.phasePatterns?.[phase]?.mood) {
+    // Action 2: Notebook si préférence émotions/tracking
+    if (shouldShowNotebook()) {
       actions.push({
         type: 'notebook',
         priority: 'medium',
-        title: getActionTitle('notebook', persona, phase),
-        prompt: getNotebookPrompt(phase, persona, intelligence),
-        confidence: intelligence.confidence
+        title: ACTION_CONFIG.notebook.titles[persona],
+        label: ACTION_CONFIG.notebook.titles[persona],
+        prompt: getNotebookPrompt(),
+        icon: ACTION_CONFIG.notebook.icons[currentPhase],
+        confidence: intelligenceData.learning.confidence
       });
     }
     
-    // Action 3: Exploration phase si nouvelles données
-    if (intelligence.confidence < 50 || !intelligence.phasePatterns?.[phase]?.topics.length) {
+    // Action 3: Phase detail si confidence faible ou nouvelle phase
+    if (shouldShowPhaseDetail()) {
       actions.push({
-        type: 'phase_detail',
+        type: 'phase_detail', 
         priority: 'low',
-        title: getActionTitle('phase_detail', persona, phase),
-        confidence: 100 - intelligence.confidence
+        title: ACTION_CONFIG.phase_detail.titles[persona],
+        label: ACTION_CONFIG.phase_detail.titles[persona],
+        prompt: null,
+        icon: ACTION_CONFIG.phase_detail.icons[currentPhase],
+        confidence: 100 - intelligenceData.learning.confidence
       });
     }
     
-    // Action 4: Suggestions ML si confiance élevée
-    if (intelligence.confidence > 70) {
-      const mlSuggestion = generateMLSuggestion(phase, persona, intelligence);
-      if (mlSuggestion) actions.push(mlSuggestion);
-    }
-    
-    return actions.slice(0, 3); // Max 3 actions
+    return actions.slice(0, 3);
   };
 
   // ──────────────────────────────────────────────────────
-  // 🤖 SUGGESTION ML AVANCÉE
+  // 🛠️ FONCTIONS UTILITAIRES
   // ──────────────────────────────────────────────────────
   
-  const generateMLSuggestion = (phase, persona, intelligence) => {
-    const phaseData = intelligence.phasePatterns[phase];
-    const timeOptimal = intelligence.timePatterns?.favoriteHours || [];
+  const getDominantPreference = (prefs) => {
+    if (!prefs || typeof prefs !== 'object') return null;
     
-    // Pattern temporel + phase + mood
-    if (phaseData?.mood && timeOptimal.length > 2) {
-      const currentHour = new Date().getHours();
-      const isOptimalTime = timeOptimal.some(h => Math.abs(h - currentHour) <= 1);
-      
-      if (isOptimalTime && phaseData.mood === 'positive') {
-        return {
-          type: 'ml_optimized',
-          priority: 'high',
-          title: `Moment optimal détecté pour ${phase}`,
-          prompt: `Tu es dans ton timing parfait pour ${phase}. Que veux-tu accomplir ?`,
-          confidence: intelligence.confidence,
-          mlGenerated: true
-        };
-      }
-    }
-    
-    // Pattern topics récurrents
-    if (phaseData?.topics?.length >= 3) {
-      const topTopic = phaseData.topics[phaseData.topics.length - 1];
-      return {
-        type: 'ml_pattern',
-        priority: 'medium',
-        title: `Retrouver ${topTopic}`,
-        prompt: `Tu explores souvent ${topTopic} pendant ${phase}. Continuer ?`,
-        confidence: intelligence.confidence,
-        mlGenerated: true
-      };
-    }
-    
-    return null;
-  };
-
-  // ──────────────────────────────────────────────────────
-  // 🛠️ UTILITAIRES
-  // ──────────────────────────────────────────────────────
-  
-  const getDominantPreference = (preferences) => {
-    return Object.entries(preferences)
-      .sort(([,a], [,b]) => b - a)[0][0];
+    return Object.entries(prefs)
+      .filter(([_, value]) => value >= 4)
+      .sort(([_, a], [__, b]) => b - a)[0]?.[0] || null;
   };
   
-  const getTimeContext = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'morning';
-    if (hour < 18) return 'afternoon';
-    return 'evening';
+  const getLearnedPrompts = () => {
+    // Simulé - à connecter avec vraie intelligence
+    return ["Comment développer ce qui a marché hier ?"];
   };
   
-  const getActionTitle = (actionType, persona, phase) => {
-    const titles = {
-      chat: {
-        emma: `Explore ${phase}`,
-        laure: `Optimise ${phase}`,
-        clara: `Domine ${phase}`,
-        sylvie: `Nourris ${phase}`,
-        christine: `Honore ${phase}`
-      },
-      notebook: {
-        emma: "Note tes découvertes",
-        laure: "Structure tes observations",
-        clara: "Capture tes insights",
-        sylvie: "Recueille tes ressentis",
-        christine: "Consigne ta sagesse"
-      },
-      phase_detail: {
-        emma: "Découvre cette phase",
-        laure: "Maîtrise cette phase", 
-        clara: "Conquiers cette phase",
-        sylvie: "Comprends cette phase",
-        christine: "Explore le mystère"
-      }
-    };
-    
-    return titles[actionType]?.[persona] || `Action ${actionType}`;
+  const shouldShowNotebook = () => {
+    return preferences.moods >= 4 || 
+           preferences.symptoms >= 4 ||
+           currentPhase === 'luteal';
   };
   
-  const getNotebookPrompt = (phase, persona, intelligence) => {
-    const phasePrompts = {
+  const shouldShowPhaseDetail = () => {
+    return intelligenceData.learning.confidence < 50 ||
+           !intelligenceData.learning.phasePatterns?.[currentPhase];
+  };
+  
+  const getNotebookPrompt = () => {
+    const prompts = {
       menstrual: "Qu'est-ce que mon corps me demande vraiment ?",
-      follicular: "Quels projets m'inspirent en ce moment ?",
+      follicular: "Quels projets m'inspirent en ce moment ?", 
       ovulatory: "Comment puis-je rayonner davantage ?",
       luteal: "Que m'enseigne cette sensibilité ?"
     };
     
-    // Personnalisation selon apprentissage
-    if (intelligence.phasePatterns?.[phase]?.mood === 'challenging') {
-      return `Comment transformer les défis de ${phase} en force ?`;
-    }
-    
-    return phasePrompts[phase] || "Que ressens-tu maintenant ?";
+    return prompts[currentPhase] || "Que ressens-tu maintenant ?";
   };
 
   // ──────────────────────────────────────────────────────
-  // 🎯 API PUBLIQUE PRINCIPALE
+  // 📊 MÉTADONNÉES PERSONNALISATION
   // ──────────────────────────────────────────────────────
   
-  const createPersonalizedExperience = () => {
-    // Utilisation des données passées en paramètres avec fallback sécurisé
-    const learningData = intelligenceData.getPersonalizedPrompts ? 
-      intelligenceData.getPersonalizedPrompts(currentPhase, persona) : 
-      { successfulPrompts: [] };
+  const getPersonalizationMetadata = () => {
+    const learning = intelligenceData.learning;
     
     return {
-      // Prompts conversation personnalisés
-      personalizedPrompts: generatePersonalizedPrompts(
-        currentPhase, persona, preferences, learningData
-      ),
-      
-      // Actions contextuelles recommandées
-      contextualActions: generateContextualActions(
-        currentPhase, persona, preferences, intelligenceData.learning
-      ),
-      
-      // Métadonnées personnalisation
-      personalization: {
-        confidence: intelligenceData.learning.confidence,
-        dataPoints: {
-          timePatterns: intelligenceData.learning.timePatterns?.favoriteHours?.length || 0,
-          phaseData: intelligenceData.learning.phasePatterns?.[currentPhase]?.topics?.length || 0,
-          conversationHistory: learningData?.successfulPrompts?.length || 0
-        },
-        recommendations: getPersonalizationRecommendations(intelligenceData.learning)
-      }
+      confidence: learning.confidence,
+      dataPoints: {
+        timePatterns: learning.timePatterns?.favoriteHours?.length || 0,
+        phaseData: Object.keys(learning.phasePatterns || {}).length,
+        conversationHistory: learning.conversationCount || 0
+      },
+      recommendations: getRecommendations(learning.confidence)
     };
   };
   
-  const getPersonalizationRecommendations = (learning) => {
+  const getRecommendations = (confidence) => {
     const recommendations = [];
     
-    if (learning.confidence < 30) {
-      recommendations.push({
-        type: 'data_collection',
-        message: 'Continue tes interactions pour une personnalisation optimale',
-        action: 'engage_more'
-      });
+    if (confidence < 30) {
+      recommendations.push("Continue tes interactions pour une personnalisation optimale");
     }
     
-    if (learning.suggestionEffectiveness.chat.rate < 0.3 && learning.suggestionEffectiveness.chat.shown > 5) {
-      recommendations.push({
-        type: 'prompt_optimization',
-        message: 'Ajustons tes suggestions pour mieux correspondre',
-        action: 'refine_prompts'
-      });
+    if (confidence > 70) {
+      recommendations.push("Tes données permettent des suggestions très personnalisées !");
     }
     
     return recommendations;
   };
 
   // ──────────────────────────────────────────────────────
-  // 🔄 API PUBLIQUE - MÉTHODES EXPOSÉES
+  // 🎯 API PUBLIQUE
   // ──────────────────────────────────────────────────────
   
+  const createPersonalizedExperience = () => {
+    return {
+      personalizedPrompts: generatePersonalizedPrompts(),
+      contextualActions: generateContextualActions(),
+      personalization: getPersonalizationMetadata()
+    };
+  };
+
   return {
-    generatePersonalizedPrompts,
-    applyTonalVariations,
-    generateContextualActions,
-    generateMLSuggestion,
-    getDominantPreference,
-    getTimeContext,
-    getActionTitle,
-    getNotebookPrompt,
     createPersonalizedExperience,
-    getPersonalizationRecommendations,
-    getContextualMessage
+    generatePersonalizedPrompts,
+    generateContextualActions,
+    getPersonalizationMetadata
   };
 };
 
 // ───────────────────────────────────────────────────────────
-// 🎯 EXPORT CLEAN - API MODERNE UNIQUEMENT
+// 🎯 FONCTION CONTEXTUELLE AUTONOME (pour l'API backend)
 // ───────────────────────────────────────────────────────────
 
-// Export uniquement de la factory function moderne
-// Plus de classe wrapper obsolète - API unifiée et performante
+export const getContextualMessage = async (phase, persona, journey, preferences) => {
+  try {
+    const phasesData = await ContentManager.getPhases();
+    const phaseData = phasesData[phase];
+    
+    if (!phaseData?.contextualEnrichments?.length) {
+      return phaseData?.description || "Explorons ensemble cette période de ton cycle.";
+    }
+
+    // Scoring enrichissements
+    let bestMatch = null;
+    let bestScore = -1;
+
+    for (const enrichment of phaseData.contextualEnrichments) {
+      let score = 0;
+      
+      if (enrichment.targetPersona === persona) score += 100;
+      if (enrichment.targetJourney === journey) score += 50;
+      if (preferences?.includes?.(enrichment.targetPreferences?.[0])) score += 25;
+      
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = enrichment;
+      }
+    }
+
+    return bestMatch?.contextualText || phaseData.description;
+  } catch (error) {
+    console.warn('🚨 getContextualMessage error:', error);
+    return "Explorons ensemble cette période de ton cycle.";
+  }
+};

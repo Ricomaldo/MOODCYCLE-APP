@@ -1,9 +1,8 @@
-//
 // ─────────────────────────────────────────────────────────
-// 📄 Fichier : app/(tabs)/chat/ChatView.jsx - MODIFIÉ NAVIGATION
+// 📄 Fichier : app/(tabs)/chat/ChatView.jsx - SMART SUGGESTIONS INTÉGRÉES
 // 🧩 Type : Composant Écran (Screen)
-// 📚 Description : Chat moderne iPhone 2025 avec Melune + Navigation vignettes
-// 🕒 Version : 5.0 - 2025-06-21 - NAVIGATION INTÉGRÉE
+// 📚 Description : Chat avec suggestions intelligentes persona/phase
+// 🕒 Version : 6.0 - 2025-06-25 - INTELLIGENCE CONNECTÉE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
 import { useState, useEffect, useRef, useCallback, memo, useMemo } from "react";
@@ -37,7 +36,62 @@ import { usePersona } from '../../../src/hooks/usePersona';
 import { useRenderMonitoring } from '../../../src/hooks/usePerformanceMonitoring';
 import ParametresButton from '../../../src/features/shared/ParametresButton';
 
+// ✅ NOUVEAU : Import Smart Suggestions
+import { useSmartSuggestions, useSmartChatSuggestions } from '../../../src/hooks/useSmartSuggestions';
+
 const HEADER_HEIGHT = 60;
+
+// ✅ NOUVEAU : Composant Suggestions Rapides
+function QuickSuggestions({ suggestions, onSuggestionPress, theme, visible }) {
+  if (!visible || !suggestions?.length) return null;
+
+  return (
+    <View style={[styles.suggestionsContainer, { backgroundColor: theme.colors.backgroundSecondary }]}>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.suggestionsContent}
+      >
+        {suggestions.slice(0, 3).map((suggestion, index) => (
+          <TouchableOpacity
+            key={index}
+            style={[styles.suggestionChip, { borderColor: theme.colors.primary }]}
+            onPress={() => onSuggestionPress(suggestion)}
+          >
+            <BodyText style={[styles.suggestionText, { color: theme.colors.primary }]}>
+              {typeof suggestion === 'string' ? suggestion : suggestion.prompt || suggestion.title}
+            </BodyText>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
+// ✅ NOUVEAU : Composant Actions Contextuelles
+function ContextualActions({ actions, onActionPress, theme, visible }) {
+  if (!visible || !actions?.length) return null;
+
+  const primaryAction = actions[0];
+  
+  return (
+    <View style={[styles.actionsContainer, { backgroundColor: theme.colors.background }]}>
+      <TouchableOpacity
+        style={[styles.primaryAction, { backgroundColor: theme.colors.primary + '15' }]}
+        onPress={() => onActionPress(primaryAction)}
+      >
+        <Feather 
+          name={primaryAction.icon || 'star'} 
+          size={20} 
+          color={theme.colors.primary} 
+        />
+        <BodyText style={[styles.actionText, { color: theme.colors.primary }]}>
+          {primaryAction.title}
+        </BodyText>
+      </TouchableOpacity>
+    </View>
+  );
+}
 
 // Composant TypingIndicator avec animations iOS-like - FIXED MEMORY LEAK
 function TypingIndicator({ theme }) {
@@ -92,7 +146,6 @@ function TypingIndicator({ theme }) {
 
     animateSequence();
     
-    // ✅ CLEANUP - Fix memory leak
     return () => {
       if (animationRef.current) {
         animationRef.current.stop();
@@ -143,32 +196,7 @@ const MemoizedTypingIndicator = memo(TypingIndicator);
 
 export default function ChatScreen() {
   
-  // 📊 Monitoring de performance - DÉSACTIVÉ TEMPORAIREMENT
-  // const renderCount = useRenderMonitoring('ChatScreen');
-  
   const { theme } = useTheme();
-  
-  // ✅ MEMORY MONITORING HELPER
-  useEffect(() => {
-    if (__DEV__) {
-      const startMemory = performance.memory?.usedJSHeapSize || 0;
-      console.log('💾 Chat Memory Start:', (startMemory / 1024 / 1024).toFixed(2), 'MB');
-      
-      const interval = setInterval(() => {
-        const currentMemory = performance.memory?.usedJSHeapSize || 0;
-        const delta = ((currentMemory - startMemory) / 1024 / 1024).toFixed(2);
-        console.log(`💾 Chat Memory: +${delta}MB depuis démarrage`);
-      }, 60000); // Log toutes les minutes
-      
-      return () => {
-        clearInterval(interval);
-        const endMemory = performance.memory?.usedJSHeapSize || 0;
-        const totalDelta = ((endMemory - startMemory) / 1024 / 1024).toFixed(2);
-        console.log('💾 Chat Memory End: Delta total =', totalDelta, 'MB');
-      };
-    }
-  }, []);
-  
   const insets = useSafeAreaInsets();
   const scrollViewRef = useRef(null);
   
@@ -197,101 +225,193 @@ export default function ChatScreen() {
   const { currentPhase, phaseInfo } = useCycle();
   const { addEntry } = useNotebookStore();
   
-  // ✅ STORES INITIALIZATION
+  // ✅ NOUVEAU : Smart Suggestions Integration
+  const smartSuggestions = useSmartSuggestions();
+  const chatSuggestions = useSmartChatSuggestions();
+  
+  // ✅ Intelligence Context
+  const intelligenceContext = useMemo(() => ({
+    phase: currentPhase,
+    persona: profile.persona?.assigned || 'emma',
+    hasData: smartSuggestions.hasPersonalizedData,
+    confidence: smartSuggestions.confidence,
+    suggestions: smartSuggestions.actions,
+    prompts: chatSuggestions.prompts
+  }), [currentPhase, profile.persona, smartSuggestions, chatSuggestions]);
+  
+  // ✅ LOG Intelligence Status
   useEffect(() => {
-    // Stores initialization check
-  }, [profile, melune, addMessage, currentPhase, addEntry]);
+    if (__DEV__) {
+      console.log('🧠 Intelligence Context Updated:', {
+        phase: intelligenceContext.phase,
+        persona: intelligenceContext.persona,
+        confidence: intelligenceContext.confidence,
+        suggestionsCount: intelligenceContext.suggestions.length,
+        promptsCount: intelligenceContext.prompts.length,
+        hasPersonalizedData: intelligenceContext.hasData
+      });
+    }
+  }, [intelligenceContext]);
   
   const phase = currentPhase;
   const prenom = profile.prenom;
 
-  // ✅ HANDLERS MEMOIZÉS
+  // ✅ HANDLERS MEMOIZÉS avec Smart Suggestions
   const memoizedHandlers = useMemo(() => ({
-         handleSend: async (messageText = null) => {
-       const currentInput = messageText || input.trim();
-       if (!currentInput || isLoading || !refs.mounted.current) {
-         return;
-       }
+    handleSend: async (messageText = null) => {
+      const currentInput = messageText || input.trim();
+      if (!currentInput || isLoading || !refs.mounted.current) {
+        return;
+      }
 
-       const userMessage = { id: Date.now(), text: currentInput, isUser: true };
-       setMessages((prev) => [...prev, userMessage]);
-       
-       // Contexte conversation (3-4 derniers messages)
-       const conversationContext = messages.slice(-3).map(m => ({
-         role: m.isUser ? 'user' : 'assistant',
-         content: m.text
-       }));
-       
-       addMessage('user', currentInput, {
-         sourceVignette: vignetteId || null,
-         sourcePhase: sourcePhase || currentPhase,
-         conversationContext // ✅ Contexte pour l'API
-       });
-       
-       if (!messageText) setInput("");
-       setIsLoading(true);
-       memoizedHandlers.scrollToBottom();
+      const userMessage = { id: Date.now(), text: currentInput, isUser: true };
+      setMessages((prev) => [...prev, userMessage]);
+      
+      // ✅ Contexte conversation enrichi (3-4 derniers messages)
+      const conversationContext = messages.slice(-3).map(m => ({
+        role: m.isUser ? 'user' : 'assistant',
+        content: m.text
+      }));
+      
+      // ✅ TRACKING SMART SUGGESTIONS
+      const suggestionUsed = messageText && intelligenceContext.prompts.some(p => 
+        (typeof p === 'string' ? p : p.prompt || p.title) === messageText
+      );
+      if (suggestionUsed) {
+        smartSuggestions.trackClicked('chat', { prompt: messageText });
+        console.log('📊 Smart suggestion used:', messageText);
+      }
+      
+      addMessage('user', currentInput, {
+        sourceVignette: vignetteId || null,
+        sourcePhase: sourcePhase || currentPhase,
+        conversationContext,
+        // ✅ NOUVEAU : Intelligence metadata
+        intelligence: {
+          suggestionUsed: !!messageText,
+          confidence: intelligenceContext.confidence,
+          persona: intelligenceContext.persona
+        }
+      });
+      
+      if (!messageText) setInput("");
+      setIsLoading(true);
+      memoizedHandlers.scrollToBottom();
 
-       try {
-         // ✅ TEST REAL API CALL WITH DETAILED ERROR HANDLING
-         let response;
-         try {
-           response = await ChatService.sendMessage(currentInput, conversationContext);
-         } catch (apiError) {
-           console.error('🚨 ChatService.sendMessage specific error:', {
-             message: apiError.message,
-             stack: apiError.stack,
-             name: apiError.name,
-             cause: apiError.cause
-           });
-           
-           // Fallback en cas d'erreur API
-           response = {
-             success: true,
-             message: "Désolée, j'ai un petit souci technique. Peux-tu réessayer dans un moment ?",
-             source: "fallback_error"
-           };
-         }
-         
-         if (response.success && refs.mounted.current) {
-           const meluneMessage = {
-             id: Date.now() + 1,
-             text: response.message,
-             isUser: false,
-             source: response.source,
-           };
-           
-           setMessages((prev) => [...prev, meluneMessage]);
-           
-           addMessage('melune', response.message, {
-             source: response.source,
-             responseToVignette: vignetteId || null
-           });
-           
-           memoizedHandlers.scrollToBottom();
-         }
-       } catch (error) {
-         console.error("🚨 handleSend Error Details:", {
-           message: error.message,
-           stack: error.stack,
-           name: error.name
-         });
-         
-         if (refs.mounted.current) {
-           const errorMessage = {
-             id: Date.now() + 1,
-             text: "Désolée, je rencontre un petit souci technique. Peux-tu réessayer ?",
-             isUser: false,
-             source: "error",
-           };
-           setMessages((prev) => [...prev, errorMessage]);
-         }
-       } finally {
-         if (refs.mounted.current) {
-           setIsLoading(false);
-         }
-       }
-     },
+      try {
+        let response;
+        try {
+          response = await ChatService.sendMessage(currentInput, conversationContext);
+        } catch (apiError) {
+          console.error('🚨 ChatService.sendMessage specific error:', {
+            message: apiError.message,
+            stack: apiError.stack,
+            name: apiError.name,
+            cause: apiError.cause
+          });
+          
+          response = {
+            success: true,
+            message: "Désolée, j'ai un petit souci technique. Peux-tu réessayer dans un moment ?",
+            source: "fallback_error"
+          };
+        }
+        
+        if (response.success && refs.mounted.current) {
+          const meluneMessage = {
+            id: Date.now() + 1,
+            text: response.message,
+            isUser: false,
+            source: response.source,
+          };
+          
+          setMessages((prev) => [...prev, meluneMessage]);
+          
+          addMessage('melune', response.message, {
+            source: response.source,
+            responseToVignette: vignetteId || null,
+            // ✅ NOUVEAU : Response intelligence
+            intelligence: {
+              persona: response.context || intelligenceContext.persona,
+              confidence: intelligenceContext.confidence
+            }
+          });
+          
+          memoizedHandlers.scrollToBottom();
+        }
+      } catch (error) {
+        console.error("🚨 handleSend Error Details:", {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        });
+        
+        if (refs.mounted.current) {
+          const errorMessage = {
+            id: Date.now() + 1,
+            text: "Désolée, je rencontre un petit souci technique. Peux-tu réessayer ?",
+            isUser: false,
+            source: "error",
+          };
+          setMessages((prev) => [...prev, errorMessage]);
+        }
+      } finally {
+        if (refs.mounted.current) {
+          setIsLoading(false);
+        }
+      }
+    },
+    
+    // ✅ NOUVEAU : Handler suggestions rapides
+    handleSuggestionPress: (suggestion) => {
+      const prompt = typeof suggestion === 'string' ? suggestion : suggestion.prompt || suggestion.title;
+      
+      // Tracking et feedback haptique
+      if (Platform.OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      
+      // Insérer dans input ou envoyer directement
+      setInput(prompt);
+      
+      // Auto-send après délai court
+      setTimeout(() => {
+        if (refs.mounted.current) {
+          memoizedHandlers.handleSend(prompt);
+        }
+      }, 500);
+    },
+    
+    // ✅ NOUVEAU : Handler actions contextuelles
+    handleActionPress: (action) => {
+      if (Platform.OS === 'ios') {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      }
+      
+      smartSuggestions.trackClicked(action.type, action);
+      
+      switch (action.type) {
+        case 'chat':
+          memoizedHandlers.handleSuggestionPress(action);
+          break;
+        case 'notebook':
+          // Navigation vers notebook avec contexte
+          navigation.navigate('notebook', { 
+            context: 'smart_suggestion',
+            action: action.title
+          });
+          break;
+        case 'phase_detail':
+          // Navigation vers cycle avec phase
+          navigation.navigate('cycle', { 
+            context: 'smart_suggestion',
+            phase: currentPhase
+          });
+          break;
+        default:
+          console.log('🎯 Action non gérée:', action.type);
+      }
+    },
     
     handleSaveMessage: (message) => {
       if (Platform.OS === 'ios') {
@@ -337,12 +457,12 @@ export default function ChatScreen() {
         }, 100);
       }
     }
-  }), [input, isLoading, messages, initialMessage, autoSend, vignetteId, sourcePhase, currentPhase, addMessage, addEntry]);
+  }), [input, isLoading, messages, initialMessage, autoSend, vignetteId, sourcePhase, currentPhase, addMessage, addEntry, intelligenceContext, smartSuggestions]);
 
   // ✅ FOCUS EFFECT OPTIMISÉ
   useFocusEffect(
     useCallback(() => {
-      refs.mounted.current = true; // ✅ FIX: Réactiver le composant au focus
+      refs.mounted.current = true;
       setShowMessages(true);
       
       if (initialMessage && refs.processedVignette.current !== vignetteId) {
@@ -357,23 +477,19 @@ export default function ChatScreen() {
           clearTimeout(refs.timer.current);
           refs.timer.current = null;
         }
-        // ✅ NE PAS désactiver mounted ici - seulement au unmount complet
       };
     }, [initialMessage, vignetteId, memoizedHandlers])
   );
-
 
   // ✅ CLEANUP COMPLET AU UNMOUNT
   useEffect(() => {
     return () => {
       refs.mounted.current = false;
       
-      // Cleanup tous les timers
       if (refs.timer.current) {
         clearTimeout(refs.timer.current);
       }
       
-      // Cleanup toutes les refs
       Object.keys(refs).forEach(key => {
         if (refs[key] && refs[key].current) {
           refs[key].current = null;
@@ -384,30 +500,57 @@ export default function ChatScreen() {
   
   // ✅ LIMITATION MESSAGES EN MÉMOIRE
   useEffect(() => {
-    // Garder seulement 50 derniers messages en mémoire locale
     if (messages.length > 50) {
       setMessages(prev => prev.slice(-50));
     }
   }, [messages.length]);
 
-  // Message d'accueil personnalisé
-  const generateWelcomeMessage = () => {
+  // ✅ Message d'accueil personnalisé avec intelligence
+  const generateWelcomeMessage = useCallback(() => {
     const tone = melune?.tone || "friendly";
-    if (prenom) {
-      if (tone === "friendly") {
-        return `Salut ${prenom} ! C'est Melune 💜 Comment te sens-tu aujourd'hui ?`;
-      } else if (tone === "inspiring") {
-        return `Bonjour ${prenom}! Je suis Melune, ta guide vers ton épanouissement cyclique ✨ Quelle énergie veux-tu cultiver aujourd'hui ?`;
-      } else {
-        return `Bonjour ${prenom}! Je suis Melune, votre accompagnatrice spécialisée. Comment puis-je vous aider aujourd'hui ?`;
+    const persona = intelligenceContext.persona;
+    const hasData = intelligenceContext.hasData;
+    
+    // Messages personnalisés selon persona et données
+    const personalizedWelcome = {
+      emma: {
+        withData: `Salut ${prenom} ! 💜 Je sens que tu évolues bien avec ton cycle ! Comment te sens-tu aujourd'hui ?`,
+        newUser: `Salut ${prenom} ! C'est Melune 💜 Prête à explorer ton cycle ensemble ?`
+      },
+      clara: {
+        withData: `Bonjour ma belle ${prenom} ! ✨ Quelle belle énergie tu développes ! Raconte-moi ta journée...`,
+        newUser: `Bonjour ${prenom} ! Je suis Melune, ta guide lumineuse ✨ Quelle énergie veux-tu cultiver ?`
+      },
+      laure: {
+        withData: `Bonjour ${prenom}. Je note vos progrès dans la compréhension de votre cycle. Comment puis-je vous accompagner ?`,
+        newUser: `Bonjour ${prenom}. Je suis Melune, votre accompagnatrice spécialisée. Comment analysons-nous votre journée ?`
+      },
+      sylvie: {
+        withData: `Bonjour ma chère ${prenom}. Je sens que tu apprends à honorer tes rythmes. Comment te portes-tu ?`,
+        newUser: `Bonjour ${prenom}. Je suis Melune, ici pour t'accompagner avec bienveillance dans ton parcours.`
+      },
+      christine: {
+        withData: `Bonjour ${prenom}. J'observe que vous développez une meilleure compréhension. Comment allez-vous ?`,
+        newUser: `Bonjour ${prenom}. Je suis Melune, votre guide spécialisée. Comment puis-je vous être utile ?`
       }
-    }
-    return "Bonjour! Je suis Melune, ta guide cyclique. Comment puis-je t'aider aujourd'hui?";
-  };
+    };
+    
+    const personaMessages = personalizedWelcome[persona] || personalizedWelcome.emma;
+    return hasData ? personaMessages.withData : personaMessages.newUser;
+  }, [prenom, melune?.tone, intelligenceContext]);
 
+  // ✅ INITIALISATION MESSAGES avec Welcome personnalisé
   useEffect(() => {
-    setMessages([{ id: 1, text: generateWelcomeMessage(), isUser: false }]);
-  }, [prenom, melune?.tone]);
+    setMessages([{ 
+      id: 1, 
+      text: generateWelcomeMessage(), 
+      isUser: false,
+      intelligence: {
+        persona: intelligenceContext.persona,
+        personalized: intelligenceContext.hasData
+      }
+    }]);
+  }, [generateWelcomeMessage, intelligenceContext.persona]);
 
   useEffect(() => {
     const initializeChatService = async () => {
@@ -441,6 +584,14 @@ export default function ChatScreen() {
     );
   };
 
+  // ✅ Détermine si afficher suggestions
+  const shouldShowSuggestions = useMemo(() => {
+    return !isLoading && 
+           input.length === 0 && 
+           messages.length <= 3 && 
+           (intelligenceContext.prompts.length > 0 || intelligenceContext.suggestions.length > 0);
+  }, [isLoading, input.length, messages.length, intelligenceContext]);
+
   const styles = getStyles(theme);
 
   return (
@@ -452,11 +603,26 @@ export default function ChatScreen() {
           color={theme.colors.primary}
           style={styles.parametresButton}
         />
-        <Heading style={styles.title}>Melune</Heading>
+        <Heading style={styles.title}>
+          Melune {intelligenceContext.hasData && '🧠'}
+        </Heading>
+        {__DEV__ && (
+          <BodyText style={styles.debugInfo}>
+            {intelligenceContext.persona} • {intelligenceContext.confidence}%
+          </BodyText>
+        )}
       </View>
 
       {/* ✅ CONTEXTE VIGNETTE */}
       {renderVignetteContext()}
+
+      {/* ✅ NOUVEAU : Actions contextuelles en haut */}
+      <ContextualActions
+        actions={smartSuggestions.immediate}
+        onActionPress={memoizedHandlers.handleActionPress}
+        theme={theme}
+        visible={shouldShowSuggestions && smartSuggestions.immediate.length > 0}
+      />
 
       <KeyboardAvoidingView
         style={styles.flexContainer}
@@ -494,6 +660,14 @@ export default function ChatScreen() {
           {isLoading && <MemoizedTypingIndicator theme={theme} />}
         </ScrollView>
 
+        {/* ✅ NOUVEAU : Suggestions rapides au-dessus de l'input */}
+        <QuickSuggestions
+          suggestions={intelligenceContext.prompts}
+          onSuggestionPress={memoizedHandlers.handleSuggestionPress}
+          theme={theme}
+          visible={shouldShowSuggestions}
+        />
+
         {/* Input collé à la tabbar */}
         <View style={[styles.inputWrapper, { paddingBottom: insets.bottom > 0 ? insets.bottom : 8 }]}>
           <View style={styles.inputContainer}>
@@ -501,7 +675,7 @@ export default function ChatScreen() {
               style={styles.input}
               value={input}
               onChangeText={setInput}
-              placeholder="Message..."
+              placeholder={`Message... (${intelligenceContext.persona})`}
               placeholderTextColor="#8E8E93"
               multiline
               maxHeight={120}
@@ -517,7 +691,7 @@ export default function ChatScreen() {
               <Feather
                 name="send"
                 size={24}
-                color={!input.trim() || isLoading ? "#C7C7CC" : "#007AFF"}
+                color={!input.trim() || isLoading ? "#C7C7CC" : theme.colors.primary}
               />
             </TouchableOpacity>
           </View>
@@ -552,7 +726,12 @@ const getStyles = (theme) => StyleSheet.create({
     fontSize: 20,
     fontWeight: '600',
   },
-  // ✅ NOUVEAU - Contexte vignette
+  debugInfo: {
+    position: 'absolute',
+    right: theme.spacing.l,
+    fontSize: 12,
+    color: theme.colors.textLight,
+  },
   vignetteContext: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -568,6 +747,45 @@ const getStyles = (theme) => StyleSheet.create({
     fontSize: 14,
     color: theme.colors.primary,
     fontWeight: '500',
+  },
+  // ✅ NOUVEAU : Styles Smart Suggestions
+  suggestionsContainer: {
+    paddingVertical: 8,
+    marginHorizontal: 16,
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  suggestionsContent: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  suggestionChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    backgroundColor: 'transparent',
+  },
+  suggestionText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  // ✅ NOUVEAU : Styles Actions Contextuelles
+  actionsContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  primaryAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 8,
+  },
+  actionText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
   messagesContent: {
     paddingHorizontal: 16,

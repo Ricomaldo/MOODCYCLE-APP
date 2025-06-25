@@ -31,24 +31,6 @@ const ENERGY_LEVELS = [
   { level: 5, icon: '⚡', color: '#4CAF50' },
 ];
 
-const SYMPTOMS_PHYSICAL = [
-  { id: 'crampes', label: 'Crampes', emoji: '🤕', color: theme.colors.phases.menstrual },
-  { id: 'fatigue', label: 'Fatigue', emoji: '😴', color: theme.colors.phases.luteal },
-  { id: 'maux_tete', label: 'Maux de tête', emoji: '🤯', color: theme.colors.warning },
-  { id: 'ballonnements', label: 'Ballonnements', emoji: '🎈', color: theme.colors.phases.follicular },
-  { id: 'douleurs', label: 'Douleurs', emoji: '💢', color: theme.colors.error },
-  { id: 'nausees', label: 'Nausées', emoji: '🤢', color: theme.colors.phases.ovulatory },
-];
-
-const SYMPTOMS_EMOTIONAL = [
-  { id: 'sensibilite', label: 'Sensibilité', emoji: '🥺', color: theme.colors.phases.ovulatory },
-  { id: 'irritabilite', label: 'Irritabilité', emoji: '😤', color: theme.colors.phases.luteal },
-  { id: 'anxiete', label: 'Anxiété', emoji: '😰', color: theme.colors.warning },
-  { id: 'joie', label: 'Joie', emoji: '😊', color: theme.colors.success },
-  { id: 'tristesse', label: 'Tristesse', emoji: '😢', color: theme.colors.phases.menstrual },
-  { id: 'zen', label: 'Zen', emoji: '😌', color: theme.colors.phases.follicular },
-];
-
 export default function QuickTrackingModal({ visible, onClose, defaultTags = [] }) {
   const { theme } = useTheme();
   const styles = getStyles(theme);
@@ -59,6 +41,25 @@ export default function QuickTrackingModal({ visible, onClose, defaultTags = [] 
   const [mood, setMood] = useState('neutral');
   const [symptoms, setSymptoms] = useState([]);
   const [activeTab, setActiveTab] = useState('physical'); // 'physical' ou 'emotional'
+  
+  // Déplacer les constantes de symptômes à l'intérieur du composant pour accéder au thème
+  const SYMPTOMS_PHYSICAL = [
+    { id: 'crampes', label: 'Crampes', emoji: '🤕', color: theme.colors.phases.menstrual },
+    { id: 'fatigue', label: 'Fatigue', emoji: '😴', color: theme.colors.phases.luteal },
+    { id: 'maux_tete', label: 'Maux de tête', emoji: '🤯', color: theme.colors.warning },
+    { id: 'ballonnements', label: 'Ballonnements', emoji: '🎈', color: theme.colors.phases.follicular },
+    { id: 'douleurs', label: 'Douleurs', emoji: '💢', color: theme.colors.error },
+    { id: 'nausees', label: 'Nausées', emoji: '🤢', color: theme.colors.phases.ovulatory },
+  ];
+
+  const SYMPTOMS_EMOTIONAL = [
+    { id: 'sensibilite', label: 'Sensibilité', emoji: '🥺', color: theme.colors.phases.ovulatory },
+    { id: 'irritabilite', label: 'Irritabilité', emoji: '😤', color: theme.colors.phases.luteal },
+    { id: 'anxiete', label: 'Anxiété', emoji: '😰', color: theme.colors.warning },
+    { id: 'joie', label: 'Joie', emoji: '😊', color: theme.colors.success },
+    { id: 'tristesse', label: 'Tristesse', emoji: '😢', color: theme.colors.phases.menstrual },
+    { id: 'zen', label: 'Zen', emoji: '😌', color: theme.colors.phases.follicular },
+  ];
   
   // Animations
   const fadeAnim = new Animated.Value(0);

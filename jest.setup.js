@@ -2,6 +2,9 @@
 import '@testing-library/jest-native/extend-expect';
 import { jest } from '@jest/globals';
 
+// Mock @expo/vector-icons
+jest.mock('@expo/vector-icons', () => require('./__tests__/__mocks__/expoVectorIcons'));
+
 // Mock expo-router
 jest.mock('expo-router', () => ({
   useFocusEffect: jest.fn((callback) => {
@@ -41,20 +44,6 @@ jest.mock('react-native-safe-area-context', () => ({
     left: 0,
     right: 0,
   }),
-}));
-
-// Mock AsyncStorage
-jest.mock('@react-native-async-storage/async-storage', () => ({
-  default: {
-    setItem: jest.fn(() => Promise.resolve()),
-    getItem: jest.fn(() => Promise.resolve(null)),
-    removeItem: jest.fn(() => Promise.resolve()),
-    clear: jest.fn(() => Promise.resolve()),
-    getAllKeys: jest.fn(() => Promise.resolve([])),
-    multiGet: jest.fn(() => Promise.resolve([])),
-    multiSet: jest.fn(() => Promise.resolve()),
-    multiRemove: jest.fn(() => Promise.resolve()),
-  }
 }));
 
 // Mock performance.memory pour les tests
