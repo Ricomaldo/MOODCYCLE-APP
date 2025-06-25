@@ -17,7 +17,7 @@ import { BodyText, Caption } from '../../core/ui/Typography';
 import { useUserStore } from '../../stores/useUserStore';
 import { useEngagementStore } from '../../stores/useEngagementStore';
 import { useCycle } from '../../hooks/useCycle';
-import { useVignettes } from '../../hooks/useVignettes';
+
 
 export default function VignetteCard({ 
   vignette, 
@@ -43,7 +43,6 @@ export default function VignetteCard({
   const userStore = useUserStore();
   const engagementStore = useEngagementStore();
   const cycleData = useCycle();
-  const { getNavigationParams } = useVignettes();
 
   const persona = userStore?.persona || {};
   const currentPhase = cycleData?.currentPhase || 'menstrual';
@@ -108,10 +107,7 @@ export default function VignetteCard({
 
   const handleNavigation = async () => {
     try {
-      // ✅ CORRECTION: Utiliser hook moderne
-      const navigationParams = getNavigationParams(vignette);
-
-      console.log('🧭 Navigation params:', navigationParams);
+      console.log('🧭 Navigation pour action:', vignette.action);
 
       switch (vignette.action) {
         case 'chat':
@@ -276,14 +272,16 @@ export default function VignetteCard({
       <View style={styles.content}>
         {/* Icône vignette */}
         <View style={[styles.iconContainer, getIconStyle()]}>
-          <BodyText style={styles.iconEmoji}>{vignette.icon}</BodyText>
+          <BodyText style={styles.iconEmoji}>
+            {vignette.icon || '✨'}
+          </BodyText>
         </View>
         
         {/* Texte */}
         <View style={styles.textContainer}>
-          <BodyText style={styles.title} numberOfLines={2}>
-            {vignette.title}
-          </BodyText>
+          <View style={styles.cardHeader}>
+            <BodyText style={styles.title}>{vignette.title}</BodyText>
+          </View>
           
           {vignette.prompt && (
             <Caption style={styles.prompt} numberOfLines={2}>
@@ -331,7 +329,12 @@ export function VignettesContainer({
   showCategories = false,
   style 
 }) {
-  const visibleVignettes = vignettes.slice(0, maxVisible);
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+  
+  // ✅ Protection contre vignettes undefined ou non-array
+  const safeVignettes = Array.isArray(vignettes) ? vignettes : [];
+  const visibleVignettes = safeVignettes.slice(0, maxVisible);
   
   if (visibleVignettes.length === 0) {
     return null;
@@ -495,5 +498,11 @@ const getStyles = (theme) => StyleSheet.create({
     color: 'white',
     fontSize: 10,
     fontWeight: 'bold',
+  },
+  
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
   },
 });

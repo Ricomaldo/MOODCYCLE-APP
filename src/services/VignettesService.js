@@ -1,5 +1,6 @@
 // services/VignettesService.js - CORRIGÉ
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import ContentManager from './ContentManager';
 
 const CACHE_KEY = 'vignettes_cache_v1';
 const CACHE_DURATION = 24 * 60 * 60 * 1000;
@@ -49,10 +50,24 @@ class VignettesService {
         return cachedVignettes;
       }
 
-      return this.getFallbackVignettes(phase, persona);
+      // ✅ UTILISER CONTENTMANAGER AU LIEU DE FALLBACKS HARCODÉS
+      const allVignettes = await ContentManager.getVignettes();
+      
+      if (allVignettes && allVignettes[phase]) {
+        const phaseVignettes = allVignettes[phase][persona];
+        
+        if (phaseVignettes && Array.isArray(phaseVignettes)) {
+          // Cache les vignettes trouvées
+          this.cache.set(cacheKey, phaseVignettes);
+          await this.cacheVignettes(cacheKey, phaseVignettes);
+          return phaseVignettes;
+        }
+      }
+
+      return this.getEmergencyVignettes(phase);
     } catch (error) {
       console.error('🚨 Erreur getVignettes:', error);
-      return this.getFallbackVignettes(phase, persona);
+      return this.getEmergencyVignettes(phase);
     }
   }
 
@@ -121,6 +136,18 @@ class VignettesService {
       return cacheData.vignettes;
     } catch (error) {
       return null;
+    }
+  }
+
+  async cacheVignettes(key, vignettes) {
+    try {
+      const cacheData = {
+        vignettes,
+        timestamp: Date.now()
+      };
+      await AsyncStorage.setItem(`${CACHE_KEY}_${key}`, JSON.stringify(cacheData));
+    } catch (error) {
+      console.error('🚨 Erreur cacheVignettes:', error);
     }
   }
 

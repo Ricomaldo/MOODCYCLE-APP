@@ -25,6 +25,7 @@ import { Heading2, BodyText, Caption } from '../../core/ui/Typography';
 import { useNotebookStore } from '../../stores/useNotebookStore';
 import { useUserStore } from '../../stores/useUserStore';
 import { useCycle } from '../../hooks/useCycle';
+import { PhaseIndicator } from '../../utils/formatters';
 
 const PROMPTS_BY_PHASE = {
   menstruelle: [
@@ -110,145 +111,142 @@ export default function FreeWritingModal({ visible, onClose }) {
   };
 
   const getPhaseEmoji = (phase) => {
-    const emojis = {
-      menstruelle: '🌙',
-      folliculaire: '🌱',
-      ovulatoire: '☀️',
-      lutéale: '🍂',
+    // Mapping des slugs vers les clés de phase
+    const phaseMapping = {
+      menstruelle: 'menstrual',
+      folliculaire: 'follicular', 
+      ovulatoire: 'ovulatory',
+      luteale: 'luteal'
     };
-    return emojis[phase] || '✨';
+    const phaseKey = phaseMapping[phase] || phase;
+    return getPhaseIcon(phaseKey);
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={onClose}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}
-        keyboardVerticalOffset={insets.top}
+        style={[styles.container, { paddingTop: insets.top }]}
       >
-        <View style={styles.overlay}>
-          <View style={styles.modal}>
-            {/* Header */}
-            <View style={styles.header}>
-              <View style={styles.headerLeft}>
-                <Heading2 style={styles.title}>{getPhaseEmoji(currentPhaseKey)} Mon Journal</Heading2>
-                <Caption style={styles.phaseLabel}>Phase {currentPhaseKey}</Caption>
-              </View>
+        <View style={styles.header}>
+          <Heading2 style={styles.title}>
+            <PhaseIndicator 
+              phase={currentPhase}
+              useIcon={true}
+              size={24}
+              color={theme.colors.text}
+            />
+            {" "}Mon Journal
+          </Heading2>
+          
+          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <Feather name="x" size={24} color={theme.colors.text} />
+          </TouchableOpacity>
+        </View>
 
-              <View style={styles.headerActions}>
+        {/* Prompts suggestions */}
+        {showPrompts && (
+          <View style={styles.promptsSection}>
+            <Caption style={styles.promptsTitle}>Inspirations pour ta phase :</Caption>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {prompts.map((prompt, index) => (
                 <TouchableOpacity
-                  onPress={() => setShowPrompts(!showPrompts)}
-                  style={styles.promptButton}
+                  key={index}
+                  style={styles.promptPill}
+                  onPress={() => handlePromptSelect(prompt)}
                 >
-                  <Feather name="zap" size={20} color={theme.colors.primary} />
+                  <BodyText style={styles.promptText}>{prompt}</BodyText>
                 </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
-                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                  <Feather name="x" size={24} color={theme.colors.textLight} />
+        {/* Zone d'écriture */}
+        <View style={styles.writingSection}>
+          <TextInput
+            style={styles.textInput}
+            placeholder="Écris tes pensées, ressentis, découvertes..."
+            placeholderTextColor={theme.colors.textLight}
+            value={content}
+            onChangeText={setContent}
+            multiline
+            textAlignVertical="top"
+            autoFocus
+          />
+
+          {/* Compteur caractères */}
+          <View style={styles.footer}>
+            <Caption style={styles.charCount}>{content.length} caractères</Caption>
+          </View>
+        </View>
+
+        {/* Tags suggestions */}
+        {suggestedTags.length > 0 && (
+          <View style={styles.tagsSection}>
+            <Caption style={styles.tagsTitle}>Tags suggérés :</Caption>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {suggestedTags.map((tag, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[styles.tagPill, selectedTags.includes(tag) && styles.tagPillSelected]}
+                  onPress={() => toggleTag(tag)}
+                >
+                  <BodyText
+                    style={[
+                      styles.tagText,
+                      selectedTags.includes(tag) && styles.tagTextSelected,
+                    ]}
+                  >
+                    {tag}
+                  </BodyText>
                 </TouchableOpacity>
-              </View>
-            </View>
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
-            {/* Prompts suggestions */}
-            {showPrompts && (
-              <View style={styles.promptsSection}>
-                <Caption style={styles.promptsTitle}>Inspirations pour ta phase :</Caption>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {prompts.map((prompt, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      style={styles.promptPill}
-                      onPress={() => handlePromptSelect(prompt)}
-                    >
-                      <BodyText style={styles.promptText}>{prompt}</BodyText>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-            )}
-
-            {/* Zone d'écriture */}
-            <View style={styles.writingSection}>
-              <TextInput
-                style={styles.textInput}
-                placeholder="Écris tes pensées, ressentis, découvertes..."
-                placeholderTextColor={theme.colors.textLight}
-                value={content}
-                onChangeText={setContent}
-                multiline
-                textAlignVertical="top"
-                autoFocus
-              />
-
-              {/* Compteur caractères */}
-              <View style={styles.footer}>
-                <Caption style={styles.charCount}>{content.length} caractères</Caption>
-              </View>
-            </View>
-
-            {/* Tags suggestions */}
-            {suggestedTags.length > 0 && (
-              <View style={styles.tagsSection}>
-                <Caption style={styles.tagsTitle}>Tags suggérés :</Caption>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {suggestedTags.map((tag, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      style={[styles.tagPill, selectedTags.includes(tag) && styles.tagPillSelected]}
-                      onPress={() => toggleTag(tag)}
-                    >
-                      <BodyText
-                        style={[
-                          styles.tagText,
-                          selectedTags.includes(tag) && styles.tagTextSelected,
-                        ]}
-                      >
-                        {tag}
-                      </BodyText>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-            )}
-
-            {/* Tags sélectionnés */}
-            {selectedTags.length > 0 && (
-              <View style={styles.selectedTagsSection}>
-                <View style={styles.selectedTags}>
-                  {selectedTags.map((tag, index) => (
-                    <View key={index} style={styles.selectedTag}>
-                      <BodyText style={styles.selectedTagText}>{tag}</BodyText>
-                      <TouchableOpacity
-                        onPress={() => toggleTag(tag)}
-                        style={styles.removeTagButton}
-                      >
-                        <Feather name="x" size={14} color={theme.colors.primary} />
-                      </TouchableOpacity>
-                    </View>
-                  ))}
+        {/* Tags sélectionnés */}
+        {selectedTags.length > 0 && (
+          <View style={styles.selectedTagsSection}>
+            <View style={styles.selectedTags}>
+              {selectedTags.map((tag, index) => (
+                <View key={index} style={styles.selectedTag}>
+                  <BodyText style={styles.selectedTagText}>{tag}</BodyText>
+                  <TouchableOpacity
+                    onPress={() => toggleTag(tag)}
+                    style={styles.removeTagButton}
+                  >
+                    <Feather name="x" size={14} color={theme.colors.primary} />
+                  </TouchableOpacity>
                 </View>
-              </View>
-            )}
-
-            {/* Actions */}
-            <View style={styles.actions}>
-              <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-                <BodyText style={styles.cancelButtonText}>Annuler</BodyText>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.saveButton,
-                  content.trim().length === 0 && styles.saveButtonDisabled,
-                ]}
-                onPress={handleSave}
-                disabled={content.trim().length === 0}
-              >
-                <Feather name="save" size={20} color="white" />
-                <BodyText style={styles.saveButtonText}>Sauvegarder</BodyText>
-              </TouchableOpacity>
+              ))}
             </View>
           </View>
+        )}
+
+        {/* Actions */}
+        <View style={styles.actions}>
+          <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+            <BodyText style={styles.cancelButtonText}>Annuler</BodyText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.saveButton,
+              content.trim().length === 0 && styles.saveButtonDisabled,
+            ]}
+            onPress={handleSave}
+            disabled={content.trim().length === 0}
+          >
+            <Feather name="save" size={20} color="white" />
+            <BodyText style={styles.saveButtonText}>Sauvegarder</BodyText>
+          </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
     </Modal>

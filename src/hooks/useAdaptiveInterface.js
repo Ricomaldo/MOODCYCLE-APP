@@ -58,7 +58,7 @@ const PROGRESSIVE_FEATURES = {
   
   phase_insights: {
     level: 'learning',
-    condition: (metrics) => metrics.phasesExplored.length >= 2,
+        condition: (metrics) => Array.isArray(metrics.phasesExplored) ? metrics.phasesExplored.length >= 2 : false,
     description: "Insights spécifiques par phase"
   },
   
@@ -217,7 +217,7 @@ export function useAdaptiveInterface() {
   const insightsSaved = metrics.insightsSaved;
   const cyclesCompleted = metrics.cyclesCompleted;
   const autonomySignals = metrics.autonomySignals;
-  const phasesExploredLength = metrics.phasesExplored.length;
+  const phasesExploredLength = Array.isArray(metrics.phasesExplored) ? metrics.phasesExplored.length : 0;
   
   // ──────────────────────────────────────────────────────
   // 🔓 CALCUL FEATURES PROGRESSIVES DISPONIBLES

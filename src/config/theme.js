@@ -243,24 +243,30 @@ export const darkTheme = {
   },
 };
 
-// ═══════════════════════════════════════════════════════
-// 🎨 FONCTIONS UTILITAIRES POUR THÈMES DYNAMIQUES
-// ═══════════════════════════════════════════════════════
+// Cache pour les thèmes (clair et sombre)
+const themeCache = {
+  light: null,  // Thème clair mémorisé
+  dark: null    // Thème sombre mémorisé
+};
 
-/**
- * Obtenir le thème complet selon le mode (clair/sombre)
- * @param {boolean} isDark - Mode sombre activé
- * @returns {Object} - Objet thème complet
- */
 export const getTheme = (isDark = false) => {
-  if (isDark) {
-    return {
-      ...theme,
-      colors: darkTheme.colors,
-      tabBar: darkTheme.tabBar,
-    };
+  const cacheKey = isDark ? 'dark' : 'light';
+  
+  // Si le thème n'est pas encore en cache, on le crée
+  if (!themeCache[cacheKey]) {
+    if (isDark) {
+      themeCache[cacheKey] = {
+        ...theme,
+        colors: darkTheme.colors,
+        tabBar: darkTheme.tabBar,
+      };
+    } else {
+      themeCache[cacheKey] = theme;
+    }
   }
-  return theme;
+  
+  // Retourne toujours le même objet pour le même mode
+  return themeCache[cacheKey];
 };
 
 /**

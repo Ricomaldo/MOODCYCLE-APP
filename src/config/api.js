@@ -2,7 +2,7 @@
 // ─────────────────────────────────────────────────────────
 // 📄 File: src/config/api.js
 // 🧩 Type: Config
-// 📚 Description: Configuration centralisée des endpoints et options API pour l’app MoodCycle
+// 📚 Description: Configuration centralisée des endpoints et options API pour l'app MoodCycle
 // 🕒 Version: 3.0 - 2025-06-21
 // 🧭 Used in: global API config, services, data fetching
 // ─────────────────────────────────────────────────────────
@@ -13,7 +13,7 @@
  */
 const API_CONFIG = {
   development: {
-    baseURL: "https://moodcycle.irimwebforge.com", // Sans /api (Nginx le gère)
+    baseURL: "http://localhost:4000", // Local avec /api dans endpoints
     endpoints: {
       chat: '/api/chat',  // Nginx proxy /api/* vers Express
       health: '/api/health',
@@ -37,8 +37,7 @@ const API_CONFIG = {
  * Auto-sélection développement/production
  */
 export const getApiConfig = () => {
-  const config = __DEV__ ? API_CONFIG.development : API_CONFIG.production;
-
+  const config = API_CONFIG.production; // Force prod
   if (__DEV__) {
     console.log("🔧 API Config (DEV):", config.baseURL);
   }
@@ -77,14 +76,19 @@ export const getEndpointUrl = (endpointName) => {
 export const getApiRequestConfig = (deviceId) => {
   const config = getApiConfig();
 
+  if (!deviceId) {
+    console.error('⚠️ Device ID manquant dans getApiRequestConfig');
+  }
+
   return {
     baseURL: config.baseURL,
     endpoints: config.endpoints,
     timeout: config.timeout,
     headers: {
       "Content-Type": "application/json",
-      "X-Device-ID": deviceId,
+      "X-Device-ID": deviceId || 'fallback-device-id',
       "X-App-Version": "1.0.0-mvp",
+      "Accept": "application/json"
     },
     retries: config.retries,
   };

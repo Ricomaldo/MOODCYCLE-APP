@@ -8,6 +8,7 @@
 // ─────────────────────────────────────────────────────────
 //
 import { useColorScheme } from 'react-native';
+import { useMemo } from 'react';
 import { useAppStore } from '../stores/useAppStore';
 import { getTheme, themeUtils } from '../config/theme';
 
@@ -26,57 +27,60 @@ export const useTheme = () => {
   const isDark = currentTheme === 'dark' || 
     (currentTheme === 'system' && systemColorScheme === 'dark');
   
-  // Obtenir l'objet thème complet
-  const theme = getTheme(isDark);
-  
-  // Fonctions utilitaires
-  const toggleTheme = () => {
-    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-  };
-  
-  const setSystemTheme = () => {
-    setTheme('system');
-  };
-  
-  const setLightTheme = () => {
-    setTheme('light');
-  };
-  
-  const setDarkTheme = () => {
-    setTheme('dark');
-  };
-  
-  // Fonctions utilitaires étendues avec le contexte du thème actuel
-  const utils = {
-    ...themeUtils,
-    // Override avec le thème actuel
-    getTextColorOn: (backgroundColor) => {
-      return themeUtils.getTextColorOn(backgroundColor, isDark);
-    },
-    getTextColorOnPhase: (phase) => {
-      return themeUtils.getTextColorOnPhase(phase, isDark);
-    },
-  };
-  
-  return {
-    // État du thème
-    theme,
-    isDark,
-    isLight: !isDark,
-    currentTheme,
-    systemColorScheme,
+  // ✅ CORRECTION : Mémoriser tout l'objet retourné pour éviter les re-créations
+  return useMemo(() => {
+    // Obtenir l'objet thème complet
+    const theme = getTheme(isDark);
     
-    // Actions
-    toggleTheme,
-    setTheme,
-    setSystemTheme,
-    setLightTheme,
-    setDarkTheme,
+    // Fonctions utilitaires
+    const toggleTheme = () => {
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      setTheme(newTheme);
+    };
     
-    // Utilitaires
-    ...utils,
-  };
+    const setSystemTheme = () => {
+      setTheme('system');
+    };
+    
+    const setLightTheme = () => {
+      setTheme('light');
+    };
+    
+    const setDarkTheme = () => {
+      setTheme('dark');
+    };
+    
+    // Fonctions utilitaires étendues avec le contexte du thème actuel
+    const utils = {
+      ...themeUtils,
+      // Override avec le thème actuel
+      getTextColorOn: (backgroundColor) => {
+        return themeUtils.getTextColorOn(backgroundColor, isDark);
+      },
+      getTextColorOnPhase: (phase) => {
+        return themeUtils.getTextColorOnPhase(phase, isDark);
+      },
+    };
+    
+    return {
+      // État du thème
+      theme,
+      isDark,
+      isLight: !isDark,
+      currentTheme,
+      systemColorScheme,
+      
+      // Actions
+      toggleTheme,
+      setTheme,
+      setSystemTheme,
+      setLightTheme,
+      setDarkTheme,
+      
+      // Utilitaires
+      ...utils,
+    };
+  }, [isDark, currentTheme, systemColorScheme, setTheme]);
 };
 
 /**

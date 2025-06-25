@@ -42,7 +42,7 @@ import { useSmartSuggestions, useSmartChatSuggestions } from '../../../src/hooks
 const HEADER_HEIGHT = 60;
 
 // ✅ NOUVEAU : Composant Suggestions Rapides
-function QuickSuggestions({ suggestions, onSuggestionPress, theme, visible }) {
+function QuickSuggestions({ suggestions, onSuggestionPress, theme, visible, styles }) {
   if (!visible || !suggestions?.length) return null;
 
   return (
@@ -69,7 +69,7 @@ function QuickSuggestions({ suggestions, onSuggestionPress, theme, visible }) {
 }
 
 // ✅ NOUVEAU : Composant Actions Contextuelles
-function ContextualActions({ actions, onActionPress, theme, visible }) {
+function ContextualActions({ actions, onActionPress, theme, visible, styles }) {
   if (!visible || !actions?.length) return null;
 
   const primaryAction = actions[0];
@@ -194,6 +194,16 @@ function TypingIndicator({ theme }) {
 
 const MemoizedTypingIndicator = memo(TypingIndicator);
 
+// ✅ Stabilisation du contexte d'intelligence
+const createIntelligenceContext = (currentPhase, profile, smartSuggestions, chatSuggestions) => ({
+  phase: currentPhase,
+  persona: profile.persona?.assigned || 'emma',
+  hasData: smartSuggestions.hasPersonalizedData,
+  confidence: smartSuggestions.confidence,
+  suggestions: smartSuggestions.actions,
+  prompts: chatSuggestions.prompts
+});
+
 export default function ChatScreen() {
   
   const { theme } = useTheme();
@@ -229,17 +239,14 @@ export default function ChatScreen() {
   const smartSuggestions = useSmartSuggestions();
   const chatSuggestions = useSmartChatSuggestions();
   
-  // ✅ Intelligence Context
-  const intelligenceContext = useMemo(() => ({
-    phase: currentPhase,
-    persona: profile.persona?.assigned || 'emma',
-    hasData: smartSuggestions.hasPersonalizedData,
-    confidence: smartSuggestions.confidence,
-    suggestions: smartSuggestions.actions,
-    prompts: chatSuggestions.prompts
-  }), [currentPhase, profile.persona, smartSuggestions, chatSuggestions]);
-  
-  // ✅ LOG Intelligence Status
+  // ✅ Stabilisation du contexte avec useCallback
+  const intelligenceContext = useMemo(
+    () => createIntelligenceContext(currentPhase, profile, smartSuggestions, chatSuggestions),
+    [currentPhase, profile.persona?.assigned, smartSuggestions.hasPersonalizedData, 
+     smartSuggestions.confidence, smartSuggestions.actions, chatSuggestions.prompts]
+  );
+
+  // ✅ Déplacer les logs en dehors du render
   useEffect(() => {
     if (__DEV__) {
       console.log('🧠 Intelligence Context Updated:', {
@@ -251,7 +258,7 @@ export default function ChatScreen() {
         hasPersonalizedData: intelligenceContext.hasData
       });
     }
-  }, [intelligenceContext]);
+  }, [intelligenceContext.phase, intelligenceContext.persona, intelligenceContext.confidence]);
   
   const phase = currentPhase;
   const prenom = profile.prenom;
@@ -622,6 +629,7 @@ export default function ChatScreen() {
         onActionPress={memoizedHandlers.handleActionPress}
         theme={theme}
         visible={shouldShowSuggestions && smartSuggestions.immediate.length > 0}
+        styles={styles}
       />
 
       <KeyboardAvoidingView
@@ -666,6 +674,7 @@ export default function ChatScreen() {
           onSuggestionPress={memoizedHandlers.handleSuggestionPress}
           theme={theme}
           visible={shouldShowSuggestions}
+          styles={styles}
         />
 
         {/* Input collé à la tabbar */}

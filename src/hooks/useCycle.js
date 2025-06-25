@@ -26,16 +26,74 @@ import {
  * Hook principal pour gestion cycle menstruel
  */
 export const useCycle = () => {
-  const { cycle, updateCycle } = useUserStore();
+  const userStoreData = useUserStore();
+  
+  // ✅ PROTECTION TOTALE : Si le store n'est pas encore hydraté, retourner des valeurs par défaut
+  if (!userStoreData || typeof userStoreData.updateCycle !== 'function') {
+    const defaultCycle = {
+      lastPeriodDate: null,
+      length: CYCLE_DEFAULTS.LENGTH,
+      periodDuration: CYCLE_DEFAULTS.PERIOD_DURATION,
+      isRegular: null,
+      trackingExperience: null
+    };
+    
+    return {
+      // État du cycle
+      cycle: defaultCycle,
+      currentPhase: 'menstrual',
+      currentDay: 1,
+      phaseInfo: PHASE_METADATA.menstrual,
+      daysSinceLastPeriod: 0,
+      nextPeriodDate: null,
+      daysUntilNextPeriod: 28,
+      phaseMetadata: PHASE_METADATA,
+      validation: { isValid: false, errors: ['Store non initialisé'] },
 
-  // ✅ Protection contre cycle undefined pendant l'hydratation
-  const safeCycle = cycle || {
-    lastPeriodDate: null,
-    length: CYCLE_DEFAULTS.LENGTH,
-    periodDuration: CYCLE_DEFAULTS.PERIOD_DURATION,
-    isRegular: null,
-    trackingExperience: null
-  };
+      // Actions (no-op pendant l'hydratation)
+      updateCycle: () => {},
+      startNewPeriod: () => {},
+      updateCycleLength: () => {},
+      updatePeriodDuration: () => {},
+      setCycleRegularity: () => {},
+      setTrackingExperience: () => {},
+
+      // Helpers
+      isInPhase: () => false,
+      getPhaseProgress: () => 0,
+      hasMinimumData: () => false,
+
+      // États dérivés
+      isValid: false,
+      hasData: false,
+      isLate: false
+    };
+  }
+
+  const { cycle, updateCycle } = userStoreData;
+
+  // ✅ CORRECTION : Protection renforcée contre cycle undefined pendant l'hydratation
+  const safeCycle = useMemo(() => {
+    // Si cycle est undefined (pendant l'hydratation), utiliser les valeurs par défaut
+    if (!cycle) {
+      return {
+        lastPeriodDate: null,
+        length: CYCLE_DEFAULTS.LENGTH,
+        periodDuration: CYCLE_DEFAULTS.PERIOD_DURATION,
+        isRegular: null,
+        trackingExperience: null
+      };
+    }
+    
+    // Si cycle existe mais certaines propriétés sont undefined, les remplacer par les valeurs par défaut
+    return {
+      lastPeriodDate: cycle.lastPeriodDate || null,
+      length: cycle.length || CYCLE_DEFAULTS.LENGTH,
+      periodDuration: cycle.periodDuration || CYCLE_DEFAULTS.PERIOD_DURATION,
+      isRegular: cycle.isRegular || null,
+      trackingExperience: cycle.trackingExperience || null
+    };
+  }, [cycle]);
 
   // ═══════════════════════════════════════════════════════
   // 🧮 CALCULS MEMOIZÉS

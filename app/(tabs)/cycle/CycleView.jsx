@@ -20,25 +20,35 @@ import { useVignettes } from '../../../src/hooks/useVignettes';
 import { usePersona } from '../../../src/hooks/usePersona';
 import { useUserStore } from '../../../src/stores/useUserStore';
 import ParametresButton from '../../../src/features/shared/ParametresButton';
+import { PhaseIndicator } from '../../../src/utils/formatters';
+import { useAdaptiveInterface } from '../../../src/hooks/useAdaptiveInterface';
+import { useEngagementStore } from '../../../src/stores/useEngagementStore';
 
 export default function CycleView() {
-  const { currentPhase, currentDay, phaseInfo, hasData, cycle } = useCycle();
+  const cycleData = useCycle() || {};
+  const { currentPhase, currentDay, phaseInfo, hasData, cycle } = cycleData;
   const { current: persona } = usePersona();
   const { profile } = useUserStore();
   const { theme } = useTheme();
-  
+  const { layout, config } = useAdaptiveInterface();
+  const { maturityLevel } = useEngagementStore();
+
   // ✅ Protection contre profile undefined pendant l'hydratation
   const safeProfile = profile || { prenom: null };
   
   // ✅ STATE POUR TOGGLE VUE
   const [viewMode, setViewMode] = React.useState('wheel'); // 'wheel' ou 'calendar'
   
-  // TEMPORAIRE - Désactiver vignettes
-  const vignettes = [];
-  const vignettesLoading = false;
-  const refreshVignettes = () => {};
-  const trackEngagement = () => {};
-
+  // ✅ CONNEXION BASIQUE IMMÉDIATE - RÉACTIVÉE APRÈS CORRECTIONS
+  const {
+    vignettes,
+    loading: vignettesLoading, 
+    error: vignettesError,
+    refresh: refreshVignettes,
+    trackEngagement,
+    maxDisplayed
+  } = useVignettes();
+  
   const [refreshing, setRefreshing] = React.useState(false);
 
   const onRefresh = React.useCallback(async () => {
@@ -63,6 +73,11 @@ export default function CycleView() {
   }, []);
 
   const styles = getStyles(theme);
+
+  // Protection supplémentaire : si cycle est undefined, affichage d'un message temporaire
+  if (!cycle) {
+    return <ScreenContainer><BodyText>Cycle non initialisé</BodyText></ScreenContainer>;
+  }
 
   if (!hasData) {
     return (
@@ -145,9 +160,15 @@ export default function CycleView() {
 
         {/* Phase info */}
         <View style={styles.phaseInfoContainer}>
-          <BodyText style={styles.phaseTitle}>
-            {phaseInfo.emoji} {phaseInfo.name}
-          </BodyText>
+          <View style={styles.phaseHeader}>
+            <PhaseIndicator 
+              phase={currentPhase}
+              useIcon={true}
+              size={24}
+              color={theme.colors.phases[currentPhase]}
+            />
+            <BodyText style={styles.phaseName}>{phaseInfo.name}</BodyText>
+          </View>
           <BodyText style={styles.phaseDescription}>
             {phaseInfo.description}
           </BodyText>
@@ -165,7 +186,7 @@ export default function CycleView() {
             <VignettesContainer
               vignettes={vignettes || []}
               onVignettePress={handleVignettePress}
-              maxVisible={3}
+              maxVisible={maxDisplayed || 3}
               showCategories={false}
             />
           )}
@@ -281,11 +302,15 @@ const getStyles = (theme) => StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  phaseTitle: {
+  phaseHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing.s,
+  },
+  phaseName: {
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: theme.spacing.s,
-    textAlign: 'center',
+    marginLeft: theme.spacing.s,
   },
   phaseDescription: {
     fontSize: 15,

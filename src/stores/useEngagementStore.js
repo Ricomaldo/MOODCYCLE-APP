@@ -133,7 +133,7 @@ export const useEngagementStore = create(
           metrics.notebookEntriesCreated >= thresholds.learning.entries
         ) {
           newLevel = 'learning';
-          confidence = Math.min(100, 40 + metrics.phasesExplored.length * 15);
+          confidence = Math.min(100, 40 + (Array.isArray(metrics.phasesExplored) ? metrics.phasesExplored.length : 0) * 15);
         } else {
           newLevel = 'discovery';
           confidence = Math.min(100, metrics.daysUsed * 10);
@@ -162,7 +162,7 @@ export const useEngagementStore = create(
         const weights = {
           consistency: metrics.daysUsed * 5, // max 30j = 150pts
           depth: metrics.conversationsCompleted * 10, // max 15 = 150pts
-          breadth: metrics.phasesExplored.length * 25, // max 4 = 100pts
+          breadth: (Array.isArray(metrics.phasesExplored) ? metrics.phasesExplored.length : 0) * 25, // max 4 = 100pts
           autonomy: metrics.autonomySignals * 20 // bonus autonomie
         };
         

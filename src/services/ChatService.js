@@ -364,24 +364,20 @@ class ChatService {
         };
       }
       
+      // ✅ Protection contre cycle undefined
+      const safeCycle = userStore.cycle || {
+        lastPeriodDate: null,
+        length: 28,
+        periodDuration: 5
+      };
+      
       // Phase actuelle calculée
       const currentPhase = getCurrentPhase(
-        userStore.cycle.lastPeriodDate,
-        userStore.cycle.length,
-        userStore.cycle.periodDuration
+        safeCycle.lastPeriodDate,
+        safeCycle.length,
+        safeCycle.periodDuration
       );
 
-      // ✅ LOG PHASE DYNAMIQUE
-      console.log('🌙 Dynamic Phase Context:', {
-        lastPeriodDate: userStore.cycle.lastPeriodDate,
-        cycleLength: userStore.cycle.length,
-        currentPhase: currentPhase,
-        persona: userStore.persona.assigned,
-        cycleDayCalculated: userStore.cycle.lastPeriodDate ? 
-          Math.floor((new Date() - new Date(userStore.cycle.lastPeriodDate)) / (1000 * 60 * 60 * 24)) % userStore.cycle.length + 1 
-          : null
-      });
-      
       // Intelligence contextuelle
       const intelligence = {
         conversationLength: chatStore.messages.length,
@@ -484,15 +480,14 @@ class ChatService {
   }
 
   async callChatAPI(message, context) {
-    // ✅ LOG IMPORTANT - Request Context
-    console.log('🚀 API Request Context:', {
-      phase: context.phase,
-      persona: context.persona,
-      timestamp: new Date().toISOString(),
-      messageLength: message.length,
-      conversationLength: context.conversation?.messages?.length || 0,
-      deviceId: this.deviceId
-    });
+    // ✅ Vérification du deviceId
+    if (!this.deviceId) {
+      console.error('❌ Device ID manquant - Réinitialisation...');
+      await this.initialize();
+      if (!this.deviceId) {
+        throw new Error('Impossible de générer un Device ID');
+      }
+    }
 
     const apiConfig = getApiRequestConfig(this.deviceId);
 
@@ -514,11 +509,8 @@ class ChatService {
       }
     };
 
-    console.log('📊 Payload size:', JSON.stringify(payload).length, 'chars');
-
     // ✅ Utiliser la nouvelle fonction pour récupérer l'URL complète
     const chatEndpointUrl = getEndpointUrl('chat');
-    console.log('🔗 Chat endpoint URL:', chatEndpointUrl);
 
     const response = await fetch(chatEndpointUrl, {
       method: 'POST',
@@ -546,25 +538,8 @@ class ChatService {
 
     const data = await response.json();
 
-    // ✅ LOG IMPORTANT - Response Success
-    console.log('✅ API Response Success:', {
-      success: !!data.response || !!data.message || !!data.data?.message,
-      phaseUsed: context.phase,
-      persona: context.persona,
-      responseLength: (data.response || data.message || data.data?.message || '').length,
-      timestamp: new Date().toISOString()
-    });
-
-    if (data.response) return data.response;
-    if (data.message) return data.message;
-    if (data.data?.message) return data.data.message;
-    
-    console.error('❌ API Response Format Error:', {
-      receivedKeys: Object.keys(data),
-      phase: context.phase,
-      persona: context.persona
-    });
-    throw new Error('Format de réponse API non reconnu');
+    // Retourner la réponse formatée
+    return data.response || data.message || data.data?.message || null;
   }
 
   // ✅ NOUVEAU : Fallbacks intelligents
@@ -615,10 +590,18 @@ class ChatService {
   async getSmartSuggestions() {
     try {
       const userStore = useUserStore.getState();
+      
+      // ✅ Protection contre cycle undefined
+      const safeCycle = userStore.cycle || {
+        lastPeriodDate: null,
+        length: 28,
+        periodDuration: 5
+      };
+      
       const currentPhase = getCurrentPhase(
-        userStore.cycle.lastPeriodDate,
-        userStore.cycle.length,
-        userStore.cycle.periodDuration
+        safeCycle.lastPeriodDate,
+        safeCycle.length,
+        safeCycle.periodDuration
       );
       
       const chatStore = useChatStore.getState();

@@ -13,61 +13,71 @@ import { createPersonalizationEngine } from '../services/PersonalizationEngine';
 // 🎯 HOOK PRINCIPAL SUGGESTIONS INTELLIGENTES
 // ───────────────────────────────────────────────────────────
 
+// ✅ Stabilisation de la factory function
+const createStableSuggestions = (persona, currentPhase, intelligence, preferences) => {
+  if (!persona || !currentPhase) {
+    return {
+      actions: [],
+      prompts: [],
+      confidence: 0,
+      dataPoints: {
+        timePatterns: 0,
+        phaseData: 0,
+        conversationHistory: 0
+      },
+      recommendations: []
+    };
+  }
+
+  // Extraction des données d'intelligence pour la factory function
+  const intelligenceData = {
+    learning: intelligence.learning,
+    getPersonalizedPrompts: (phase, persona) => intelligence.getPersonalizedPrompts(phase, persona)
+  };
+
+  // Génération via createPersonalizationEngine
+  const personalizationEngine = createPersonalizationEngine(
+    intelligenceData,
+    preferences,
+    currentPhase,
+    persona
+  );
+
+  return personalizationEngine.createPersonalizedExperience();
+};
+
 export function useSmartSuggestions() {
   const { preferences } = useUserStore();
   const { current: persona } = usePersona();
   const { currentPhase } = useCycle();
   const intelligence = useUserIntelligence();
 
-  // ──────────────────────────────────────────────────────
-  // 🧠 GÉNÉRATION SUGGESTIONS CONTEXTUELLES
-  // ──────────────────────────────────────────────────────
-  
+  // ✅ Stabilisation des dépendances
+  const stablePreferences = useMemo(() => preferences, [preferences]);
+  const stablePersona = useMemo(() => persona, [persona]);
+  const stablePhase = useMemo(() => currentPhase, [currentPhase]);
+  const stableIntelligence = useMemo(() => ({
+    learning: intelligence.learning,
+    getPersonalizedPrompts: intelligence.getPersonalizedPrompts
+  }), [intelligence.learning, intelligence.getPersonalizedPrompts]);
+
+  // ✅ Génération suggestions avec dépendances stables
   const suggestions = useMemo(() => {
-    if (!persona || !currentPhase) {
-      return {
-        actions: [],
-        prompts: [],
-        confidence: 0,
-        dataPoints: {
-          timePatterns: 0,
-          phaseData: 0,
-          conversationHistory: 0
-        },
-        recommendations: []
-      };
-    }
-
-    // Extraction des données d'intelligence pour la factory function
-    const intelligenceData = {
-      learning: intelligence.learning,
-      getPersonalizedPrompts: (phase, persona) => intelligence.getPersonalizedPrompts(phase, persona)
-    };
-
-    // Génération via createPersonalizationEngine
-    const personalizationEngine = createPersonalizationEngine(
-      intelligenceData,
-      preferences,
-      currentPhase,
-      persona
+    const experience = createStableSuggestions(
+      stablePersona,
+      stablePhase,
+      stableIntelligence,
+      stablePreferences
     );
 
-    const personalizedExperience = personalizationEngine.createPersonalizedExperience();
-
     return {
-      // Actions recommandées avec priorité
-      actions: personalizedExperience.contextualActions,
-      
-      // Prompts conversation personnalisés
-      prompts: personalizedExperience.personalizedPrompts,
-      
-      // Métadonnées
-      confidence: personalizedExperience.personalization.confidence,
-      dataPoints: personalizedExperience.personalization.dataPoints,
-      recommendations: personalizedExperience.personalization.recommendations
+      actions: experience.contextualActions || [],
+      prompts: experience.personalizedPrompts || [],
+      confidence: experience.personalization?.confidence || 0,
+      dataPoints: experience.personalization?.dataPoints || {},
+      recommendations: experience.personalization?.recommendations || []
     };
-
-  }, [currentPhase, persona, preferences, intelligence.learning.confidence]);
+  }, [stablePersona, stablePhase, stableIntelligence, stablePreferences]);
 
   // ──────────────────────────────────────────────────────
   // 📊 TRACKING UTILISATION
@@ -268,7 +278,7 @@ export function useSmartChatSuggestions() {
     prompts,
     selectPrompt: (prompt) => trackClicked('chat', { prompt }),
     confidence,
-    hasPersonalized: prompts.length > 0 && confidence > 30
+    hasPersonalized: Array.isArray(prompts) && prompts.length > 0 && confidence > 30
   };
 }
 
@@ -291,7 +301,7 @@ export function useProactiveNotifications() {
   return {
     notifications: proactive.filter(p => p.priority === 'notification'),
     supportSuggestions: proactive.filter(p => p.priority === 'support'),
-    hasActiveNotifications: proactive.length > 0,
+    hasActiveNotifications: Array.isArray(proactive) && proactive.length > 0,
     dismissNotification: (notification) => trackClicked(notification.action.type, notification.action)
   };
 }

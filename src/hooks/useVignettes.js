@@ -32,6 +32,28 @@ export function useVignettes(forcePhase = null, forcePersona = null) {
   const adaptiveVignettesLimit = layout?.config?.adaptiveVignettes || 3;
   const firstSuggestionAction = suggestions?.contextualActions?.[0];
 
+  // ✅ LOGIQUE ADAPTATIVE SIMPLE
+  const { getEngagementScore } = useEngagementStore();
+  
+  const getAdaptiveVignettesLimit = useMemo(() => {
+    // Si useAdaptiveInterface fonctionne, utiliser sa logique
+    if (layout?.config?.maturityLevel) {
+      switch(layout.config.maturityLevel) {
+        case 'autonomous': return 4;
+        case 'learning': return 3;
+        case 'discovery': return 2;
+        default: return 2;
+      }
+    }
+    
+    // Sinon, logique de fallback basée sur l'engagement
+    const engagementScore = getEngagementScore();
+    
+    if (engagementScore >= 70) return 4;      // Expert
+    if (engagementScore >= 40) return 3;      // Intermédiaire
+    return 2;                                 // Débutant
+  }, [layout?.config?.maturityLevel, getEngagementScore]);
+
   // ──────────────────────────────────────────────────────
   // 🔄 CHARGEMENT VIGNETTES
   // ──────────────────────────────────────────────────────
@@ -55,17 +77,14 @@ export function useVignettes(forcePhase = null, forcePersona = null) {
         ? layout.limitVignettes(rawVignettes) 
         : (Array.isArray(rawVignettes) ? rawVignettes.slice(0, adaptiveVignettesLimit) : []);
       
-      setVignettes(adaptedVignettes);
+      setVignettes(Array.isArray(rawVignettes) ? rawVignettes : []);
     } catch (err) {
       console.error('🚨 useVignettes error:', err);
       setError(err);
       
       // ✅ Fallback emergency sécurisé
       const emergencyVignettes = VignettesService.getEmergencyVignettes(currentPhase);
-      const limitedEmergency = layout?.limitVignettes 
-        ? layout.limitVignettes(emergencyVignettes)
-        : (Array.isArray(emergencyVignettes) ? emergencyVignettes.slice(0, adaptiveVignettesLimit) : []);
-      setVignettes(limitedEmergency);
+      setVignettes(Array.isArray(emergencyVignettes) ? emergencyVignettes : []);
     } finally {
       setLoading(false);
     }
@@ -98,8 +117,8 @@ export function useVignettes(forcePhase = null, forcePersona = null) {
       }
     }
     
-    return baseVignettes.slice(0, adaptiveVignettesLimit);
-  }, [vignettes, firstSuggestionAction, currentPhase, adaptiveVignettesLimit]);
+    return baseVignettes.slice(0, getAdaptiveVignettesLimit);
+  }, [vignettes, firstSuggestionAction, currentPhase, getAdaptiveVignettesLimit]);
 
   // ──────────────────────────────────────────────────────
   // 📊 TRACKING ENGAGEMENT
@@ -150,7 +169,7 @@ export function useVignettes(forcePhase = null, forcePersona = null) {
     // Métadonnées
     hasSmartSuggestions: !!firstSuggestionAction,
     totalAvailable: Array.isArray(vignettes) ? vignettes.length : 0,
-    maxDisplayed: adaptiveVignettesLimit,
+    maxDisplayed: getAdaptiveVignettesLimit,
     
     // Debug
     rawVignettes: vignettes,

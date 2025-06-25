@@ -26,7 +26,11 @@
       "Massage à l'huile chaude"
     ],
     "affirmation": "Je m'accorde le droit de ralentir et d'écouter mon corps.",
-    "symbol": "🌙",
+    "symbol": "🌸",
+    "icon": {
+      "name": "droplet",
+      "type": "feather"
+    },
     "element": "Eau",
     "archetype": "La Sage",
     "melune": {
@@ -109,6 +113,10 @@
     ],
     "affirmation": "Je grandis et j'explore avec confiance mes nouveaux possibles.",
     "symbol": "🌱",
+    "icon": {
+      "name": "feather",
+      "type": "feather"
+    },
     "element": "Air", 
     "archetype": "L'Exploratrice",
     "melune": {
@@ -190,7 +198,11 @@
       "Connexion avec d'autres femmes"
     ],
     "affirmation": "Je rayonne ma lumière intérieure et j'ose briller pleinement.",
-    "symbol": "☀️",
+    "symbol": "🌼",
+    "icon": {
+      "name": "sun",
+      "type": "feather"
+    },
     "element": "Feu",
     "archetype": "La Déesse",
     "melune": {
@@ -272,7 +284,11 @@
       "Préparation au cycle suivant"
     ],
     "affirmation": "Je fais confiance à mon intuition et j'honore mes limites.",
-    "symbol": "🔮",
+    "symbol": "🌀",
+    "icon": {
+      "name": "wind",
+      "type": "feather"
+    },
     "element": "Terre",
     "archetype": "La Prêtresse",
     "melune": {

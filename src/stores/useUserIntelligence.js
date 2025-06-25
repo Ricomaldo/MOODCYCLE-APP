@@ -148,20 +148,20 @@ export const useUserIntelligence = create(
           let factors = 0;
           
           // Facteur 1: Données temporelles (max 25 points)
-          if (learning.timePatterns.favoriteHours.length > 0) {
-            confidence += Math.min(25, learning.timePatterns.favoriteHours.length * 5);
+          if (Array.isArray(learning.timePatterns.favoriteHours) && learning.timePatterns.favoriteHours.length > 0) {
+      confidence += Math.min(25, learning.timePatterns.favoriteHours.length * 5);
             factors++;
           }
           
           // Facteur 2: Patterns conversation (max 30 points)
-          if (learning.conversationPrefs.successfulPrompts.length > 0) {
-            confidence += Math.min(30, learning.conversationPrefs.successfulPrompts.length * 3);
+          if (Array.isArray(learning.conversationPrefs.successfulPrompts) && learning.conversationPrefs.successfulPrompts.length > 0) {
+      confidence += Math.min(30, learning.conversationPrefs.successfulPrompts.length * 3);
             factors++;
           }
           
           // Facteur 3: Patterns phases (max 25 points)
           const phasesWithData = Object.values(learning.phasePatterns)
-            .filter(p => p.topics.length > 0 || p.mood !== null).length;
+            .filter(p => (Array.isArray(p.topics) && p.topics.length > 0) || p.mood !== null).length;
           if (phasesWithData > 0) {
             confidence += Math.min(25, phasesWithData * 6);
             factors++;
@@ -216,7 +216,7 @@ export const useUserIntelligence = create(
         
         // Heure favorite la plus proche
         const favorites = learning.timePatterns.favoriteHours;
-        if (favorites.length === 0) return null;
+        if (!Array.isArray(favorites) || favorites.length === 0) return null;
         
         const closest = favorites.reduce((prev, curr) => 
           Math.abs(curr - currentHour) < Math.abs(prev - currentHour) ? curr : prev
@@ -236,7 +236,7 @@ export const useUserIntelligence = create(
         return {
           predictedMood: phaseData?.mood,
           preferredTopics: phaseData?.topics || [],
-          dataAvailable: (phaseData?.topics?.length || 0) > 0 || phaseData?.mood !== null,
+          dataAvailable: (Array.isArray(phaseData?.topics) && phaseData.topics.length > 0) || phaseData?.mood !== null,
           confidence: learning.confidence
         };
       },
@@ -251,10 +251,10 @@ export const useUserIntelligence = create(
           timestamp: new Date().toISOString(),
           confidence: learning.confidence,
           dataPoints: {
-            timePatterns: learning.timePatterns.favoriteHours.length,
-            conversations: learning.conversationPrefs.successfulPrompts.length,
+            timePatterns: Array.isArray(learning.timePatterns.favoriteHours) ? learning.timePatterns.favoriteHours.length : 0,
+            conversations: Array.isArray(learning.conversationPrefs.successfulPrompts) ? learning.conversationPrefs.successfulPrompts.length : 0,
             phaseData: Object.values(learning.phasePatterns)
-              .filter(p => p.topics.length > 0).length,
+              .filter(p => Array.isArray(p.topics) && p.topics.length > 0).length,
             suggestionTracking: Object.values(learning.suggestionEffectiveness)
               .reduce((acc, s) => acc + s.shown, 0)
           },

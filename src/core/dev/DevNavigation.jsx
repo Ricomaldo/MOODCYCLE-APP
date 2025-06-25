@@ -154,144 +154,11 @@ export default function DevNavigation() {
   };
 
   // ═══════════════════════════════════════════════════════
-  // 🎭 BOUTON 2: PERSONA SIMULATOR
+  // 🎭 BOUTON 2: PERSONA SIMULATOR (SUPPRIMÉ)
   // ═══════════════════════════════════════════════════════
   
-  const runPersonaSimulator = () => {
-    const scenarios = [
-      {
-        name: 'Emma Découverte',
-        persona: 'emma',
-        phase: 'follicular',
-        setup: () => simulateCompleteScenario('emma', 'follicular', 'discovery')
-      },
-      {
-        name: 'Laure Professionnelle',
-        persona: 'laure', 
-        phase: 'ovulatory',
-        setup: () => simulateCompleteScenario('laure', 'ovulatory', 'learning')
-      },
-      {
-        name: 'Sylvie Lutéale',
-        persona: 'sylvie',
-        phase: 'luteal',
-        setup: () => simulateCompleteScenario('sylvie', 'luteal', 'autonomous')
-      }
-    ];
-    
-    Alert.alert(
-      '🎭 Persona Simulator',
-      'Choisir un scénario d\'expérience complète:',
-      [
-        ...scenarios.map(scenario => ({
-          text: scenario.name,
-          onPress: scenario.setup
-        })),
-        { text: 'Annuler', style: 'cancel' }
-      ]
-    );
-  };
-
-  const simulateCompleteScenario = async (personaId, targetPhase, maturityLevel) => {
-    try {
-      Alert.alert('🎬 Simulation en cours...', 'Configuration du scénario');
-      
-      // 1. Setup persona complet
-      const personaData = PERSONA_PROFILES[personaId];
-      updateProfile({
-        prenom: personaData.name,
-        ageRange: personaData.ageRange[0],
-        journeyChoice: personaData.preferredJourney[0],
-        completed: true,
-      });
-      updatePreferences(personaData.referencePreferences);
-      setPersona(personaId, 1.0);
-      updateMelune({
-        avatarStyle: personaData.avatarStyle[0],
-        tone: personaData.communicationStyle[0],
-        personalityMatch: personaId,
-      });
-      
-      // 2. Setup cycle phase
-      const phaseDays = { menstrual: 2, follicular: 10, ovulatory: 15, luteal: 22 };
-      const dayInCycle = phaseDays[targetPhase];
-      const newDate = new Date();
-      newDate.setDate(newDate.getDate() - dayInCycle);
-      const { updateCycle } = useUserStore.getState();
-      updateCycle({ lastPeriodDate: newDate.toISOString() });
-      
-      // 3. Generate contextual data
-      await generateContextualData(personaId, targetPhase, maturityLevel);
-      
-      // 4. Load vignettes pour ce contexte
-      if (vignetteHook) {
-        await vignetteHook.refresh();
-      }
-      
-      Alert.alert(
-        '✅ Scénario Activé',
-        `${personaData.name} en phase ${targetPhase}\nMaturité: ${maturityLevel}\n\nTeste maintenant l'intelligence!`,
-        [
-          { text: 'Voir Chat', onPress: () => navigateTo('/(tabs)/chat') },
-          { text: 'Voir Cycle', onPress: () => navigateTo('/(tabs)/cycle') },
-          { text: 'OK' }
-        ]
-      );
-      
-    } catch (error) {
-      console.error('❌ Erreur simulation:', error);
-      Alert.alert('❌ Simulation Failed', error.message);
-    }
-  };
-
-  const generateContextualData = async (personaId, phase, maturityLevel) => {
-    // Messages contextuels selon persona
-    const personaMessages = {
-      emma: {
-        user: "Je découvre mon cycle et c'est fascinant! Comment mieux comprendre cette phase?",
-        melune: "C'est merveilleux de voir ta curiosité Emma! ✨ Cette phase folliculaire est parfaite pour explorer..."
-      },
-      laure: {
-        user: "Je veux optimiser ma productivité selon ma phase. Quelles sont les meilleures stratégies?",
-        melune: "Excellente approche Laure! Analysons ensemble comment structurer ta phase ovulatoire pour maximiser ton énergie."
-      },
-      sylvie: {
-        user: "Je ressens des changements dans mon énergie. Comment mieux accueillir cette transition?",
-        melune: "Ta sensibilité à ces changements est précieuse Sylvie. La phase lutéale invite à la douceur avec soi-même..."
-      }
-    };
-    
-    const messages = personaMessages[personaId];
-    if (messages) {
-      const { addMessage } = useChatStore.getState();
-      addMessage(messages.user, 'user');
-      addMessage(messages.melune, 'assistant', { 
-        persona: personaId,
-        phase: phase,
-        context: 'simulation'
-      });
-    }
-    
-    // Entrées carnet contextuelles
-    const journalEntries = {
-      discovery: `Première exploration de ma phase ${phase}. Je commence à comprendre mon rythme naturel.`,
-      learning: `Analyse de mes patterns en phase ${phase}. J'observe des récurrences intéressantes.`,
-      autonomous: `Maîtrise de ma phase ${phase}. Je sais maintenant comment optimiser cette période.`
-    };
-    
-    addEntry(journalEntries[maturityLevel], "personal", [`#${phase}`, `#${maturityLevel}`, "#simulation"]);
-    
-    // Quick tracking selon phase
-    const phaseTracking = {
-      menstrual: { mood: 'reflectif', energy: 2, symptoms: ['fatigue', 'introspection'] },
-      follicular: { mood: 'optimiste', energy: 4, symptoms: ['motivation', 'clarté'] },
-      ovulatory: { mood: 'confiant', energy: 5, symptoms: ['énergie', 'social'] },
-      luteal: { mood: 'contemplatif', energy: 3, symptoms: ['sensibilité', 'créativité'] }
-    };
-    
-    const tracking = phaseTracking[phase];
-    addQuickTracking(tracking.mood, tracking.energy, tracking.symptoms);
-  };
+  // SUPPRIMÉ: runPersonaSimulator et simulateCompleteScenario
+  // Les personas et la maturité sont maintenant séparés
 
   // ═══════════════════════════════════════════════════════
   // 🔬 BOUTON 3: VIGNETTES LAB
@@ -416,6 +283,7 @@ export default function DevNavigation() {
     const personaData = PERSONA_PROFILES[personaId];
     if (!personaData) return;
 
+    // Configuration du style/ton seulement (sans maturité)
     updateProfile({
       prenom: personaData.name,
       ageRange: personaData.ageRange[0],
@@ -431,7 +299,108 @@ export default function DevNavigation() {
       personalityMatch: personaId,
     });
     
-    Alert.alert('🎭 Persona Activé', `${personaData.name} configurée !\n\nTeste maintenant l'intelligence avec les 3 boutons d'action!`);
+    Alert.alert('🎭 Persona Activé', `${personaData.name} configurée !\n\nStyle: ${personaData.avatarStyle[0]}\nTon: ${personaData.communicationStyle[0]}\n\nConfigure maintenant la maturité séparément!`);
+  };
+
+  const simulateMaturityLevel = (level) => {
+    try {
+      if (!engagementStore) {
+        Alert.alert('⚠️ Engagement Store', 'Store d\'engagement non disponible');
+        return;
+      }
+
+      // Configuration des métriques d'engagement selon le niveau
+      const maturityConfigs = {
+        discovery: {
+          engagementScore: 25,
+          daysUsed: 7,
+          totalActions: 15,
+          milestone: 'discovery'
+        },
+        learning: {
+          engagementScore: 60,
+          daysUsed: 30,
+          totalActions: 80,
+          milestone: 'learning'
+        },
+        autonomous: {
+          engagementScore: 95,
+          daysUsed: 90,
+          totalActions: 200,
+          milestone: 'autonomous'
+        }
+      };
+
+      const config = maturityConfigs[level];
+      if (!config) {
+        Alert.alert('❌ Niveau invalide', 'Niveau de maturité non reconnu');
+        return;
+      }
+
+      // Mise à jour du store d'engagement
+      engagementStore.setEngagementScore(config.engagementScore);
+      engagementStore.setDaysUsed(config.daysUsed);
+      engagementStore.setTotalActions(config.totalActions);
+      
+      // Mise à jour du niveau de maturité dans l'interface adaptative
+      if (adaptiveInterface && adaptiveInterface.setMaturityLevel) {
+        adaptiveInterface.setMaturityLevel(level);
+      }
+
+      // Génération de données contextuelles selon la maturité
+      generateMaturityData(level);
+
+      Alert.alert(
+        '🎓 Maturité Configurée', 
+        `Niveau: ${level}\nScore: ${config.engagementScore}/100\nJours: ${config.daysUsed}\nActions: ${config.totalActions}\n\nTeste maintenant l'intelligence adaptative!`
+      );
+
+    } catch (error) {
+      console.error('❌ Erreur configuration maturité:', error);
+      Alert.alert('❌ Erreur', `Impossible de configurer la maturité: ${error.message}`);
+    }
+  };
+
+  const generateMaturityData = (level) => {
+    try {
+      // Messages selon le niveau de maturité
+      const maturityMessages = {
+        discovery: {
+          user: "Je commence à découvrir mon cycle, c'est fascinant !",
+          melune: "C'est merveilleux de voir ta curiosité ! ✨ Commençons par explorer ensemble..."
+        },
+        learning: {
+          user: "J'observe des patterns dans mon cycle, je veux en apprendre plus.",
+          melune: "Excellente observation ! Analysons ensemble ces patterns pour mieux comprendre ton rythme."
+        },
+        autonomous: {
+          user: "Je maîtrise maintenant mon cycle, je sais comment l'optimiser.",
+          melune: "Ta maîtrise est impressionnante ! Tu as développé une vraie sagesse cyclique."
+        }
+      };
+
+      const messages = maturityMessages[level];
+      if (messages) {
+        const { addMessage } = useChatStore.getState();
+        addMessage(messages.user, 'user');
+        addMessage(messages.melune, 'assistant', { 
+          maturityLevel: level,
+          context: 'maturity-simulation'
+        });
+      }
+
+      // Entrées carnet selon maturité
+      const journalEntries = {
+        discovery: "Première exploration de mon cycle. Je découvre un nouveau langage corporel.",
+        learning: "Analyse de mes patterns cycliques. J'observe des récurrences intéressantes.",
+        autonomous: "Maîtrise de mon cycle. Je sais maintenant comment optimiser chaque phase."
+      };
+
+      addEntry(journalEntries[level], "personal", [`#${level}`, "#maturité", "#simulation"]);
+
+    } catch (error) {
+      console.error('❌ Erreur génération données maturité:', error);
+    }
   };
 
   const setCyclePhase = (targetPhase) => {
@@ -607,6 +576,7 @@ export default function DevNavigation() {
             <Text style={styles.status}>
               {persona?.currentPersona || 'auto'} | {cycle?.currentPhase || 'loading'} J{cycle?.currentDay || 0}
               {adaptiveInterface ? ` | ${adaptiveInterface.maturityLevel}` : ''}
+              {engagementStore ? ` | 🎓 ${engagementStore.getCurrentMilestone?.()?.name || 'none'}` : ''}
             </Text>
             
             {/* 🔬 ACTIONS INTELLIGENCE PRINCIPALES */}
@@ -617,12 +587,7 @@ export default function DevNavigation() {
               <Text style={styles.intelligenceButtonSub}>Surveillance IA temps réel</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity style={[styles.intelligenceButton, {backgroundColor: '#FF6B6B'}]} onPress={runPersonaSimulator}>
-              <Text style={styles.intelligenceButtonText}>🎭 Persona Simulator</Text>
-              <Text style={styles.intelligenceButtonSub}>Scénarios expérience complète</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={[styles.intelligenceButton, {backgroundColor: '#4ECDC4'}]} onPress={runVignettesLab}>
+            <TouchableOpacity style={[styles.intelligenceButton, {backgroundColor: '#FF6B6B'}]} onPress={runVignettesLab}>
               <Text style={styles.intelligenceButtonText}>🔬 Vignettes Lab</Text>
               <Text style={styles.intelligenceButtonSub}>Test navigation intelligente</Text>
             </TouchableOpacity>
@@ -655,6 +620,22 @@ export default function DevNavigation() {
                 >
                   <Text style={styles.quickButtonText}>
                     {PERSONA_PROFILES[personaId].name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            
+            {/* 🎓 MATURITÉ */}
+            <Text style={styles.sectionTitle}>🎓 Maturité</Text>
+            <View style={styles.buttonGrid}>
+              {['discovery', 'learning', 'autonomous'].map(level => (
+                <TouchableOpacity 
+                  key={level}
+                  style={[styles.quickButton, {backgroundColor: '#FF9500'}, adaptiveInterface?.maturityLevel === level && styles.activeMaturity]} 
+                  onPress={() => simulateMaturityLevel(level)}
+                >
+                  <Text style={styles.quickButtonText}>
+                    {level.slice(0, 3)}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -702,6 +683,9 @@ export default function DevNavigation() {
               <Text style={styles.statsText}>🎭 {Math.round((persona?.confidence || 0) * 100)}%</Text>
               {adaptiveInterface && (
                 <Text style={styles.statsText}>🧠 {adaptiveInterface.featuresAvailable}/{adaptiveInterface.totalFeatures} features</Text>
+              )}
+              {engagementStore && (
+                <Text style={styles.statsText}>🎓 {engagementStore.getEngagementScore?.() || 0}/100 engagement</Text>
               )}
             </View>
             
@@ -914,6 +898,11 @@ const styles = StyleSheet.create({
   
   activePersona: {
     backgroundColor: '#FF9500',
+    transform: [{ scale: 1.05 }],
+  },
+  
+  activeMaturity: {
+    backgroundColor: '#FF6B6B',
     transform: [{ scale: 1.05 }],
   },
   

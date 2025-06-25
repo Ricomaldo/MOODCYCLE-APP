@@ -7,18 +7,12 @@
 // 🧭 Utilisé dans : CycleView, NotebookView
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
+import React from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import Svg, { Circle, Path, G, Line, Text } from 'react-native-svg';
 import { useTheme } from '../../hooks/useTheme';
 import { CYCLE_DEFAULTS, PHASE_NAMES, WHEEL_CONSTANTS } from '../../config/cycleConstants';
-
-// 🎭 Métadonnées des phases avec émojis
-const PHASE_METADATA = {
-  menstrual: { emoji: "🌙", name: "Menstruelle" },
-  follicular: { emoji: "🌱", name: "Folliculaire" },
-  ovulatory: { emoji: "☀️", name: "Ovulatoire" },
-  luteal: { emoji: "🔮", name: "Lutéale" }
-};
+import { getPhaseSymbol, getPhaseMetadata } from '../../utils/formatters';
 
 export default function CycleWheel({
   currentPhase = PHASE_NAMES.MENSTRUAL,
@@ -30,10 +24,11 @@ export default function CycleWheel({
 }) {
   const { theme } = useTheme();
   const styles = getStyles(theme);
+  
   // Configuration des phases du cycle depuis les constantes
   const phases = Object.values(PHASE_NAMES);
   const colors = phases.map((phase) => theme.colors.phases[phase]);
-
+  
   // 🎯 Limite prénom selon constante
   const displayName = userName.length > WHEEL_CONSTANTS.MAX_NAME_LENGTH 
     ? userName.substring(0, WHEEL_CONSTANTS.MAX_NAME_LENGTH) + '...' 
@@ -183,7 +178,7 @@ export default function CycleWheel({
     const angleRad = ((angle - 90) * Math.PI) / 180;
     const x = adjustedCenterX + labelRadius * Math.cos(angleRad);
     const y = adjustedCenterY + labelRadius * Math.sin(angleRad);
-    
+
     return (
       <Text 
         key={`label-${phase}`} 
@@ -196,7 +191,7 @@ export default function CycleWheel({
         fontWeight="bold"
         style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}
       >
-        {PHASE_METADATA[phase]?.emoji || '●'}
+        {getPhaseSymbol(phase)}
       </Text>
     );
   });
@@ -206,12 +201,8 @@ export default function CycleWheel({
   const markerY = adjustedCenterY - (radius - strokeWidth / 2);
 
   return (
-    <View style={styles.container}>
-      <Svg
-        width={adjustedSize}
-        height={adjustedSize}
-        viewBox={`0 0 ${adjustedSize} ${adjustedSize}`}
-      >
+    <View style={[styles.container, { width: size, height: size }]}>
+      <Svg width={adjustedSize} height={adjustedSize}>
         <G>
           {arcs}
           {separatorLines}
@@ -255,7 +246,7 @@ export default function CycleWheel({
           >
             <View style={[styles.legendDot, { backgroundColor: colors[index] }]} />
             <Text style={styles.legendText}>
-              {PHASE_METADATA[phase]?.emoji} {PHASE_METADATA[phase]?.name}
+              {getPhaseSymbol(phase)} {getPhaseMetadata(phase)?.name}
             </Text>
           </Pressable>
         ))}

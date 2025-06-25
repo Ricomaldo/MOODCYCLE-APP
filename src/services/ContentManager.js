@@ -11,6 +11,7 @@ import { getApiConfig } from '../config/api.js';
 import localInsights from '../data/insights.json';
 import localPhases from '../data/phases.json';
 import localClosings from '../data/closings.json';
+import localVignettes from '../data/vignettes.json';
 
 class ContentManager {
   constructor() {
@@ -18,6 +19,7 @@ class ContentManager {
       insights: { data: null, timestamp: null, ttl: 2 * 60 * 60 * 1000 }, // 2h - Jeza active
       phases: { data: null, timestamp: null, ttl: 24 * 60 * 60 * 1000 }, // 24h - Stable
       closings: { data: null, timestamp: null, ttl: 7 * 24 * 60 * 60 * 1000 }, // 7j - Très stable
+      vignettes: { data: null, timestamp: null, ttl: 24 * 60 * 60 * 1000 }, // 24h - Stable
     };
   }
 
@@ -43,6 +45,10 @@ class ContentManager {
 
   async getClosings() {
     return this.getContent('closings', '/api/admin/closings', localClosings);
+  }
+
+  async getVignettes() {
+    return this.getContent('vignettes', '/api/admin/vignettes', localVignettes);
   }
 
   async getContent(type, endpoint, fallbackData) {

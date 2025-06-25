@@ -16,6 +16,7 @@ import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
 import { BodyText } from '../../src/core/ui/Typography';
 import { useTheme } from '../../src/hooks/useTheme';
+import { getPhaseIcon } from '../../src/utils/formatters';
 
 export default function PrenomScreen() {
   // 🧠 INTELLIGENCE HOOK
@@ -120,8 +121,8 @@ export default function PrenomScreen() {
   };
 
   const generatePersonalizedPreview = () => {
-    if (!prenom.trim()) {
-      return "Bonjour, comment vas-tu aujourd'hui ?";
+    if (prenom.trim().length < 2) {
+      return "Dis-moi ton prénom pour personnaliser notre relation !";
     }
     
     const persona = intelligence.currentPersona || intelligence.userProfile.suggestedPersona || 'emma';
@@ -129,10 +130,10 @@ export default function PrenomScreen() {
     
     const previews = {
       emma: {
-        menstrual: `Coucou ${prenom.trim()} ! Comment tu te sens dans cette phase cocooning ? 🌙`,
+        menstrual: `Coucou ${prenom.trim()} ! Comment tu te sens dans cette phase cocooning ? ${getPhaseIcon('menstrual')}`,
         follicular: `Hey ${prenom.trim()} ! Je sens que ton énergie remonte ! ✨`,
         ovulatory: `Bonjour ma belle ${prenom.trim()} ! Tu rayonnes aujourd'hui ! 💫`,
-        luteal: `Salut ${prenom.trim()}, comment tu gères cette phase d'automne ? 🍂`
+        luteal: `Salut ${prenom.trim()}, comment tu gères cette phase d'automne ? ${getPhaseIcon('luteal')}`
       },
       laure: {
         menstrual: `Bonjour ${prenom.trim()}. Comment organisez-vous votre repos aujourd'hui ?`,
