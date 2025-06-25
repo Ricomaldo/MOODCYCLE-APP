@@ -196,3 +196,111 @@ export const createStyles = (styleFunction) => {
   const styles = StyleSheet.create(styleFunction(theme));
   return styles;
 };
+
+// ═══════════════════════════════════════════════════════
+// 🌙 THÈME SOMBRE
+// ═══════════════════════════════════════════════════════
+
+export const darkTheme = {
+  colors: {
+    primary: "#E91E63", // Plus vif en mode sombre
+    secondary: "#CDDC39", 
+    background: "#121212", // Fond sombre Material Design
+    text: "#FFFFFF", // Texte blanc
+    textLight: "#B3B3B3", // Texte secondaire plus clair
+    textPrimary: "#FFFFFF", // Alias pour compatibilité
+    textSecondary: "#B3B3B3", // Alias pour compatibilité
+    surface: "#1E1E1E", // Surfaces légèrement plus claires
+    border: "#2C2C2C", // Bordures subtiles
+    white: "#FFFFFF", // Blanc pur (reste blanc)
+    success: "#4CAF50", // Vert succès
+    warning: "#FF9800", // Orange warning
+    error: "#F44336", // Rouge erreur
+    backgroundSecondary: "#1A1A1A", // Fond secondaire
+    phases: {
+      // Couleurs phases adaptées pour le sombre - plus vives
+      menstrual: "#EF5350", // Rouge plus vif
+      follicular: "#FFA726", // Orange plus saturé
+      ovulatory: "#26C6DA", // Cyan plus lumineux
+      luteal: "#7986CB", // Violet plus doux
+    },
+  },
+  // Hériter les autres propriétés du thème clair
+  fonts: theme.fonts,
+  typography: theme.typography,
+  spacing: theme.spacing,
+  borderRadius: theme.borderRadius,
+  tabBar: {
+    height: 80,
+    activeTintColor: "#E91E63",
+    inactiveTintColor: "#B3B3B3",
+    backgroundColor: "#1E1E1E",
+    borderColor: "#2C2C2C",
+    labelSize: 12,
+    labelWeight: "500",
+    paddingTop: 8,
+    marginBottom: 4,
+  },
+};
+
+// ═══════════════════════════════════════════════════════
+// 🎨 FONCTIONS UTILITAIRES POUR THÈMES DYNAMIQUES
+// ═══════════════════════════════════════════════════════
+
+/**
+ * Obtenir le thème complet selon le mode (clair/sombre)
+ * @param {boolean} isDark - Mode sombre activé
+ * @returns {Object} - Objet thème complet
+ */
+export const getTheme = (isDark = false) => {
+  if (isDark) {
+    return {
+      ...theme,
+      colors: darkTheme.colors,
+      tabBar: darkTheme.tabBar,
+    };
+  }
+  return theme;
+};
+
+/**
+ * Fonctions utilitaires étendues pour le thème sombre
+ */
+export const themeUtils = {
+  // Déterminer si une couleur est claire (compatible sombre)
+  isLightColor: (color) => {
+    return theme.isLightColor(color);
+  },
+  
+  // Déterminer si une couleur est foncée (compatible sombre)
+  isDarkColor: (color) => {
+    return theme.isDarkColor(color);
+  },
+  
+  // Obtenir la couleur de texte optimale selon le thème
+  getTextColorOn: (backgroundColor, isDarkTheme = false) => {
+    const textColor = isDarkTheme ? darkTheme.colors.text : theme.colors.text;
+    const whiteColor = "#FFFFFF";
+    
+    return theme.isLightColor(backgroundColor) ? textColor : whiteColor;
+  },
+  
+  // Obtenir la couleur de texte pour une phase selon le thème
+  getTextColorOnPhase: (phase, isDarkTheme = false) => {
+    const currentTheme = isDarkTheme ? darkTheme : theme;
+    const phaseColor = currentTheme.colors.phases[phase];
+    
+    if (!phaseColor) return currentTheme.colors.text;
+    
+    // Utiliser la logique existante mais adaptée au thème
+    return theme.getTextColorOnPhase(phase);
+  },
+};
+
+// Créer des styles avec thème dynamique
+export const createDynamicStyles = (styleFunction) => {
+  return (isDark = false) => {
+    const currentTheme = getTheme(isDark);
+    return StyleSheet.create(styleFunction(currentTheme));
+  };
+};

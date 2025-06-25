@@ -15,7 +15,7 @@ import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
 import { BodyText } from '../../src/core/ui/Typography';
-import { theme } from '../../src/config/theme';
+import { useTheme } from '../../src/hooks/useTheme';
 import { PERSONA_PROFILES } from '../../src/config/personaProfiles';
 
 // 🎯 TRANSFORMATION : Personas thérapeutiques, pas avatars visuels
@@ -75,6 +75,8 @@ const THERAPEUTIC_PERSONAS = [
 export default function AvatarScreen() {
   // 🧠 INTELLIGENCE HOOK
   const intelligence = useOnboardingIntelligence('600-avatar');
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   
   // 🎨 Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -308,7 +310,7 @@ export default function AvatarScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   scrollView: {
     flex: 1,
   },

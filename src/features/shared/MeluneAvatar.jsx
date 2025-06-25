@@ -9,13 +9,15 @@
 //
 import React, { useEffect, useRef, useMemo } from 'react';
 import { View, Image, StyleSheet, Animated, Text } from 'react-native';
-import { theme } from '../../config/theme';
+import { useTheme } from '../../hooks/useTheme';
 import { BodyText } from '../../core/ui/Typography';
 import { useUserStore } from '../../stores/useUserStore';
 
 export default function MeluneAvatar({ phase = 'menstrual', size = 'large', style, animated = true }) {
   // Récupération du style depuis le store avec fallback sur la prop
   const { melune } = useUserStore();
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const avatarStyle = style || melune?.avatarStyle || 'classic';
 
   // Animations iOS-like
@@ -139,7 +141,7 @@ export default function MeluneAvatar({ phase = 'menstrual', size = 'large', styl
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',

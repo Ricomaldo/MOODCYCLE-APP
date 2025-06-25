@@ -17,7 +17,7 @@ import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
 import { BodyText } from '../../src/core/ui/Typography';
-import { theme } from '../../src/config/theme';
+import { useTheme } from '../../src/hooks/useTheme';
 import phasesData from '../../src/data/phases.json';
 
 // 🎯 Étapes du processus
@@ -59,6 +59,8 @@ const getPhaseMessage = (phase, persona = 'emma') => {
 };
 
 export default function CycleScreen() {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   // 🧠 INTELLIGENCE + CYCLE HOOKS
   const intelligence = useOnboardingIntelligence('400-cycle');
   const { 
@@ -444,7 +446,7 @@ export default function CycleScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   scrollView: {
     flex: 1,
   },

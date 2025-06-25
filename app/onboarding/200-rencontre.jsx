@@ -15,7 +15,7 @@ import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
 import { BodyText } from '../../src/core/ui/Typography';
-import { theme } from '../../src/config/theme';
+import { useTheme } from '../../src/hooks/useTheme';
 
 // 🎯 Choix profonds qui touchent l'âme
 const JOURNEY_CHOICES = [
@@ -47,6 +47,8 @@ const JOURNEY_CHOICES = [
 ];
 
 export default function RencontreScreen() {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   // 🧠 INTELLIGENCE HOOK
   const intelligence = useOnboardingIntelligence('200-rencontre');
   
@@ -254,7 +256,7 @@ export default function RencontreScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   scrollView: {
     flex: 1,
   },

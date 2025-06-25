@@ -11,11 +11,14 @@ import React, { forwardRef } from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialIcons } from '@expo/vector-icons';
-import { theme } from '../../config/theme';
+import { useTheme } from '../../hooks/useTheme';
 
 const CARD_SIZE = 360; // 1080px équivalent en densité React Native (3x scale)
 
 const ShareableCard = forwardRef(({ message, visible = false }, ref) => {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+  
   if (!visible) return null;
 
   return (
@@ -56,7 +59,7 @@ const ShareableCard = forwardRef(({ message, visible = false }, ref) => {
 
 export default ShareableCard;
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     position: 'absolute',
     top: -1000, // Hors écran pour ne pas gêner l'UI

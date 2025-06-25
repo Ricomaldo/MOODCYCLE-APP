@@ -20,10 +20,10 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { theme } from '../../config/theme';
 import { Heading2, BodyText, Caption } from '../../core/ui/Typography';
 import { useUserStore } from '../../stores/useUserStore';
 import { useCycle } from '../../hooks/useCycle';
+import { useTheme } from '../../hooks/useTheme';
 
 // Import des onglets
 import ProfilTab from './tabs/ProfilTab';
@@ -52,6 +52,8 @@ export default function ParametresModal({ visible, onClose }) {
   // Store & hooks
   const { updateProfile, updatePreferences, updateMelune } = useUserStore();
   const { currentPhase } = useCycle();
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   
   // Phase color pour le header
   const phaseColor = theme.colors.phases[currentPhase] || theme.colors.primary;
@@ -261,7 +263,7 @@ export default function ParametresModal({ visible, onClose }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',

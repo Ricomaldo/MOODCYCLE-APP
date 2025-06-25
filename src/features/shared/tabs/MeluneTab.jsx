@@ -10,7 +10,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { theme } from '../../../config/theme';
+import { useTheme } from '../../../hooks/useTheme';
 import { Heading, BodyText } from '../../../core/ui/Typography';
 import { useUserStore } from '../../../stores/useUserStore';
 import MeluneAvatar from '../MeluneAvatar';
@@ -61,6 +61,8 @@ const VOICE_TONES = [
 
 export default function MeluneTab({ onDataChange }) {
   const { melune, updateMelune } = useUserStore();
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const [selectedAvatar, setSelectedAvatar] = useState(melune?.avatarStyle || 'classic');
   const [selectedTone, setSelectedTone] = useState(melune?.tone || 'friendly');
   const [hasChanges, setHasChanges] = useState(false);
@@ -245,7 +247,7 @@ export default function MeluneTab({ onDataChange }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
   },

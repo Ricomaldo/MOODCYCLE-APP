@@ -2,7 +2,7 @@
 // ─────────────────────────────────────────────────────────
 // 📄 Fichier : app/(tabs)/cycle/phases/[id].jsx
 // 🧩 Type : Composant Écran
-// 📚 Description : Composant affichant l’écran principal
+// 📚 Description : Composant affichant l'écran principal
 // 🕒 Version : 3.0 - 2025-06-21
 // 🧭 Utilisé dans : /notebook cycle route
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from 'expo-haptics';
-import { theme } from "../../../../src/config/theme";
+import { useTheme } from "../../../../src/hooks/useTheme";
 import ContentManager from "../../../../src/services/ContentManager";
 import { Heading, BodyText, Caption } from "../../../../src/core/ui/Typography";
 
@@ -23,6 +23,8 @@ export default function PhaseDetailScreen() {
   const [loading, setLoading] = useState(true);
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
 
   useEffect(() => {
     const loadPhaseData = async () => {
@@ -123,7 +125,7 @@ export default function PhaseDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,

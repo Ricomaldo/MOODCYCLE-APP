@@ -18,9 +18,11 @@ import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
 import VignetteCard from '../../src/features/shared/VignetteCard';
 import { BodyText } from '../../src/core/ui/Typography';
-import { theme } from '../../src/config/theme';
+import { useTheme } from '../../src/hooks/useTheme';
 
 export default function CadeauScreen() {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   // 🧠 INTELLIGENCE HOOK
   const intelligence = useOnboardingIntelligence('800-cadeau');
   
@@ -329,7 +331,7 @@ export default function CadeauScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: theme.spacing.l,

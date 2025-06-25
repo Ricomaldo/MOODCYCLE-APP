@@ -20,7 +20,7 @@ export const useAppStore = create(
     (set, get) => ({
       // État application minimal
       isFirstLaunch: true,
-      currentTheme: "light", // 'light' | 'dark'
+      currentTheme: "system", // 'light' | 'dark' | 'system'
       isOnline: true,
       devMode: __DEV__, // Mode développement (activé en DEV)
 
@@ -54,7 +54,7 @@ export const useAppStore = create(
       reset: () =>
         set({
           isFirstLaunch: true,
-          currentTheme: "light",
+          currentTheme: "system",
           devMode: __DEV__,
           notifications: {
             enabled: true,

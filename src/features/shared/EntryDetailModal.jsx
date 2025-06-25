@@ -2,13 +2,15 @@ import React, { useRef, useState, useCallback, useMemo } from 'react';
 import { View, Modal, TouchableOpacity, StyleSheet, Alert, Share, ActionSheetIOS, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { captureRef } from 'react-native-view-shot';
-import { theme } from '../../config/theme';
+import { useTheme } from '../../hooks/useTheme';
 import { BodyText } from '../../core/ui/Typography';
 import { useNotebookStore } from '../../stores/useNotebookStore';
 import ShareableCard from '../../features/shared/ShareableCard';
 
 export default function EntryDetailModal({ entries = [], visible, onClose, showActions = true }) {
   const { deleteEntry, formatTrackingEmotional, calculateTrends } = useNotebookStore();
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const [isSharing, setIsSharing] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const shareCardRef = useRef();
@@ -323,7 +325,7 @@ export default function EntryDetailModal({ entries = [], visible, onClose, showA
 }
 
 // Styles identiques...
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   detailOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',

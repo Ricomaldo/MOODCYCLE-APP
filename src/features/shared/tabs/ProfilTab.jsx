@@ -9,7 +9,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { theme } from '../../../config/theme';
+import { useTheme } from '../../../hooks/useTheme';
 import { Heading3, BodyText, Caption } from '../../../core/ui/Typography';
 import { useUserStore } from '../../../stores/useUserStore';
 
@@ -44,6 +44,8 @@ const JOURNEY_CHOICES = [
 
 export default function ProfilTab({ onDataChange }) {
   const { profile, updateProfile } = useUserStore();
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   
   const [localProfile, setLocalProfile] = useState({
     prenom: profile?.prenom || '',
@@ -192,7 +194,7 @@ export default function ProfilTab({ onDataChange }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,

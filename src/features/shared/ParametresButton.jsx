@@ -10,10 +10,13 @@ import React, { useState } from 'react';
 import { TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { theme } from '../../config/theme';
+import { useTheme } from '../../hooks/useTheme';
 import ParametresModal from './ParametresModal';
 
-export default function ParametresButton({ color = theme.colors.textLight, size = 24, style }) {
+export default function ParametresButton({ color, size = 24, style }) {
+  const { theme } = useTheme();
+  const finalColor = color || theme.colors.textLight;
+  const styles = getStyles(theme);
   const [modalVisible, setModalVisible] = useState(false);
 
   const handlePress = () => {
@@ -36,7 +39,7 @@ export default function ParametresButton({ color = theme.colors.textLight, size 
         onPress={handlePress}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
-        <Feather name="settings" size={size} color={color} />
+        <Feather name="settings" size={size} color={finalColor} />
       </TouchableOpacity>
       
       <ParametresModal
@@ -47,7 +50,7 @@ export default function ParametresButton({ color = theme.colors.textLight, size 
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   button: {
     width: 40,
     height: 40,

@@ -19,16 +19,9 @@ import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { BodyText, Caption } from '../../core/ui/Typography';
-import { theme } from '../../config/theme';
+import { useTheme } from '../../hooks/useTheme';
 import { useNotebookStore } from '../../stores/useNotebookStore';
 import { useCycle } from '../../hooks/useCycle';
-
-const PHASE_FILTERS = [
-  { id: 'menstrual', label: 'Mens.', color: theme.colors.phases.menstrual },
-  { id: 'follicular', label: 'Foll.', color: theme.colors.phases.follicular },
-  { id: 'ovulatory', label: 'Ovu.', color: theme.colors.phases.ovulatory },
-  { id: 'luteal', label: 'Lutéale', color: theme.colors.phases.luteal },
-];
 
 const SWIPE_THRESHOLD = 80; // Distance minimum pour déclencher action
 
@@ -41,6 +34,8 @@ export default function SwipeableEntryIOS({
   getEntryTags,
   phase,
 }) {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const { deleteEntry, addTagToEntry } = useNotebookStore();
   const { currentPhase } = useCycle();
   const translateX = useRef(new Animated.Value(0)).current;
@@ -150,7 +145,7 @@ export default function SwipeableEntryIOS({
                   style={[
                     styles.phaseDot,
                     {
-                      backgroundColor: PHASE_FILTERS.find((p) => p.id === item.phase)?.color,
+                      backgroundColor: theme.colors.phases[item.phase],
                     },
                   ]}
                 />
@@ -180,7 +175,7 @@ export default function SwipeableEntryIOS({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     marginBottom: theme.spacing.m,
     position: 'relative',

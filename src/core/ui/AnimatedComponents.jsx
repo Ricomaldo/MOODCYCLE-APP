@@ -10,7 +10,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, TouchableOpacity, StyleSheet, Animated, TextInput, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { theme } from '../../config/theme';
+import { useTheme } from '../../hooks/useTheme';
 import { BodyText, Caption } from './Typography';
 
 // ✅ FAB Animé Multi-Options
@@ -18,6 +18,8 @@ import { BodyText, Caption } from './Typography';
 
 // ✅ Barre de Recherche Animée
 export function AnimatedSearchBar({ visible, query, onChangeText, onClear }) {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const scaleYAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
@@ -70,6 +72,8 @@ export function AnimatedSearchBar({ visible, query, onChangeText, onClear }) {
 
 // ✅ Filter Pills Animés
 export function AnimatedFilterPill({ item, isActive, onPress, index }) {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const backgroundAnim = useRef(new Animated.Value(0)).current;
 
@@ -125,6 +129,8 @@ export function AnimatedFilterPill({ item, isActive, onPress, index }) {
 
 // ✅ Entry Loading Skeleton
 export function EntryLoadingSkeleton() {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const pulseAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -200,7 +206,7 @@ export function AnimatedChatBubble({ children, delay = 0, isUser = false }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
 
   // Search
   searchContainer: {

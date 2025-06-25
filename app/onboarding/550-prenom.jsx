@@ -15,11 +15,13 @@ import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
 import { BodyText } from '../../src/core/ui/Typography';
-import { theme } from '../../src/config/theme';
+import { useTheme } from '../../src/hooks/useTheme';
 
 export default function PrenomScreen() {
   // 🧠 INTELLIGENCE HOOK
   const intelligence = useOnboardingIntelligence('550-prenom');
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   
   // 🎨 Animations Standard
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -321,7 +323,7 @@ export default function PrenomScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   scrollView: {
     flex: 1,
   },

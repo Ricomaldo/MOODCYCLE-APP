@@ -9,7 +9,7 @@
 //
 import { View, StyleSheet, Pressable } from 'react-native';
 import Svg, { Circle, Path, G, Line, Text } from 'react-native-svg';
-import { theme } from '../../config/theme';
+import { useTheme } from '../../hooks/useTheme';
 import { CYCLE_DEFAULTS, PHASE_NAMES, WHEEL_CONSTANTS } from '../../config/cycleConstants';
 
 // 🎭 Métadonnées des phases avec émojis
@@ -28,6 +28,8 @@ export default function CycleWheel({
   cycleLength = CYCLE_DEFAULTS.LENGTH,
   onPhasePress = () => {},
 }) {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   // Configuration des phases du cycle depuis les constantes
   const phases = Object.values(PHASE_NAMES);
   const colors = phases.map((phase) => theme.colors.phases[phase]);
@@ -262,7 +264,7 @@ export default function CycleWheel({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',

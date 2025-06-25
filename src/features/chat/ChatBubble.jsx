@@ -10,7 +10,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { BodyText } from '../../core/ui/Typography';
-import { theme } from '../../config/theme';
+import { useTheme } from '../../hooks/useTheme';
 import MeluneAvatar from '../shared/MeluneAvatar';
 import { useUserStore } from '../../stores/useUserStore';
 
@@ -22,6 +22,8 @@ export default function ChatBubble({
   delay = 0
 }) {
   const { melune } = useUserStore();
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const translateYAnim = useRef(new Animated.Value(5)).current;
 
@@ -84,13 +86,13 @@ export default function ChatBubble({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   userContainer: {
     alignItems: 'flex-end',
     marginVertical: 4,
   },
   userBubble: {
-    backgroundColor: '#007AFF',
+    backgroundColor: theme.colors.primary,
     borderRadius: 20,
     borderBottomRightRadius: 6,
     paddingHorizontal: 16,
@@ -103,7 +105,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   userText: {
-    color: '#FFFFFF',
+    color: 'white',
     fontSize: 16,
     lineHeight: 20,
   },

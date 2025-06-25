@@ -21,6 +21,7 @@ import {
   Quicksand_700Bold,
 } from "@expo-google-fonts/quicksand";
 import { useNetworkStatus } from "../src/hooks/useNetworkStatus";
+import { useTheme } from "../src/hooks/useTheme";
 import DevNavigation from "../src/core/dev/DevNavigation";
 import performanceMonitor from "../src/core/monitoring/PerformanceMonitor";
 
@@ -33,6 +34,9 @@ export default function RootLayout() {
 
   // Hook pour surveiller la connexion réseau
   useNetworkStatus();
+  
+  // Hook pour le thème
+  const { isDark } = useTheme();
 
   // Attendre que les polices soient chargées
   if (!fontsLoaded) {
@@ -42,7 +46,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <StatusBar style="auto" />
+        <StatusBar style={isDark ? "light" : "auto"} />
         <Stack>
           <Stack.Screen name="onboarding" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

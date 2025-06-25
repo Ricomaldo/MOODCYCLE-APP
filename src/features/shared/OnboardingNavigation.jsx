@@ -11,7 +11,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import { theme } from '../../config/theme';
+import { useTheme } from '../../hooks/useTheme';
 import { BodyText, Caption } from '../../core/ui/Typography';
 
 // Mapping écrans vers étapes groupées
@@ -36,6 +36,8 @@ const STEP_LABELS = {
 };
 
 export default function OnboardingNavigation({ currentScreen, canGoBack = true }) {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const currentStep = SCREEN_TO_STEP[currentScreen] || 1;
   const progressAnim = useRef(new Animated.Value(0)).current;
   const backButtonAnim = useRef(new Animated.Value(0)).current;
@@ -143,7 +145,7 @@ export default function OnboardingNavigation({ currentScreen, canGoBack = true }
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -9,10 +9,12 @@
 //
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { theme } from "../../src/config/theme"; // Importer le thème
+import { useTheme } from "../../src/hooks/useTheme"; // Importer le thème
 
 export default function TabLayout() {
-  return (
+  const { theme } = useTheme();
+  
+return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: theme.tabBar.activeTintColor,

@@ -8,9 +8,10 @@
 //
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
-import { theme } from '../../../config/theme';
+import { useTheme } from '../../../hooks/useTheme';
 import { Heading3, BodyText, Caption } from '../../../core/ui/Typography';
 import { useUserStore } from '../../../stores/useUserStore';
+import ThemeSelector from '../ThemeSelector';
 
 // 🎨 Dimensions thérapeutiques identiques à l'onboarding
 const THERAPEUTIC_DIMENSIONS = [
@@ -61,6 +62,7 @@ const THERAPEUTIC_DIMENSIONS = [
 const SLIDER_LABELS = ['Pas du tout', 'Un peu', 'Moyennement', 'Beaucoup', 'Passionnément'];
 
 export default function PreferencesTab({ onDataChange }) {
+  const { theme } = useTheme();
   const { preferences, updatePreferences } = useUserStore();
   
   const [localPreferences, setLocalPreferences] = useState(
@@ -102,6 +104,8 @@ export default function PreferencesTab({ onDataChange }) {
         return dimension?.title || key;
       });
   };
+
+  const styles = getStyles(theme);
 
   const renderSlider = (dimension) => {
     const value = localPreferences[dimension.key] || 3;
@@ -162,6 +166,9 @@ export default function PreferencesTab({ onDataChange }) {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Sélecteur de thème */}
+      <ThemeSelector onDataChange={onDataChange} />
+      
       {/* Header explicatif */}
       <View style={styles.header}>
         <Heading3 style={styles.headerTitle}>Tes préférences thérapeutiques</Heading3>
@@ -198,7 +205,7 @@ export default function PreferencesTab({ onDataChange }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,

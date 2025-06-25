@@ -9,9 +9,11 @@
 //
 import { View, StyleSheet } from 'react-native';
 import { BodyText, Caption } from '../Typography/Typography';
-import { theme } from '../../config/theme';
+import { useTheme } from '../../hooks/useTheme';
 
 export default function InsightCard({ insight, phase = 'menstrual' }) {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   // Calcul automatique de la couleur de texte selon la phase
   const phaseColor = theme.colors.phases[phase];
   const textColor = theme.getTextColorOn(phaseColor);
@@ -26,7 +28,7 @@ export default function InsightCard({ insight, phase = 'menstrual' }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     borderRadius: theme.borderRadius.medium,
     padding: theme.spacing.l,

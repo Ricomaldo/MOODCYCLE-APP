@@ -15,7 +15,7 @@ import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
 import { BodyText } from '../../src/core/ui/Typography';
-import { theme } from '../../src/config/theme';
+import { useTheme } from '../../src/hooks/useTheme';
 import { Feather } from '@expo/vector-icons';
 
 // 🎯 Arguments personnalisés par persona
@@ -79,6 +79,8 @@ const PRICING = {
 };
 
 export default function PaywallScreen() {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const intelligence = useOnboardingIntelligence('700-paywall');
   
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -274,7 +276,7 @@ export default function PaywallScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   scrollView: { flex: 1 },
   scrollContent: { flexGrow: 1 },
   content: { flex: 1, paddingHorizontal: theme.spacing.l },

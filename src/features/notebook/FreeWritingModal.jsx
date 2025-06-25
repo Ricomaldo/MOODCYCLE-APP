@@ -20,7 +20,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons, Feather } from '@expo/vector-icons';
-import { theme } from '../../config/theme';
+import { useTheme } from '../../hooks/useTheme';
 import { Heading2, BodyText, Caption } from '../../core/ui/Typography';
 import { useNotebookStore } from '../../stores/useNotebookStore';
 import { useUserStore } from '../../stores/useUserStore';
@@ -50,6 +50,8 @@ const PROMPTS_BY_PHASE = {
 };
 
 export default function FreeWritingModal({ visible, onClose }) {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const insets = useSafeAreaInsets();
   const { addEntry } = useNotebookStore();
   const { currentPhase } = useCycle();
@@ -253,7 +255,7 @@ export default function FreeWritingModal({ visible, onClose }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
   },

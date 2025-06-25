@@ -15,48 +15,50 @@ import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
 import { BodyText } from '../../src/core/ui/Typography';
-import { theme } from '../../src/config/theme';
-
-// 🎯 Tranches d'âge avec descriptions psychologiques
-const AGE_RANGES = [
-  {
-    id: '18-25',
-    title: 'Exploratrice (18-25 ans)',
-    description: 'Découverte de ton cycle et de ta nature féminine',
-    icon: '🌸',
-    color: theme.colors.phases.follicular,
-  },
-  {
-    id: '26-35',
-    title: 'Créatrice (26-35 ans)', 
-    description: 'Équilibre entre ambitions et sagesse cyclique',
-    icon: '🌿',
-    color: theme.colors.phases.ovulatory,
-  },
-  {
-    id: '36-45',
-    title: 'Sage (36-45 ans)',
-    description: 'Maîtrise de ton pouvoir féminin et transmission',
-    icon: '🌙',
-    color: theme.colors.phases.luteal,
-  },
-  {
-    id: '46-55',
-    title: 'Transformation (46-55 ans)',
-    description: 'Honorer les transitions et la sagesse acquise',
-    icon: '✨',
-    color: theme.colors.phases.menstrual,
-  },
-  {
-    id: '55+',
-    title: 'Liberté (55+ ans)',
-    description: 'Épanouissement au-delà des cycles traditionnels',
-    icon: '🦋',
-    color: theme.colors.primary,
-  },
-];
+import { useTheme } from '../../src/hooks/useTheme';
 
 export default function ConfianceScreen() {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+  
+  // 🎯 Tranches d'âge avec descriptions psychologiques (déplacé dans le composant pour accéder au thème)
+  const AGE_RANGES = [
+    {
+      id: '18-25',
+      title: 'Exploratrice (18-25 ans)',
+      description: 'Découverte de ton cycle et de ta nature féminine',
+      icon: '🌸',
+      color: theme.colors.phases.follicular,
+    },
+    {
+      id: '26-35',
+      title: 'Créatrice (26-35 ans)', 
+      description: 'Équilibre entre ambitions et sagesse cyclique',
+      icon: '🌿',
+      color: theme.colors.phases.ovulatory,
+    },
+    {
+      id: '36-45',
+      title: 'Sage (36-45 ans)',
+      description: 'Maîtrise de ton pouvoir féminin et transmission',
+      icon: '🌙',
+      color: theme.colors.phases.luteal,
+    },
+    {
+      id: '46-55',
+      title: 'Transformation (46-55 ans)',
+      description: 'Honorer les transitions et la sagesse acquise',
+      icon: '✨',
+      color: theme.colors.phases.menstrual,
+    },
+    {
+      id: '55+',
+      title: 'Liberté (55+ ans)',
+      description: 'Épanouissement au-delà des cycles traditionnels',
+      icon: '🦋',
+      color: theme.colors.primary,
+    },
+  ];
   // 🧠 INTELLIGENCE HOOK
   const intelligence = useOnboardingIntelligence('300-confiance');
   
@@ -291,7 +293,7 @@ export default function ConfianceScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   scrollView: {
     flex: 1,
   },

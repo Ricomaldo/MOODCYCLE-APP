@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { View, Modal, TouchableOpacity, StyleSheet, ScrollView, Animated } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { theme } from '../../config/theme';
+import { useTheme } from '../../hooks/useTheme';
 import { Heading2, BodyText, Caption } from '../../core/ui/Typography';
 import { useNotebookStore } from '../../stores/useNotebookStore';
 import { useCycle } from '../../hooks/useCycle';
@@ -50,6 +50,8 @@ const SYMPTOMS_EMOTIONAL = [
 ];
 
 export default function QuickTrackingModal({ visible, onClose, defaultTags = [] }) {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const { addQuickTracking } = useNotebookStore();
   const { currentPhase } = useCycle();
   
@@ -331,7 +333,7 @@ export default function QuickTrackingModal({ visible, onClose, defaultTags = [] 
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',

@@ -10,7 +10,7 @@
 import { useState, useMemo, memo, useRef, useEffect, Profiler } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { theme } from '../../config/theme';
+import { useTheme } from '../../hooks/useTheme';
 import { Caption } from '../../core/ui/Typography';
 import { useNotebookStore } from '../../stores/useNotebookStore';
 import { useCycle } from '../../hooks/useCycle';
@@ -45,6 +45,8 @@ const CalendarView = memo(function CalendarView({
   onPhasePress = () => {},
   onDatePress = () => {},
 }) {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
@@ -262,7 +264,7 @@ function ProfiledCalendarView(props) {
 
 export default ProfiledCalendarView;
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.medium,

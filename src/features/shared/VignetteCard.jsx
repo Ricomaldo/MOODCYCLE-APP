@@ -12,7 +12,7 @@ import { View, TouchableOpacity, StyleSheet, Platform, Alert } from 'react-nativ
 import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Feather } from '@expo/vector-icons';
-import { theme } from '../../config/theme';
+import { useTheme } from '../../hooks/useTheme';
 import { BodyText, Caption } from '../../core/ui/Typography';
 import { useUserStore } from '../../stores/useUserStore';
 import { useEngagementStore } from '../../stores/useEngagementStore';
@@ -26,6 +26,8 @@ export default function VignetteCard({
   showCategory = false,
   trackEngagement = true 
 }) {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   // ✅ DEBUG: Vérification données vignette
   if (!vignette) {
     console.error('🚨 VignetteCard: vignette is null/undefined');
@@ -350,7 +352,7 @@ export function VignettesContainer({
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   // Container
   container: {
     gap: theme.spacing.m,

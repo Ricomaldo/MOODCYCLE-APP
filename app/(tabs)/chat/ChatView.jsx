@@ -25,7 +25,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Feather } from "@expo/vector-icons";
 import ChatBubble from "../../../src/features/chat/ChatBubble";
-import { theme } from "../../../src/config/theme";
+import { useTheme } from "../../../src/hooks/useTheme";
 import { Heading, BodyText } from "../../../src/core/ui/Typography";
 import ChatService from "../../../src/services/ChatService";
 import ScreenContainer from "../../../src/core/layout/ScreenContainer";
@@ -40,7 +40,7 @@ import ParametresButton from '../../../src/features/shared/ParametresButton';
 const HEADER_HEIGHT = 60;
 
 // Composant TypingIndicator avec animations iOS-like - FIXED MEMORY LEAK
-function TypingIndicator() {
+function TypingIndicator({ theme }) {
   const dot1Anim = useRef(new Animated.Value(0.4)).current;
   const dot2Anim = useRef(new Animated.Value(0.4)).current;
   const dot3Anim = useRef(new Animated.Value(0.4)).current;
@@ -101,13 +101,38 @@ function TypingIndicator() {
     };
   }, []);
 
+  const typingStyles = {
+    loadingContainer: {
+      alignItems: 'flex-start',
+      marginVertical: 8,
+    },
+    loadingBubble: {
+      backgroundColor: theme.colors.backgroundSecondary,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 16,
+      borderBottomLeftRadius: 4,
+    },
+    typingIndicator: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    dot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: theme.colors.textLight,
+      marginHorizontal: 1,
+    },
+  };
+
   return (
-    <View style={styles.loadingContainer}>
-      <View style={styles.loadingBubble}>
-        <View style={styles.typingIndicator}>
-          <Animated.View style={[styles.dot, { opacity: dot1Anim }]} />
-          <Animated.View style={[styles.dot, { opacity: dot2Anim }]} />
-          <Animated.View style={[styles.dot, { opacity: dot3Anim }]} />
+    <View style={typingStyles.loadingContainer}>
+      <View style={typingStyles.loadingBubble}>
+        <View style={typingStyles.typingIndicator}>
+          <Animated.View style={[typingStyles.dot, { opacity: dot1Anim }]} />
+          <Animated.View style={[typingStyles.dot, { opacity: dot2Anim }]} />
+          <Animated.View style={[typingStyles.dot, { opacity: dot3Anim }]} />
         </View>
       </View>
     </View>
@@ -120,6 +145,8 @@ export default function ChatScreen() {
   
   // 📊 Monitoring de performance - DÉSACTIVÉ TEMPORAIREMENT
   // const renderCount = useRenderMonitoring('ChatScreen');
+  
+  const { theme } = useTheme();
   
   // ✅ MEMORY MONITORING HELPER
   useEffect(() => {
@@ -414,6 +441,8 @@ export default function ChatScreen() {
     );
   };
 
+  const styles = getStyles(theme);
+
   return (
     <ScreenContainer style={styles.container} hasTabs={true}>
       
@@ -462,7 +491,7 @@ export default function ChatScreen() {
             />
           ))}
           
-          {isLoading && <MemoizedTypingIndicator />}
+          {isLoading && <MemoizedTypingIndicator theme={theme} />}
         </ScrollView>
 
         {/* Input collé à la tabbar */}
@@ -498,10 +527,10 @@ export default function ChatScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.background,
   },
   flexContainer: {
     flex: 1,
@@ -544,39 +573,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
   },
-  loadingContainer: {
-    alignItems: 'flex-start',
-    marginTop: 12,
-  },
-  loadingBubble: {
-    backgroundColor: '#F2F2F7',
-    borderRadius: 18,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    maxWidth: '70%',
-  },
-  typingIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#8E8E93',
-  },
   inputWrapper: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: theme.colors.background,
     paddingHorizontal: 16,
     paddingTop: 8,
     borderTopWidth: 0.5,
-    borderTopColor: '#E5E5EA',
+    borderTopColor: theme.colors.border,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    backgroundColor: '#F2F2F7',
+    backgroundColor: theme.colors.backgroundSecondary,
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -585,7 +592,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    color: '#000000',
+    color: theme.colors.text,
     paddingVertical: 8,
     paddingRight: 8,
     maxHeight: 100,

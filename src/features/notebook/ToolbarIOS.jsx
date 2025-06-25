@@ -12,11 +12,13 @@ import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { theme } from '../../config/theme';
+import { useTheme } from '../../hooks/useTheme';
 import { BodyText } from '../../core/ui/Typography';
 
 export default function ToolbarIOS({ onWritePress, onTrackPress }) {
+  const { theme } = useTheme();
   const insets = useSafeAreaInsets();
+  const styles = getStyles(theme);
 
   const handleWritePress = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -56,7 +58,7 @@ export default function ToolbarIOS({ onWritePress, onTrackPress }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   toolbar: {
     position: 'absolute',
     bottom: 0,

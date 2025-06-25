@@ -13,9 +13,11 @@ import { router } from 'expo-router';
 import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
 import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import { BodyText } from '../../src/core/ui/Typography';
-import { theme } from '../../src/config/theme';
+import { useTheme } from '../../src/hooks/useTheme';
 
 export default function PromesseScreen() {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   // 🧠 INTELLIGENCE HOOK
   const intelligence = useOnboardingIntelligence('100-promesse');
   
@@ -198,7 +200,7 @@ export default function PromesseScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: theme.spacing.l,

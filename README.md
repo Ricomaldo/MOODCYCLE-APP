@@ -1,181 +1,178 @@
 # 📱 MoodCycle App - Intelligence Cyclique Évolutive
 
-> **Première IA thérapeutique spécialisée cycle féminin - Architecture Enterprise-Grade**
+> **Vision** : Première IA thérapeutique spécialisée cycle féminin avec architecture d'intelligence adaptative
 > 
-> **État** : Post-Migration UI + Polish Complet ✅ | **Version** : 7.0 | **Statut** : Production Ready 🚀
+> **État Actuel** : MVP Fonctionnel + Architecture Intelligence (Partiellement Connectée) | **Version** : 7.0-alpha | **Statut** : En Développement 🚧
 
 ---
 
-## 🎯 **VISION & DIFFÉRENCIATION**
+## 🎯 **VISION & OBJECTIF**
 
-### **Problème Résolu**
+### **Problème Identifié**
 - **Rupture d'expérience** : Onboarding prometteur → outils excellents mais sans guidance  
 - **Paradoxe du choix** : Trop d'options parfaites créent l'immobilisme
 - **Désengagement précoce** : 60% abandon après J7, faute de personnalisation
 
-### **Solution Révolutionnaire : 3 Systèmes Intégrés**
+### **Solution Cible : 3 Systèmes Intégrés**
 1. **🎭 Intelligence Comportementale** : 5 personas × patterns temporels × préférences
 2. **📈 Progression Adaptative** : Discovery → Learning → Autonomous (Méthodologie Jeza)  
 3. **🎯 Révélation Contextuelle** : 3 vignettes personnalisées vs 15 options paralysantes
 
-### **ROI Attendu**
-- **Rétention +85%** (guidance continue vs abandon)
-- **Engagement +200%** (actions contextuelles vs navigation libre)
-- **Différenciation unique** : Seule app IA cyclique évolutive
+### **📊 ÉTAT ACTUEL vs OBJECTIF**
+
+| Composant | État Actuel | Objectif | Connexions |
+|-----------|-------------|----------|-------------|
+| **MVP Core** | ✅ **COMPLET** | ✅ | Chat, Cycle, Notebook fonctionnels |
+| **Architecture Intelligence** | 🟡 **CRÉÉE** | ✅ | Services/Hooks créés mais **partiellement connectés** |
+| **Données Thérapeutiques** | ✅ **VALIDÉES** | ✅ | 2329+ insights validés par thérapeute |
+| **Personas Engine** | ✅ **TESTÉ** | ✅ | Algorithme fonctionnel + tests |
+| **Connexions Intelligence** | 🔴 **MANQUANTES** | ✅ | **PRIORITÉ** : Connecter services → composants |
+| **Expérience Adaptative** | 🔴 **À IMPLÉMENTER** | ✅ | Vignettes contextuelles, suggestions |
 
 ---
 
-## ✨ **FONCTIONNALITÉS PRINCIPALES**
+## ✨ **FONCTIONNALITÉS ACTUELLES**
 
-### **🧠 Intelligence Adaptative**
-- **5 Personas Thérapeutiques** : Emma (exploratrice) / Laure (pro) / Clara (énergique) / Sylvie (sage) / Christine (mature)
-- **60+ Expériences Distinctes** : Chaque combo persona×phase×maturité unique
-- **Apprentissage Comportemental** : Patterns temporels, efficacité suggestions, préférences
+### **🟢 Fonctionnalités Opérationnelles**
+- 🗣️ **Chat IA Melune** - Conversations de base (sans personnalisation persona)
+- 📊 **Roue du Cycle** - Affichage phases + données statiques
+- 📝 **Carnet Personnel** - Journal avec swipe actions iOS natives ✅
+- ⚙️ **Paramètres Utilisateur** - Modification profil, préférences, avatar ✅
+- 🌙 **Onboarding Complet** - 8 écrans avec calcul persona ✅
 
-### **📱 Fonctionnalités Core**
-- 🗣️ **Chat IA Melune** - Conversations personnalisées par persona + phase
-- 📊 **Roue du Cycle** - Hub avec vignettes intelligentes contextuelles
-- 📝 **Carnet Personnel** - Journal avec swipe actions iOS natives
-- 🎯 **Insights Thérapeutiques** - 890+ recommandations personnalisées
-- 🌙 **Onboarding Conversationnel** - Intelligence activée dès l'écran 2
+### **🟡 Fonctionnalités Partielles**
+- 🎯 **Insights Thérapeutiques** - 2329+ disponibles mais sélection non-intelligente
+- 🎭 **Personas** - Calculées mais non-utilisées dans l'expérience
+- 📈 **Tracking Intelligence** - Collecté mais non-exploité
 
----
-
-## 🏗️ **ARCHITECTURE ENTERPRISE-GRADE**
-
-### **Transformation Technique**
-
-**AVANT : Architecture Statique**
-```
-Stores Basiques → Navigation Libre → Paralysie du Choix
-```
-
-**APRÈS : Architecture Intelligence Évolutive**
-```
-🧠 INTELLIGENCE LAYER
-├── UserIntelligence (ML patterns)
-├── PersonalizationEngine (contexte+persona)
-├── AdaptiveGuidance (suggestions dynamiques)
-└── EngagementStore (progression Jeza)
-
-🎯 ORCHESTRATION LAYER
-├── SmartSuggestions (actions prioritaires)
-├── VignettesService (révélation contextuelle)
-└── FeatureGatingSystem (révélation progressive)
-
-🎪 EXPERIENCE LAYER
-├── VignetteCard (navigation enrichie)
-├── AdaptiveInterface (layout évolutif)
-└── SwipeableEntryIOS (actions natives)
-```
-
-### **📊 Métriques Post-Polish**
-- **Fichiers obsolètes supprimés** : 4 (doublon + 3 classes wrapper legacy)
-- **Code legacy migré** : 100% vers API moderne
-- **Warnings console** : -100% (architecture unifiée)
-- **Re-renders évités** : -40% (optimisations hooks)
-- **Cohérence patterns** : 100% factory functions
+### **🔴 Fonctionnalités À Connecter**
+- **Navigation Contextuelle** - Vignettes intelligentes selon persona/phase
+- **Suggestions Adaptatives** - Recommandations basées sur patterns
+- **Interface Évolutive** - Adaptation selon maturité utilisateur
+- **Chat Personnalisé** - Réponses selon persona + contexte
 
 ---
 
-## 📁 **STRUCTURE PROJET**
+## 🏗️ **ARCHITECTURE - ÉTAT IMPLÉMENTATION**
+
+### **🟢 Couches Implémentées**
+
+```
+📊 DATA LAYER ✅
+├── phases.json (330 lignes) - Contextes par phase
+├── insights.json (2329 lignes) - Conseils personnalisés  
+├── vignettes.json (571 lignes) - Contenus adaptatifs
+└── closings.json (27 lignes) - Formules persona
+
+🏪 STORES LAYER ✅  
+├── useUserStore.js - Hub central + profil
+├── useUserIntelligence.js - Patterns comportementaux
+├── useEngagementStore.js - Métriques progression
+├── useChatStore.js - Conversations
+└── useNotebookStore.js - Journal
+
+🔌 SERVICES LAYER ✅ (Créés mais non-connectés)
+├── PersonalizationEngine.js - Factory contexts
+├── AdaptiveGuidance.js - Messages adaptatifs  
+├── VignettesService.js - Navigation enrichie
+├── PersonaEngine.js - Algorithme personas (testé)
+└── InsightsEngine.js - Sélection insights
+```
+
+### **🔴 Connexions Manquantes**
+
+```
+🚧 INTEGRATION GAPS
+├── Services → Composants (non-connectés)
+├── Intelligence → UX (statique)
+├── Personas → Chat (non-personnalisé)
+├── Patterns → Suggestions (non-exploités)
+└── Données → Interface (sélection manuelle)
+```
+
+---
+
+## 🎯 **PRIORITÉS DÉVELOPPEMENT**
+
+### **Phase 1 : Connexions Core** 🔥
+1. **PersonalizationEngine** → Chat personnalisé par persona
+2. **VignettesService** → Navigation contextuelle CycleView
+3. **InsightsEngine** → Sélection intelligente vs liste statique
+4. **AdaptiveGuidance** → Suggestions basées sur patterns
+
+### **Phase 2 : Intelligence Adaptative**
+1. **useSmartSuggestions** → Actions prioritaires contextuelles
+2. **useAdaptiveInterface** → Layout évolutif selon maturité
+3. **FeatureGatingSystem** → Révélation progressive fonctionnalités
+4. **OnboardingContinuum** → Guidance post-onboarding
+
+### **Phase 3 : Optimisation**
+1. **Performance** - Cache intelligent, optimisations
+2. **Tests** - Coverage intelligence services
+3. **Analytics** - Métriques efficacité suggestions
+
+---
+
+## 📁 **STRUCTURE PROJET ACTUELLE**
 
 ```
 MOODCYCLE-APP/
 ├── __tests__/                          # 🧪 Tests (626 lignes)
-│   ├── cycleCalculations.test.js       # Tests calculs cycle  
-│   └── PersonaEngine.test.js           # Tests algorithme personas
+│   ├── cycleCalculations.test.js       # ✅ Tests calculs cycle  
+│   └── PersonaEngine.test.js           # ✅ Tests algorithme personas
 ├── app/                                # 🚀 Expo Router
-│   ├── onboarding/                     # 8 écrans avec intelligence
-│   │   └── 200-rencontre.jsx          # 🧠 IA activée dès écran 2
-│   └── (tabs)/                        # Navigation principale
-│       ├── chat/                      # Conversations personnalisées
-│       ├── cycle/                     # Hub vignettes intelligentes  
-│       └── notebook/                  # Carnet iOS natif
+│   ├── onboarding/                     # ✅ 8 écrans fonctionnels
+│   └── (tabs)/                         # ✅ Navigation principale
+│       ├── chat/                       # 🟡 Chat basique (non-personnalisé)
+│       ├── cycle/                      # 🟡 Affichage statique
+│       └── notebook/                   # ✅ Journal iOS natif complet
 ├── src/
-│   ├── stores/                        # 🏪 State Management Unifié
-│   │   ├── useUserStore.js            # Hub central + profil
-│   │   ├── useUserIntelligence.js     # 🧠 ML patterns (NOUVEAU)
-│   │   ├── useEngagementStore.js      # 📈 Progression Jeza (NOUVEAU)
-│   │   ├── useChatStore.js            # Conversations
-│   │   └── useNotebookStore.js        # Journal personnel
-│   ├── services/                      # 🔌 Intelligence Services
-│   │   ├── PersonalizationEngine.js   # 🎨 Factory contexts (NOUVEAU)
-│   │   ├── AdaptiveGuidance.js        # 🧭 Messages adaptatifs (NOUVEAU)
-│   │   ├── VignettesService.js        # 🎯 Navigation enrichie (NOUVEAU)
-│   │   ├── FeatureGatingSystem.js     # 🔓 Révélation progressive (NOUVEAU)
-│   │   ├── OnboardingContinuum.js     # 📈 Guidance post-onboarding (NOUVEAU)
-│   │   ├── PersonaEngine.js           # Algorithme personas (testé)
-│   │   ├── ChatService.js             # API Claude + intelligence
-│   │   ├── ContentManager.js          # Gestion contenus offline
-│   │   └── InsightsEngine.js          # Insights contextuels
-│   ├── hooks/                         # 🎣 Hooks Spécialisés
-│   │   ├── useVignettes.js            # 🎴 Intégration complète (NOUVEAU)
-│   │   ├── useSmartSuggestions.js     # 🤖 Orchestration (NOUVEAU)
-│   │   ├── useAdaptiveInterface.js    # 🔄 Interface évolutive (NOUVEAU)
-│   │   ├── usePersonalizedInsight.js  # Insights premium
-│   │   ├── useInsightsList.js         # Listes + useContext intégré
-│   │   ├── useCycle.js                # API cycle optimisée
-│   │   ├── usePersona.js              # Gestion personas
-│   │   └── usePerformanceMonitoring.js # 📊 Performance
-│   ├── features/                      # 🎨 Composants Métier
+│   ├── stores/                         # ✅ State Management Complet
+│   │   ├── useUserStore.js             # ✅ Hub central + profil
+│   │   ├── useUserIntelligence.js      # 🟡 Collecte patterns (non-exploité)
+│   │   ├── useEngagementStore.js       # 🟡 Métriques (non-utilisées)
+│   │   ├── useChatStore.js             # ✅ Conversations
+│   │   └── useNotebookStore.js         # ✅ Journal personnel
+│   ├── services/                       # 🔴 Services Créés (Non-Connectés)
+│   │   ├── PersonalizationEngine.js    # 🔴 Factory contexts
+│   │   ├── AdaptiveGuidance.js         # 🔴 Messages adaptatifs
+│   │   ├── VignettesService.js         # 🔴 Navigation enrichie
+│   │   ├── PersonaEngine.js            # ✅ Algorithme testé
+│   │   ├── ChatService.js              # ✅ API Claude
+│   │   └── InsightsEngine.js           # 🔴 Sélection intelligente
+│   ├── hooks/                          # 🔴 Hooks Spécialisés (Non-Utilisés)
+│   │   ├── useSmartSuggestions.js      # 🔴 Orchestration
+│   │   ├── useAdaptiveInterface.js     # 🔴 Interface évolutive
+│   │   ├── usePersonalizedInsight.js   # 🔴 Insights premium
+│   │   └── useVignettes.js             # 🔴 Intégration complète
+│   ├── features/                       # 🎨 Composants Métier
 │   │   ├── shared/
-│   │   │   ├── VignetteCard.jsx       # 🎯 Navigation enrichie (NOUVEAU)
-│   │   │   └── OnboardingNavigation.jsx # Navigation onboarding (NOUVEAU)
+│   │   │   ├── ParametresModal.jsx     # ✅ Paramètres complets
+│   │   │   └── MeluneAvatar.jsx        # ✅ Avatar réactif
 │   │   └── notebook/
-│   │       ├── SwipeableEntryIOS.jsx  # 🍎 Swipe natif
-│   │       └── ToolbarIOS.jsx         # 🍎 Toolbar native
-│   ├── core/                          # 🏗️ Infrastructure
-│   │   ├── dev/PerformanceDashboard.jsx # 📊 Dashboard debug
-│   │   └── monitoring/PerformanceMonitor.js # Surveillance (346 lignes)
-│   └── utils/                         # 🛠️ Utilitaires (testés)
-       ├── cycleCalculations.js        # Calculs cycle + tests
-       └── dateUtils.js               # Utilitaires dates
+│   │       ├── SwipeableEntryIOS.jsx   # ✅ Swipe natif
+│   │       └── ToolbarIOS.jsx          # ✅ Toolbar native
+│   └── data/                           # ✅ Données Thérapeutiques Validées
+       ├── phases.json                 # ✅ 330 lignes - Contextes
+       ├── insights.json               # ✅ 2329 lignes - Conseils
+       ├── vignettes.json              # ✅ 571 lignes - Contenus
+       └── closings.json               # ✅ 27 lignes - Formules
 ```
 
 ---
 
-## 🧠 **INTELLIGENCE COMPORTEMENTALE**
+## 🎯 **PROCHAINES ÉTAPES**
 
-### **🎭 Système Personas (5 Profils Thérapeutiques)**
+### **Objectif Immédiat : MVP Intelligence** 
+Connecter les services d'intelligence existants aux composants pour créer une première expérience adaptative.
 
-| Persona | Style | Ton | Actions Préférées | Exemple Prompt |
-|---------|-------|-----|------------------|----------------|
-| **Emma** | Exploratrice | "Hey ! ✨" | explore, discover | "Comment canaliser cette énergie qui remonte ? ✨" |
-| **Laure** | Professionnelle | "Analysons :" | plan, optimize | "Comment structurer vos objectifs pour cette phase ?" |
-| **Clara** | Énergique | "Ready ? 🚀" | transform, inspire | "Comment exploiter au MAX cette phase de puissance ?" |
-| **Sylvie** | Sage | "En douceur..." | nurture, balance | "Comment accueillir cette sagesse lutéale ?" |
-| **Christine** | Mature | "Avec sagesse," | wisdom, guide | "Comment honorer cette phase de transformation ?" |
+### **Sessions de Développement Planifiées**
+1. **Session Audit** - Cartographier connexions manquantes
+2. **Session Core** - Connecter PersonalizationEngine + VignettesService  
+3. **Session Intelligence** - Implémenter suggestions adaptatives
 
-### **📈 Progression Maturité (Méthodologie Jeza)**
-
-| Niveau | Durée | Vignettes | Complexité | Actions Mises en Avant |
-|--------|-------|-----------|------------|----------------------|
-| **Discovery** | 0-7 jours | 2 | Simple | chat, notebook, explore |
-| **Learning** | 7-21 jours | 3 | Modérée | track, analyze, plan |
-| **Autonomous** | 21+ jours | 4 | Complète | create, optimize, share |
-
-### **🎯 Exemple Flow Intelligence**
-
-```javascript
-// 1. Contexte utilisateur
-Emma + Phase Menstruelle + Discovery + J3 app
-
-// 2. Génération vignette
-VignetteCard {
-  title: "Explore tes ressentis",
-  prompt: "Comment honorer ton besoin de repos aujourd'hui ? 🌙",
-  action: 'chat',
-  confidence: 85%
-}
-
-// 3. Navigation enrichie  
-Tap → router.push('/chat', {
-  initialMessage: "Comment honorer ton besoin de repos aujourd'hui ? 🌙",
-  context: 'vignette_menstrual_emma',
-  autoSend: false
-})
-```
+### **Résultat Attendu**
+Transformer l'app statique actuelle en expérience intelligente avec navigation contextuelle et suggestions personnalisées.
 
 ---
 
@@ -196,160 +193,20 @@ npm start          # Expo DevTools
 npm run ios        # Simulateur iOS
 npm run android    # Émulateur Android
 
-# Tests & Quality  
-npm test              # Tests unitaires
-npm run lint          # Linting code
-npm run type-check    # Validation TypeScript
+# Tests
+npm test              # Tests unitaires (626 lignes)
 ```
 
 ### **Stack Technique**
 
 - **Framework** : React Native + Expo SDK 53
 - **Navigation** : Expo Router (file-based)
-- **State** : Zustand + persistence + intelligence
-- **Storage** : AsyncStorage (offline-first) + monitoring
-- **Tests** : Jest + 626 lignes tests unitaires
+- **State** : Zustand + persistence
+- **Storage** : AsyncStorage (offline-first)
+- **Tests** : Jest + tests algorithmes
 - **iOS** : ActionSheetIOS, Haptics, Share API natifs
 
 ---
 
-## 📊 **DIFFÉRENCIATION vs CONCURRENCE**
-
-| Fonctionnalité | Flo/Clue | Period Tracker | **MoodCycle** |
-|---|---|---|---|
-| Tracking cycle | ✅ | ✅ | ✅ |
-| Insights génériques | ✅ | ✅ | ✅ |
-| **IA personnalisée** | ❌ | ❌ | **✅** |
-| **Guidance évolutive** | ❌ | ❌ | **✅** |
-| **Personas thérapeutiques** | ❌ | ❌ | **✅** |
-| **Navigation contextuelle** | ❌ | ❌ | **✅** |
-
-### **Avantages Uniques**
-
-1. **Méthodologie Jeza** : Focus phase + progression neuroplasticité 21j
-2. **Intelligence Cyclique** : Seule IA spécialisée patterns féminins
-3. **Personas Thérapeutiques** : 60+ expériences distinctes
-4. **Apprentissage Comportemental** : Patterns temporels + efficacité suggestions
-
----
-
-## 🧪 **TESTS & PERFORMANCE**
-
-### **Tests Unitaires (626 lignes)**
-
-```javascript
-// cycleCalculations.test.js (311 lignes)
-test('getCurrentCycleDay - calcule jour cycle standard', () => {
-  const date10JoursAgo = new Date(MOCK_NOW - 10 * 24 * 60 * 60 * 1000).toISOString();
-  expect(getCurrentCycleDay(date10JoursAgo, 28)).toBe(11);
-});
-
-// PersonaEngine.test.js (315 lignes)  
-test('Emma - Jeune découverte (18-25, body)', () => {
-  const userData = { ageRange: '18-25', journeyChoice: 'body' };
-  const scores = calculatePersonaScores(userData);
-  expect(scores.emma).toBeGreaterThan(70);
-});
-```
-
-### **Performance Monitoring**
-
-```javascript
-// Surveillance automatique temps réel
-class PerformanceMonitor {
-  metrics: {
-    storeHydration: {},    // Temps hydratation stores
-    asyncStorage: {},      // Performance AsyncStorage
-    renders: {},           // Re-renders composants
-    alerts: []            // Alertes automatiques
-  }
-  
-  thresholds: {
-    hydrationTime: 200,    // ms - Alert si lent
-    renderCount: 10        // renders/sec - Alert excessif
-  }
-}
-```
-
----
-
-## 🍎 **EXPÉRIENCE iOS NATIVE**
-
-### **SwipeableEntryIOS - Actions Natives**
-
-```jsx
-// Long press → ActionSheetIOS natif
-ActionSheetIOS.showActionSheetWithOptions({
-  title: 'Actions sur l\'entrée',
-  options: ['Annuler', '🏷️ Tag', '📤 Partager', '🗑️ Supprimer'],
-  destructiveButtonIndex: [3]
-}, (buttonIndex) => {
-  switch(buttonIndex) {
-    case 1: addTag(); Haptics.success(); break;
-    case 2: Share.share({ message: content }); break;
-    case 3: deleteEntry(); Haptics.warning(); break;
-  }
-});
-```
-
----
-
-## 📈 **ROADMAP**
-
-### **Phase Beta (Q4 2024)**
-- **Engagement** : +150% vs version statique
-- **Rétention J7** : >75% vs 40% actuel  
-- **Actions Complétées** : >65% suggestions suivies
-- **Persona Accuracy** : >80% suggestions pertinentes
-
-### **Évolutions Futures**
-- **Cycle Prediction** : Anticiper phases difficiles
-- **Voice Guidance** : Melune parle selon persona
-- **Social Intelligence** : Patterns groupes similaires
-
----
-
-## 🎯 **CONCLUSION**
-
-### **Transformation Réussie : De Toolbox à Thérapie Digitale**
-
-**Impact Technique** : Architecture enterprise-grade avec 11 nouveaux services d'intelligence
-
-**Impact UX** : Navigation paralysante → Guidance contextuelle avec 60+ expériences distinctes  
-
-**Impact Business** : App commoditisée → IA cyclique différenciante unique
-
-**Résultat** : **Première application thérapie digitale cyclique évolutive** avec intelligence comportementale intégrée.
-
-MoodCycle devient **leader innovation femtech** avec avantage concurrentiel défendable via méthodologie Jeza + personas thérapeutiques + architecture d'apprentissage.
-
----
-
-## 🛠️ **SCRIPTS UTILES**
-
-```bash
-# Développement
-npm start              # Expo DevTools
-npm run ios           # Simulateur iOS  
-npm run android       # Émulateur Android
-
-# Tests & Quality  
-npm test              # Tests unitaires
-npm run test:watch    # Tests mode watch
-npm run test:coverage # Coverage complet
-npm run lint          # Linting
-npm run type-check    # TypeScript
-
-# Performance
-npm run perf:monitor  # Dashboard monitoring
-npm run perf:report   # Rapport performance
-
-# Build
-npm run build         # Build production
-npx expo start --clear # Clear cache
-```
-
----
-
-**📱 Application mobile révolutionnaire - Architecture Enterprise v7.0**  
-**Première IA thérapeutique cyclique avec personas évolutifs - Production Ready** ✅🚀
+**📱 Application cycle menstruel avec vision d'intelligence adaptative**  
+**État** : MVP Fonctionnel + Architecture Intelligence (Connexions en cours) 🚧

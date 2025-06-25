@@ -9,7 +9,7 @@
 import React from 'react';
 import { View, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { theme } from '../../../config/theme';
+import { useTheme } from '../../../hooks/useTheme';
 import { Heading3, BodyText, Caption } from '../../../core/ui/Typography';
 
 // 🍎 Documents légaux avec statuts pour Apple compliance
@@ -66,7 +66,7 @@ const LEGAL_DOCUMENTS = [
   }
 ];
 
-const STATUS_CONFIG = {
+const getStatusConfig = (theme) => ({
   draft: {
     label: 'En cours',
     color: theme.colors.warning,
@@ -82,9 +82,12 @@ const STATUS_CONFIG = {
     color: theme.colors.primary,
     icon: '🆕'
   }
-};
+});
 
 export default function LegalTab({ onDataChange }) {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+  const STATUS_CONFIG = getStatusConfig(theme);
   
   const handleDocumentPress = (document) => {
     if (document.status === 'available' && document.content) {
@@ -214,7 +217,7 @@ export default function LegalTab({ onDataChange }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,

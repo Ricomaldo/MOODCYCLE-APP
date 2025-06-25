@@ -10,7 +10,7 @@
 import React from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { theme } from "../../config/theme"; // Importer le thème
+import { useTheme } from "../../hooks/useTheme"; // Importer le hook thème
 
 export default function ScreenContainer({
   children,

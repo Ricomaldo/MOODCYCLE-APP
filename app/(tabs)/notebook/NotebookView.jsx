@@ -11,7 +11,7 @@ import { View, FlatList, TouchableOpacity, StyleSheet, Alert, Share, RefreshCont
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import { theme } from '../../../src/config/theme';
+import { useTheme } from '../../../src/hooks/useTheme';
 import { Heading, BodyText, Caption } from '../../../src/core/ui/Typography';
 import { useNotebookStore } from '../../../src/stores/useNotebookStore';
 import { useNavigationStore } from '../../../src/stores/useNavigationStore';
@@ -37,16 +37,325 @@ const FILTER_PILLS = [
   { id: 'tracking', label: 'Tracking', icon: 'bar-chart-2' },
 ];
 
-const PHASE_FILTERS = [
-  { id: 'menstrual', label: 'Mens.', color: theme.colors.phases.menstrual },
-  { id: 'follicular', label: 'Foll.', color: theme.colors.phases.follicular },
-  { id: 'ovulatory', label: 'Ovu.', color: theme.colors.phases.ovulatory },
-  { id: 'luteal', label: 'Lutéale', color: theme.colors.phases.luteal },
-];
+// Déplacement de getStyles avant le composant pour éviter l'erreur "Property 'theme' doesn't exist"
+const getStyles = (theme) => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+  header: {
+    height: 60,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: theme.spacing.l,
+    paddingHorizontal: theme.spacing.l,
+    position: 'relative',
+  },
+  parametresButton: {
+    position: 'absolute',
+    left: theme.spacing.l,
+  },
+  title: {
+    textAlign: 'center',
+    fontSize: 24,
+    fontWeight: '700',
+    color: theme.colors.text,
+  },
+  searchToggle: {
+    position: 'absolute',
+    right: theme.spacing.l,
+    padding: theme.spacing.s,
+  },
+  
+  // Contexte vignette premium
+  vignetteContext: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary + '08',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginHorizontal: theme.spacing.l,
+    marginBottom: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.primary + '20',
+    gap: 8,
+  },
+  vignetteContextText: {
+    fontSize: 14,
+    color: theme.colors.primary,
+    fontWeight: '500',
+    flex: 1,
+  },
+
+  // Badge filtres compact
+  compactFilterBadge: {
+    // Conteneur touchable transparent
+  },
+  compactFilterBadgeInner: {
+    width: 20,
+    height: 20,
+    backgroundColor: theme.colors.primary,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: theme.colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  compactFilterBadgeText: {
+    fontSize: 12,
+    color: 'white',
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+
+  // Filtres design premium
+  filtersContainer: {
+    paddingHorizontal: theme.spacing.l,
+    marginBottom: theme.spacing.m,
+  },
+  filterPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: theme.borderRadius.pill,
+    paddingHorizontal: theme.spacing.m,
+    paddingVertical: theme.spacing.s + 2,
+    marginRight: theme.spacing.s,
+    gap: theme.spacing.xs,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  filterPillActive: {
+    backgroundColor: theme.colors.primary,
+    shadowColor: theme.colors.primary,
+    shadowOpacity: 0.3,
+  },
+  filterText: {
+    fontSize: 14,
+    color: theme.colors.textLight,
+    fontWeight: '500',
+  },
+  filterTextActive: {
+    color: 'white',
+    fontWeight: '600',
+  },
+
+  // Filtres phases premium
+  phaseFiltersContainer: {
+    paddingHorizontal: theme.spacing.l,
+    marginBottom: theme.spacing.m,
+  },
+  phasePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderRadius: theme.borderRadius.pill,
+    paddingHorizontal: theme.spacing.m,
+    paddingVertical: theme.spacing.s,
+    marginRight: theme.spacing.s,
+    gap: 6,
+  },
+  phaseIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  phaseText: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  phaseTextActive: {
+    fontWeight: '700',
+  },
+
+  // Tags améliorés
+  tagsContainer: {
+    paddingHorizontal: theme.spacing.l,
+    marginBottom: theme.spacing.m,
+  },
+  tagsTitle: {
+    marginBottom: theme.spacing.s,
+    color: theme.colors.textLight,
+    fontSize: 12,
+  },
+  tagFilter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.borderRadius.pill,
+    paddingLeft: theme.spacing.m,
+    paddingRight: theme.spacing.xs,
+    paddingVertical: theme.spacing.xs + 2,
+    marginRight: theme.spacing.s,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  tagFilterActive: {
+    backgroundColor: theme.colors.primary + '15',
+    borderColor: theme.colors.primary,
+  },
+  tagFilterText: {
+    fontSize: 12,
+    color: theme.colors.textLight,
+    fontWeight: '500',
+  },
+  tagFilterTextActive: {
+    color: theme.colors.primary,
+    fontWeight: '600',
+  },
+  tagCount: {
+    backgroundColor: theme.colors.textLight + '20',
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginLeft: 4,
+  },
+  tagCountText: {
+    fontSize: 10,
+    color: theme.colors.textLight,
+    fontWeight: '600',
+  },
+
+  // Trend card premium
+  trendCard: {
+    backgroundColor: 'white',
+    marginHorizontal: theme.spacing.l,
+    padding: theme.spacing.l,
+    borderRadius: theme.borderRadius.medium,
+    marginBottom: theme.spacing.l,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  trendHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.s,
+  },
+  trendTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: theme.colors.text,
+  },
+  trendWeek: {
+    fontSize: 12,
+    color: theme.colors.primary,
+    fontWeight: '500',
+  },
+  trendSubtitle: {
+    fontSize: 15,
+    color: theme.colors.textLight,
+    marginBottom: theme.spacing.xs,
+  },
+  trendDetail: {
+    fontSize: 14,
+    color: theme.colors.text,
+    marginTop: theme.spacing.s,
+  },
+  trendFooter: {
+    marginTop: theme.spacing.m,
+    paddingTop: theme.spacing.s,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+  },
+  trendCount: {
+    fontSize: 12,
+    color: theme.colors.textLight,
+    fontStyle: 'italic',
+  },
+
+  // États vides améliorés
+  emptyContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: theme.spacing.xl * 2,
+    paddingHorizontal: theme.spacing.xl,
+  },
+  emptyIcon: {
+    marginBottom: theme.spacing.l,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: theme.spacing.m,
+  },
+  emptyState: {
+    padding: theme.spacing.xl * 2,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: theme.colors.textLight,
+    marginTop: theme.spacing.m,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    textAlign: 'center',
+    color: theme.colors.textLight + '80',
+    marginTop: theme.spacing.xs,
+  },
+  description: {
+    textAlign: 'center',
+    marginBottom: theme.spacing.xl,
+    color: theme.colors.textLight,
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  startButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: theme.spacing.xl,
+    paddingVertical: theme.spacing.m + 2,
+    borderRadius: theme.borderRadius.pill,
+    shadowColor: theme.colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  startButtonText: {
+    color: 'white',
+    marginLeft: theme.spacing.s,
+    fontWeight: '700',
+    fontSize: 16,
+  },
+
+  list: {
+    flex: 1,
+  },
+  listContent: {
+    paddingBottom: 100, // Pour la toolbar
+  },
+});
 
 export default function NotebookView() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams();
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+  
+  // Phase filters avec accès au thème (déplacé dans le composant)
+  const PHASE_FILTERS = [
+    { id: 'menstrual', label: 'Mens.', color: theme.colors.phases.menstrual },
+    { id: 'follicular', label: 'Foll.', color: theme.colors.phases.follicular },
+    { id: 'ovulatory', label: 'Ovu.', color: theme.colors.phases.ovulatory },
+    { id: 'luteal', label: 'Lutéale', color: theme.colors.phases.luteal },
+  ];
   
   const {
     entries,
@@ -191,7 +500,7 @@ export default function NotebookView() {
     },
 
     getEntryTags: (entry) => [...(entry.tags || []), ...(entry.autoTags || []), ...(entry.metadata?.tags || [])]
-  }), []);
+  }), [theme]);
 
   // Handlers optimisés
   const handleFilterChange = useCallback((newFilter) => {
@@ -587,308 +896,3 @@ export default function NotebookView() {
     </ScreenContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  header: {
-    height: 60,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: theme.spacing.l,
-    paddingHorizontal: theme.spacing.l,
-    position: 'relative',
-  },
-  parametresButton: {
-    position: 'absolute',
-    left: theme.spacing.l,
-  },
-  title: {
-    textAlign: 'center',
-    fontSize: 24,
-    fontWeight: '700',
-    color: theme.colors.text,
-  },
-  searchToggle: {
-    position: 'absolute',
-    right: theme.spacing.l,
-    padding: theme.spacing.s,
-  },
-  
-  // Contexte vignette premium
-  vignetteContext: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.primary + '08',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    marginHorizontal: theme.spacing.l,
-    marginBottom: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: theme.colors.primary + '20',
-    gap: 8,
-  },
-  vignetteContextText: {
-    fontSize: 14,
-    color: theme.colors.primary,
-    fontWeight: '500',
-    flex: 1,
-  },
-
-  // Badge filtres compact
-  compactFilterBadge: {
-    // Conteneur touchable transparent
-  },
-  compactFilterBadgeInner: {
-    width: 20,
-    height: 20,
-    backgroundColor: theme.colors.primary,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  compactFilterBadgeText: {
-    fontSize: 12,
-    color: 'white',
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-
-  // Filtres design premium
-  filtersContainer: {
-    paddingHorizontal: theme.spacing.l,
-    marginBottom: theme.spacing.m,
-  },
-  filterPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'white',
-    borderRadius: theme.borderRadius.pill,
-    paddingHorizontal: theme.spacing.m,
-    paddingVertical: theme.spacing.s + 2,
-    marginRight: theme.spacing.s,
-    gap: theme.spacing.xs,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  filterPillActive: {
-    backgroundColor: theme.colors.primary,
-    shadowColor: theme.colors.primary,
-    shadowOpacity: 0.3,
-  },
-  filterText: {
-    fontSize: 14,
-    color: theme.colors.textLight,
-    fontWeight: '500',
-  },
-  filterTextActive: {
-    color: 'white',
-    fontWeight: '600',
-  },
-
-  // Filtres phases premium
-  phaseFiltersContainer: {
-    paddingHorizontal: theme.spacing.l,
-    marginBottom: theme.spacing.m,
-  },
-  phasePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderRadius: theme.borderRadius.pill,
-    paddingHorizontal: theme.spacing.m,
-    paddingVertical: theme.spacing.s,
-    marginRight: theme.spacing.s,
-    gap: 6,
-  },
-  phaseIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  phaseText: {
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  phaseTextActive: {
-    fontWeight: '700',
-  },
-
-  // Tags améliorés
-  tagsContainer: {
-    paddingHorizontal: theme.spacing.l,
-    marginBottom: theme.spacing.m,
-  },
-  tagsTitle: {
-    marginBottom: theme.spacing.s,
-    color: theme.colors.textLight,
-    fontSize: 12,
-  },
-  tagFilter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-    borderRadius: theme.borderRadius.pill,
-    paddingLeft: theme.spacing.m,
-    paddingRight: theme.spacing.xs,
-    paddingVertical: theme.spacing.xs + 2,
-    marginRight: theme.spacing.s,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  tagFilterActive: {
-    backgroundColor: theme.colors.primary + '15',
-    borderColor: theme.colors.primary,
-  },
-  tagFilterText: {
-    fontSize: 12,
-    color: theme.colors.textLight,
-    fontWeight: '500',
-  },
-  tagFilterTextActive: {
-    color: theme.colors.primary,
-    fontWeight: '600',
-  },
-  tagCount: {
-    backgroundColor: theme.colors.textLight + '20',
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    marginLeft: 4,
-  },
-  tagCountText: {
-    fontSize: 10,
-    color: theme.colors.textLight,
-    fontWeight: '600',
-  },
-
-  // Trend card premium
-  trendCard: {
-    backgroundColor: 'white',
-    marginHorizontal: theme.spacing.l,
-    padding: theme.spacing.l,
-    borderRadius: theme.borderRadius.medium,
-    marginBottom: theme.spacing.l,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  trendHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.s,
-  },
-  trendTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: theme.colors.text,
-  },
-  trendWeek: {
-    fontSize: 12,
-    color: theme.colors.primary,
-    fontWeight: '500',
-  },
-  trendSubtitle: {
-    fontSize: 15,
-    color: theme.colors.textLight,
-    marginBottom: theme.spacing.xs,
-  },
-  trendDetail: {
-    fontSize: 14,
-    color: theme.colors.text,
-    marginTop: theme.spacing.s,
-  },
-  trendFooter: {
-    marginTop: theme.spacing.m,
-    paddingTop: theme.spacing.s,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-  },
-  trendCount: {
-    fontSize: 12,
-    color: theme.colors.textLight,
-    fontStyle: 'italic',
-  },
-
-  // États vides améliorés
-  emptyContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingBottom: theme.spacing.xl * 2,
-    paddingHorizontal: theme.spacing.xl,
-  },
-  emptyIcon: {
-    marginBottom: theme.spacing.l,
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.m,
-  },
-  emptyState: {
-    padding: theme.spacing.xl * 2,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 16,
-    textAlign: 'center',
-    color: theme.colors.textLight,
-    marginTop: theme.spacing.m,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    textAlign: 'center',
-    color: theme.colors.textLight + '80',
-    marginTop: theme.spacing.xs,
-  },
-  description: {
-    textAlign: 'center',
-    marginBottom: theme.spacing.xl,
-    color: theme.colors.textLight,
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  startButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.primary,
-    paddingHorizontal: theme.spacing.xl,
-    paddingVertical: theme.spacing.m + 2,
-    borderRadius: theme.borderRadius.pill,
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  startButtonText: {
-    color: 'white',
-    marginLeft: theme.spacing.s,
-    fontWeight: '700',
-    fontSize: 16,
-  },
-
-  list: {
-    flex: 1,
-  },
-  listContent: {
-    paddingBottom: 100, // Pour la toolbar
-  },
-});

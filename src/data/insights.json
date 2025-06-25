@@ -13,7 +13,6 @@
         "lastModified": "2025-06-16T01:01:51.182Z",
         "enrichedBy": "admin-interface",
         "personaVariants": {
-          "emma": ""
         },
         "targetJourney": [
           "body_disconnect"

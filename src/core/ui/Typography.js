@@ -8,10 +8,13 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
 import { Text, StyleSheet } from 'react-native';
-import { theme } from '../../config/theme';
+import { useTheme } from '../../hooks/useTheme';
 
 // H1 - Quintessential 24px
 export function Heading1({ children, style, ...props }) {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+  
   return (
     <Text style={[styles.heading1, style]} {...props}>
       {children}
@@ -21,6 +24,9 @@ export function Heading1({ children, style, ...props }) {
 
 // H2 - Quintessential 20px
 export function Heading2({ children, style, ...props }) {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+  
   return (
     <Text style={[styles.heading2, style]} {...props}>
       {children}
@@ -30,6 +36,9 @@ export function Heading2({ children, style, ...props }) {
 
 // H3 - Quicksand Bold 16px
 export function Heading3({ children, style, ...props }) {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+  
   return (
     <Text style={[styles.heading3, style]} {...props}>
       {children}
@@ -39,6 +48,9 @@ export function Heading3({ children, style, ...props }) {
 
 // Corps de texte - Quicksand Regular 14px
 export function BodyText({ children, style, ...props }) {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+  
   return (
     <Text style={[styles.body, style]} {...props}>
       {children}
@@ -48,6 +60,9 @@ export function BodyText({ children, style, ...props }) {
 
 // Petit texte - Quicksand Regular 10px
 export function SmallText({ children, style, ...props }) {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+  
   return (
     <Text style={[styles.small, style]} {...props}>
       {children}
@@ -65,6 +80,9 @@ export function Heading({ children, style, ...props }) {
 }
 
 export function Caption({ children, style, ...props }) {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
+  
   return (
     <SmallText style={[styles.caption, style]} {...props}>
       {children}
@@ -72,7 +90,7 @@ export function Caption({ children, style, ...props }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   heading1: {
     ...theme.typography.heading1,
     color: theme.colors.text,

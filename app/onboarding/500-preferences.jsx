@@ -15,7 +15,7 @@ import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
 import { BodyText } from '../../src/core/ui/Typography';
-import { theme } from '../../src/config/theme';
+import { useTheme } from '../../src/hooks/useTheme';
 
 // 🎨 Dimensions thérapeutiques avec couleurs
 const THERAPEUTIC_DIMENSIONS = [
@@ -66,6 +66,8 @@ const THERAPEUTIC_DIMENSIONS = [
 const SLIDER_LABELS = ['Pas du tout', 'Un peu', 'Moyennement', 'Beaucoup', 'Passionnément'];
 
 export default function PreferencesScreen() {
+  const { theme } = useTheme();
+  const styles = getStyles(theme);
   // 🧠 INTELLIGENCE HOOK
   const intelligence = useOnboardingIntelligence('500-preferences');
   
@@ -408,7 +410,7 @@ export default function PreferencesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   scrollView: {
     flex: 1,
   },

@@ -9,7 +9,7 @@
 import React from 'react';
 import { View, ScrollView, StyleSheet, RefreshControl, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { theme } from '../../../src/config/theme';
+import { useTheme } from '../../../src/hooks/useTheme';
 import { Heading, BodyText } from '../../../src/core/ui/Typography';
 import ScreenContainer from '../../../src/core/layout/ScreenContainer';
 import CycleWheel from '../../../src/features/cycle/CycleWheel';
@@ -25,6 +25,7 @@ export default function CycleView() {
   const { currentPhase, currentDay, phaseInfo, hasData, cycle } = useCycle();
   const { current: persona } = usePersona();
   const { profile } = useUserStore();
+  const { theme } = useTheme();
   
   // ✅ Protection contre profile undefined pendant l'hydratation
   const safeProfile = profile || { prenom: null };
@@ -60,6 +61,8 @@ export default function CycleView() {
   const handleDatePress = React.useCallback((dateString, entries) => {
     // Handler pour les dates
   }, []);
+
+  const styles = getStyles(theme);
 
   if (!hasData) {
     return (
@@ -181,7 +184,7 @@ export default function CycleView() {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
@@ -268,7 +271,7 @@ const styles = StyleSheet.create({
   
   // Phase info
   phaseInfoContainer: {
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.l,
     padding: theme.spacing.l,
     marginBottom: theme.spacing.xl,
