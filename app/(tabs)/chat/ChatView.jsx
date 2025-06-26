@@ -1,8 +1,8 @@
 // ─────────────────────────────────────────────────────────
-// 📄 Fichier : app/(tabs)/chat/ChatView.jsx - SMART SUGGESTIONS INTÉGRÉES
+// 📄 Fichier : app/(tabs)/chat/ChatView.jsx - CASCADE 2.5 ADAPTATIF
 // 🧩 Type : Composant Écran (Screen)
-// 📚 Description : Chat avec suggestions intelligentes persona/phase
-// 🕒 Version : 6.0 - 2025-06-25 - INTELLIGENCE CONNECTÉE
+// 📚 Description : Chat avec interface adaptative complète selon maturité
+// 🕒 Version : 7.0 - 2025-06-26 - INTERFACE ADAPTATIVE INTÉGRÉE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
 import { useState, useEffect, useRef, useCallback, memo, useMemo } from "react";
@@ -36,14 +36,17 @@ import { usePersona } from '../../../src/hooks/usePersona';
 import { useRenderMonitoring } from '../../../src/hooks/usePerformanceMonitoring';
 import ParametresButton from '../../../src/features/shared/ParametresButton';
 
-// ✅ NOUVEAU : Import Smart Suggestions
+// ✅ Smart Suggestions + Interface Adaptative
 import { useSmartSuggestions, useSmartChatSuggestions } from '../../../src/hooks/useSmartSuggestions';
+import { useAdaptiveInterface } from '../../../src/hooks/useAdaptiveInterface';
 
 const HEADER_HEIGHT = 60;
 
-// ✅ NOUVEAU : Composant Suggestions Rapides
-function QuickSuggestions({ suggestions, onSuggestionPress, theme, visible, styles }) {
+// ✅ Composant Suggestions Rapides Adaptatif
+function QuickSuggestions({ suggestions, onSuggestionPress, theme, visible, styles, maxSuggestions = 3 }) {
   if (!visible || !suggestions?.length) return null;
+
+  const limitedSuggestions = suggestions.slice(0, maxSuggestions);
 
   return (
     <View style={[styles.suggestionsContainer, { backgroundColor: theme.colors.backgroundSecondary }]}>
@@ -52,7 +55,7 @@ function QuickSuggestions({ suggestions, onSuggestionPress, theme, visible, styl
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.suggestionsContent}
       >
-        {suggestions.slice(0, 3).map((suggestion, index) => (
+        {limitedSuggestions.map((suggestion, index) => (
           <TouchableOpacity
             key={index}
             style={[styles.suggestionChip, { borderColor: theme.colors.primary }]}
@@ -68,9 +71,9 @@ function QuickSuggestions({ suggestions, onSuggestionPress, theme, visible, styl
   );
 }
 
-// ✅ NOUVEAU : Composant Actions Contextuelles
-function ContextualActions({ actions, onActionPress, theme, visible, styles }) {
-  if (!visible || !actions?.length) return null;
+// ✅ Composant Actions Contextuelles Adaptatif
+function ContextualActions({ actions, onActionPress, theme, visible, styles, showAdvanced = true }) {
+  if (!visible || !actions?.length || !showAdvanced) return null;
 
   const primaryAction = actions[0];
   
@@ -93,7 +96,29 @@ function ContextualActions({ actions, onActionPress, theme, visible, styles }) {
   );
 }
 
-// Composant TypingIndicator avec animations iOS-like - FIXED MEMORY LEAK
+// ✅ Guidance Hints Adaptatif
+function GuidanceHints({ visible, guidanceLevel, theme, styles, maturityLevel }) {
+  if (!visible || guidanceLevel === 'low') return null;
+
+  const hints = {
+    discovery: "💡 Pose toutes tes questions ! Je suis là pour t'accompagner dans la découverte de ton cycle.",
+    learning: "🎯 Tu progresses bien ! N'hésite pas à explorer plus en profondeur.",
+    autonomous: null // Pas de hints pour les expertes
+  };
+
+  const hint = hints[maturityLevel];
+  if (!hint) return null;
+
+  return (
+    <View style={[styles.guidanceContainer, { backgroundColor: theme.colors.primary + '08' }]}>
+      <BodyText style={[styles.guidanceText, { color: theme.colors.primary }]}>
+        {hint}
+      </BodyText>
+    </View>
+  );
+}
+
+// Composant TypingIndicator (inchangé)
 function TypingIndicator({ theme }) {
   const dot1Anim = useRef(new Animated.Value(0.4)).current;
   const dot2Anim = useRef(new Animated.Value(0.4)).current;
@@ -218,7 +243,7 @@ export default function ChatScreen() {
     mounted: useRef(true)
   };
   
-  // ✅ NAVIGATION PARAMS - Stabilisé
+  // ✅ NAVIGATION PARAMS
   const params = useLocalSearchParams();
   const { initialMessage, sourcePhase, sourcePersona, vignetteId, context, autoSend } = params;
   
@@ -235,35 +260,32 @@ export default function ChatScreen() {
   const { currentPhase, phaseInfo } = useCycle();
   const { addEntry } = useNotebookStore();
   
-  // ✅ NOUVEAU : Smart Suggestions Integration
+  // ✅ NOUVEAU : Interface Adaptative + Smart Suggestions
   const smartSuggestions = useSmartSuggestions();
   const chatSuggestions = useSmartChatSuggestions();
+  const { config, layout, maturityLevel } = useAdaptiveInterface();
   
-  // ✅ Stabilisation du contexte avec useCallback
+  // ✅ Stabilisation du contexte
   const intelligenceContext = useMemo(
     () => createIntelligenceContext(currentPhase, profile, smartSuggestions, chatSuggestions),
     [currentPhase, profile.persona?.assigned, smartSuggestions.hasPersonalizedData, 
      smartSuggestions.confidence, smartSuggestions.actions, chatSuggestions.prompts]
   );
 
-  // ✅ Déplacer les logs en dehors du render
-  useEffect(() => {
-    if (__DEV__) {
-      console.log('🧠 Intelligence Context Updated:', {
-        phase: intelligenceContext.phase,
-        persona: intelligenceContext.persona,
-        confidence: intelligenceContext.confidence,
-        suggestionsCount: intelligenceContext.suggestions.length,
-        promptsCount: intelligenceContext.prompts.length,
-        hasPersonalizedData: intelligenceContext.hasData
-      });
-    }
-  }, [intelligenceContext.phase, intelligenceContext.persona, intelligenceContext.confidence]);
-  
+  // ✅ Configuration adaptative interface
+  const adaptiveConfig = useMemo(() => ({
+    maxPrompts: config.guidanceLevel === 'high' ? 3 : 
+                config.guidanceLevel === 'medium' ? 2 : 1,
+    showAdvancedActions: config.navigationComplexity !== 'simple',
+    showGuidanceHints: layout.shouldShowGuidance('hints'),
+    showProgressIndicators: config.showFeatureProgress,
+    guidanceIntensity: config.guidanceLevel
+  }), [config, layout]);
+
   const phase = currentPhase;
   const prenom = profile.prenom;
 
-  // ✅ HANDLERS MEMOIZÉS avec Smart Suggestions
+  // ✅ HANDLERS MEMOIZÉS avec adaptation
   const memoizedHandlers = useMemo(() => ({
     handleSend: async (messageText = null) => {
       const currentInput = messageText || input.trim();
@@ -274,13 +296,13 @@ export default function ChatScreen() {
       const userMessage = { id: Date.now(), text: currentInput, isUser: true };
       setMessages((prev) => [...prev, userMessage]);
       
-      // ✅ Contexte conversation enrichi (3-4 derniers messages)
+      // ✅ Contexte conversation enrichi
       const conversationContext = messages.slice(-3).map(m => ({
         role: m.isUser ? 'user' : 'assistant',
         content: m.text
       }));
       
-      // ✅ TRACKING SMART SUGGESTIONS
+      // ✅ Tracking Smart Suggestions
       const suggestionUsed = messageText && intelligenceContext.prompts.some(p => 
         (typeof p === 'string' ? p : p.prompt || p.title) === messageText
       );
@@ -293,11 +315,11 @@ export default function ChatScreen() {
         sourceVignette: vignetteId || null,
         sourcePhase: sourcePhase || currentPhase,
         conversationContext,
-        // ✅ NOUVEAU : Intelligence metadata
         intelligence: {
           suggestionUsed: !!messageText,
           confidence: intelligenceContext.confidence,
-          persona: intelligenceContext.persona
+          persona: intelligenceContext.persona,
+          maturityLevel: maturityLevel
         }
       });
       
@@ -337,10 +359,10 @@ export default function ChatScreen() {
           addMessage('melune', response.message, {
             source: response.source,
             responseToVignette: vignetteId || null,
-            // ✅ NOUVEAU : Response intelligence
             intelligence: {
               persona: response.context || intelligenceContext.persona,
-              confidence: intelligenceContext.confidence
+              confidence: intelligenceContext.confidence,
+              maturityLevel: maturityLevel
             }
           });
           
@@ -369,19 +391,15 @@ export default function ChatScreen() {
       }
     },
     
-    // ✅ NOUVEAU : Handler suggestions rapides
     handleSuggestionPress: (suggestion) => {
       const prompt = typeof suggestion === 'string' ? suggestion : suggestion.prompt || suggestion.title;
       
-      // Tracking et feedback haptique
       if (Platform.OS === 'ios') {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
       
-      // Insérer dans input ou envoyer directement
       setInput(prompt);
       
-      // Auto-send après délai court
       setTimeout(() => {
         if (refs.mounted.current) {
           memoizedHandlers.handleSend(prompt);
@@ -389,7 +407,6 @@ export default function ChatScreen() {
       }, 500);
     },
     
-    // ✅ NOUVEAU : Handler actions contextuelles
     handleActionPress: (action) => {
       if (Platform.OS === 'ios') {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -402,14 +419,12 @@ export default function ChatScreen() {
           memoizedHandlers.handleSuggestionPress(action);
           break;
         case 'notebook':
-          // Navigation vers notebook avec contexte
           navigation.navigate('notebook', { 
             context: 'smart_suggestion',
             action: action.title
           });
           break;
         case 'phase_detail':
-          // Navigation vers cycle avec phase
           navigation.navigate('cycle', { 
             context: 'smart_suggestion',
             phase: currentPhase
@@ -464,9 +479,9 @@ export default function ChatScreen() {
         }, 100);
       }
     }
-  }), [input, isLoading, messages, initialMessage, autoSend, vignetteId, sourcePhase, currentPhase, addMessage, addEntry, intelligenceContext, smartSuggestions]);
+  }), [input, isLoading, messages, initialMessage, autoSend, vignetteId, sourcePhase, currentPhase, addMessage, addEntry, intelligenceContext, smartSuggestions, maturityLevel]);
 
-  // ✅ FOCUS EFFECT OPTIMISÉ
+  // ✅ FOCUS EFFECT
   useFocusEffect(
     useCallback(() => {
       refs.mounted.current = true;
@@ -488,7 +503,7 @@ export default function ChatScreen() {
     }, [initialMessage, vignetteId, memoizedHandlers])
   );
 
-  // ✅ CLEANUP COMPLET AU UNMOUNT
+  // ✅ CLEANUP
   useEffect(() => {
     return () => {
       refs.mounted.current = false;
@@ -505,20 +520,19 @@ export default function ChatScreen() {
     };
   }, []);
   
-  // ✅ LIMITATION MESSAGES EN MÉMOIRE
+  // ✅ LIMITATION MESSAGES
   useEffect(() => {
     if (messages.length > 50) {
       setMessages(prev => prev.slice(-50));
     }
   }, [messages.length]);
 
-  // ✅ Message d'accueil personnalisé avec intelligence
+  // ✅ Message d'accueil personnalisé
   const generateWelcomeMessage = useCallback(() => {
     const tone = melune?.tone || "friendly";
     const persona = intelligenceContext.persona;
     const hasData = intelligenceContext.hasData;
     
-    // Messages personnalisés selon persona et données
     const personalizedWelcome = {
       emma: {
         withData: `Salut ${prenom} ! 💜 Je sens que tu évolues bien avec ton cycle ! Comment te sens-tu aujourd'hui ?`,
@@ -546,7 +560,7 @@ export default function ChatScreen() {
     return hasData ? personaMessages.withData : personaMessages.newUser;
   }, [prenom, melune?.tone, intelligenceContext]);
 
-  // ✅ INITIALISATION MESSAGES avec Welcome personnalisé
+  // ✅ INITIALISATION MESSAGES
   useEffect(() => {
     setMessages([{ 
       id: 1, 
@@ -554,10 +568,11 @@ export default function ChatScreen() {
       isUser: false,
       intelligence: {
         persona: intelligenceContext.persona,
-        personalized: intelligenceContext.hasData
+        personalized: intelligenceContext.hasData,
+        maturityLevel: maturityLevel
       }
     }]);
-  }, [generateWelcomeMessage, intelligenceContext.persona]);
+  }, [generateWelcomeMessage, intelligenceContext.persona, maturityLevel]);
 
   useEffect(() => {
     const initializeChatService = async () => {
@@ -577,7 +592,7 @@ export default function ChatScreen() {
     setRefreshing(false);
   };
 
-  // ✅ INDICATEUR CONTEXTE VIGNETTE
+  // ✅ CONTEXTE VIGNETTE
   const renderVignetteContext = () => {
     if (context !== 'vignette' || !sourcePhase) return null;
     
@@ -591,20 +606,21 @@ export default function ChatScreen() {
     );
   };
 
-  // ✅ Détermine si afficher suggestions
+  // ✅ LOGIQUE AFFICHAGE SUGGESTIONS ADAPTATIVE
   const shouldShowSuggestions = useMemo(() => {
     return !isLoading && 
            input.length === 0 && 
            messages.length <= 3 && 
+           adaptiveConfig.showGuidanceHints &&
            (intelligenceContext.prompts.length > 0 || intelligenceContext.suggestions.length > 0);
-  }, [isLoading, input.length, messages.length, intelligenceContext]);
+  }, [isLoading, input.length, messages.length, adaptiveConfig.showGuidanceHints, intelligenceContext]);
 
   const styles = getStyles(theme);
 
   return (
     <ScreenContainer style={styles.container} hasTabs={true}>
       
-      {/* Header aligné avec les autres pages */}
+      {/* Header */}
       <View style={styles.header}>
         <ParametresButton 
           color={theme.colors.primary}
@@ -612,6 +628,7 @@ export default function ChatScreen() {
         />
         <Heading style={styles.title}>
           Melune {intelligenceContext.hasData && '🧠'}
+          {__DEV__ && ` (${maturityLevel})`}
         </Heading>
         {__DEV__ && (
           <BodyText style={styles.debugInfo}>
@@ -620,16 +637,26 @@ export default function ChatScreen() {
         )}
       </View>
 
-      {/* ✅ CONTEXTE VIGNETTE */}
+      {/* Contexte vignette */}
       {renderVignetteContext()}
 
-      {/* ✅ NOUVEAU : Actions contextuelles en haut */}
+      {/* ✅ NOUVEAU : Guidance Hints */}
+      <GuidanceHints
+        visible={adaptiveConfig.showGuidanceHints && messages.length <= 2}
+        guidanceLevel={adaptiveConfig.guidanceIntensity}
+        theme={theme}
+        styles={styles}
+        maturityLevel={maturityLevel}
+      />
+
+      {/* ✅ Actions contextuelles adaptatives */}
       <ContextualActions
         actions={smartSuggestions.immediate}
         onActionPress={memoizedHandlers.handleActionPress}
         theme={theme}
         visible={shouldShowSuggestions && smartSuggestions.immediate.length > 0}
         styles={styles}
+        showAdvanced={adaptiveConfig.showAdvancedActions}
       />
 
       <KeyboardAvoidingView
@@ -668,23 +695,24 @@ export default function ChatScreen() {
           {isLoading && <MemoizedTypingIndicator theme={theme} />}
         </ScrollView>
 
-        {/* ✅ NOUVEAU : Suggestions rapides au-dessus de l'input */}
+        {/* ✅ Suggestions rapides adaptatives */}
         <QuickSuggestions
           suggestions={intelligenceContext.prompts}
           onSuggestionPress={memoizedHandlers.handleSuggestionPress}
           theme={theme}
           visible={shouldShowSuggestions}
           styles={styles}
+          maxSuggestions={adaptiveConfig.maxPrompts}
         />
 
-        {/* Input collé à la tabbar */}
+        {/* Input */}
         <View style={[styles.inputWrapper, { paddingBottom: insets.bottom > 0 ? insets.bottom : 8 }]}>
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
               value={input}
               onChangeText={setInput}
-              placeholder={`Message... (${intelligenceContext.persona})`}
+              placeholder={`Message... (${intelligenceContext.persona}${__DEV__ ? ` • ${maturityLevel}` : ''})`}
               placeholderTextColor="#8E8E93"
               multiline
               maxHeight={120}
@@ -757,7 +785,23 @@ const getStyles = (theme) => StyleSheet.create({
     color: theme.colors.primary,
     fontWeight: '500',
   },
-  // ✅ NOUVEAU : Styles Smart Suggestions
+  // ✅ NOUVEAU : Guidance Hints
+  guidanceContainer: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.primary + '20',
+  },
+  guidanceText: {
+    fontSize: 14,
+    fontWeight: '500',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  // Suggestions
   suggestionsContainer: {
     paddingVertical: 8,
     marginHorizontal: 16,
@@ -779,7 +823,7 @@ const getStyles = (theme) => StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  // ✅ NOUVEAU : Styles Actions Contextuelles
+  // Actions Contextuelles
   actionsContainer: {
     paddingHorizontal: 16,
     paddingVertical: 8,

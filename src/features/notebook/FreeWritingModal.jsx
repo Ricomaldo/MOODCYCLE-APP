@@ -7,7 +7,7 @@
 // 🧭 Used in: notebook screen, free writing, shared notebook UI
 // ─────────────────────────────────────────────────────────
 //
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Modal,
@@ -62,17 +62,19 @@ export default function FreeWritingModal({ visible, onClose, initialPrompt, sugg
   const [showPrompts, setShowPrompts] = useState(false);
   const [suggestedTags, setSuggestedTags] = useState([]);
 
-  // Initialiser le contenu avec le prompt de vignette si fourni
+  // Initialiser le contenu avec le prompt de vignette si fourni - NE PAS pré-remplir !
   useEffect(() => {
-    if (visible && initialPrompt && !content) {
-      setContent(initialPrompt);
+    if (visible && initialPrompt) {
+      // On affiche les prompts au lieu de pré-remplir
+      setShowPrompts(true);
     }
   }, [visible, initialPrompt]);
 
-  // Initialiser les tags suggérés depuis les props
+  // NE PAS auto-sélectionner les tags - juste les proposer
   useEffect(() => {
     if (visible && propSuggestedTags && propSuggestedTags.length > 0) {
-      setSelectedTags(propSuggestedTags);
+      // Ajouter aux suggestions sans les sélectionner, mais éviter les doublons
+      setSuggestedTags(propSuggestedTags.filter(tag => tag && tag.trim()));
     }
   }, [visible, propSuggestedTags]);
 
@@ -87,11 +89,19 @@ export default function FreeWritingModal({ visible, onClose, initialPrompt, sugg
   }, [visible]);
 
   const currentPhaseKey = currentPhase || 'menstruelle';
-  const prompts = PROMPTS_BY_PHASE[currentPhaseKey] || PROMPTS_BY_PHASE.menstruelle;
+  const basePrompts = PROMPTS_BY_PHASE[currentPhaseKey] || PROMPTS_BY_PHASE.menstruelle;
+  
+  // Si on a un prompt initial de vignette, le mettre en premier
+  const prompts = useMemo(() => {
+    if (initialPrompt && !basePrompts.includes(initialPrompt)) {
+      return [initialPrompt, ...basePrompts];
+    }
+    return basePrompts;
+  }, [initialPrompt, basePrompts]);
 
-  // Mise à jour suggestions tags en temps réel
+  // Suggestions automatiques basées sur le contenu (stabilisé)
   useEffect(() => {
-    if (content.length > 10) {
+    if (content.length > 10 && !propSuggestedTags?.length) {
       // Logique simple de suggestions basée sur le contenu
       const words = content.toLowerCase().split(' ');
       const suggestions = [];
@@ -103,10 +113,10 @@ export default function FreeWritingModal({ visible, onClose, initialPrompt, sugg
       if (words.includes('stress') || words.includes('anxiety')) suggestions.push('#stress');
       
       setSuggestedTags(suggestions);
-    } else {
+    } else if (!propSuggestedTags?.length) {
       setSuggestedTags([]);
     }
-  }, [content]);
+  }, [content, propSuggestedTags]);
 
   const handleSave = () => {
     if (content.trim().length === 0) return;
@@ -150,10 +160,11 @@ export default function FreeWritingModal({ visible, onClose, initialPrompt, sugg
       transparent={true}
       onRequestClose={onClose}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={[styles.container, { paddingTop: insets.top }]}
-      >
+      <View style={styles.overlay}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={[styles.modal, { paddingTop: insets.top }]}
+        >
         <View style={styles.header}>
           <Heading2 style={styles.title}>
             <PhaseIndicator 
@@ -269,25 +280,23 @@ export default function FreeWritingModal({ visible, onClose, initialPrompt, sugg
             <BodyText style={styles.saveButtonText}>Sauvegarder</BodyText>
           </TouchableOpacity>
         </View>
-      </KeyboardAvoidingView>
+        </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
 
 const getStyles = (theme) => StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    padding: theme.spacing.l,
+    justifyContent: 'flex-end',
   },
   modal: {
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.large,
-    height: '85%', // Hauteur fixe au lieu de maxHeight
+    borderTopLeftRadius: theme.borderRadius.large,
+    borderTopRightRadius: theme.borderRadius.large,
+    height: '90%',
     overflow: 'hidden',
   },
   header: {
