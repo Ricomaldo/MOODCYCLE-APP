@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../../src/hooks/useTheme';
+import { useAdaptiveInterface } from '../../../src/hooks/useAdaptiveInterface';
 import { Heading, BodyText, Caption } from '../../../src/core/ui/Typography';
 import { useNotebookStore } from '../../../src/stores/useNotebookStore';
 import { useNavigationStore } from '../../../src/stores/useNavigationStore';
@@ -89,29 +90,7 @@ const getStyles = (theme) => StyleSheet.create({
     flex: 1,
   },
 
-  // Badge filtres compact
-  compactFilterBadge: {
-    // Conteneur touchable transparent
-  },
-  compactFilterBadgeInner: {
-    width: 20,
-    height: 20,
-    backgroundColor: theme.colors.primary,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  compactFilterBadgeText: {
-    fontSize: 12,
-    color: 'white',
-    fontWeight: '700',
-    textAlign: 'center',
-  },
+
 
   // Filtres design premium
   filtersContainer: {
@@ -371,6 +350,7 @@ export default function NotebookView() {
 
   const { currentPhase } = useCycle();
   const { notebookFilters, setNotebookFilter } = useNavigationStore();
+  const { features, config, maturityLevel } = useAdaptiveInterface();
 
   // États
   const filter = notebookFilters.type || 'all';
@@ -387,14 +367,7 @@ export default function NotebookView() {
   // Animation pour header premium
   const headerAnim = new Animated.Value(0);
 
-  // Fonction compteur filtres actifs
-  const getActiveFiltersCount = useCallback(() => {
-    let count = 0;
-    if (notebookFilters.type && notebookFilters.type !== 'all') count++;
-    if (notebookFilters.phase) count++;
-    if (notebookFilters.tags && notebookFilters.tags.length > 0) count++;
-    return count;
-  }, [notebookFilters]);
+
 
   // Navigation vignettes
   useFocusEffect(
@@ -420,7 +393,8 @@ export default function NotebookView() {
   const handleVignetteNavigation = useCallback(() => {
     const { initialPrompt, sourcePhase, sourcePersona, vignetteId, mode } = params;
     
-    if (mode === 'write' && initialPrompt) {
+    // Si on a un prompt initial, on ouvre automatiquement la modal d'écriture
+    if (initialPrompt) {
       setVignetteContext({
         prompt: initialPrompt,
         phase: sourcePhase,
@@ -703,44 +677,7 @@ export default function NotebookView() {
         </TouchableOpacity>
       </Animated.View>
 
-      {/* Badge filtres actifs compact */}
-      {getActiveFiltersCount() > 0 && (
-        <TouchableOpacity
-          onPress={() => {
-            setNotebookFilter('type', 'all');
-            setNotebookFilter('phase', null);
-            setNotebookFilter('tags', []);
-          }}
-          style={[
-            styles.compactFilterBadge,
-            {
-              position: 'absolute',
-              top: 15,
-              right: 50,
-              zIndex: 10,
-            }
-          ]}
-        >
-          <Animated.View 
-            style={[
-              styles.compactFilterBadgeInner,
-              {
-                opacity: headerAnim,
-                transform: [{
-                  scale: headerAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.8, 1]
-                  })
-                }]
-              }
-            ]}
-          >
-            <BodyText style={styles.compactFilterBadgeText}>
-              {getActiveFiltersCount()}
-            </BodyText>
-          </Animated.View>
-        </TouchableOpacity>
-      )}
+
 
       {renderVignetteContext()}
 
@@ -756,7 +693,10 @@ export default function NotebookView() {
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
-          data={FILTER_PILLS}
+          data={FILTER_PILLS.filter(pill => 
+            maturityLevel === 'autonomous' || 
+            ['all', 'personal', 'saved'].includes(pill.id)
+          )}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
             <TouchableOpacity
@@ -776,42 +716,44 @@ export default function NotebookView() {
         />
       </View>
 
-      {/* Filtres par phase avec indicateur visuel */}
-      <View style={styles.phaseFiltersContainer}>
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={PHASE_FILTERS}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[
-                styles.phasePill,
-                { borderColor: item.color },
-                phaseFilter === item.id && {
-                  backgroundColor: item.color + '20',
-                  borderWidth: 2,
-                },
-              ]}
-              onPress={() => handlePhaseFilter(item.id)}
-            >
-              <View style={[styles.phaseIndicator, { backgroundColor: item.color }]} />
-              <BodyText
+      {/* Filtres phases - seulement si entries avec phases */}
+      {entries.some(entry => entry.phase) && (
+        <View style={styles.phaseFiltersContainer}>
+          <FlatList
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            data={PHASE_FILTERS}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
                 style={[
-                  styles.phaseText,
-                  { color: phaseFilter === item.id ? item.color : theme.colors.textLight },
-                  phaseFilter === item.id && styles.phaseTextActive,
+                  styles.phasePill,
+                  { borderColor: item.color },
+                  phaseFilter === item.id && {
+                    backgroundColor: item.color + '20',
+                    borderWidth: 2,
+                  },
                 ]}
+                onPress={() => handlePhaseFilter(item.id)}
               >
-                {item.label}
-              </BodyText>
-            </TouchableOpacity>
-          )}
-        />
-      </View>
+                <View style={[styles.phaseIndicator, { backgroundColor: item.color }]} />
+                <BodyText
+                  style={[
+                    styles.phaseText,
+                    { color: phaseFilter === item.id ? item.color : theme.colors.textLight },
+                    phaseFilter === item.id && styles.phaseTextActive,
+                  ]}
+                >
+                  {item.label}
+                </BodyText>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+      )}
 
       {/* Tags populaires améliorés */}
-      {tagStats.length > 0 && (
+      {tagStats.length > 0 && features.advanced_tracking && (
         <View style={styles.tagsContainer}>
           <Caption style={styles.tagsTitle}>Tags populaires:</Caption>
           <FlatList

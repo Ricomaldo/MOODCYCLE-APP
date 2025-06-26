@@ -187,7 +187,7 @@ export const getDaysUntilNextPeriod = (lastPeriodDate, cycleLength = CYCLE_DEFAU
   if (!nextPeriodDate) return null;
   
   const nextDate = new Date(nextPeriodDate);
-  const today = new Date();
+  const today = new Date(Date.now()); // Utilise le mock dans les tests
   
   return Math.ceil((nextDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 };
@@ -258,7 +258,7 @@ export const validateCycleData = (cycleData) => {
  * ✅ FIX: Params optionnels + dates cohérentes
  */
 export const createMockCycleData = (daysAgo = 0, cycleLength = CYCLE_DEFAULTS.LENGTH) => {
-  const lastPeriodDate = new Date();
+  const lastPeriodDate = new Date(Date.now()); // Utilise Date.now() pour respecter les mocks
   lastPeriodDate.setDate(lastPeriodDate.getDate() - daysAgo);
   
   return {
@@ -274,11 +274,16 @@ export const createMockCycleData = (daysAgo = 0, cycleLength = CYCLE_DEFAULTS.LE
  * Crée un cycle positionné sur une phase spécifique
  */
 export const createCycleAtPhase = (targetPhase, cycleLength = CYCLE_DEFAULTS.LENGTH) => {
+  // Calcule les jours de début de chaque phase selon la logique de getCurrentPhase
+  const follicularEnd = Math.max(13, Math.floor(cycleLength * 0.4));
+  const ovulatoryStart = follicularEnd + 1;
+  const ovulatoryEnd = Math.min(ovulatoryStart + 2, Math.floor(cycleLength * 0.6));
+  
   const phaseStartDays = {
     'menstrual': 0,
-    'follicular': CYCLE_DEFAULTS.PERIOD_DURATION + 1,
-    'ovulatory': Math.floor(cycleLength * 0.4),
-    'luteal': Math.floor(cycleLength * 0.6)
+    'follicular': CYCLE_DEFAULTS.PERIOD_DURATION + 1, // Jour 6
+    'ovulatory': ovulatoryStart - 1, // Pour être au bon jour du cycle
+    'luteal': ovulatoryEnd // Premier jour de la phase lutéale
   };
   
   const daysAgo = phaseStartDays[targetPhase] || 0;

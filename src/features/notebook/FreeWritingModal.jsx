@@ -50,7 +50,7 @@ const PROMPTS_BY_PHASE = {
   ],
 };
 
-export default function FreeWritingModal({ visible, onClose }) {
+export default function FreeWritingModal({ visible, onClose, initialPrompt, suggestedTags: propSuggestedTags }) {
   const { theme } = useTheme();
   const styles = getStyles(theme);
   const insets = useSafeAreaInsets();
@@ -61,6 +61,30 @@ export default function FreeWritingModal({ visible, onClose }) {
   const [selectedTags, setSelectedTags] = useState([]);
   const [showPrompts, setShowPrompts] = useState(false);
   const [suggestedTags, setSuggestedTags] = useState([]);
+
+  // Initialiser le contenu avec le prompt de vignette si fourni
+  useEffect(() => {
+    if (visible && initialPrompt && !content) {
+      setContent(initialPrompt);
+    }
+  }, [visible, initialPrompt]);
+
+  // Initialiser les tags suggérés depuis les props
+  useEffect(() => {
+    if (visible && propSuggestedTags && propSuggestedTags.length > 0) {
+      setSelectedTags(propSuggestedTags);
+    }
+  }, [visible, propSuggestedTags]);
+
+  // Reset quand la modal se ferme
+  useEffect(() => {
+    if (!visible) {
+      setContent('');
+      setSelectedTags([]);
+      setSuggestedTags([]);
+      setShowPrompts(false);
+    }
+  }, [visible]);
 
   const currentPhaseKey = currentPhase || 'menstruelle';
   const prompts = PROMPTS_BY_PHASE[currentPhaseKey] || PROMPTS_BY_PHASE.menstruelle;
@@ -91,10 +115,7 @@ export default function FreeWritingModal({ visible, onClose }) {
     const tags = [`#${currentPhaseKey}`, ...selectedTags];
     addEntry(content, 'personal', tags);
 
-    // Reset et fermer
-    setContent('');
-    setSelectedTags([]);
-    setSuggestedTags([]);
+    // Fermer (le reset se fait automatiquement via useEffect)
     onClose();
   };
 

@@ -26,7 +26,16 @@
     "transform": {
       "^.+\\.(js|jsx|ts|tsx)$": "babel-jest"
     },
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/__tests__/**/*.(js|jsx|ts|tsx)",
+      "**/*.(test|spec).(js|jsx|ts|tsx)"
+    ],
+    "testPathIgnorePatterns": [
+      "<rootDir>/node_modules/",
+      "<rootDir>/__tests__/__mocks__/",
+      ".*\\.future\\..*"
+    ]
   },
   "dependencies": {
     "@expo-google-fonts/quicksand": "^0.3.0",

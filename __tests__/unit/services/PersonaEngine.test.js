@@ -2,8 +2,8 @@
 // 🧪 TESTS PersonaEngine.js - Suite complète
 // ═══════════════════════════════════════════════════════════
 
-import { calculatePersona } from '../src/services/PersonaEngine.js';
-import { SIMULATION_PROFILES } from '../src/config/personaProfiles.js';
+import { calculatePersona } from '../../../src/services/PersonaEngine.js';
+import { SIMULATION_PROFILES } from '../../../src/config/personaProfiles.js';
 
 // Conversion SIMULATION_PROFILES vers format UserStore
 const convertToUserStoreFormat = (simProfile) => ({
