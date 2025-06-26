@@ -18,10 +18,12 @@
       "<rootDir>/jest.setup.js"
     ],
     "transformIgnorePatterns": [
-      "node_modules/(?!(react-native|@react-native|expo|@expo|@react-navigation|react-native-safe-area-context|@react-native-async-storage|expo-modules-core)/)"
+      "node_modules/(?!(react-native|@react-native|expo|@expo|@react-navigation|react-native-safe-area-context|@react-native-async-storage|expo-modules-core|react-native-view-shot|expo-linear-gradient)/)"
     ],
     "moduleNameMapper": {
-      "^@react-native-async-storage/async-storage$": "<rootDir>/__tests__/__mocks__/asyncStorage.js"
+      "^@react-native-async-storage/async-storage$": "<rootDir>/__tests__/__mocks__/asyncStorage.js",
+      "^react-native-view-shot$": "<rootDir>/__tests__/__mocks__/reactNativeViewShot.js",
+      "^expo-linear-gradient$": "<rootDir>/__tests__/__mocks__/expoLinearGradient.js"
     },
     "transform": {
       "^.+\\.(js|jsx|ts|tsx)$": "babel-jest"

@@ -48,17 +48,6 @@ export default function VignetteCard({
   const currentPhase = cycleData?.currentPhase || 'menstrual';
   const trackAction = engagementStore?.trackAction || (() => {});
 
-  // ✅ DEBUG: Log état hooks
-  React.useEffect(() => {
-    console.log('🔍 VignetteCard Debug:', {
-      vignetteId: vignette.id,
-      vignetteAction: vignette.action,
-      currentPhase,
-      personaAssigned: persona.assigned,
-      hasTrackAction: typeof trackAction === 'function'
-    });
-  }, [vignette.id, vignette.action, currentPhase, persona.assigned]);
-
   // ✅ ACTIONS NAVIGATION COMPLÈTES
   const handlePress = async () => {
     try {

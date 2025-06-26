@@ -1,13 +1,13 @@
 //
 // ─────────────────────────────────────────────────────────
 // 📄 File: src/features/notebook/FreeWritingModal.jsx
-// 🧩 Type: UI Component
-// 📚 Description: Modal d'écriture libre pour le carnet, avec suggestions selon la phase
-// 🕒 Version: 3.0 - 2025-06-21
-// 🧭 Used in: notebook screen, free writing, shared notebook UI
+// 🧩 Type: UI Component Premium
+// 📚 Description: Expérience d'écriture fluide avec AI contextuel
+// 🕒 Version: 6.0 - 2025-06-26 - AI CONTEXTUAL PATTERNS
+// 🧭 Patterns: Progressive Disclosure + AI Assistance + Flow State
 // ─────────────────────────────────────────────────────────
 //
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import {
   View,
   Modal,
@@ -17,270 +17,566 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Animated,
+  Dimensions
 } from 'react-native';
+import { PanGestureHandler } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useTheme } from '../../hooks/useTheme';
 import { Heading2, BodyText, Caption } from '../../core/ui/Typography';
 import { useNotebookStore } from '../../stores/useNotebookStore';
 import { useUserStore } from '../../stores/useUserStore';
 import { useCycle } from '../../hooks/useCycle';
-import { PhaseIndicator } from '../../utils/formatters';
+import { PhaseIcon } from '../../config/iconConstants';
 
-const PROMPTS_BY_PHASE = {
-  menstruelle: [
-    "Comment te sens-tu aujourd'hui ?",
-    "Qu'est-ce que ton corps te demande ?",
-    'Une chose pour laquelle tu es reconnaissante...',
-  ],
-  folliculaire: [
-    'Quelles sont tes intentions pour ce nouveau cycle ?',
-    "Qu'est-ce qui t'inspire en ce moment ?",
-    'Un projet qui te fait vibrer...',
-  ],
-  ovulatoire: [
-    'Comment veux-tu utiliser cette énergie créatrice ?',
-    'Quel message veux-tu partager au monde ?',
-    "Une idée qui mérite d'être explorée...",
-  ],
-  lutéale: [
-    "Qu'est-ce qui mérite d'être lâché ?",
-    'De quoi as-tu besoin pour bien terminer ce cycle ?',
-    'Une leçon apprise cette semaine...',
-  ],
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const MODAL_HEIGHT = SCREEN_HEIGHT * 0.92;
+
+// ✅ Prompts enrichis par phase avec intelligence contextuelle
+const ENHANCED_PROMPTS = {
+  menstruelle: {
+    category: 'Accueil & Réconfort',
+    prompts: [
+      { text: "Comment ton corps te parle aujourd'hui ?", type: 'introspection', tags: ['#corps', '#écoute'] },
+      { text: "Qu'est-ce qui pourrait t'apporter du réconfort maintenant ?", type: 'care', tags: ['#soin', '#douceur'] },
+      { text: "Une gratitude pour ce que ton corps traverse...", type: 'gratitude', tags: ['#gratitude', '#force'] },
+      { text: "Quel rythme ton énergie te demande-t-elle ?", type: 'energy', tags: ['#énergie', '#rythme'] }
+    ]
+  },
+  folliculaire: {
+    category: 'Renaissance & Projets',
+    prompts: [
+      { text: "Quelles graines veux-tu planter ce cycle ?", type: 'intention', tags: ['#projets', '#intentions'] },
+      { text: "Qu'est-ce qui éveille ta curiosité en ce moment ?", type: 'exploration', tags: ['#curiosité', '#découverte'] },
+      { text: "Comment cette énergie montante veut-elle s'exprimer ?", type: 'expression', tags: ['#créativité', '#expression'] },
+      { text: "Quel apprentissage t'appelle ?", type: 'growth', tags: ['#apprentissage', '#évolution'] }
+    ]
+  },
+  ovulatoire: {
+    category: 'Rayonnement & Connexion',
+    prompts: [
+      { text: "Comment veux-tu partager tes dons avec le monde ?", type: 'sharing', tags: ['#partage', '#dons'] },
+      { text: "Quel message ton cœur veut-il transmettre ?", type: 'message', tags: ['#message', '#cœur'] },
+      { text: "Comment célébrer cette énergie créatrice ?", type: 'celebration', tags: ['#célébration', '#créativité'] },
+      { text: "Quelle connexion profonde recherches-tu ?", type: 'connection', tags: ['#connexion', '#authenticité'] }
+    ]
+  },
+  lutéale: {
+    category: 'Sagesse & Introspection',
+    prompts: [
+      { text: "Quelles leçons ce cycle t'a-t-il offertes ?", type: 'wisdom', tags: ['#leçons', '#sagesse'] },
+      { text: "De quoi as-tu besoin pour bien clôturer ?", type: 'closure', tags: ['#clôture', '#besoins'] },
+      { text: "Qu'est-ce qui mérite d'être lâché ?", type: 'release', tags: ['#lâcher-prise', '#libération'] },
+      { text: "Comment honorer ta sensibilité aujourd'hui ?", type: 'sensitivity', tags: ['#sensibilité', '#honneur'] }
+    ]
+  }
 };
 
-export default function FreeWritingModal({ visible, onClose, initialPrompt, suggestedTags: propSuggestedTags }) {
+export default function FreeWritingModal({ 
+  visible, 
+  onClose, 
+  initialPrompt, 
+  suggestedTags: propSuggestedTags = [],
+  mode = 'free' // 'free', 'guided', 'vignette'
+}) {
   const { theme } = useTheme();
   const styles = getStyles(theme);
   const insets = useSafeAreaInsets();
   const { addEntry } = useNotebookStore();
+  const { persona, firstName } = useUserStore();
   const { currentPhase } = useCycle();
 
+  // États principaux
   const [content, setContent] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
   const [showPrompts, setShowPrompts] = useState(false);
-  const [suggestedTags, setSuggestedTags] = useState([]);
+  const [showAIAssistance, setShowAIAssistance] = useState(false);
+  const [writingMode, setWritingMode] = useState('compose'); // 'compose', 'reflect', 'explore'
+  const [aiSuggestions, setAISuggestions] = useState([]);
+  const [currentPromptIndex, setCurrentPromptIndex] = useState(0);
+  const [focusMode, setFocusMode] = useState(false);
+  
+  // Refs pour animations
+  const modalTranslateY = useRef(new Animated.Value(MODAL_HEIGHT)).current;
+  const contentOpacity = useRef(new Animated.Value(0)).current;
+  const keyboardHeightAnim = useRef(new Animated.Value(0)).current;
+  const textInputRef = useRef(null);
 
-  // Initialiser le contenu avec le prompt de vignette si fourni - NE PAS pré-remplir !
-  useEffect(() => {
-    if (visible && initialPrompt) {
-      // On affiche les prompts au lieu de pré-remplir
-      setShowPrompts(true);
+  // ✅ Prompts contextuels selon phase et persona
+  const contextualPrompts = useMemo(() => {
+    const phasePrompts = ENHANCED_PROMPTS[currentPhase] || ENHANCED_PROMPTS.menstruelle;
+    let prompts = [...phasePrompts.prompts];
+    
+    // Ajouter prompt initial de vignette en premier
+    if (initialPrompt && !prompts.some(p => p.text === initialPrompt)) {
+      prompts.unshift({
+        text: initialPrompt,
+        type: 'vignette',
+        tags: ['#vignette', '#guidé', `#${currentPhase}`]
+      });
     }
-  }, [visible, initialPrompt]);
-
-  // NE PAS auto-sélectionner les tags - juste les proposer
-  useEffect(() => {
-    if (visible && propSuggestedTags && propSuggestedTags.length > 0) {
-      // Ajouter aux suggestions sans les sélectionner, mais éviter les doublons
-      setSuggestedTags(propSuggestedTags.filter(tag => tag && tag.trim()));
+    
+    // Personnalisation selon persona (exemple Emma vs Christine)
+    if (persona === 'emma') {
+      prompts.push({
+        text: "Quelle nouvelle chose as-tu découverte sur toi ?",
+        type: 'discovery',
+        tags: ['#découverte', '#moi']
+      });
+    } else if (persona === 'christine') {
+      prompts.push({
+        text: "Comment cette expérience enrichit-elle ta sagesse ?",
+        type: 'wisdom',
+        tags: ['#sagesse', '#expérience']
+      });
     }
-  }, [visible, propSuggestedTags]);
+    
+    return prompts;
+  }, [currentPhase, initialPrompt, persona]);
 
-  // Reset quand la modal se ferme
+  // ✅ AI Analysis en temps réel (simulation)
+  const analyzeContent = useCallback((text) => {
+    if (text.length < 20) return [];
+    
+    const suggestions = [];
+    const words = text.toLowerCase();
+    
+    // Détection d'émotions
+    if (words.includes('fatigue') || words.includes('épuisé')) {
+      suggestions.push({
+        type: 'care',
+        text: "💤 Et si tu t'accordais une pause bien méritée ?",
+        action: 'suggest_rest'
+      });
+    }
+    
+    if (words.includes('stress') || words.includes('anxieux')) {
+      suggestions.push({
+        type: 'technique',
+        text: "🌊 Essaie la respiration 4-7-8 pour retrouver ton calme",
+        action: 'breathing_exercise'
+      });
+    }
+    
+    if (words.includes('joie') || words.includes('heureux')) {
+      suggestions.push({
+        type: 'amplify',
+        text: "✨ Continue à décrire ce qui nourrit cette joie !",
+        action: 'explore_positive'
+      });
+    }
+    
+    // Suggestions de tags intelligentes
+    const autoTags = [];
+    if (words.includes('rêve') || words.includes('songe')) autoTags.push('#rêves');
+    if (words.includes('famille') || words.includes('proche')) autoTags.push('#relations');
+    if (words.includes('travail') || words.includes('boulot')) autoTags.push('#professionnel');
+    if (words.includes('nature') || words.includes('dehors')) autoTags.push('#nature');
+    
+    return { suggestions, autoTags };
+  }, []);
+
+  // ✅ Analyse en temps réel avec debounce
   useEffect(() => {
-    if (!visible) {
+    const timer = setTimeout(() => {
+      if (content.length > 20) {
+        const analysis = analyzeContent(content);
+        setAISuggestions(analysis.suggestions);
+        
+        // Auto-suggest tags without auto-selecting
+        const newAutoTags = analysis.autoTags.filter(tag => 
+          !selectedTags.includes(tag) && !propSuggestedTags.includes(tag)
+        );
+        // Just suggest, don't auto-select
+      }
+    }, 2000);
+    
+    return () => clearTimeout(timer);
+  }, [content, selectedTags, propSuggestedTags]);
+
+  // ✅ Animation modal entrée
+  useEffect(() => {
+    if (visible) {
+      setShowPrompts(!!initialPrompt);
+      
+      Animated.parallel([
+        Animated.spring(modalTranslateY, {
+          toValue: 0,
+          tension: 80,
+          friction: 10,
+          useNativeDriver: true,
+        }),
+        Animated.timing(contentOpacity, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      // Reset states
       setContent('');
       setSelectedTags([]);
-      setSuggestedTags([]);
       setShowPrompts(false);
+      setShowAIAssistance(false);
+      setAISuggestions([]);
+      setFocusMode(false);
+      modalTranslateY.setValue(MODAL_HEIGHT);
+      contentOpacity.setValue(0);
     }
   }, [visible]);
 
-  const currentPhaseKey = currentPhase || 'menstruelle';
-  const basePrompts = PROMPTS_BY_PHASE[currentPhaseKey] || PROMPTS_BY_PHASE.menstruelle;
-  
-  // Si on a un prompt initial de vignette, le mettre en premier
-  const prompts = useMemo(() => {
-    if (initialPrompt && !basePrompts.includes(initialPrompt)) {
-      return [initialPrompt, ...basePrompts];
-    }
-    return basePrompts;
-  }, [initialPrompt, basePrompts]);
+  // ✅ Swipe to dismiss
+  const onGestureEvent = useMemo(() => 
+    Animated.event([
+      { nativeEvent: { translationY: modalTranslateY } }
+    ], { useNativeDriver: true }), [modalTranslateY]);
 
-  // Suggestions automatiques basées sur le contenu (stabilisé)
-  useEffect(() => {
-    if (content.length > 10 && !propSuggestedTags?.length) {
-      // Logique simple de suggestions basée sur le contenu
-      const words = content.toLowerCase().split(' ');
-      const suggestions = [];
+  const onHandlerStateChange = useCallback((event) => {
+    if (event.nativeEvent.state === 5) { // 5 = END state
+      const { translationY, velocityY } = event.nativeEvent;
       
-      if (words.includes('fatigue') || words.includes('tired')) suggestions.push('#fatigue');
-      if (words.includes('énergie') || words.includes('energy')) suggestions.push('#énergie');
-      if (words.includes('douleur') || words.includes('pain')) suggestions.push('#douleur');
-      if (words.includes('joie') || words.includes('joy')) suggestions.push('#joie');
-      if (words.includes('stress') || words.includes('anxiety')) suggestions.push('#stress');
-      
-      setSuggestedTags(suggestions);
-    } else if (!propSuggestedTags?.length) {
-      setSuggestedTags([]);
+      if (translationY > 100 || velocityY > 500) {
+        onClose();
+      } else {
+        Animated.spring(modalTranslateY, {
+          toValue: 0,
+          tension: 80,
+          friction: 10,
+          useNativeDriver: true,
+        }).start();
+      }
     }
-  }, [content, propSuggestedTags]);
+  }, [onClose]);
 
-  const handleSave = () => {
+  // ✅ Handlers optimisés
+  const handleSave = useCallback(() => {
     if (content.trim().length === 0) return;
 
-    // Utiliser la nouvelle API simplifiée
-    const tags = [`#${currentPhaseKey}`, ...selectedTags];
-    addEntry(content, 'personal', tags);
-
-    // Fermer (le reset se fait automatiquement via useEffect)
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    
+    const finalTags = [
+      `#${currentPhase}`,
+      ...selectedTags,
+      ...(mode === 'vignette' ? ['#vignette'] : [])
+    ];
+    
+    addEntry(content, 'personal', finalTags);
     onClose();
-  };
+  }, [content, selectedTags, currentPhase, mode, addEntry, onClose]);
 
-  const handlePromptSelect = (prompt) => {
-    const newContent = content ? `${content}\n\n${prompt}` : prompt;
+  const handlePromptSelect = useCallback((prompt) => {
+    const personalizedPrompt = firstName 
+      ? prompt.text.replace(/tu /g, `${firstName}, tu `)
+      : prompt.text;
+    
+    const newContent = content ? `${content}\n\n${personalizedPrompt}` : personalizedPrompt;
     setContent(newContent);
+    
+    // Auto-add prompt tags
+    if (prompt.tags) {
+      const newTags = prompt.tags.filter(tag => !selectedTags.includes(tag));
+      setSelectedTags(prev => [...prev, ...newTags]);
+    }
+    
     setShowPrompts(false);
-  };
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    // Focus text input
+    setTimeout(() => {
+      textInputRef.current?.focus();
+    }, 300);
+  }, [content, firstName, selectedTags]);
 
-  const toggleTag = (tag) => {
-    setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+  const handleAISuggestionSelect = useCallback((suggestion) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    
+    switch (suggestion.action) {
+      case 'suggest_rest':
+        setContent(prev => prev + "\n\n💤 Prendre du temps pour me reposer...");
+        break;
+      case 'breathing_exercise':
+        setContent(prev => prev + "\n\n🌊 Respirer profondément... 4 temps inspiration, 7 temps retenue, 8 temps expiration...");
+        break;
+      case 'explore_positive':
+        setContent(prev => prev + "\n\nCe qui nourrit cette joie : ");
+        break;
+    }
+  }, []);
+
+  const toggleTag = useCallback((tag) => {
+    setSelectedTags(prev =>
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
     );
-  };
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  }, []);
 
-  const getPhaseEmoji = (phase) => {
-    // Mapping des slugs vers les clés de phase
-    const phaseMapping = {
-      menstruelle: 'menstrual',
-      folliculaire: 'follicular', 
-      ovulatoire: 'ovulatory',
-      luteale: 'luteal'
+  const toggleFocusMode = useCallback(() => {
+    setFocusMode(prev => !prev);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  }, []);
+
+  // ✅ Suggestions tags enrichies
+  const allSuggestedTags = useMemo(() => {
+    const baseTags = [
+      ...propSuggestedTags,
+      '#gratitude', '#réflexion', '#découverte', '#émotion'
+    ];
+    
+    // Ajouter tags contextuels selon phase
+    const phaseTags = {
+      menstruelle: ['#repos', '#introspection', '#douceur'],
+      folliculaire: ['#projets', '#énergie', '#nouveauté'],
+      ovulatoire: ['#créativité', '#partage', '#confiance'],
+      lutéale: ['#bilan', '#sagesse', '#préparation']
     };
-    const phaseKey = phaseMapping[phase] || phase;
-    return getPhaseIcon(phaseKey);
-  };
+    
+    const contextTags = phaseTags[currentPhase] || [];
+    
+    return [...new Set([...baseTags, ...contextTags])];
+  }, [propSuggestedTags, currentPhase]);
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} transparent animationType="none">
       <View style={styles.overlay}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={[styles.modal, { paddingTop: insets.top }]}
+        <PanGestureHandler
+          onGestureEvent={onGestureEvent}
+          onHandlerStateChange={onHandlerStateChange}
         >
-        <View style={styles.header}>
-          <Heading2 style={styles.title}>
-            <PhaseIndicator 
-              phase={currentPhase}
-              useIcon={true}
-              size={24}
-              color={theme.colors.text}
-            />
-            {" "}Mon Journal
-          </Heading2>
-          
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Feather name="x" size={24} color={theme.colors.text} />
-          </TouchableOpacity>
-        </View>
+          <Animated.View
+            style={[
+              styles.modal,
+              {
+                paddingTop: insets.top,
+                paddingBottom: insets.bottom,
+                transform: [{ translateY: modalTranslateY }]
+              }
+            ]}
+          >
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              style={styles.container}
+            >
+              {/* Handle iOS */}
+              <View style={styles.handle} />
 
-        {/* Prompts suggestions */}
-        {showPrompts && (
-          <View style={styles.promptsSection}>
-            <Caption style={styles.promptsTitle}>Inspirations pour ta phase :</Caption>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {prompts.map((prompt, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.promptPill}
-                  onPress={() => handlePromptSelect(prompt)}
-                >
-                  <BodyText style={styles.promptText}>{prompt}</BodyText>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        )}
+              <Animated.View style={[styles.content, { opacity: contentOpacity }]}>
+                
+                {/* ═══ HEADER CONTEXTUEL ═══ */}
+                {!focusMode && (
+                  <View style={styles.header}>
+                    <View style={styles.headerLeft}>
+                      <PhaseIcon 
+                        phaseKey={currentPhase}
+                        size={20}
+                        color="white"
+                      />
+                      <View style={styles.headerText}>
+                        <Heading2 style={[styles.title, { color: theme.colors.phases[currentPhase] }]}>
+                          Mon Journal
+                        </Heading2>
+                        <Caption style={styles.phaseCategory}>
+                          {ENHANCED_PROMPTS[currentPhase]?.category || 'Écriture libre'}
+                        </Caption>
+                      </View>
+                    </View>
+                    
+                    <View style={styles.headerActions}>
+                      <TouchableOpacity 
+                        onPress={() => setShowPrompts(!showPrompts)} 
+                        style={[styles.actionButton, showPrompts && styles.actionButtonActive]}
+                      >
+                        <Feather name="compass" size={20} color={showPrompts ? 'white' : theme.colors.primary} />
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity 
+                        onPress={toggleFocusMode}
+                        style={styles.actionButton}
+                      >
+                        <Feather name="minimize-2" size={20} color={theme.colors.primary} />
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity onPress={onClose} style={styles.actionButton}>
+                        <Feather name="x" size={20} color={theme.colors.textLight} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
 
-        {/* Zone d'écriture */}
-        <View style={styles.writingSection}>
-          <TextInput
-            style={styles.textInput}
-            placeholder="Écris tes pensées, ressentis, découvertes..."
-            placeholderTextColor={theme.colors.textLight}
-            value={content}
-            onChangeText={setContent}
-            multiline
-            textAlignVertical="top"
-            autoFocus
-          />
+                {/* ═══ PROMPTS INSPIRANTS ═══ */}
+                {showPrompts && !focusMode && (
+                  <View style={styles.promptsSection}>
+                    <Caption style={styles.promptsTitle}>
+                      💫 Inspirations pour ta phase {currentPhase}
+                    </Caption>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                      {contextualPrompts.map((prompt, index) => (
+                        <TouchableOpacity
+                          key={index}
+                          style={[
+                            styles.promptPill,
+                            { backgroundColor: theme.colors.phases[currentPhase] + '15' }
+                          ]}
+                          onPress={() => handlePromptSelect(prompt)}
+                        >
+                          <BodyText style={[styles.promptText, { color: theme.colors.phases[currentPhase] }]}>
+                            {prompt.text}
+                          </BodyText>
+                          <Caption style={[styles.promptType, { color: theme.colors.phases[currentPhase] + 'AA' }]}>
+                            {prompt.type}
+                          </Caption>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                )}
 
-          {/* Compteur caractères */}
-          <View style={styles.footer}>
-            <Caption style={styles.charCount}>{content.length} caractères</Caption>
-          </View>
-        </View>
-
-        {/* Tags suggestions */}
-        {suggestedTags.length > 0 && (
-          <View style={styles.tagsSection}>
-            <Caption style={styles.tagsTitle}>Tags suggérés :</Caption>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {suggestedTags.map((tag, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[styles.tagPill, selectedTags.includes(tag) && styles.tagPillSelected]}
-                  onPress={() => toggleTag(tag)}
-                >
-                  <BodyText
+                {/* ═══ ZONE D'ÉCRITURE PRINCIPALE ═══ */}
+                <View style={styles.writingZone}>
+                  <TextInput
+                    ref={textInputRef}
                     style={[
-                      styles.tagText,
-                      selectedTags.includes(tag) && styles.tagTextSelected,
+                      styles.textInput, 
+                      focusMode && styles.textInputFocus
                     ]}
-                  >
-                    {tag}
-                  </BodyText>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        )}
+                    placeholder={`${firstName ? `${firstName}, ` : ''}laisse tes pensées s'exprimer librement...`}
+                    placeholderTextColor={theme.colors.textLight}
+                    value={content}
+                    onChangeText={setContent}
+                    multiline
+                    textAlignVertical="top"
+                    autoFocus
+                    scrollEnabled={true}
+                  />
 
-        {/* Tags sélectionnés */}
-        {selectedTags.length > 0 && (
-          <View style={styles.selectedTagsSection}>
-            <View style={styles.selectedTags}>
-              {selectedTags.map((tag, index) => (
-                <View key={index} style={styles.selectedTag}>
-                  <BodyText style={styles.selectedTagText}>{tag}</BodyText>
+                  {/* AI Assistance contextuelle */}
+                  {aiSuggestions.length > 0 && !focusMode && (
+                    <View style={styles.aiAssistance}>
+                      <Caption style={styles.aiTitle}>💡 MéLune suggère</Caption>
+                      {aiSuggestions.map((suggestion, index) => (
+                        <TouchableOpacity
+                          key={index}
+                          style={styles.aiSuggestion}
+                          onPress={() => handleAISuggestionSelect(suggestion)}
+                        >
+                          <BodyText style={styles.aiSuggestionText}>{suggestion.text}</BodyText>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
+
+                  {/* Compteur de mots avec encouragement */}
+                  <View style={styles.writingStats}>
+                    <Caption style={styles.charCount}>
+                      {content.length} caractères
+                      {content.split(' ').filter(w => w.length > 0).length > 0 && 
+                        ` • ${content.split(' ').filter(w => w.length > 0).length} mots`
+                      }
+                    </Caption>
+                    {content.length > 100 && (
+                      <Caption style={styles.encouragement}>
+                        ✨ Belle expression !
+                      </Caption>
+                    )}
+                  </View>
+                </View>
+
+                {/* ═══ TAGS INTELLIGENTS ═══ */}
+                {!focusMode && allSuggestedTags.length > 0 && (
+                  <View style={styles.tagsSection}>
+                    <Caption style={styles.tagsTitle}>Étiquettes suggérées :</Caption>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                      {allSuggestedTags.map((tag, index) => (
+                        <TouchableOpacity
+                          key={index}
+                          style={[
+                            styles.tagPill, 
+                            selectedTags.includes(tag) && [
+                              styles.tagPillSelected,
+                              { backgroundColor: theme.colors.phases[currentPhase] + '20' }
+                            ]
+                          ]}
+                          onPress={() => toggleTag(tag)}
+                        >
+                          <BodyText
+                            style={[
+                              styles.tagText,
+                              selectedTags.includes(tag) && [
+                                styles.tagTextSelected,
+                                { color: theme.colors.phases[currentPhase] }
+                              ]
+                            ]}
+                          >
+                            {tag}
+                          </BodyText>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  </View>
+                )}
+
+                {/* ═══ TAGS SÉLECTIONNÉS ═══ */}
+                {selectedTags.length > 0 && !focusMode && (
+                  <View style={styles.selectedTagsSection}>
+                    <View style={styles.selectedTags}>
+                      {selectedTags.map((tag, index) => (
+                        <View 
+                          key={index} 
+                          style={[
+                            styles.selectedTag,
+                            { backgroundColor: theme.colors.phases[currentPhase] }
+                          ]}
+                        >
+                          <BodyText style={styles.selectedTagText}>{tag}</BodyText>
+                          <TouchableOpacity
+                            onPress={() => toggleTag(tag)}
+                            style={styles.removeTagButton}
+                          >
+                            <Feather name="x" size={12} color="white" />
+                          </TouchableOpacity>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                {/* ═══ ACTIONS BOTTOM ═══ */}
+                <View style={styles.actions}>
+                  {focusMode ? (
+                    <TouchableOpacity 
+                      style={styles.focusExitButton} 
+                      onPress={toggleFocusMode}
+                    >
+                      <Feather name="maximize-2" size={20} color={theme.colors.primary} />
+                      <BodyText style={styles.focusExitText}>Quitter focus</BodyText>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+                      <BodyText style={styles.cancelButtonText}>Annuler</BodyText>
+                    </TouchableOpacity>
+                  )}
+
                   <TouchableOpacity
-                    onPress={() => toggleTag(tag)}
-                    style={styles.removeTagButton}
+                    style={[
+                      styles.saveButton,
+                      { backgroundColor: theme.colors.phases[currentPhase] },
+                      content.trim().length === 0 && styles.saveButtonDisabled,
+                    ]}
+                    onPress={handleSave}
+                    disabled={content.trim().length === 0}
                   >
-                    <Feather name="x" size={14} color={theme.colors.primary} />
+                    <Feather name="save" size={20} color="white" />
+                    <BodyText style={styles.saveButtonText}>
+                      Sauvegarder {content.trim() && `(${content.trim().split(' ').length} mots)`}
+                    </BodyText>
                   </TouchableOpacity>
                 </View>
-              ))}
-            </View>
-          </View>
-        )}
 
-        {/* Actions */}
-        <View style={styles.actions}>
-          <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-            <BodyText style={styles.cancelButtonText}>Annuler</BodyText>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.saveButton,
-              content.trim().length === 0 && styles.saveButtonDisabled,
-            ]}
-            onPress={handleSave}
-            disabled={content.trim().length === 0}
-          >
-            <Feather name="save" size={20} color="white" />
-            <BodyText style={styles.saveButtonText}>Sauvegarder</BodyText>
-          </TouchableOpacity>
-        </View>
-        </KeyboardAvoidingView>
+              </Animated.View>
+            </KeyboardAvoidingView>
+          </Animated.View>
+        </PanGestureHandler>
       </View>
     </Modal>
   );
@@ -294,179 +590,274 @@ const getStyles = (theme) => StyleSheet.create({
   },
   modal: {
     backgroundColor: theme.colors.surface,
-    borderTopLeftRadius: theme.borderRadius.large,
-    borderTopRightRadius: theme.borderRadius.large,
-    height: '90%',
-    overflow: 'hidden',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    height: MODAL_HEIGHT,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 12,
   },
+  handle: {
+    width: 36,
+    height: 4,
+    backgroundColor: theme.colors.border,
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginVertical: 8,
+  },
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+
+  // ═══ HEADER ═══
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    padding: theme.spacing.l,
+    paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    borderBottomColor: theme.colors.border + '30',
+    marginBottom: 16,
   },
   headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flex: 1,
   },
-  title: {
-    color: theme.colors.primary,
-    marginBottom: theme.spacing.xs,
+  phaseIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  phaseLabel: {
+  phaseEmoji: {
+    fontSize: 14,
+    color: 'white',
+  },
+  headerText: {
+    marginLeft: 12,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  phaseCategory: {
+    fontSize: 12,
     color: theme.colors.textLight,
-    fontStyle: 'italic',
+    marginTop: 2,
   },
   headerActions: {
     flexDirection: 'row',
-    alignItems: 'center',
+    gap: 8,
   },
-  promptButton: {
-    padding: theme.spacing.s,
-    marginRight: theme.spacing.s,
+  actionButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: theme.colors.background,
   },
-  closeButton: {
-    padding: theme.spacing.s,
+  actionButtonActive: {
+    backgroundColor: theme.colors.primary,
   },
 
-  // Prompts
+  // ═══ PROMPTS ═══
   promptsSection: {
-    padding: theme.spacing.l,
-    paddingBottom: theme.spacing.m,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    marginBottom: 16,
   },
   promptsTitle: {
-    marginBottom: theme.spacing.s,
+    marginBottom: 12,
     color: theme.colors.textLight,
+    fontWeight: '500',
   },
   promptPill: {
-    backgroundColor: theme.colors.primary + '15',
-    borderRadius: theme.borderRadius.pill,
-    paddingHorizontal: theme.spacing.m,
-    paddingVertical: theme.spacing.s,
-    marginRight: theme.spacing.s,
-    maxWidth: 180,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginRight: 12,
+    minWidth: 200,
+    maxWidth: 280,
   },
   promptText: {
-    fontSize: 12,
-    color: theme.colors.primary,
-    textAlign: 'center',
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  promptType: {
+    fontSize: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 
-  // Zone écriture
-  writingSection: {
+  // ═══ WRITING ZONE ═══
+  writingZone: {
     flex: 1,
-    padding: theme.spacing.l,
+    marginBottom: 16,
   },
   textInput: {
     flex: 1,
-    fontSize: 16,
-    lineHeight: 24,
+    fontSize: 17,
+    lineHeight: 26,
     color: theme.colors.text,
     fontFamily: theme.fonts.body,
     textAlignVertical: 'top',
+    paddingVertical: 16,
     minHeight: 200,
   },
-  footer: {
-    alignItems: 'flex-end',
-    marginTop: theme.spacing.s,
+  textInputFocus: {
+    fontSize: 19,
+    lineHeight: 28,
+    paddingHorizontal: 16,
+    backgroundColor: theme.colors.background + '50',
+    borderRadius: 12,
+  },
+  writingStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: 8,
   },
   charCount: {
     color: theme.colors.textLight,
   },
+  encouragement: {
+    color: theme.colors.primary,
+    fontWeight: '500',
+  },
 
-  // Tags
+  // ═══ AI ASSISTANCE ═══
+  aiAssistance: {
+    backgroundColor: theme.colors.primary + '08',
+    borderRadius: 12,
+    padding: 12,
+    marginVertical: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: theme.colors.primary,
+  },
+  aiTitle: {
+    color: theme.colors.primary,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  aiSuggestion: {
+    paddingVertical: 8,
+  },
+  aiSuggestionText: {
+    fontSize: 14,
+    color: theme.colors.text,
+    lineHeight: 20,
+  },
+
+  // ═══ TAGS ═══
   tagsSection: {
-    padding: theme.spacing.l,
-    paddingTop: theme.spacing.m,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
+    marginBottom: 12,
   },
   tagsTitle: {
-    marginBottom: theme.spacing.s,
+    marginBottom: 8,
     color: theme.colors.textLight,
+    fontSize: 12,
+    fontWeight: '500',
   },
   tagPill: {
     backgroundColor: theme.colors.border,
-    borderRadius: theme.borderRadius.pill,
-    paddingHorizontal: theme.spacing.m,
-    paddingVertical: theme.spacing.s,
-    marginRight: theme.spacing.s,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 8,
     borderWidth: 1,
     borderColor: 'transparent',
   },
   tagPillSelected: {
-    backgroundColor: theme.colors.primary + '20',
     borderColor: theme.colors.primary,
   },
   tagText: {
     fontSize: 12,
     color: theme.colors.textLight,
+    fontWeight: '500',
   },
   tagTextSelected: {
-    color: theme.colors.primary,
     fontWeight: '600',
   },
-
-  // Tags sélectionnés
   selectedTagsSection: {
-    padding: theme.spacing.l,
-    paddingTop: theme.spacing.m,
+    marginBottom: 16,
   },
   selectedTags: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: theme.spacing.s,
+    gap: 8,
   },
   selectedTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.pill,
-    paddingLeft: theme.spacing.m,
-    paddingRight: theme.spacing.s,
-    paddingVertical: theme.spacing.s,
+    borderRadius: 16,
+    paddingLeft: 12,
+    paddingRight: 8,
+    paddingVertical: 6,
   },
   selectedTagText: {
     color: 'white',
     fontSize: 12,
-    marginRight: theme.spacing.xs,
+    fontWeight: '500',
+    marginRight: 6,
   },
   removeTagButton: {
     padding: 2,
   },
 
-  // Actions
+  // ═══ ACTIONS ═══
   actions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    padding: theme.spacing.l,
+    alignItems: 'center',
+    paddingVertical: 16,
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
+    borderTopColor: theme.colors.border + '30',
   },
   cancelButton: {
-    paddingHorizontal: theme.spacing.l,
-    paddingVertical: theme.spacing.m,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
   },
   cancelButtonText: {
     color: theme.colors.textLight,
+    fontSize: 16,
+  },
+  focusExitButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 8,
+  },
+  focusExitText: {
+    color: theme.colors.primary,
+    fontSize: 14,
+    fontWeight: '500',
   },
   saveButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.primary,
-    paddingHorizontal: theme.spacing.l,
-    paddingVertical: theme.spacing.m,
-    borderRadius: theme.borderRadius.medium,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+    gap: 8,
   },
   saveButtonDisabled: {
     backgroundColor: theme.colors.textLight,
+    shadowOpacity: 0,
   },
   saveButtonText: {
     color: 'white',
     fontWeight: '600',
-    marginLeft: theme.spacing.s,
+    fontSize: 16,
   },
 });

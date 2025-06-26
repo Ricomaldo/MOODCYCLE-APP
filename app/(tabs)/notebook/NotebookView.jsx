@@ -6,7 +6,7 @@
 // 🕒 Version : 5.0 - 2025-06-21 - DESIGN PREMIUM
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { View, FlatList, TouchableOpacity, StyleSheet, Alert, Share, RefreshControl, Animated } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
@@ -24,8 +24,6 @@ import SwipeableEntryIOS from '../../../src/features/notebook/SwipeableEntryIOS'
 import ToolbarIOS from '../../../src/features/notebook/ToolbarIOS';
 import {
   AnimatedSearchBar,
-  AnimatedFilterPill,
-  EntryLoadingSkeleton,
 } from '../../../src/core/ui/AnimatedComponents';
 import ScreenContainer from '../../../src/core/layout/ScreenContainer';
 import { formatTrendSummary } from '../../../src/utils/trackingFormatters';
@@ -365,33 +363,14 @@ export default function NotebookView() {
   const [refreshing, setRefreshing] = useState(false);
   
   // Animation pour header premium
-  const headerAnim = new Animated.Value(0);
-
-
+  const headerAnim = useRef(new Animated.Value(0)).current;
 
   // Navigation vignettes
-  useFocusEffect(
-    useCallback(() => {
-      if (params.context === 'vignette') {
-        handleVignetteNavigation();
-      }
-      
-      // Animation header entrée
-      Animated.spring(headerAnim, {
-        toValue: 1,
-        tension: 60,
-        friction: 8,
-        useNativeDriver: true,
-      }).start();
-      
-      return () => {
-        setVignetteContext(null);
-      };
-    }, [params])
-  );
-
   const handleVignetteNavigation = useCallback(() => {
     const { initialPrompt, sourcePhase, sourcePersona, vignetteId, mode } = params;
+    
+    // Éviter les appels inutiles si les valeurs clés n'ont pas changé
+    if (!initialPrompt && !mode && !sourcePhase) return;
     
     // Si on a un prompt initial, on ouvre automatiquement la modal d'écriture
     if (initialPrompt) {
@@ -419,7 +398,34 @@ export default function NotebookView() {
       });
       setNotebookFilter('phase', sourcePhase);
     }
-  }, [params, setNotebookFilter]);
+  }, [params.initialPrompt, params.sourcePhase, params.mode, params.vignetteId, setNotebookFilter]);
+
+  // Navigation vignettes
+  const handleVignetteNavigationRef = useRef(handleVignetteNavigation);
+  handleVignetteNavigationRef.current = handleVignetteNavigation;
+  
+  useFocusEffect(
+    useCallback(() => {
+      if (params.context === 'vignette') {
+        // Vérification de sécurité
+        if (handleVignetteNavigationRef.current) {
+          handleVignetteNavigationRef.current();
+        }
+      }
+      
+      // Animation header entrée
+      Animated.spring(headerAnim, {
+        toValue: 1,
+        tension: 60,
+        friction: 8,
+        useNativeDriver: true,
+      }).start();
+      
+      return () => {
+        setVignetteContext(null);
+      };
+    }, [params.context])
+  );
 
   // Filtres memoized
   const filters = useMemo(() => ({

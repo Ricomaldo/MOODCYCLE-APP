@@ -15,7 +15,7 @@ import {
   Platform,
   Animated
 } from 'react-native';
-import { PanGestureHandler, State } from 'react-native-gesture-handler';
+import { PanGestureHandler } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { BodyText, Caption } from '../../core/ui/Typography';
@@ -62,7 +62,7 @@ export default function SwipeableEntryIOS({
   const handleGestureStateChange = useCallback((event) => {
     const { translationX, state } = event.nativeEvent;
     
-    if (state === State.END) {
+    if (state === 5) { // 5 = END state
       // Performance : éviter calculs inutiles si translation faible
       if (Math.abs(translationX) < 10) {
         // Reset rapide sans animation pour micro-gestures

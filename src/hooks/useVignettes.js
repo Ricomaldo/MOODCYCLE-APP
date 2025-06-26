@@ -32,27 +32,18 @@ export function useVignettes(forcePhase = null, forcePersona = null) {
   const adaptiveVignettesLimit = layout?.config?.adaptiveVignettes || 3;
   const firstSuggestionAction = suggestions?.contextualActions?.[0];
 
-  // ✅ LOGIQUE ADAPTATIVE SIMPLE
-  const { getEngagementScore } = useEngagementStore();
-  
-  const getAdaptiveVignettesLimit = useMemo(() => {
-    // Si useAdaptiveInterface fonctionne, utiliser sa logique
-    if (layout?.config?.maturityLevel) {
-      switch(layout.config.maturityLevel) {
-        case 'autonomous': return 4;
-        case 'learning': return 3;
-        case 'discovery': return 2;
-        default: return 2;
-      }
+  // ✅ LOGIQUE ADAPTATIVE SIMPLE - fixée pour éviter les boucles
+  const adaptiveLimit = useMemo(() => {
+    // Valeur statique basée sur le maturity level seulement
+    const maturityLevel = layout?.config?.maturityLevel;
+    
+    switch(maturityLevel) {
+      case 'autonomous': return 4;
+      case 'learning': return 3;
+      case 'discovery': return 2;
+      default: return 3; // valeur par défaut
     }
-    
-    // Sinon, logique de fallback basée sur l'engagement
-    const engagementScore = getEngagementScore();
-    
-    if (engagementScore >= 70) return 4;      // Expert
-    if (engagementScore >= 40) return 3;      // Intermédiaire
-    return 2;                                 // Débutant
-  }, [layout?.config?.maturityLevel, getEngagementScore]);
+  }, [layout?.config?.maturityLevel]);
 
   // ──────────────────────────────────────────────────────
   // 🔄 CHARGEMENT VIGNETTES
@@ -71,11 +62,6 @@ export function useVignettes(forcePhase = null, forcePersona = null) {
         currentPhase, 
         currentPersona
       );
-      
-      // ✅ Filtrage adaptatif sécurisé
-      const adaptedVignettes = layout?.limitVignettes 
-        ? layout.limitVignettes(rawVignettes) 
-        : (Array.isArray(rawVignettes) ? rawVignettes.slice(0, adaptiveVignettesLimit) : []);
       
       setVignettes(Array.isArray(rawVignettes) ? rawVignettes : []);
     } catch (err) {
@@ -117,8 +103,8 @@ export function useVignettes(forcePhase = null, forcePersona = null) {
       }
     }
     
-    return baseVignettes.slice(0, getAdaptiveVignettesLimit);
-  }, [vignettes, firstSuggestionAction, currentPhase, getAdaptiveVignettesLimit]);
+    return baseVignettes.slice(0, adaptiveLimit);
+  }, [vignettes, firstSuggestionAction, currentPhase, adaptiveLimit]);
 
   // ──────────────────────────────────────────────────────
   // 📊 TRACKING ENGAGEMENT
@@ -169,7 +155,7 @@ export function useVignettes(forcePhase = null, forcePersona = null) {
     // Métadonnées
     hasSmartSuggestions: !!firstSuggestionAction,
     totalAvailable: Array.isArray(vignettes) ? vignettes.length : 0,
-    maxDisplayed: getAdaptiveVignettesLimit,
+    maxDisplayed: adaptiveLimit,
     
     // Debug
     rawVignettes: vignettes,

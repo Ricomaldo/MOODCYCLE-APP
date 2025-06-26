@@ -86,3 +86,10 @@ jest.mock('./src/stores/useNavigationStore', () => ({
     trackVignetteClick: jest.fn(),
   })),
 }));
+
+// ✅ Mock pour react-native-view-shot
+jest.mock('react-native-view-shot', () => ({
+  captureRef: jest.fn(() => Promise.resolve('mock-screenshot-uri')),
+  releaseCapture: jest.fn(),
+  captureScreen: jest.fn(() => Promise.resolve('mock-screen-uri')),
+}));

@@ -16,7 +16,7 @@ import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
 import { BodyText } from '../../src/core/ui/Typography';
 import { useTheme } from '../../src/hooks/useTheme';
-import { getPhaseIcon } from '../../src/utils/formatters';
+import { getPhaseSymbol } from '../../src/utils/formatters';
 
 export default function PrenomScreen() {
   // 🧠 INTELLIGENCE HOOK
@@ -130,10 +130,10 @@ export default function PrenomScreen() {
     
     const previews = {
       emma: {
-        menstrual: `Coucou ${prenom.trim()} ! Comment tu te sens dans cette phase cocooning ? ${getPhaseIcon('menstrual')}`,
+        menstrual: `Coucou ${prenom.trim()} ! Comment tu te sens dans cette phase cocooning ? ${getPhaseSymbol('menstrual')}`,
         follicular: `Hey ${prenom.trim()} ! Je sens que ton énergie remonte ! ✨`,
         ovulatory: `Bonjour ma belle ${prenom.trim()} ! Tu rayonnes aujourd'hui ! 💫`,
-        luteal: `Salut ${prenom.trim()}, comment tu gères cette phase d'automne ? ${getPhaseIcon('luteal')}`
+        luteal: `Salut ${prenom.trim()}, comment tu gères cette phase d'automne ? ${getPhaseSymbol('luteal')}`
       },
       laure: {
         menstrual: `Bonjour ${prenom.trim()}. Comment organisez-vous votre repos aujourd'hui ?`,

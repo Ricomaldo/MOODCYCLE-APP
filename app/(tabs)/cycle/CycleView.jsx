@@ -20,9 +20,10 @@ import { useVignettes } from '../../../src/hooks/useVignettes';
 import { usePersona } from '../../../src/hooks/usePersona';
 import { useUserStore } from '../../../src/stores/useUserStore';
 import ParametresButton from '../../../src/features/shared/ParametresButton';
-import { PhaseIndicator } from '../../../src/utils/formatters';
+import { PhaseIcon } from '../../../src/config/iconConstants';
 import { useAdaptiveInterface } from '../../../src/hooks/useAdaptiveInterface';
 import { useEngagementStore } from '../../../src/stores/useEngagementStore';
+import EntryDetailModal from '../../../src/features/shared/EntryDetailModal';
 
 export default function CycleView() {
   const cycleData = useCycle() || {};
@@ -38,6 +39,10 @@ export default function CycleView() {
   
   // ✅ STATE POUR TOGGLE VUE
   const [viewMode, setViewMode] = React.useState('wheel'); // 'wheel' ou 'calendar'
+  
+  // ✅ STATE POUR MODAL ENTRIES DU JOUR
+  const [selectedDayEntries, setSelectedDayEntries] = React.useState([]);
+  const [showDayDetail, setShowDayDetail] = React.useState(false);
   
   // ✅ CONNEXION BASIQUE IMMÉDIATE - RÉACTIVÉE APRÈS CORRECTIONS
   const {
@@ -68,8 +73,9 @@ export default function CycleView() {
     // Handler pour les phases
   }, []);
   
-  const handleDatePress = React.useCallback((dateString, entries) => {
-    // Handler pour les dates
+  const handleDatePress = React.useCallback((dateString, dayEntries) => {
+    setSelectedDayEntries(dayEntries);
+    setShowDayDetail(true);
   }, []);
 
   const styles = getStyles(theme);
@@ -161,9 +167,8 @@ export default function CycleView() {
         {/* Phase info */}
         <View style={styles.phaseInfoContainer}>
           <View style={styles.phaseHeader}>
-            <PhaseIndicator 
-              phase={currentPhase}
-              useIcon={true}
+            <PhaseIcon 
+              phaseKey={currentPhase}
               size={24}
               color={theme.colors.phases[currentPhase]}
             />
@@ -201,6 +206,14 @@ export default function CycleView() {
         {/* Espacement bottom pour tab bar */}
         <View style={{ height: 20 }} />
       </ScrollView>
+
+      {/* ✅ MODAL DETAIL ENTRIES DU JOUR */}
+      <EntryDetailModal
+        entries={selectedDayEntries}
+        visible={showDayDetail}
+        onClose={() => setShowDayDetail(false)}
+        showActions={true}
+      />
     </ScreenContainer>
   );
 }

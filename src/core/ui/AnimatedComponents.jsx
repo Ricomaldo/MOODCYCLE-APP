@@ -38,8 +38,6 @@ export function AnimatedSearchBar({ visible, query, onChangeText, onClear }) {
     ]).start();
   }, [visible]);
 
-  if (!visible) return null;
-
   return (
     <Animated.View
       style={[
@@ -49,6 +47,7 @@ export function AnimatedSearchBar({ visible, query, onChangeText, onClear }) {
           opacity: opacityAnim,
         },
       ]}
+      pointerEvents={visible ? 'auto' : 'none'}
     >
       <View style={styles.searchInput}>
         <Feather name="search" size={20} color={theme.colors.textLight} />

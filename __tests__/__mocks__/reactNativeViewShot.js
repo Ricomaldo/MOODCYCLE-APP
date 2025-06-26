@@ -1,10 +1,9 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 Fichier : __tests__/__mocks__/api.js
-// 🧩 Type : Mocks Réutilisables
-// 📚 Description : Mocks API ChatService & ContentManager réutilisables pour tests
-// 🕒 Version : 1.0 - 2025-06-25
-// 🧭 Utilisé dans : tests nécessitant API
+// 📄 Fichier : __tests__/__mocks__/reactNativeViewShot.js
+// 🧩 Type : Mock Jest
+// 📚 Description : Mock pour react-native-view-shot
+// 🕒 Version : 1.0 - 2025-06-26
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
 
@@ -26,5 +25,4 @@ export default class ViewShot {
   render() {
     return this.props.children;
   }
-}
-
+} 

@@ -2,50 +2,52 @@
  * 📝 FORMATAGE SIMPLE DONNÉES
  */
 
-import React from 'react';
-import { Text } from 'react-native';
 import { getCurrentPhase } from './cycleCalculations';
 import phasesData from '../data/phases.json';
-import { PhaseIcon } from '../config/iconConstants';
-
-export const formatUserProfile = (user) => ({
-    prenom: user.profile?.prenom,
-    age: user.profile?.ageRange,
-    phase: getCurrentPhase(user.cycle?.lastPeriodDate, user.cycle?.length, user.cycle?.periodDuration),
-    persona: user.persona?.assigned
-  });
-  
-  export const formatPreferences = (preferences) => 
-    Object.entries(preferences)
-      .filter(([, val]) => val >= 4)
-      .map(([key]) => key);
-  
-  export const formatPhaseInfo = (phaseInfo) => ({
-    name: phaseInfo.name,
-    emoji: getPhaseSymbol(phaseInfo.phase),
-    color: phaseInfo.color,
-    day: `Jour ${phaseInfo.day}`
-  });
-  
-  export const formatPersonaName = (persona) => {
-    const names = {
-      emma: 'Emma',
-      laure: 'Laure', 
-      sylvie: 'Sylvie',
-      christine: 'Christine',
-      clara: 'Clara'
-    };
-    return names[persona] || 'Melune';
-  };
 
 //
 // ─────────────────────────────────────────────────────────
 // 📄 File: src/utils/formatters.js
-// 🧩 Type: Utility Functions
-// 📚 Description: Formatters pour les données de l'application
-// 🕒 Version: 1.0 - 2025-01-21
+// 🧩 Type: Utility Functions - FORMATAGE GÉNÉRAL
+// 📚 Description: Formatters pour les données générales de l'application
+// 🎯 Responsabilités: 
+//    - Profils utilisateur et personas
+//    - Phases du cycle (symboles, métadonnées, icônes)
+//    - Préférences et informations générales
+// 🕒 Version: 2.0 - 2025-06-26 - NETTOYAGE & AMÉLIORATION
 // ─────────────────────────────────────────────────────────
 //
+
+// ═══════════════════════════════════════════════════════════
+// 👤 FORMATAGE PROFIL UTILISATEUR
+// ═══════════════════════════════════════════════════════════
+
+export const formatUserProfile = (user) => ({
+  prenom: user.profile?.prenom,
+  age: user.profile?.ageRange,
+  phase: getCurrentPhase(user.cycle?.lastPeriodDate, user.cycle?.length, user.cycle?.periodDuration),
+  persona: user.persona?.assigned
+});
+
+export const formatPreferences = (preferences) => 
+  Object.entries(preferences)
+    .filter(([, val]) => val >= 4)
+    .map(([key]) => key);
+
+export const formatPersonaName = (persona) => {
+  const names = {
+    emma: 'Emma',
+    laure: 'Laure', 
+    sylvie: 'Sylvie',
+    christine: 'Christine',
+    clara: 'Clara'
+  };
+  return names[persona] || 'Melune';
+};
+
+// ═══════════════════════════════════════════════════════════
+// 🌙 FORMATAGE PHASES DU CYCLE
+// ═══════════════════════════════════════════════════════════
 
 /**
  * Récupère l'emoji d'une phase depuis phases.json
@@ -70,25 +72,12 @@ export const getPhaseIconData = (phaseKey) => {
   return phase?.icon || null;
 };
 
-/**
- * Composant de rendu intelligent pour les indicateurs de phase
- * @param {Object} props - Props du composant
- * @param {string} props.phase - Clé de la phase
- * @param {boolean} props.useIcon - Utiliser l'icône Feather si disponible
- * @param {number} props.size - Taille de l'icône
- * @param {string} props.color - Couleur de l'icône
- */
-export const PhaseIndicator = ({ phase, useIcon = true, size = 24, color }) => {
-  if (!phase) return null;
-  
-  const phaseData = phasesData[phase];
-  
-  if (useIcon && phaseData?.icon?.name) {
-    return <PhaseIcon phaseKey={phase} size={size} color={color} />;
-  }
-  
-  return <Text style={{ fontSize: size * 0.75 }}>{phaseData?.symbol || '✨'}</Text>;
-};
+export const formatPhaseInfo = (phaseInfo) => ({
+  name: phaseInfo.name,
+  emoji: getPhaseSymbol(phaseInfo.phase),
+  color: phaseInfo.color,
+  day: `Jour ${phaseInfo.day}`
+});
 
 /**
  * Récupère toutes les icônes de phase dans un objet
