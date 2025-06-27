@@ -74,8 +74,28 @@ export const mockNotebookStore = {
 };
 
 export const mockEngagementStore = {
-  metrics: { daysUsed: 5, vignetteEngagements: 3 },
+  metrics: {
+    daysUsed: 5, 
+    vignetteEngagements: 3,
+    conversationsStarted: 3,
+    conversationsCompleted: 2,
+    notebookEntriesCreated: 4,
+    insightsSaved: 2,
+    cyclesCompleted: 0,
+    autonomySignals: 1,
+    phasesExplored: ['menstrual', 'follicular']
+  },
+  maturity: { current: 'learning', confidence: 75 },
   trackAction: jest.fn(),
   getEngagementLevel: jest.fn().mockReturnValue('medium'),
-  getPatterns: jest.fn().mockReturnValue({})
+  getPatterns: jest.fn().mockReturnValue({}),
+  // ✅ FONCTIONS MANQUANTES POUR useAdaptiveInterface
+  getEngagementScore: jest.fn().mockReturnValue(68),
+  getNextMilestone: jest.fn().mockReturnValue({
+    name: 'Explorer',
+    missing: { days: 2, conversations: 1, entries: 0 }
+  }),
+  getNextSteps: jest.fn().mockReturnValue([
+    { action: 'explore', priority: 'high', context: 'cycle_tracking' }
+  ])
 };
