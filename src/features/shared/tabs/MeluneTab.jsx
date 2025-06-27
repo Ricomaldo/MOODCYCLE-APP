@@ -7,7 +7,7 @@
 // 🧭 Used in: ParametresModal
 // ─────────────────────────────────────────────────────────
 //
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../../hooks/useTheme';
@@ -67,36 +67,69 @@ export default function MeluneTab({ onDataChange }) {
   const [selectedTone, setSelectedTone] = useState(melune?.tone || 'friendly');
   const [hasChanges, setHasChanges] = useState(false);
 
+  // ✅ DEBUG : Ajout de logs pour tracer le problème
+  console.log('🎭 MeluneTab render:', {
+    meluneFromStore: melune,
+    selectedAvatar,
+    selectedTone,
+    hasChanges
+  });
+
+  // ✅ SYNC avec le store quand les valeurs du store changent
+  useEffect(() => {
+    setSelectedAvatar(melune?.avatarStyle || 'classic');
+    setSelectedTone(melune?.tone || 'friendly');
+  }, [melune?.avatarStyle, melune?.tone]);
+
   // Détecter les changements
   useEffect(() => {
     const hasAvatarChange = selectedAvatar !== (melune?.avatarStyle || 'classic');
     const hasToneChange = selectedTone !== (melune?.tone || 'friendly');
     const hasAnyChange = hasAvatarChange || hasToneChange;
     
+    console.log('🔄 Change detection:', {
+      hasAvatarChange,
+      hasToneChange,
+      hasAnyChange,
+      currentStore: melune?.avatarStyle,
+      selectedAvatar
+    });
+    
     setHasChanges(hasAnyChange);
     onDataChange?.(hasAnyChange);
-  }, [selectedAvatar, selectedTone, melune, onDataChange]);
+  }, [selectedAvatar, selectedTone, melune?.avatarStyle, melune?.tone, onDataChange]);
 
-  // Sauvegarder les changements
-  const handleSave = () => {
+  // ✅ Auto-save CORRIGÉ avec useCallback pour stabiliser la fonction
+  const handleSave = useCallback(() => {
+    console.log('💾 Saving to store:', {
+      avatarStyle: selectedAvatar,
+      tone: selectedTone
+    });
+    
     updateMelune({
       avatarStyle: selectedAvatar,
       tone: selectedTone
     });
+    
     setHasChanges(false);
     onDataChange?.(false);
-  };
+  }, [selectedAvatar, selectedTone, updateMelune, onDataChange]);
 
-  // Auto-save en temps réel
+  // Auto-save en temps réel - CORRECTION FINALE
   useEffect(() => {
     if (hasChanges) {
+      console.log('⏰ Setting save timer...');
       const timer = setTimeout(() => {
+        console.log('⏰ Timer fired, saving...');
         handleSave();
-      }, 1000); // Auto-save après 1 seconde d'inactivité
+      }, 1000);
       
-      return () => clearTimeout(timer);
+      return () => {
+        console.log('⏰ Clearing timer');
+        clearTimeout(timer);
+      };
     }
-  }, [selectedAvatar, selectedTone]);
+  }, [hasChanges, handleSave]);
 
   const renderAvatarOption = (style) => {
     const isSelected = selectedAvatar === style.id;
@@ -240,6 +273,20 @@ export default function MeluneTab({ onDataChange }) {
           </View>
         </View>
       </View>
+
+      {/* ✅ DEBUG : Bouton sauvegarde manuelle */}
+      {__DEV__ && hasChanges && (
+        <View style={styles.debugSection}>
+          <TouchableOpacity 
+            style={styles.debugSaveButton}
+            onPress={handleSave}
+          >
+            <BodyText style={styles.debugSaveText}>
+              💾 Sauvegarder maintenant (DEBUG)
+            </BodyText>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Espacement bottom */}
       <View style={{ height: 40 }} />
@@ -404,5 +451,23 @@ const getStyles = (theme) => StyleSheet.create({
   // Checkmark
   checkmark: {
     marginLeft: theme.spacing.s,
+  },
+  
+  // ✅ DEBUG styles
+  debugSection: {
+    padding: theme.spacing.l,
+    backgroundColor: '#ff0000',
+    margin: theme.spacing.l,
+    borderRadius: theme.borderRadius.medium,
+  },
+  debugSaveButton: {
+    backgroundColor: 'white',
+    padding: theme.spacing.m,
+    borderRadius: theme.borderRadius.small,
+    alignItems: 'center',
+  },
+  debugSaveText: {
+    color: '#ff0000',
+    fontWeight: 'bold',
   },
 }); 

@@ -20,6 +20,13 @@ export default function MeluneAvatar({ phase = 'menstrual', size = 'large', styl
   const styles = getStyles(theme);
   const avatarStyle = style || melune?.avatarStyle || 'classic';
 
+  // ✅ DEBUG : Log pour tracer les changements
+  console.log('👤 MeluneAvatar render:', {
+    styleProp: style,
+    meluneFromStore: melune?.avatarStyle,
+    finalAvatarStyle: avatarStyle
+  });
+
   // Animations iOS-like
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
