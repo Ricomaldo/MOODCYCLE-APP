@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Heading1, Heading2, BodyText } from '../../components/Typography';
 import { useOnboardingStore } from '../../stores/useOnboardingStore';
 import { theme } from '../../config/theme';
-import { DevNavigation } from '../../components/DevNavigation';
+import { DevPanel } from '../../components/DevPanel';
 
 export default function PromesseScreen() {
   const router = useRouter();
@@ -32,8 +32,8 @@ export default function PromesseScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-      {/* DevNavigation pour le développement */}
-      <DevNavigation />
+      {/* DevPanel pour le développement */}
+      <DevPanel />
       
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
         

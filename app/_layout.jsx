@@ -23,7 +23,7 @@ import {
 } from "@expo-google-fonts/quicksand";
 import { useNetworkStatus } from "../src/hooks/useNetworkStatus";
 import { useTheme } from "../src/hooks/useTheme";
-import DevNavigation from "../src/core/dev/DevNavigation";
+import DevPanel from "../src/core/dev/DevPanel";
 import ParametresButton from "../src/features/shared/ParametresButton";
 import performanceMonitor from "../src/core/monitoring/PerformanceMonitor";
 
@@ -62,7 +62,7 @@ function LayoutContent() {
       </Stack>
       
       {/* 🛠️ TOOLBOX DEV - Disponible partout */}
-      <DevNavigation />
+      <DevPanel />
     </>
   );
 }

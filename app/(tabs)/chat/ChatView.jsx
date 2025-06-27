@@ -43,29 +43,46 @@ const HEADER_HEIGHT = 60;
 
 // ✅ Composant Suggestions Rapides Adaptatif
 function QuickSuggestions({ suggestions, onSuggestionPress, theme, visible, styles, maxSuggestions = 3 }) {
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  
   if (!visible || !suggestions?.length) return null;
 
   const limitedSuggestions = suggestions.slice(0, maxSuggestions);
 
   return (
     <View style={[styles.suggestionsContainer, { backgroundColor: theme.colors.backgroundSecondary }]}>
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.suggestionsContent}
+      {/* Bouton ampoule pour basculer les suggestions */}
+      <TouchableOpacity
+        style={styles.suggestionsToggle}
+        onPress={() => setShowSuggestions(!showSuggestions)}
       >
-        {limitedSuggestions.map((suggestion, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[styles.suggestionChip, { borderColor: theme.colors.primary }]}
-            onPress={() => onSuggestionPress(suggestion)}
-          >
-            <BodyText style={[styles.suggestionText, { color: theme.colors.primary }]}>
-              {typeof suggestion === 'string' ? suggestion : suggestion.prompt || suggestion.title}
-            </BodyText>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+        <Feather 
+          name="lightbulb" 
+          size={16} 
+          color={showSuggestions ? theme.colors.primary : theme.colors.textLight} 
+        />
+      </TouchableOpacity>
+      
+      {/* Suggestions conditionnelles */}
+      {showSuggestions && (
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.suggestionsContent}
+        >
+          {limitedSuggestions.map((suggestion, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[styles.suggestionChip, { borderColor: theme.colors.primary }]}
+              onPress={() => onSuggestionPress(suggestion)}
+            >
+              <BodyText style={[styles.suggestionText, { color: theme.colors.primary }]}>
+                {typeof suggestion === 'string' ? suggestion : suggestion.prompt || suggestion.title}
+              </BodyText>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -542,16 +559,16 @@ export default function ChatScreen() {
         newUser: `Bonjour ${prenom} ! Je suis Melune, ta guide lumineuse ✨ Quelle énergie veux-tu cultiver ?`
       },
       laure: {
-        withData: `Bonjour ${prenom}. Je note vos progrès dans la compréhension de votre cycle. Comment puis-je vous accompagner ?`,
-        newUser: `Bonjour ${prenom}. Je suis Melune, votre accompagnatrice spécialisée. Comment analysons-nous votre journée ?`
+        withData: `Bonjour ${prenom}. Je note tes progrès dans la compréhension de ton cycle. Comment puis-je t'accompagner ?`,
+        newUser: `Bonjour ${prenom}. Je suis Melune, ta guide spécialisée. Comment analysons-nous ta journée ?`
       },
       sylvie: {
         withData: `Bonjour ma chère ${prenom}. Je sens que tu apprends à honorer tes rythmes. Comment te portes-tu ?`,
         newUser: `Bonjour ${prenom}. Je suis Melune, ici pour t'accompagner avec bienveillance dans ton parcours.`
       },
       christine: {
-        withData: `Bonjour ${prenom}. J'observe que vous développez une meilleure compréhension. Comment allez-vous ?`,
-        newUser: `Bonjour ${prenom}. Je suis Melune, votre guide spécialisée. Comment puis-je vous être utile ?`
+        withData: `Bonjour ${prenom}. J'observe que tu développes une meilleure compréhension. Comment allez-vous ?`,
+        newUser: `Bonjour ${prenom}. Je suis Melune, ta guide spécialisée. Comment puis-je t'être utile ?`
       }
     };
     
@@ -707,7 +724,7 @@ export default function ChatScreen() {
               style={styles.input}
               value={input}
               onChangeText={setInput}
-              placeholder={`Message... (${intelligenceContext.persona}${__DEV__ ? ` • ${maturityLevel}` : ''})`}
+              placeholder={`Message...`}
               placeholderTextColor="#8E8E93"
               multiline
               maxHeight={120}
@@ -798,9 +815,12 @@ const getStyles = (theme) => StyleSheet.create({
     marginHorizontal: 16,
     borderRadius: 12,
     marginBottom: 8,
+    minHeight: 44,
+    position: 'relative',
   },
   suggestionsContent: {
     paddingHorizontal: 16,
+    paddingTop: 8,
     gap: 8,
   },
   suggestionChip: {
@@ -866,5 +886,14 @@ const getStyles = (theme) => StyleSheet.create({
   },
   sendButtonDisabled: {
     opacity: 0.5,
+  },
+  suggestionsToggle: {
+    position: 'absolute',
+    top: 8,
+    right: 12,
+    padding: 8,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    zIndex: 1,
   },
 });
