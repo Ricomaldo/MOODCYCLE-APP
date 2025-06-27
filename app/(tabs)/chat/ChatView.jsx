@@ -38,6 +38,7 @@ import { useRenderMonitoring } from '../../../src/hooks/usePerformanceMonitoring
 // ✅ Smart Suggestions + Interface Adaptative
 import { useSmartSuggestions, useSmartChatSuggestions } from '../../../src/hooks/useSmartSuggestions';
 import { useAdaptiveInterface } from '../../../src/hooks/useAdaptiveInterface';
+import ParametresButton from '../../../src/features/shared/ParametresButton';
 
 const HEADER_HEIGHT = 60;
 
@@ -642,6 +643,13 @@ export default function ChatScreen() {
           Melune {intelligenceContext.hasData && '🧠'}
           {__DEV__ && ` (${maturityLevel})`}
         </Heading>
+        
+        {/* ✅ BOUTON PARAMÈTRES */}
+        <ParametresButton 
+          color={theme.colors.primary}
+          style={styles.parametresButton}
+        />
+        
         {__DEV__ && (
           <BodyText style={styles.debugInfo}>
             {intelligenceContext.persona} • {intelligenceContext.confidence}%
@@ -888,6 +896,15 @@ const getStyles = (theme) => StyleSheet.create({
     opacity: 0.5,
   },
   suggestionsToggle: {
+    position: 'absolute',
+    top: 8,
+    right: 12,
+    padding: 8,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    zIndex: 1,
+  },
+  parametresButton: {
     position: 'absolute',
     top: 8,
     right: 12,

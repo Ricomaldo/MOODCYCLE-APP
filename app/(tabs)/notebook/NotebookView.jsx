@@ -27,6 +27,7 @@ import {
 } from '../../../src/core/ui/AnimatedComponents';
 import ScreenContainer from '../../../src/core/layout/ScreenContainer';
 import { formatTrendSummary } from '../../../src/utils/trackingFormatters';
+import ParametresButton from '../../../src/features/shared/ParametresButton';
 
 const FILTER_PILLS = [
   { id: 'all', label: 'Tout', icon: 'layers' },
@@ -59,6 +60,11 @@ const getStyles = (theme) => StyleSheet.create({
   searchToggle: {
     position: 'absolute',
     right: theme.spacing.l,
+    padding: theme.spacing.s,
+  },
+  parametresButton: {
+    position: 'absolute',
+    left: theme.spacing.l,
     padding: theme.spacing.s,
   },
   
@@ -619,6 +625,10 @@ export default function NotebookView() {
           ]}
         >
           <Heading style={styles.title}>Mon Carnet</Heading>
+          <ParametresButton 
+            color={theme.colors.primary}
+            style={styles.parametresButton}
+          />
           <TouchableOpacity onPress={() => setShowSearch(!showSearch)} style={styles.searchToggle}>
             <Feather name="search" size={24} color={theme.colors.primary} />
           </TouchableOpacity>
@@ -669,6 +679,13 @@ export default function NotebookView() {
         ]}
       >
         <Heading style={styles.title}>Mon Carnet</Heading>
+        
+        {/* ✅ BOUTON PARAMÈTRES */}
+        <ParametresButton 
+          color={theme.colors.primary}
+          style={styles.parametresButton}
+        />
+        
         <TouchableOpacity onPress={() => setShowSearch(!showSearch)} style={styles.searchToggle}>
           <Feather name="search" size={24} color={theme.colors.primary} />
         </TouchableOpacity>

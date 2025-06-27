@@ -1,12 +1,8 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 Fichier : src/core/dev/DevPanel.jsx
-// 🧩 Type : Dev Component Simplifié
-// 📚 Description : Panel développement quotidien - Version allégée
-// 🕒 Version : 1.0 - 2025-06-27 - SIMPLIFIED
-// 🧭 Utilisé dans : Layout app (mode dev uniquement)
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//
+// 📄 Fichier : src/core/dev/DevPanel.jsx - RÉVÉLATION TESTING
+// 🚀 CASCADE 3.1: Testing Intelligence Revelation
+// ─────────────────────────────────────────────────────────
 
 import React, { useState } from 'react';
 import { View, TouchableOpacity, StyleSheet, Alert, ScrollView, Text } from 'react-native';
@@ -16,6 +12,8 @@ import { useRouter } from 'expo-router';
 import { useUserStore } from '../../stores/useUserStore';
 import { useChatStore } from '../../stores/useChatStore';
 import { useNotebookStore } from '../../stores/useNotebookStore';
+import { useUserIntelligence } from '../../stores/useUserIntelligence';
+import { useEngagementStore } from '../../stores/useEngagementStore';
 
 // Hooks
 import { useCycle } from '../../hooks/useCycle';
@@ -26,23 +24,184 @@ import { PERSONA_PROFILES } from '../../config/personaProfiles';
 export default function DevPanel() {
   const router = useRouter();
   const [showPanel, setShowPanel] = useState(false);
-  const [activeTab, setActiveTab] = useState('cycle');
+  const [activeTab, setActiveTab] = useState('revelation');
 
   // Stores
   const { profile, persona, updateProfile, updateCycle, setPersona, reset: resetUser } = useUserStore();
   const { addMessage, clearMessages, getMessagesCount } = useChatStore();
   const { addEntry, addQuickTracking, reset: resetNotebook, entries } = useNotebookStore();
+  const intelligence = useUserIntelligence();
+  const engagement = useEngagementStore();
   
   // Cycle hook
   const cycle = useCycle();
 
-  // Ne pas afficher en production
   if (process.env.NODE_ENV === 'production') {
     return null;
   }
 
   // ═══════════════════════════════════════════════════════
-  // 🔄 CYCLE CONTROL
+  // 🌟 REVELATION TESTING - NOUVEAU
+  // ═══════════════════════════════════════════════════════
+
+  const simulateIntelligenceData = (scenario) => {
+    const scenarios = {
+      // Scenario 1: Utilisatrice active le soir
+      evening_active: {
+        timePatterns: {
+          favoriteHours: [20, 21, 19],
+          activeDays: ['monday', 'wednesday', 'friday'],
+          sessionDuration: 8
+        },
+        phasePatterns: {
+          menstrual: { mood: 'introspective', topics: ['repos', 'cocooning'] },
+          follicular: { mood: 'energetic', topics: ['creativite', 'projets'] },
+          ovulatory: { mood: 'confident', topics: ['communication', 'social'] },
+          luteal: { mood: 'sensitive', topics: ['emotions', 'reflexion'] }
+        },
+        conversationPrefs: {
+          successfulPrompts: [
+            { prompt: 'Comment te sens-tu ?', phase: 'luteal' },
+            { prompt: 'Quelle energie ressens-tu ?', phase: 'follicular' },
+            { prompt: 'Comment honorer ton besoin ?', phase: 'menstrual' }
+          ]
+        },
+        confidence: 65
+      },
+
+      // Scenario 2: Utilisatrice matinale créative
+      morning_creative: {
+        timePatterns: {
+          favoriteHours: [7, 8, 9],
+          activeDays: ['tuesday', 'thursday', 'saturday'],
+          sessionDuration: 12
+        },
+        phasePatterns: {
+          menstrual: { mood: 'calm', topics: ['meditation', 'lecture'] },
+          follicular: { mood: 'inspired', topics: ['art', 'ecriture', 'creativite'] },
+          ovulatory: { mood: 'radiant', topics: ['partage', 'expression'] },
+          luteal: { mood: 'focused', topics: ['organisation', 'finalisation'] }
+        },
+        conversationPrefs: {
+          successfulPrompts: [
+            { prompt: 'Comment exprimer ma creativite ?', phase: 'follicular' },
+            { prompt: 'Que me dit mon intuition ?', phase: 'luteal' },
+            { prompt: 'Comment rayonner aujourd\'hui ?', phase: 'ovulatory' }
+          ]
+        },
+        confidence: 78
+      },
+
+      // Scenario 3: Utilisatrice débutante
+      beginner: {
+        timePatterns: {
+          favoriteHours: [14],
+          activeDays: ['sunday'],
+          sessionDuration: 5
+        },
+        phasePatterns: {
+          menstrual: { mood: null, topics: [] },
+          follicular: { mood: null, topics: ['decouverte'] },
+          ovulatory: { mood: null, topics: [] },
+          luteal: { mood: null, topics: [] }
+        },
+        conversationPrefs: {
+          successfulPrompts: [
+            { prompt: 'Comment fonctionne mon cycle ?', phase: 'follicular' }
+          ]
+        },
+        confidence: 15
+      }
+    };
+
+    const data = scenarios[scenario];
+    if (!data) return;
+
+    // Injection directe dans le store intelligence
+    intelligence.learning.timePatterns = data.timePatterns;
+    intelligence.learning.phasePatterns = data.phasePatterns;
+    intelligence.learning.conversationPrefs = data.conversationPrefs;
+    intelligence.learning.confidence = data.confidence;
+
+    // Mise à jour engagement selon scenario
+    const engagementData = {
+      evening_active: { daysUsed: 12, conversationsStarted: 8, autonomySignals: 2 },
+      morning_creative: { daysUsed: 18, conversationsStarted: 12, autonomySignals: 4 },
+      beginner: { daysUsed: 3, conversationsStarted: 2, autonomySignals: 0 }
+    };
+
+    const engagementUpdate = engagementData[scenario];
+    if (engagementUpdate) {
+      Object.keys(engagementUpdate).forEach(key => {
+        engagement.metrics[key] = engagementUpdate[key];
+      });
+    }
+
+    Alert.alert(
+      '🌟 Intelligence Simulée', 
+      `Scenario "${scenario}" activé\nConfiance: ${data.confidence}%\nPatterns: ${data.timePatterns.favoriteHours.length} heures`
+    );
+  };
+
+  const testRevelationComponents = () => {
+    Alert.alert(
+      '🧪 Test Composants Révélation',
+      'Quel composant tester ?',
+      [
+        { text: 'PersonalPatterns', onPress: () => navigateTo('/(tabs)/home') },
+        { text: 'Insight Enrichi', onPress: () => navigateToInsightTest() },
+        { text: 'Accueil Complet', onPress: () => navigateTo('/(tabs)/home') },
+        { text: 'Annuler', style: 'cancel' }
+      ]
+    );
+  };
+
+  const navigateToInsightTest = () => {
+    // Forcer refresh de l'insight
+    setTimeout(() => {
+      navigateTo('/(tabs)/home');
+    }, 100);
+  };
+
+  const showIntelligenceDebug = () => {
+    const debugInfo = {
+      confidence: intelligence.learning.confidence,
+      timePatterns: intelligence.learning.timePatterns?.favoriteHours?.length || 0,
+      phasePatterns: Object.keys(intelligence.learning.phasePatterns || {}).length,
+      conversations: intelligence.learning.conversationPrefs?.successfulPrompts?.length || 0,
+      autonomySignals: engagement.metrics.autonomySignals
+    };
+
+    console.log('🧠 Intelligence Debug:', JSON.stringify(debugInfo, null, 2));
+    
+    Alert.alert(
+      '🧠 État Intelligence',
+      `Confiance: ${debugInfo.confidence}%\n` +
+      `Patterns temporels: ${debugInfo.timePatterns}\n` +
+      `Phases documentées: ${debugInfo.phasePatterns}\n` +
+      `Conversations: ${debugInfo.conversations}\n` +
+      `Signaux autonomie: ${debugInfo.autonomySignals}`,
+      [{ text: 'Voir Console', onPress: () => console.log('🧠 Full Intelligence:', intelligence.learning) }]
+    );
+  };
+
+  const resetIntelligence = () => {
+    Alert.alert(
+      '🧹 Reset Intelligence',
+      'Réinitialiser toutes les données d\'apprentissage ?',
+      [
+        { text: 'Oui', style: 'destructive', onPress: () => {
+          intelligence.resetLearning();
+          engagement.resetEngagement();
+          Alert.alert('✅ Intelligence Reset', 'Données d\'apprentissage effacées');
+        }},
+        { text: 'Annuler', style: 'cancel' }
+      ]
+    );
+  };
+
+  // ═══════════════════════════════════════════════════════
+  // 🔄 CYCLE CONTROL (simplifié)
   // ═══════════════════════════════════════════════════════
 
   const jumpToDay = (targetDay) => {
@@ -52,34 +211,19 @@ export default function DevPanel() {
       cycleStart.setDate(today.getDate() - targetDay + 1);
       
       updateCycle({ lastPeriodDate: cycleStart.toISOString() });
-      Alert.alert('🔄 Cycle Mis à Jour', `Maintenant à J${targetDay} du cycle`);
+      Alert.alert('🔄 Cycle', `J${targetDay}`);
     } catch (error) {
-      Alert.alert('❌ Erreur', 'Impossible de modifier le cycle');
-    }
-  };
-
-  const adjustDay = (direction) => {
-    try {
-      const currentDay = cycle?.currentDay || 1;
-      const newDay = direction === 'next' ? currentDay + 1 : Math.max(1, currentDay - 1);
-      jumpToDay(newDay);
-    } catch (error) {
-      Alert.alert('❌ Erreur', 'Impossible d\'ajuster le jour');
+      Alert.alert('❌ Erreur cycle');
     }
   };
 
   const jumpToPhase = (targetPhase) => {
-    const phaseDays = { 
-      menstrual: 2, 
-      follicular: 10, 
-      ovulatory: 15, 
-      luteal: 22 
-    };
+    const phaseDays = { menstrual: 2, follicular: 10, ovulatory: 15, luteal: 22 };
     jumpToDay(phaseDays[targetPhase]);
   };
 
   // ═══════════════════════════════════════════════════════
-  // 🎭 PERSONA & TESTS
+  // 🎭 PERSONA CONTROL (simplifié)
   // ═══════════════════════════════════════════════════════
 
   const switchPersona = (personaId) => {
@@ -93,115 +237,11 @@ export default function DevPanel() {
     });
 
     setPersona(personaId, 1.0);
-    Alert.alert('🎭 Persona Activée', `${personaData.name} configurée !`);
-  };
-
-  const testChatContext = async () => {
-    const testMessage = "Comment me sens-je dans ma phase actuelle ?";
-    const currentPersona = persona?.currentPersona || 'emma';
-    const currentPhase = cycle?.currentPhase || 'follicular';
-    
-    addMessage(testMessage, 'user');
-    
-    // Message de test contextuel
-    const contextResponses = {
-      emma: {
-        menstrual: "C'est normal de te sentir plus introspective en phase menstruelle 🌙",
-        follicular: "Tu débordas d'énergie en phase folliculaire ! ✨",
-        ovulatory: "Phase ovulatoire = ton moment de rayonnement 🌟",
-        luteal: "Phase lutéale, temps de ralentir et d'écouter ton corps 🍂"
-      },
-      laure: {
-        menstrual: "Optimise cette phase pour la réflexion stratégique 📋",
-        follicular: "Phase parfaite pour lancer de nouveaux projets 🚀",
-        ovulatory: "Communication et networking au top ! 💼",
-        luteal: "Finalise tes projets avant la prochaine phase 📊"
-      },
-      clara: {
-        menstrual: "Phase cocooning, on se dorlote ! 🛁",
-        follicular: "On sort, on explore, on découvre ! 🌸",
-        ovulatory: "Tu rayonnes, profites-en ! ✨",
-        luteal: "Temps de créativité et d'introspection 🎨"
-      }
-    };
-
-    const response = contextResponses[currentPersona]?.[currentPhase] || 
-                    "Je m'adapte à ta phase et ta personnalité ! 💫";
-    
-    addMessage(response, 'assistant', { 
-      persona: currentPersona, 
-      phase: currentPhase,
-      context: 'dev-test' 
-    });
-
-    Alert.alert(
-      '💬 Test Chat Contexte', 
-      `Message adapté pour ${currentPersona} en phase ${currentPhase}`
-    );
+    Alert.alert('🎭 Persona', `${personaData.name} activée`);
   };
 
   // ═══════════════════════════════════════════════════════
-  // 📊 DATA PLAYGROUND
-  // ═══════════════════════════════════════════════════════
-
-  const fillRealisticData = () => {
-    Alert.alert(
-      '📊 Générer Données Réalistes',
-      'Quel type de données ?',
-      [
-        { text: 'Notebook Complet', onPress: () => generateNotebookData() },
-        { text: 'Chat History', onPress: () => generateChatData() },
-        { text: 'Tout Générer', onPress: () => generateAllData() },
-        { text: 'Annuler', style: 'cancel' }
-      ]
-    );
-  };
-
-  const generateNotebookData = () => {
-    const sampleEntries = [
-      "Journée pleine d'énergie, j'ai envie de tout entreprendre !",
-      "Sensation d'hypersensibilité aujourd'hui, émotions à fleur de peau",
-      "Créativité au maximum, mes idées fusent !",
-      "Besoin de calme et de cocooning, phase introspective",
-      "Confiance en moi au top, je rayonne !",
-      "Fatigue inhabituelle, j'écoute mon corps",
-      "Irritabilité légère, je prends du recul",
-      "Motivation au rendez-vous pour mes projets"
-    ];
-
-    sampleEntries.forEach((text, index) => {
-      addEntry(text, "personal", [`#jour${index + 1}`, "#observation"]);
-      if (index % 2 === 0) {
-        addQuickTracking("humeur", Math.floor(Math.random() * 5) + 1, ["énergie"]);
-      }
-    });
-
-    Alert.alert('✅ Carnet Rempli', `${sampleEntries.length} entrées ajoutées`);
-  };
-
-  const generateChatData = () => {
-    const conversations = [
-      { user: "Salut Melune ! Comment vas-tu ?", assistant: "Coucou ! Je vais bien, et toi dans ta phase actuelle ? ✨" },
-      { user: "J'ai des crampes aujourd'hui", assistant: "Je comprends, c'est inconfortable. As-tu essayé la bouillotte ? 🤗" },
-      { user: "Pourquoi je me sens si créative ?", assistant: "C'est magnifique ! Ta phase influence ta créativité naturelle 🎨" },
-      { user: "Mes émotions sont intenses", assistant: "C'est normal, ton cycle influence tes ressentis. Veux-tu en parler ? 💙" }
-    ];
-
-    conversations.forEach(conv => {
-      addMessage(conv.user, 'user');
-      addMessage(conv.assistant, 'assistant', { context: 'demo-data' });
-    });
-
-    Alert.alert('✅ Chat Généré', `${conversations.length} conversations ajoutées`);
-  };
-
-  const generateAllData = () => {
-    generateNotebookData();
-    setTimeout(() => generateChatData(), 500);
-  };
-
-  // ═══════════════════════════════════════════════════════
-  // 🧹 DEV UTILS
+  // 🧹 UTILS (simplifié)
   // ═══════════════════════════════════════════════════════
 
   const navigateTo = (route) => {
@@ -209,40 +249,26 @@ export default function DevPanel() {
       router.push(route);
       setShowPanel(false);
     } catch (error) {
-      Alert.alert('❌ Navigation', `Impossible de naviguer vers ${route}`);
+      Alert.alert('❌ Navigation', `Erreur: ${route}`);
     }
   };
 
-  const resetSpecific = () => {
+  const resetAll = () => {
     Alert.alert(
-      '🧹 Reset Spécifique',
-      'Que veux-tu réinitialiser ?',
+      '🧹 Reset Complet',
+      'Effacer toutes les données ?',
       [
-        { text: 'Chat seulement', onPress: () => { clearMessages(); Alert.alert('✅ Chat Vidé'); }},
-        { text: 'Carnet seulement', onPress: () => { resetNotebook(); Alert.alert('✅ Carnet Vidé'); }},
-        { text: 'Profil seulement', onPress: () => { resetUser(); Alert.alert('✅ Profil Reset'); }},
-        { text: 'Tout Reset', style: 'destructive', onPress: () => {
+        { text: 'Oui', style: 'destructive', onPress: () => {
           resetUser();
           clearMessages();
           resetNotebook();
-          Alert.alert('✅ Reset Complet', 'Toutes les données effacées');
+          intelligence.resetLearning();
+          engagement.resetEngagement();
+          Alert.alert('✅ Reset Complet');
         }},
         { text: 'Annuler', style: 'cancel' }
       ]
     );
-  };
-
-  const copyCurrentState = () => {
-    const state = {
-      persona: persona?.currentPersona,
-      phase: cycle?.currentPhase,
-      day: cycle?.currentDay,
-      messages: getMessagesCount()?.total || 0,
-      entries: entries?.length || 0
-    };
-    
-    console.log('📋 Current Dev State:', JSON.stringify(state, null, 2));
-    Alert.alert('📋 État Copié', 'State copié dans la console');
   };
 
   // ═══════════════════════════════════════════════════════
@@ -256,7 +282,7 @@ export default function DevPanel() {
         style={[styles.toggleButton, showPanel && styles.toggleActive]} 
         onPress={() => setShowPanel(!showPanel)}
       >
-        <Text style={styles.toggleText}>{showPanel ? '✕' : '🛠️'}</Text>
+        <Text style={styles.toggleText}>{showPanel ? '✕' : '🧠'}</Text>
       </TouchableOpacity>
 
       {/* Dev Panel */}
@@ -264,18 +290,19 @@ export default function DevPanel() {
         <View style={styles.panel}>
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>🛠️ Dev Panel</Text>
+            <Text style={styles.title}>🧠 Test Révélation</Text>
             <Text style={styles.status}>
-              {persona?.currentPersona || 'auto'} | {cycle?.currentPhase || 'loading'} J{cycle?.currentDay || 0}
+              {persona?.currentPersona || 'auto'} | {cycle?.currentPhase || '?'} J{cycle?.currentDay || 0} | 
+              Conf: {intelligence.learning.confidence || 0}%
             </Text>
           </View>
 
           {/* Tabs */}
           <View style={styles.tabs}>
             {[
+              { id: 'revelation', icon: '🌟', label: 'Test' },
               { id: 'cycle', icon: '🔄', label: 'Cycle' },
               { id: 'persona', icon: '🎭', label: 'Persona' },
-              { id: 'data', icon: '📊', label: 'Data' },
               { id: 'utils', icon: '🧹', label: 'Utils' }
             ].map(tab => (
               <TouchableOpacity
@@ -290,24 +317,58 @@ export default function DevPanel() {
           </View>
 
           <ScrollView style={styles.content}>
+            {/* 🌟 REVELATION TAB - NOUVEAU */}
+            {activeTab === 'revelation' && (
+              <View>
+                <Text style={styles.sectionTitle}>🌟 Test Intelligence Révélation</Text>
+                
+                <Text style={styles.subTitle}>Scénarios Utilisatrice :</Text>
+                <TouchableOpacity 
+                  style={styles.scenarioButton} 
+                  onPress={() => simulateIntelligenceData('evening_active')}
+                >
+                  <Text style={styles.scenarioText}>🌙 Active le Soir</Text>
+                  <Text style={styles.scenarioSub}>65% conf • Patterns émotionnels</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.scenarioButton} 
+                  onPress={() => simulateIntelligenceData('morning_creative')}
+                >
+                  <Text style={styles.scenarioText}>🌅 Matinale Créative</Text>
+                  <Text style={styles.scenarioSub}>78% conf • Patterns artistiques</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.scenarioButton} 
+                  onPress={() => simulateIntelligenceData('beginner')}
+                >
+                  <Text style={styles.scenarioText}>🌱 Débutante</Text>
+                  <Text style={styles.scenarioSub}>15% conf • Peu de données</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.subTitle}>Tests Composants :</Text>
+                <TouchableOpacity style={styles.testButton} onPress={testRevelationComponents}>
+                  <Text style={styles.testButtonText}>🧪 Test Composants</Text>
+                  <Text style={styles.testButtonSub}>PersonalPatterns + Insight</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.debugButton} onPress={showIntelligenceDebug}>
+                  <Text style={styles.debugButtonText}>🐛 Debug Intelligence</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.resetButton} onPress={resetIntelligence}>
+                  <Text style={styles.resetButtonText}>🧹 Reset Intelligence</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
             {/* 🔄 CYCLE TAB */}
             {activeTab === 'cycle' && (
               <View>
                 <Text style={styles.sectionTitle}>🔄 Contrôle Cycle</Text>
                 
-                {/* Navigation jours */}
-                <View style={styles.dayControl}>
-                  <TouchableOpacity style={styles.dayButton} onPress={() => adjustDay('prev')}>
-                    <Text style={styles.dayButtonText}>← J-1</Text>
-                  </TouchableOpacity>
-                  <Text style={styles.currentDay}>J{cycle?.currentDay || 0}</Text>
-                  <TouchableOpacity style={styles.dayButton} onPress={() => adjustDay('next')}>
-                    <Text style={styles.dayButtonText}>J+1 →</Text>
-                  </TouchableOpacity>
-                </View>
-
-                {/* Jump phases */}
-                <Text style={styles.subTitle}>Sauter à la phase :</Text>
+                <Text style={styles.subTitle}>Phases Rapides :</Text>
                 <View style={styles.buttonGrid}>
                   {['menstrual', 'follicular', 'ovulatory', 'luteal'].map(phase => (
                     <TouchableOpacity
@@ -320,8 +381,7 @@ export default function DevPanel() {
                   ))}
                 </View>
 
-                {/* Jump jours spécifiques */}
-                <Text style={styles.subTitle}>Sauter au jour :</Text>
+                <Text style={styles.subTitle}>Jours Spécifiques :</Text>
                 <View style={styles.buttonGrid}>
                   {[1, 7, 14, 21, 28].map(day => (
                     <TouchableOpacity
@@ -339,40 +399,18 @@ export default function DevPanel() {
             {/* 🎭 PERSONA TAB */}
             {activeTab === 'persona' && (
               <View>
-                <Text style={styles.sectionTitle}>🎭 Personas & Tests</Text>
+                <Text style={styles.sectionTitle}>🎭 Personas</Text>
                 
-                <Text style={styles.subTitle}>Switch Persona :</Text>
                 <View style={styles.buttonGrid}>
-                  {Object.keys(PERSONA_PROFILES).slice(0, 3).map(personaId => (
+                  {Object.entries(PERSONA_PROFILES).map(([personaId, data]) => (
                     <TouchableOpacity
                       key={personaId}
                       style={[styles.personaButton, persona?.currentPersona === personaId && styles.personaActive]}
                       onPress={() => switchPersona(personaId)}
                     >
-                      <Text style={styles.personaText}>{PERSONA_PROFILES[personaId].name}</Text>
+                      <Text style={styles.personaText}>{data.name}</Text>
                     </TouchableOpacity>
                   ))}
-                </View>
-
-                <TouchableOpacity style={styles.testButton} onPress={testChatContext}>
-                  <Text style={styles.testButtonText}>💬 Test Chat Contexte</Text>
-                  <Text style={styles.testButtonSub}>Message adapté persona + phase</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {/* 📊 DATA TAB */}
-            {activeTab === 'data' && (
-              <View>
-                <Text style={styles.sectionTitle}>📊 Data Playground</Text>
-                
-                <TouchableOpacity style={styles.dataButton} onPress={fillRealisticData}>
-                  <Text style={styles.dataButtonText}>📝 Générer Données Réalistes</Text>
-                </TouchableOpacity>
-
-                <View style={styles.dataStats}>
-                  <Text style={styles.statsText}>💬 {getMessagesCount()?.total || 0} messages</Text>
-                  <Text style={styles.statsText}>📝 {entries?.length || 0} entrées carnet</Text>
                 </View>
               </View>
             )}
@@ -380,7 +418,7 @@ export default function DevPanel() {
             {/* 🧹 UTILS TAB */}
             {activeTab === 'utils' && (
               <View>
-                <Text style={styles.sectionTitle}>🧹 Dev Utils</Text>
+                <Text style={styles.sectionTitle}>🧹 Utils</Text>
                 
                 <Text style={styles.subTitle}>Navigation :</Text>
                 <View style={styles.buttonGrid}>
@@ -388,8 +426,7 @@ export default function DevPanel() {
                     { route: '/(tabs)/home', label: 'Home' },
                     { route: '/(tabs)/chat', label: 'Chat' },
                     { route: '/(tabs)/cycle', label: 'Cycle' },
-                    { route: '/(tabs)/notebook', label: 'Carnet' },
-                    { route: '/onboarding/100-promesse', label: 'Onboard' }
+                    { route: '/(tabs)/notebook', label: 'Carnet' }
                   ].map(nav => (
                     <TouchableOpacity
                       key={nav.route}
@@ -401,13 +438,17 @@ export default function DevPanel() {
                   ))}
                 </View>
 
-                <TouchableOpacity style={styles.utilButton} onPress={resetSpecific}>
-                  <Text style={styles.utilButtonText}>🗑️ Reset Spécifique</Text>
+                <TouchableOpacity style={styles.utilButton} onPress={resetAll}>
+                  <Text style={styles.utilButtonText}>🗑️ Reset Complet</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.utilButton} onPress={copyCurrentState}>
-                  <Text style={styles.utilButtonText}>📋 Copy Current State</Text>
-                </TouchableOpacity>
+                <View style={styles.statsContainer}>
+                  <Text style={styles.statsText}>📊 État Actuel:</Text>
+                  <Text style={styles.statsText}>• {getMessagesCount()?.total || 0} messages</Text>
+                  <Text style={styles.statsText}>• {entries?.length || 0} entrées</Text>
+                  <Text style={styles.statsText}>• {intelligence.learning.confidence || 0}% confiance</Text>
+                  <Text style={styles.statsText}>• {engagement.metrics.autonomySignals || 0} signaux auto</Text>
+                </View>
               </View>
             )}
           </ScrollView>
@@ -439,7 +480,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#8B5CF6',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -463,8 +504,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 115,
     right: 15,
-    width: 300,
-    height: 600,
+    width: 320,
+    height: 650,
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     shadowColor: '#000',
@@ -490,7 +531,7 @@ const styles = StyleSheet.create({
   },
   
   status: {
-    fontSize: 12,
+    fontSize: 10,
     color: '#8E8E93',
     textAlign: 'center',
     marginTop: 4,
@@ -512,11 +553,11 @@ const styles = StyleSheet.create({
   },
   
   tabText: {
-    fontSize: 16,
+    fontSize: 14,
   },
   
   tabLabel: {
-    fontSize: 10,
+    fontSize: 9,
     color: '#8E8E93',
     marginTop: 2,
   },
@@ -539,32 +580,73 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 8,
   },
-  
-  dayControl: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-    paddingHorizontal: 20,
-  },
-  
-  dayButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+
+  // 🌟 NOUVEAUX STYLES RÉVÉLATION
+  scenarioButton: {
+    backgroundColor: '#8B5CF6',
+    padding: 12,
     borderRadius: 8,
+    marginBottom: 8,
   },
   
-  dayButtonText: {
+  scenarioText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  
+  scenarioSub: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 11,
+    marginTop: 2,
+  },
+  
+  testButton: {
+    backgroundColor: '#00D4AA',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  
+  testButtonText: {
     color: 'white',
     fontSize: 12,
     fontWeight: '600',
   },
   
-  currentDay: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1C1C1E',
+  testButtonSub: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 10,
+    marginTop: 2,
+  },
+  
+  debugButton: {
+    backgroundColor: '#FF9500',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  
+  debugButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  
+  resetButton: {
+    backgroundColor: '#FF6B6B',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  
+  resetButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
   },
   
   buttonGrid: {
@@ -628,52 +710,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   
-  testButton: {
-    backgroundColor: '#00D4AA',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  
-  testButtonText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  
-  testButtonSub: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 10,
-    marginTop: 2,
-  },
-  
-  dataButton: {
-    backgroundColor: '#FF9500',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  
-  dataButtonText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  
-  dataStats: {
-    backgroundColor: '#F2F2F7',
-    padding: 12,
-    borderRadius: 8,
-  },
-  
-  statsText: {
-    fontSize: 12,
-    color: '#8E8E93',
-    marginBottom: 4,
-  },
-  
   navButton: {
     backgroundColor: '#5856D6',
     paddingHorizontal: 10,
@@ -694,12 +730,24 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   
   utilButtonText: {
     color: 'white',
     fontSize: 12,
     fontWeight: '600',
+  },
+
+  statsContainer: {
+    backgroundColor: '#F2F2F7',
+    padding: 12,
+    borderRadius: 8,
+  },
+  
+  statsText: {
+    fontSize: 11,
+    color: '#8E8E93',
+    marginBottom: 2,
   },
 });

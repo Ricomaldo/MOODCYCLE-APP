@@ -7,8 +7,9 @@
 // ─────────────────────────────────────────────────────────
 //
 import React from 'react';
-import { View, ScrollView, StyleSheet, RefreshControl, TouchableOpacity } from 'react-native';
+import { View, ScrollView, StyleSheet, RefreshControl, TouchableOpacity, Alert } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useTheme } from '../../../src/hooks/useTheme';
 import { Heading, BodyText } from '../../../src/core/ui/Typography';
 import ScreenContainer from '../../../src/core/layout/ScreenContainer';
@@ -18,10 +19,12 @@ import { useCycle } from '../../../src/hooks/useCycle';
 import { useUserStore } from '../../../src/stores/useUserStore';
 import { PhaseIcon } from '../../../src/config/iconConstants';
 import EntryDetailModal from '../../../src/features/shared/EntryDetailModal';
+import QuickTrackingModal from '../../../src/features/notebook/QuickTrackingModal';
+import ParametresButton from '../../../src/features/shared/ParametresButton';
 
 export default function CycleView() {
   const cycleData = useCycle() || {};
-  const { currentPhase, currentDay, phaseInfo, hasData, cycle } = cycleData;
+  const { currentPhase, currentDay, phaseInfo, hasData, cycle, nextPeriodDate, daysUntilNextPeriod } = cycleData;
   const { profile } = useUserStore();
   const { theme } = useTheme();
 
@@ -35,6 +38,9 @@ export default function CycleView() {
   const [selectedDayEntries, setSelectedDayEntries] = React.useState([]);
   const [showDayDetail, setShowDayDetail] = React.useState(false);
   
+  // ✅ NOUVEAU: État pour le modal de tracking
+  const [showQuickTracking, setShowQuickTracking] = React.useState(false);
+  
   const [refreshing, setRefreshing] = React.useState(false);
 
   const onRefresh = React.useCallback(async () => {
@@ -45,12 +51,64 @@ export default function CycleView() {
 
   // ✅ HANDLERS POUR LE CALENDRIER (CONSERVÉS)
   const handlePhasePress = React.useCallback((phase) => {
-    // Handler pour les phases
+    // ✅ NOUVEAU: Navigation vers la page de détail de phase
+    router.push(`/(tabs)/cycle/phases/${phase}`);
   }, []);
   
   const handleDatePress = React.useCallback((dateString, dayEntries) => {
     setSelectedDayEntries(dayEntries);
     setShowDayDetail(true);
+  }, []);
+
+  // ✅ NOUVEAUX HANDLERS POUR LES ACTIONS
+  const handleSymptomTracking = React.useCallback(() => {
+    setShowQuickTracking(true);
+  }, []);
+
+  // Fonction utilitaire pour la phase suivante
+  const getNextPhase = (currentPhase) => {
+    const phases = ['menstrual', 'follicular', 'ovulatory', 'luteal'];
+    const currentIndex = phases.indexOf(currentPhase);
+    const nextIndex = (currentIndex + 1) % phases.length;
+    return getPhaseDisplayName(phases[nextIndex]);
+  };
+
+  const handlePredictions = React.useCallback(() => {
+    if (nextPeriodDate && daysUntilNextPeriod !== null) {
+      const nextDate = new Date(nextPeriodDate).toLocaleDateString('fr-FR', {
+        weekday: 'long',
+        day: 'numeric', 
+        month: 'long'
+      });
+      
+      Alert.alert(
+        '🔮 Tes prédictions',
+        `📅 Prochaines règles : ${nextDate}\n⏰ Dans ${daysUntilNextPeriod} jours\n\n🌟 Phase suivante : ${getNextPhase(currentPhase)}`,
+        [{ text: 'Parfait !', style: 'default' }]
+      );
+    } else {
+      Alert.alert(
+        '🔮 Prédictions',
+        'Continue à utiliser MoodCycle pour que je puisse te donner des prédictions plus précises ! 💫',
+        [{ text: 'Compris !', style: 'default' }]
+      );
+    }
+  }, [nextPeriodDate, daysUntilNextPeriod, currentPhase]);
+
+  const handleHistory = React.useCallback(() => {
+    // Navigation vers le notebook avec filtres par phase
+    router.push({
+      pathname: '/(tabs)/notebook',
+      params: {
+        filterPhase: currentPhase,
+        mode: 'history'
+      }
+    });
+  }, [currentPhase]);
+
+  const handlePhaseNavigation = React.useCallback((phase) => {
+    // ✅ NOUVEAU: Navigation vers les pages de détail
+    router.push(`/(tabs)/cycle/phases/${phase}`);
   }, []);
 
   const styles = getStyles(theme);
@@ -103,10 +161,21 @@ export default function CycleView() {
                 color={theme.colors.primary} 
               />
             </TouchableOpacity>
+            
+            {/* ✅ BOUTON PARAMÈTRES */}
+            <ParametresButton 
+              color={theme.colors.primary}
+              style={styles.parametresButton}
+            />
           </View>
           
           <BodyText style={styles.subtitle}>
             Jour {currentDay} • Phase {phaseInfo.name}
+            {daysUntilNextPeriod !== null && (
+              <BodyText style={styles.prediction}>
+                • Prochaines règles dans {daysUntilNextPeriod} jours
+              </BodyText>
+            )}
           </BodyText>
         </View>
 
@@ -120,6 +189,7 @@ export default function CycleView() {
                 cycleDay={currentDay}
                 cycleLength={cycle?.length || 28}
                 userName={safeProfile.prenom || 'Emma'}
+                onPhasePress={handlePhasePress}
               />
             </View>
           ) : (
@@ -176,7 +246,7 @@ export default function CycleView() {
           </View>
         </View>
 
-        {/* ✅ NAVIGATION VERS PHASES DÉTAILLÉES */}
+        {/* ✅ NAVIGATION VERS PHASES DÉTAILLÉES (AMÉLIORÉE) */}
         <View style={styles.phasesNavigation}>
           <Heading style={styles.sectionTitle}>Explorer les phases</Heading>
           
@@ -188,6 +258,7 @@ export default function CycleView() {
                   styles.phaseNavItem,
                   currentPhase === phase && styles.phaseNavItemActive
                 ]}
+                onPress={() => handlePhaseNavigation(phase)}
               >
                 <PhaseIcon 
                   phaseKey={phase}
@@ -205,26 +276,35 @@ export default function CycleView() {
           </View>
         </View>
 
-        {/* ✅ RACCOURCIS ACTIONS CYCLE */}
+        {/* ✅ RACCOURCIS ACTIONS CYCLE (AMÉLIORÉS) */}
         <View style={styles.actionsSection}>
           <Heading style={styles.sectionTitle}>Actions rapides</Heading>
           
           <View style={styles.actionsGrid}>
-            <TouchableOpacity style={styles.actionItem}>
+            <TouchableOpacity 
+              style={styles.actionItem}
+              onPress={handleSymptomTracking}
+            >
               <View style={[styles.actionIcon, { backgroundColor: theme.colors.primary + '20' }]}>
                 <Feather name="plus" size={20} color={theme.colors.primary} />
               </View>
               <BodyText style={styles.actionText}>Noter symptômes</BodyText>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.actionItem}>
+            <TouchableOpacity 
+              style={styles.actionItem}
+              onPress={handlePredictions}
+            >
               <View style={[styles.actionIcon, { backgroundColor: theme.colors.secondary + '20' }]}>
                 <Feather name="calendar" size={20} color={theme.colors.secondary} />
               </View>
               <BodyText style={styles.actionText}>Prédictions</BodyText>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.actionItem}>
+            <TouchableOpacity 
+              style={styles.actionItem}
+              onPress={handleHistory}
+            >
               <View style={[styles.actionIcon, { backgroundColor: theme.colors.phases[currentPhase] + '20' }]}>
                 <Feather name="trending-up" size={20} color={theme.colors.phases[currentPhase]} />
               </View>
@@ -243,6 +323,13 @@ export default function CycleView() {
         visible={showDayDetail}
         onClose={() => setShowDayDetail(false)}
         showActions={true}
+      />
+
+      {/* ✅ NOUVEAU: Modal de tracking rapide */}
+      <QuickTrackingModal
+        visible={showQuickTracking}
+        onClose={() => setShowQuickTracking(false)}
+        defaultTags={[`#${currentPhase}`]}
       />
     </ScreenContainer>
   );
@@ -347,6 +434,9 @@ const getStyles = (theme) => StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  parametresButton: {
+    // Styles spécifiques pour le bouton paramètres
   },
   subtitle: {
     fontSize: 16,
@@ -495,5 +585,12 @@ const getStyles = (theme) => StyleSheet.create({
     fontSize: 12,
     color: theme.colors.textLight,
     textAlign: 'center',
+  },
+  
+  // ✅ NOUVEAU: Style pour la prédiction
+  prediction: {
+    fontSize: 14,
+    color: theme.colors.textLight,
+    fontStyle: 'italic',
   },
 });

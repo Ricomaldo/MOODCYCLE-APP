@@ -22,6 +22,7 @@ import { usePersona } from '../../../src/hooks/usePersona';
 import { useUserStore } from '../../../src/stores/useUserStore';
 import { PhaseIcon } from '../../../src/config/iconConstants';
 import MeluneAvatar from '../../../src/features/shared/MeluneAvatar';
+import ParametresButton from '../../../src/features/shared/ParametresButton';
 
 export default function AccueilView() {
   const cycleData = useCycle() || {};
@@ -135,8 +136,17 @@ export default function AccueilView() {
         {/* ✅ HEADER AVEC AVATAR MELUNE */}
         <View style={styles.header}>
           <View style={styles.headerTop}>
+            {/* Bouton paramètres à gauche */}
+            <ParametresButton 
+              color={theme.colors.primary}
+              style={styles.parametresButton}
+            />
+            
             {/* Avatar Melune centré */}
             <MeluneAvatar size={60} style={styles.headerAvatar} />
+            
+            {/* Espace vide pour équilibrer */}
+            <View style={styles.headerSpacer} />
           </View>
           
           {/* Salutation personnalisée */}
@@ -321,12 +331,18 @@ const getStyles = (theme) => StyleSheet.create({
   headerTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     width: '100%',
     marginBottom: theme.spacing.l,
   },
+  parametresButton: {
+    // Styles spécifiques pour le bouton paramètres
+  },
   headerAvatar: {
     // Avatar Melune centré
+  },
+  headerSpacer: {
+    width: 40, // Même largeur que le bouton paramètres pour équilibrer
   },
   greeting: {
     fontSize: 24,
