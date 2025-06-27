@@ -1,9 +1,9 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 File: app/(tabs)/cycle/CycleView.jsx - TOGGLE VUE CYCLE/CALENDRIER
+// 📄 File: app/(tabs)/cycle/CycleView.jsx - VERSION ALLÉGÉE FOCUS VISUALISATION
 // 🧩 Type: Écran Principal Cycle
-// 📚 Description: Page d'accueil cycle avec toggle vue roue/calendrier
-// 🕒 Version: 3.0 - 2025-06-23 - TOGGLE VUE RESTAURÉ
+// 📚 Description: Page cycle épurée - uniquement roue/calendrier + phase info
+// 🕒 Version: 4.0 - 2025-06-27 - ALLÉGÉE (insights transférés vers Accueil)
 // ─────────────────────────────────────────────────────────
 //
 import React from 'react';
@@ -14,61 +14,36 @@ import { Heading, BodyText } from '../../../src/core/ui/Typography';
 import ScreenContainer from '../../../src/core/layout/ScreenContainer';
 import CycleWheel from '../../../src/features/cycle/CycleWheel';
 import CalendarView from '../../../src/features/cycle/CalendarView';
-import { VignettesContainer } from '../../../src/features/shared/VignetteCard';
 import { useCycle } from '../../../src/hooks/useCycle';
-import { useVignettes } from '../../../src/hooks/useVignettes';
-import { usePersona } from '../../../src/hooks/usePersona';
 import { useUserStore } from '../../../src/stores/useUserStore';
-import ParametresButton from '../../../src/features/shared/ParametresButton';
 import { PhaseIcon } from '../../../src/config/iconConstants';
-import { useAdaptiveInterface } from '../../../src/hooks/useAdaptiveInterface';
-import { useEngagementStore } from '../../../src/stores/useEngagementStore';
 import EntryDetailModal from '../../../src/features/shared/EntryDetailModal';
 
 export default function CycleView() {
   const cycleData = useCycle() || {};
   const { currentPhase, currentDay, phaseInfo, hasData, cycle } = cycleData;
-  const { current: persona } = usePersona();
   const { profile } = useUserStore();
   const { theme } = useTheme();
-  const { layout, config } = useAdaptiveInterface();
-  const { maturityLevel } = useEngagementStore();
 
   // ✅ Protection contre profile undefined pendant l'hydratation
   const safeProfile = profile || { prenom: null };
   
-  // ✅ STATE POUR TOGGLE VUE
+  // ✅ STATE POUR TOGGLE VUE (CONSERVÉ)
   const [viewMode, setViewMode] = React.useState('wheel'); // 'wheel' ou 'calendar'
   
-  // ✅ STATE POUR MODAL ENTRIES DU JOUR
+  // ✅ STATE POUR MODAL ENTRIES DU JOUR (CONSERVÉ)
   const [selectedDayEntries, setSelectedDayEntries] = React.useState([]);
   const [showDayDetail, setShowDayDetail] = React.useState(false);
-  
-  // ✅ CONNEXION BASIQUE IMMÉDIATE - RÉACTIVÉE APRÈS CORRECTIONS
-  const {
-    vignettes,
-    loading: vignettesLoading, 
-    error: vignettesError,
-    refresh: refreshVignettes,
-    trackEngagement,
-    maxDisplayed
-  } = useVignettes();
   
   const [refreshing, setRefreshing] = React.useState(false);
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
-    await refreshVignettes();
-    setRefreshing(false);
-  }, [refreshVignettes]);
+    // Plus de refresh vignettes - seulement cycle
+    setTimeout(() => setRefreshing(false), 1000);
+  }, []);
 
-  // ✅ HANDLER VIGNETTE PRESS
-  const handleVignettePress = (vignette) => {
-    trackEngagement(vignette);
-    // Navigation automatique gérée par VignetteCard
-  };
-
-  // ✅ HANDLERS POUR LE CALENDRIER
+  // ✅ HANDLERS POUR LE CALENDRIER (CONSERVÉS)
   const handlePhasePress = React.useCallback((phase) => {
     // Handler pour les phases
   }, []);
@@ -80,7 +55,7 @@ export default function CycleView() {
 
   const styles = getStyles(theme);
 
-  // Protection supplémentaire : si cycle est undefined, affichage d'un message temporaire
+  // Protection : si cycle est undefined, affichage d'un message temporaire
   if (!cycle) {
     return <ScreenContainer><BodyText>Cycle non initialisé</BodyText></ScreenContainer>;
   }
@@ -112,18 +87,12 @@ export default function CycleView() {
           />
         }
       >
-        {/* Header avec toggle et paramètres */}
+        {/* ✅ HEADER AVEC TOGGLE ET PARAMÈTRES (CONSERVÉ) */}
         <View style={styles.header}>
           <View style={styles.headerTop}>
-            {/* Bouton paramètres à gauche */}
-            <ParametresButton 
-              color={theme.colors.primary}
-              style={styles.parametresButton}
-            />
-            
             <Heading style={styles.title}>Mon Cycle</Heading>
             
-            {/* ✅ TOGGLE BUTTON */}
+            {/* ✅ TOGGLE BUTTON (CONSERVÉ) */}
             <TouchableOpacity 
               style={styles.toggleButton}
               onPress={() => setViewMode(viewMode === 'wheel' ? 'calendar' : 'wheel')}
@@ -141,7 +110,7 @@ export default function CycleView() {
           </BodyText>
         </View>
 
-        {/* ✅ VUE CONDITIONNELLE AVEC HAUTEUR FIXE */}
+        {/* ✅ VUE CONDITIONNELLE AVEC HAUTEUR FIXE (CONSERVÉE) */}
         <View style={styles.viewContainer}>
           {viewMode === 'wheel' ? (
             /* Roue du cycle */
@@ -164,50 +133,111 @@ export default function CycleView() {
           )}
         </View>
 
-        {/* Phase info */}
+        {/* ✅ PHASE INFO ENRICHIE (AMÉLIORÉE) */}
         <View style={styles.phaseInfoContainer}>
           <View style={styles.phaseHeader}>
             <PhaseIcon 
               phaseKey={currentPhase}
-              size={24}
+              size={32}
               color={theme.colors.phases[currentPhase]}
             />
-            <BodyText style={styles.phaseName}>{phaseInfo.name}</BodyText>
+            <View style={styles.phaseHeaderText}>
+              <Heading style={styles.phaseName}>{phaseInfo.name}</Heading>
+              <BodyText style={styles.phaseDay}>Jour {currentDay}</BodyText>
+            </View>
           </View>
+          
           <BodyText style={styles.phaseDescription}>
             {phaseInfo.description}
           </BodyText>
+          
+          {/* ✅ NOUVELLES INFOS PHASE DÉTAILLÉES */}
+          <View style={styles.phaseDetails}>
+            <View style={styles.phaseDetailItem}>
+              <BodyText style={styles.phaseDetailLabel}>Énergie</BodyText>
+              <BodyText style={styles.phaseDetailValue}>
+                {getPhaseEnergyLevel(currentPhase)}
+              </BodyText>
+            </View>
+            
+            <View style={styles.phaseDetailItem}>
+              <BodyText style={styles.phaseDetailLabel}>Focus</BodyText>
+              <BodyText style={styles.phaseDetailValue}>
+                {getPhaseFocus(currentPhase)}
+              </BodyText>
+            </View>
+            
+            <View style={styles.phaseDetailItem}>
+              <BodyText style={styles.phaseDetailLabel}>Durée estimée</BodyText>
+              <BodyText style={styles.phaseDetailValue}>
+                {getPhaseDuration(currentPhase)} jours
+              </BodyText>
+            </View>
+          </View>
         </View>
 
-        {/* ✅ VIGNETTES CONTEXTUELLES */}
-        <View style={styles.vignettesSection}>
-          <Heading style={styles.sectionTitle}>Pour toi aujourd'hui</Heading>
+        {/* ✅ NAVIGATION VERS PHASES DÉTAILLÉES */}
+        <View style={styles.phasesNavigation}>
+          <Heading style={styles.sectionTitle}>Explorer les phases</Heading>
           
-          {vignettesLoading ? (
-            <View style={styles.loadingVignettes}>
-              <BodyText style={styles.loadingText}>Personnalisation...</BodyText>
-            </View>
-          ) : (
-            <VignettesContainer
-              vignettes={vignettes || []}
-              onVignettePress={handleVignettePress}
-              maxVisible={maxDisplayed || 3}
-              showCategories={false}
-            />
-          )}
+          <View style={styles.phasesGrid}>
+            {['menstrual', 'follicular', 'ovulatory', 'luteal'].map((phase) => (
+              <TouchableOpacity 
+                key={phase}
+                style={[
+                  styles.phaseNavItem,
+                  currentPhase === phase && styles.phaseNavItemActive
+                ]}
+              >
+                <PhaseIcon 
+                  phaseKey={phase}
+                  size={24}
+                  color={currentPhase === phase ? 'white' : theme.colors.phases[phase]}
+                />
+                <BodyText style={[
+                  styles.phaseNavText,
+                  currentPhase === phase && styles.phaseNavTextActive
+                ]}>
+                  {getPhaseDisplayName(phase)}
+                </BodyText>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* ✅ RACCOURCIS ACTIONS CYCLE */}
+        <View style={styles.actionsSection}>
+          <Heading style={styles.sectionTitle}>Actions rapides</Heading>
           
-          {(vignettes?.length === 0 || !vignettes) && !vignettesLoading && (
-            <BodyText style={styles.noVignettesText}>
-              Aucune suggestion disponible pour le moment
-            </BodyText>
-          )}
+          <View style={styles.actionsGrid}>
+            <TouchableOpacity style={styles.actionItem}>
+              <View style={[styles.actionIcon, { backgroundColor: theme.colors.primary + '20' }]}>
+                <Feather name="plus" size={20} color={theme.colors.primary} />
+              </View>
+              <BodyText style={styles.actionText}>Noter symptômes</BodyText>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.actionItem}>
+              <View style={[styles.actionIcon, { backgroundColor: theme.colors.secondary + '20' }]}>
+                <Feather name="calendar" size={20} color={theme.colors.secondary} />
+              </View>
+              <BodyText style={styles.actionText}>Prédictions</BodyText>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.actionItem}>
+              <View style={[styles.actionIcon, { backgroundColor: theme.colors.phases[currentPhase] + '20' }]}>
+                <Feather name="trending-up" size={20} color={theme.colors.phases[currentPhase]} />
+              </View>
+              <BodyText style={styles.actionText}>Historique</BodyText>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Espacement bottom pour tab bar */}
         <View style={{ height: 20 }} />
       </ScrollView>
 
-      {/* ✅ MODAL DETAIL ENTRIES DU JOUR */}
+      {/* ✅ MODAL DETAIL ENTRIES DU JOUR (CONSERVÉE) */}
       <EntryDetailModal
         entries={selectedDayEntries}
         visible={showDayDetail}
@@ -217,6 +247,47 @@ export default function CycleView() {
     </ScreenContainer>
   );
 }
+
+// ✅ FONCTIONS UTILITAIRES PHASE
+const getPhaseEnergyLevel = (phase) => {
+  const energyLevels = {
+    menstrual: 'Basse',
+    follicular: 'Montante',
+    ovulatory: 'Haute',
+    luteal: 'Descendante'
+  };
+  return energyLevels[phase] || 'Variable';
+};
+
+const getPhaseFocus = (phase) => {
+  const phaseFocus = {
+    menstrual: 'Repos & introspection',
+    follicular: 'Nouveaux projets',
+    ovulatory: 'Communication',
+    luteal: 'Finalisation'
+  };
+  return phaseFocus[phase] || 'Équilibre';
+};
+
+const getPhaseDuration = (phase) => {
+  const durations = {
+    menstrual: '3-7',
+    follicular: '7-10',
+    ovulatory: '3-5',
+    luteal: '10-14'
+  };
+  return durations[phase] || '5-7';
+};
+
+const getPhaseDisplayName = (phase) => {
+  const names = {
+    menstrual: 'Règles',
+    follicular: 'Folliculaire',
+    ovulatory: 'Ovulation',
+    luteal: 'Lutéale'
+  };
+  return names[phase] || phase;
+};
 
 const getStyles = (theme) => StyleSheet.create({
   container: {
@@ -241,7 +312,7 @@ const getStyles = (theme) => StyleSheet.create({
     fontSize: 16,
   },
   
-  // Header avec toggle
+  // ✅ HEADER AVEC TOGGLE (CONSERVÉ)
   header: {
     alignItems: 'center',
     marginBottom: theme.spacing.xl,
@@ -258,9 +329,6 @@ const getStyles = (theme) => StyleSheet.create({
     fontWeight: '700',
     flex: 1,
     textAlign: 'center',
-  },
-  parametresButton: {
-    // Style pour le bouton paramètres
   },
   toggleButton: {
     width: 44,
@@ -285,14 +353,14 @@ const getStyles = (theme) => StyleSheet.create({
     color: theme.colors.textLight,
   },
   
-  // Conteneur fixe pour éviter les sauts
+  // ✅ CONTENEUR FIXE POUR ÉVITER LES SAUTS (CONSERVÉ)
   viewContainer: {
-    height: 320, // ✅ Hauteur fixe pour éviter les sauts
+    height: 320,
     marginBottom: theme.spacing.xl,
     justifyContent: 'center',
   },
   
-  // Conteneurs de vue
+  // ✅ CONTENEURS DE VUE (CONSERVÉS)
   wheelContainer: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -303,7 +371,7 @@ const getStyles = (theme) => StyleSheet.create({
     justifyContent: 'center',
   },
   
-  // Phase info
+  // ✅ PHASE INFO ENRICHIE
   phaseInfoContainer: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.l,
@@ -318,22 +386,56 @@ const getStyles = (theme) => StyleSheet.create({
   phaseHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: theme.spacing.s,
+    marginBottom: theme.spacing.l,
+  },
+  phaseHeaderText: {
+    marginLeft: theme.spacing.m,
+    flex: 1,
   },
   phaseName: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '600',
-    marginLeft: theme.spacing.s,
+  },
+  phaseDay: {
+    fontSize: 14,
+    color: theme.colors.textLight,
+    marginTop: 2,
   },
   phaseDescription: {
     fontSize: 15,
     color: theme.colors.textLight,
-    textAlign: 'center',
     lineHeight: 22,
+    marginBottom: theme.spacing.l,
   },
   
-  // ✅ Section vignettes
-  vignettesSection: {
+  // ✅ DÉTAILS PHASE
+  phaseDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  phaseDetailItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  phaseDetailLabel: {
+    fontSize: 12,
+    color: theme.colors.textLight,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 4,
+  },
+  phaseDetailValue: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: theme.colors.text,
+    textAlign: 'center',
+  },
+  
+  // ✅ SECTIONS
+  phasesNavigation: {
+    marginBottom: theme.spacing.xl,
+  },
+  actionsSection: {
     marginBottom: theme.spacing.xl,
   },
   sectionTitle: {
@@ -342,19 +444,56 @@ const getStyles = (theme) => StyleSheet.create({
     marginBottom: theme.spacing.l,
     color: theme.colors.text,
   },
-  loadingVignettes: {
+  
+  // ✅ NAVIGATION PHASES
+  phasesGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: theme.spacing.s,
+  },
+  phaseNavItem: {
+    flex: 1,
     alignItems: 'center',
-    padding: theme.spacing.xl,
+    padding: theme.spacing.m,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.medium,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
-  loadingText: {
-    color: theme.colors.textLight,
-    fontSize: 14,
+  phaseNavItemActive: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
   },
-  noVignettesText: {
+  phaseNavText: {
+    fontSize: 12,
+    color: theme.colors.text,
+    marginTop: theme.spacing.xs,
     textAlign: 'center',
+  },
+  phaseNavTextActive: {
+    color: 'white',
+  },
+  
+  // ✅ ACTIONS RAPIDES
+  actionsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  actionItem: {
+    alignItems: 'center',
+    gap: theme.spacing.s,
+  },
+  actionIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  actionText: {
+    fontSize: 12,
     color: theme.colors.textLight,
-    fontSize: 14,
-    fontStyle: 'italic',
-    padding: theme.spacing.l,
+    textAlign: 'center',
   },
 });

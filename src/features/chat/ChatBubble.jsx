@@ -1,10 +1,10 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 File: src/features/chat/ChatBubble.jsx
+// 📄 File: src/features/chat/ChatBubble.jsx - ACTIONS VISIBLES
 // 🧩 Type: UI Component
-// 📚 Description: Bulle de message avec cross-navigation notebook
-// 🕒 Version: 5.0 - 2025-06-26 - CASCADE 2.6 CROSS-NAVIGATION
-// 🧭 Used in: chat screen
+// 📚 Description: Bulle chat avec actions subtiles mais visibles
+// 🕒 Version: 7.0 - 2025-06-27 - ACTIONS VISIBLES + BORDER RADIUS UNIFIÉ
+// 🧭 Pattern: Tap → Actions contrastées visibles
 // ─────────────────────────────────────────────────────────
 //
 import React, { useEffect, useRef, useState } from 'react';
@@ -14,9 +14,10 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { BodyText } from '../../core/ui/Typography';
 import { useTheme } from '../../hooks/useTheme';
-import MeluneAvatar from '../shared/MeluneAvatar';
 import { useUserStore } from '../../stores/useUserStore';
+import { useNotebookStore } from '../../stores/useNotebookStore';
 import { useCycle } from '../../hooks/useCycle';
+import MeluneAvatar from '../shared/MeluneAvatar';
 
 export default function ChatBubble({ 
   message, 
@@ -24,13 +25,14 @@ export default function ChatBubble({
   phase = 'menstrual',
   onSave,
   delay = 0,
-  showCrossActions = true
+  showActions = true
 }) {
-  const { melune } = useUserStore();
   const { theme } = useTheme();
+  const { saveFromChat } = useNotebookStore();
   const { currentPhase } = useCycle();
   const styles = getStyles(theme);
-  const [showActions, setShowActions] = useState(false);
+  
+  const [actionsVisible, setActionsVisible] = useState(false);
   
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const translateYAnim = useRef(new Animated.Value(5)).current;
@@ -55,29 +57,36 @@ export default function ChatBubble({
 
   useEffect(() => {
     Animated.timing(actionsOpacity, {
-      toValue: showActions ? 1 : 0,
+      toValue: actionsVisible ? 1 : 0,
       duration: 200,
       useNativeDriver: true,
     }).start();
-  }, [showActions]);
+  }, [actionsVisible]);
 
   const animatedStyle = {
     opacity: opacityAnim,
     transform: [{ translateY: translateYAnim }],
   };
 
-  const handleLongPress = () => {
-    if (!isUser && onSave) {
-      onSave();
+  // ✅ HANDLERS STANDARDISÉS
+  const handleSave = () => {
+    if (Haptics.impactAsync) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
+    
+    const entryId = saveFromChat(message, 'melune');
+    setActionsVisible(false);
+    
+    // Callback externe si fourni
+    if (onSave) onSave(entryId);
   };
 
-  // ✅ NOUVEAU : Navigation vers notebook avec contexte
-  const handleNotebookNavigation = () => {
+  const handleNote = () => {
     if (Haptics.impactAsync) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     
+    setActionsVisible(false);
     router.push({
       pathname: '/(tabs)/notebook',
       params: {
@@ -90,10 +99,10 @@ export default function ChatBubble({
     });
   };
 
-  // ✅ NOUVEAU : Toggle actions au tap
+  // ✅ TAP POUR RÉVÉLER ACTIONS
   const handleBubblePress = () => {
-    if (!isUser && showCrossActions) {
-      setShowActions(!showActions);
+    if (!isUser && showActions) {
+      setActionsVisible(!actionsVisible);
     }
   };
 
@@ -117,9 +126,7 @@ export default function ChatBubble({
         <View style={styles.bubbleAndActions}>
           <TouchableOpacity
             style={[styles.meluneBubble, { backgroundColor: theme.colors.phases[phase] }]}
-            onLongPress={handleLongPress}
             onPress={handleBubblePress}
-            delayLongPress={600}
             activeOpacity={0.9}
           >
             <BodyText style={[styles.meluneText, { color: theme.getTextColorOnPhase(phase) }]}>
@@ -127,31 +134,29 @@ export default function ChatBubble({
             </BodyText>
           </TouchableOpacity>
 
-          {/* ✅ NOUVEAU : Actions cross-navigation */}
-          {showCrossActions && (
+          {/* ✅ ACTIONS VISIBLES ET CONTRASTÉES */}
+          {showActions && (
             <Animated.View 
               style={[
-                styles.crossActions,
+                styles.actionsContainer,
                 { opacity: actionsOpacity }
               ]}
             >
               <TouchableOpacity
-                style={[styles.actionButton, styles.notebookButton]}
-                onPress={handleNotebookNavigation}
+                style={styles.actionButton}
+                onPress={handleSave}
               >
-                <Feather name="edit-3" size={14} color={theme.colors.primary} />
-                <BodyText style={styles.actionText}>Noter</BodyText>
+                <Feather name="bookmark" size={16} color={theme.colors.primary} />
+                <BodyText style={styles.actionText}>Épingler</BodyText>
               </TouchableOpacity>
               
-              {onSave && (
-                <TouchableOpacity
-                  style={[styles.actionButton, styles.saveButton]}
-                  onPress={onSave}
-                >
-                  <Feather name="bookmark" size={14} color={theme.colors.accent} />
-                  <BodyText style={styles.actionText}>Sauver</BodyText>
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={handleNote}
+              >
+                <Feather name="edit-3" size={16} color={theme.colors.secondary} />
+                <BodyText style={styles.actionText}>Noter</BodyText>
+              </TouchableOpacity>
             </Animated.View>
           )}
         </View>
@@ -167,8 +172,8 @@ const getStyles = (theme) => StyleSheet.create({
   },
   userBubble: {
     backgroundColor: theme.colors.primary,
-    borderRadius: 20,
-    borderBottomRightRadius: 6,
+    borderRadius: theme.borderRadius.large, // ✅ UNIFIÉ
+    borderBottomRightRadius: theme.borderRadius.small, // ✅ UNIFIÉ
     paddingHorizontal: 16,
     paddingVertical: 10,
     maxWidth: '75%',
@@ -194,8 +199,8 @@ const getStyles = (theme) => StyleSheet.create({
     marginLeft: 8,
   },
   meluneBubble: {
-    borderRadius: 20,
-    borderBottomLeftRadius: 6,
+    borderRadius: theme.borderRadius.large, // ✅ UNIFIÉ
+    borderBottomLeftRadius: theme.borderRadius.small, // ✅ UNIFIÉ
     paddingHorizontal: 16,
     paddingVertical: 12,
     maxWidth: '85%',
@@ -210,37 +215,30 @@ const getStyles = (theme) => StyleSheet.create({
     lineHeight: 22,
   },
   
-  // ✅ NOUVEAU : Styles cross-actions
-  crossActions: {
+  // ✅ ACTIONS VISIBLES ET CONTRASTÉES
+  actionsContainer: {
     flexDirection: 'row',
-    marginTop: 8,
-    gap: 8,
+    marginTop: 12,
+    gap: 12,
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    gap: 4,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.large, // ✅ UNIFIÉ
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    gap: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  notebookButton: {
-    backgroundColor: theme.colors.primary + '15',
-    borderWidth: 1,
-    borderColor: theme.colors.primary + '30',
-  },
-  saveButton: {
-    backgroundColor: theme.colors.accent + '15',
-    borderWidth: 1,
-    borderColor: theme.colors.accent + '30',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
   actionText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '500',
     color: theme.colors.text,
   },

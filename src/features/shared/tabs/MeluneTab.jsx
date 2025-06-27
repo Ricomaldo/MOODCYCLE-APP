@@ -147,7 +147,7 @@ export default function MeluneTab({ onDataChange }) {
         <View style={styles.avatarPreview}>
           <MeluneAvatar 
             size="medium" 
-            style={style.id}
+            avatarStyle={style.id}
             animated={isSelected}
           />
         </View>
@@ -261,7 +261,7 @@ export default function MeluneTab({ onDataChange }) {
           <View style={styles.previewAvatar}>
             <MeluneAvatar 
               size="large" 
-              style={selectedAvatar}
+              avatarStyle={selectedAvatar}
               animated={true}
             />
           </View>

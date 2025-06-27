@@ -7,25 +7,36 @@
 // 🧭 Utilisé dans : NotebookView, CycleView, partages, onboarding
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo, memo } from 'react';
 import { View, Image, StyleSheet, Animated, Text } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
 import { BodyText } from '../../core/ui/Typography';
 import { useUserStore } from '../../stores/useUserStore';
 
-export default function MeluneAvatar({ phase = 'menstrual', size = 'large', style, animated = true }) {
+function MeluneAvatar({ 
+  phase = 'menstrual', 
+  size = 'large', 
+  avatarStyle,  // ✅ Renommé de 'style' en 'avatarStyle'
+  style,        // ✅ Nouveau : style du conteneur
+  animated = true 
+}) {
   // Récupération du style depuis le store avec fallback sur la prop
   const { melune } = useUserStore();
   const { theme } = useTheme();
   const styles = getStyles(theme);
-  const avatarStyle = style || melune?.avatarStyle || 'classic';
+  const finalAvatarStyle = avatarStyle || melune?.avatarStyle || 'classic';
 
-  // ✅ DEBUG : Log pour tracer les changements
-  console.log('👤 MeluneAvatar render:', {
-    styleProp: style,
-    meluneFromStore: melune?.avatarStyle,
-    finalAvatarStyle: avatarStyle
-  });
+  // ✅ DEBUG : Log conditionnel (seulement si __DEV__ et changements)
+  const prevStyleRef = useRef(finalAvatarStyle);
+  
+  if (__DEV__ && prevStyleRef.current !== finalAvatarStyle) {
+    console.log('👤 MeluneAvatar style changed:', {
+      from: prevStyleRef.current,
+      to: finalAvatarStyle,
+      source: avatarStyle ? 'prop' : 'store'
+    });
+    prevStyleRef.current = finalAvatarStyle;
+  }
 
   // Animations iOS-like
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
@@ -41,16 +52,16 @@ export default function MeluneAvatar({ phase = 'menstrual', size = 'large', styl
     };
 
     try {
-      return imagePaths[avatarStyle] || imagePaths.classic;
+      return imagePaths[finalAvatarStyle] || imagePaths.classic;
     } catch (error) {
       console.warn('MeluneAvatar: Erreur chargement image', {
-        style: avatarStyle,
+        style: finalAvatarStyle,
         availableStyles: Object.keys(imagePaths),
         error: error.message
       });
       return null;
     }
-  }, [avatarStyle]);
+  }, [finalAvatarStyle]);
 
   const sizeValue = size === 'large' ? 160 : size === 'medium' ? 120 : 80;
   const borderColor = theme.colors.phases?.[phase] || theme.colors.primary;
@@ -95,7 +106,7 @@ export default function MeluneAvatar({ phase = 'menstrual', size = 'large', styl
 
       return () => pulseAnimation.stop();
     }
-  }, [animated, avatarStyle]); // Ajout de 'avatarStyle' dans les dépendances pour re-animer lors du changement
+  }, [animated, finalAvatarStyle]);
 
   const animatedStyle = animated ? {
     opacity: opacityAnim,
@@ -116,6 +127,7 @@ export default function MeluneAvatar({ phase = 'menstrual', size = 'large', styl
             width: sizeValue + 12,
             height: sizeValue + 12,
           },
+          style  // ✅ Applique le style du conteneur
         ]}
       >
         <BodyText style={[styles.fallbackText, { fontSize: sizeValue * 0.4 }]}>🧚‍♀️</BodyText>
@@ -129,10 +141,11 @@ export default function MeluneAvatar({ phase = 'menstrual', size = 'large', styl
         styles.container,
         {
           borderColor: borderColor,
-          width: sizeValue + 12, // Pour le bord
+          width: sizeValue + 12,
           height: sizeValue + 12,
         },
         animatedStyle,
+        style  // ✅ Applique le style du conteneur
       ]}
     >
       <Image
@@ -140,9 +153,9 @@ export default function MeluneAvatar({ phase = 'menstrual', size = 'large', styl
         style={{ 
           width: sizeValue, 
           height: sizeValue,
-          borderRadius: sizeValue / 2, // Cercle parfait pour l'image
+          borderRadius: sizeValue / 2,
         }}
-        resizeMode="cover" // Changé en cover pour un meilleur rendu des dessins
+        resizeMode="cover"
       />
     </Animated.View>
   );
@@ -153,16 +166,18 @@ const getStyles = (theme) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderRadius: 9999, // Cercle parfait
+    borderRadius: 9999,
     padding: 4,
     overflow: 'hidden',
-    backgroundColor: '#fff', // Fond blanc pour faire ressortir les dessins
+    backgroundColor: '#fff',
   },
   fallbackContainer: {
     backgroundColor: theme.colors.primary + '20',
   },
   fallbackText: {
     textAlign: 'center',
-    // fontSize sera défini dynamiquement selon size prop
   },
 });
+
+// ✅ Export avec memo pour éviter les re-renders
+export default memo(MeluneAvatar);

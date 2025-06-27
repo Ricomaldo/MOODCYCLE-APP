@@ -34,7 +34,6 @@ import { useNotebookStore } from "../../../src/stores/useNotebookStore";
 import { useCycle } from '../../../src/hooks/useCycle';
 import { usePersona } from '../../../src/hooks/usePersona';
 import { useRenderMonitoring } from '../../../src/hooks/usePerformanceMonitoring';
-import ParametresButton from '../../../src/features/shared/ParametresButton';
 
 // ✅ Smart Suggestions + Interface Adaptative
 import { useSmartSuggestions, useSmartChatSuggestions } from '../../../src/hooks/useSmartSuggestions';
@@ -622,10 +621,6 @@ export default function ChatScreen() {
       
       {/* Header */}
       <View style={styles.header}>
-        <ParametresButton 
-          color={theme.colors.primary}
-          style={styles.parametresButton}
-        />
         <Heading style={styles.title}>
           Melune {intelligenceContext.hasData && '🧠'}
           {__DEV__ && ` (${maturityLevel})`}
@@ -753,10 +748,6 @@ const getStyles = (theme) => StyleSheet.create({
     paddingHorizontal: theme.spacing.l,
     marginBottom: 0,
     position: 'relative',
-  },
-  parametresButton: {
-    position: 'absolute',
-    left: theme.spacing.l,
   },
   title: {
     textAlign: 'center',

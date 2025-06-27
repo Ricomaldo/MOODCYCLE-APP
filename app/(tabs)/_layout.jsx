@@ -34,6 +34,15 @@ return (
       }}
     >
       <Tabs.Screen
+        name="home"
+        options={{
+          title: "Accueil",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="cycle"
         options={{
           title: "Mon cycle",
