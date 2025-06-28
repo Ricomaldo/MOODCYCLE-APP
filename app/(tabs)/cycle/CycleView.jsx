@@ -129,23 +129,47 @@ export default function CycleView() {
         <View style={styles.header}>
           <BodyText style={styles.subtitle}>
             Jour {currentDay} • Phase {phaseInfo.name}
-            {daysUntilNextPeriod !== null && (
-              <BodyText style={styles.prediction}>
-                • Prochaines règles dans {daysUntilNextPeriod} jours
-              </BodyText>
-            )}
           </BodyText>
+          {daysUntilNextPeriod !== null && (
+            <BodyText style={styles.prediction}>
+              Prochaines règles dans {daysUntilNextPeriod} jours
+            </BodyText>
+          )}
         </View>
 
         {/* Roue du cycle */}
         <View style={styles.wheelContainer}>
-          <CycleWheel 
+          <CycleWheel
             currentPhase={currentPhase}
+            size={240}
+            userName={safeProfile.prenom || 'Emma'}
             cycleDay={currentDay}
             cycleLength={cycle?.length || 28}
-            userName={safeProfile.prenom || 'Emma'}
             onPhasePress={handlePhasePress}
           />
+        </View>
+
+        {/* 🩸 BOUTON RÈGLES - ESSENTIEL */}
+        <View style={styles.periodButtonContainer}>
+          {currentPhase === 'menstrual' ? (
+            <TouchableOpacity 
+              style={[styles.periodButton, styles.periodEndButton]}
+              onPress={handlePeriodEnd}
+            >
+              <BodyText style={styles.periodButtonText}>
+                Mes règles sont terminées
+              </BodyText>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity 
+              style={[styles.periodButton, styles.periodStartButton]}
+              onPress={handlePeriodStart}
+            >
+              <BodyText style={styles.periodButtonText}>
+                Mes règles ont commencé
+              </BodyText>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Phase info */}
@@ -479,4 +503,51 @@ const getStyles = (theme) => StyleSheet.create({
     color: theme.colors.textLight,
     textAlign: 'center',
   },
+  periodButtonContainer: {
+    marginBottom: theme.spacing.xl,
+    alignItems: 'center',
+    
+  },
+  periodButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: theme.spacing.m,
+    paddingHorizontal: theme.spacing.xl,
+    borderRadius: 16,
+    borderWidth: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  periodStartButton: {
+    backgroundColor: theme.colors.primary + '15',
+    borderColor: theme.colors.primary,
+    shadowColor: theme.colors.primary,
+  },
+  periodEndButton: {
+    backgroundColor: theme.colors.primary + '15',
+    borderColor: theme.colors.primary,
+    shadowColor: theme.colors.primary,
+  },
+  periodButtonText: {
+    color: theme.colors.primary,
+    fontWeight: '600',
+    fontSize: 16,
+    marginLeft: theme.spacing.s,
+  },
 });
+
+// 🩸 Handlers pour le bouton règles
+const handlePeriodStart = () => {
+  // TODO: Logique pour marquer le début des règles
+  console.log('Début des règles marqué');
+  // Mettre à jour le cycle, recalculer les phases
+};
+
+const handlePeriodEnd = () => {
+  // TODO: Logique pour marquer la fin des règles  
+  console.log('Fin des règles marquée');
+  // Transition vers phase folliculaire
+};

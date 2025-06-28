@@ -113,14 +113,54 @@ export const getPhasePosition = (cycleDay) => {
 // ═══════════════════════════════════════════════════════
 
 export const WHEEL_CONSTANTS = {
-  STROKE_WIDTH: 40,
-  ARCS_PER_QUARTER: 7, // 1 semaine par phase
-  SEPARATOR_EXTENSION: 8,
+  STROKE_WIDTH: 28,
+  SEPARATOR_OPACITY: 0.6,
+  EMOJI_SIZE: 12,
+  SHOW_LEGEND: false,
+  SHOW_EMOJIS: false,
+  ARCS_PER_QUARTER: 7,
+  SEPARATOR_EXTENSION: 6,
   MAX_NAME_LENGTH: 12,
-  MARKER_RADIUS: 10,
+  MARKER_RADIUS: 8,
   FONT_SIZE: {
-    LARGE: 24,
-    SMALL: 18,
+    LARGE: 22,
+    SMALL: 16,
   },
   SIZE_THRESHOLD: 200,
+};
+
+// ═══════════════════════════════════════════════════════
+// 🔮 CONSTANTES ROUE THÉRAPEUTIQUE
+// ═══════════════════════════════════════════════════════
+
+export const THERAPEUTIC_WHEEL = {
+  // Axes cardinaux comme dans la roue spirituelle
+  CARDINAL_AXES: false,
+  AXIS_STROKE_WIDTH: 4,
+  AXIS_COLOR: '#333333',
+  AXIS_OPACITY: 0.8,
+  
+  // Descriptions énergétiques des phases
+  PHASE_DESCRIPTIONS: {
+    menstrual: 'Sorcière',
+    follicular: 'Jeune fille', 
+    ovulatory: 'Mère',
+    luteal: 'Enchanteresse',
+  },
+  
+  // Configuration texte courbe
+  CURVED_TEXT: {
+    ENABLED: true,
+    RADIUS_OFFSET: 8,
+    FONT_SIZE: 10,
+    LETTER_SPACING: 2,
+  },
+  
+  // Style mandala
+  MANDALA_STYLE: {
+    SHOW_GEOMETRIC_PATTERNS: true,
+    INNER_CIRCLE_DECORATION: true,
+    INNER_CIRCLE_RADIUS: 12,
+    SACRED_GEOMETRY: true,
+  },
 }; 

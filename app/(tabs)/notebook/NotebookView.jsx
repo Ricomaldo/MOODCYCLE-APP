@@ -106,13 +106,21 @@ const getStyles = (theme) => StyleSheet.create({
   phasePill: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.8)',
+    backdropFilter: 'blur(10px)',
     borderWidth: 1.5,
     borderRadius: theme.borderRadius.pill,
     paddingHorizontal: theme.spacing.m,
     paddingVertical: theme.spacing.s,
     marginRight: theme.spacing.s,
     gap: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
+  
   phaseIndicator: {
     width: 8,
     height: 8,

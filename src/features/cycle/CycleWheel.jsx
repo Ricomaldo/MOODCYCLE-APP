@@ -11,7 +11,7 @@ import React from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import Svg, { Circle, Path, G, Line, Text } from 'react-native-svg';
 import { useTheme } from '../../hooks/useTheme';
-import { CYCLE_DEFAULTS, PHASE_NAMES, WHEEL_CONSTANTS } from '../../config/cycleConstants';
+import { CYCLE_DEFAULTS, PHASE_NAMES, WHEEL_CONSTANTS, THERAPEUTIC_WHEEL } from '../../config/cycleConstants';
 import { getPhaseSymbol, getPhaseMetadata } from '../../utils/formatters';
 
 export default function CycleWheel({
@@ -166,35 +166,75 @@ export default function CycleWheel({
         stroke="#FFFFFF"
         strokeWidth="3"
         strokeDasharray="0"
-        opacity="0.8"
+        opacity={WHEEL_CONSTANTS.SEPARATOR_OPACITY}
       />
     );
   }
 
-  // 🏷️ Génération des étiquettes émojis des phases
-  const phaseLabels = phases.map((phase, index) => {
-    const angle = index * 90 + 45 + rotationAngle; // Centre de chaque phase
-    const labelRadius = radius - strokeWidth * 1.5;
-    const angleRad = ((angle - 90) * Math.PI) / 180;
-    const x = adjustedCenterX + labelRadius * Math.cos(angleRad);
-    const y = adjustedCenterY + labelRadius * Math.sin(angleRad);
+  // 🔮 Génération des axes cardinaux (style thérapeutique)
+  const cardinalAxes = [];
+  if (THERAPEUTIC_WHEEL.CARDINAL_AXES) {
+    for (let i = 0; i < 4; i++) {
+      const angle = i * 90 + rotationAngle;
+      const angleRad = ((angle - 90) * Math.PI) / 180;
 
-    return (
-      <Text 
-        key={`label-${phase}`} 
-        x={x} 
-        y={y} 
-        textAnchor="middle" 
-        alignmentBaseline="middle"
-        fontSize="16" 
-        fill="white" 
-        fontWeight="bold"
-        style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}
-      >
-        {getPhaseSymbol(phase)}
-      </Text>
-    );
-  });
+      const innerPoint = {
+        x: adjustedCenterX + (innerRadius - separatorExtension * 2) * Math.cos(angleRad),
+        y: adjustedCenterY + (innerRadius - separatorExtension * 2) * Math.sin(angleRad),
+      };
+
+      const outerPoint = {
+        x: adjustedCenterX + (radius + separatorExtension * 2) * Math.cos(angleRad),
+        y: adjustedCenterY + (radius + separatorExtension * 2) * Math.sin(angleRad),
+      };
+
+      cardinalAxes.push(
+        <Line
+          key={`cardinal-${angle}`}
+          x1={innerPoint.x}
+          y1={innerPoint.y}
+          x2={outerPoint.x}
+          y2={outerPoint.y}
+          stroke={THERAPEUTIC_WHEEL.AXIS_COLOR}
+          strokeWidth={THERAPEUTIC_WHEEL.AXIS_STROKE_WIDTH}
+          opacity={THERAPEUTIC_WHEEL.AXIS_OPACITY}
+        />
+      );
+    }
+  }
+
+  // 🔮 Génération des descriptions énergétiques en texte courbe
+  const phaseDescriptions = [];
+  if (THERAPEUTIC_WHEEL.CURVED_TEXT.ENABLED) {
+    phases.forEach((phase, index) => {
+      const description = THERAPEUTIC_WHEEL.PHASE_DESCRIPTIONS[phase];
+      if (description) {
+        const angle = index * 90 + 45 + rotationAngle; // Centre de chaque phase
+        const textRadius = radius + THERAPEUTIC_WHEEL.CURVED_TEXT.RADIUS_OFFSET;
+        const angleRad = ((angle - 90) * Math.PI) / 180;
+        const x = adjustedCenterX + textRadius * Math.cos(angleRad);
+        const y = adjustedCenterY + textRadius * Math.sin(angleRad);
+
+        phaseDescriptions.push(
+          <Text
+            key={`desc-${phase}`}
+            x={x}
+            y={y}
+            textAnchor="middle"
+            alignmentBaseline="middle"
+            fontSize={THERAPEUTIC_WHEEL.CURVED_TEXT.FONT_SIZE}
+            fill={theme.colors.textLight}
+            fontWeight="500"
+            opacity={0.8}
+            letterSpacing={THERAPEUTIC_WHEEL.CURVED_TEXT.LETTER_SPACING}
+            transform={`rotate(${angle}, ${x}, ${y})`}
+          >
+            {description}
+          </Text>
+        );
+      }
+    });
+  }
 
   // Position du marqueur fixe en haut
   const markerX = adjustedCenterX;
@@ -206,27 +246,47 @@ export default function CycleWheel({
         <G>
           {arcs}
           {separatorLines}
+          {/* 🔮 Axes cardinaux thérapeutiques */}
+          {cardinalAxes}
         </G>
 
-        {/* 🏷️ Étiquettes des phases */}
-        {phaseLabels}
+        {/* 🔮 Descriptions énergétiques courbes */}
+        {phaseDescriptions}
 
-        {/* Cercle central avec couleur de background */}
+        {/* Cercle central avec décoration mandala */}
         <Circle
           cx={adjustedCenterX}
           cy={adjustedCenterY}
           r={strokeWidth}
           fill={theme.colors.background}
+          stroke={theme.colors.border}
+          strokeWidth={1}
+          opacity={0.9}
         />
 
-        {/* Prénom coloré selon la phase actuelle (max 12 chars) */}
+        {/* 🔮 Cercle intérieur décoratif */}
+        {THERAPEUTIC_WHEEL.MANDALA_STYLE.INNER_CIRCLE_DECORATION && (
+          <Circle
+            cx={adjustedCenterX}
+            cy={adjustedCenterY}
+            r={strokeWidth - THERAPEUTIC_WHEEL.MANDALA_STYLE.INNER_CIRCLE_RADIUS}
+            fill="none"
+            stroke={theme.colors.phases[currentPhase]}
+            strokeWidth={2}
+            opacity={0.3}
+            strokeDasharray="4,4"
+          />
+        )}
+
+        {/* Prénom avec police heading (style thérapeutique) */}
         <Text
           x={adjustedCenterX}
           y={adjustedCenterY}
           textAnchor="middle"
           alignmentBaseline="middle"
           fontSize={size > WHEEL_CONSTANTS.SIZE_THRESHOLD ? WHEEL_CONSTANTS.FONT_SIZE.LARGE : WHEEL_CONSTANTS.FONT_SIZE.SMALL}
-          fontWeight="bold"
+          fontFamily={theme.fonts.heading}
+          fontWeight="normal"
           fill={theme.colors.phases[currentPhase]}
         >
           {displayName}
@@ -236,21 +296,23 @@ export default function CycleWheel({
         <Circle cx={markerX} cy={markerY} r={WHEEL_CONSTANTS.MARKER_RADIUS} fill="white" stroke="#333" strokeWidth={2} />
       </Svg>
 
-      {/* 🏷️ Légende des phases */}
-      <View style={styles.legend}>
-        {phases.map((phase, index) => (
-          <Pressable 
-            key={phase} 
-            style={styles.legendItem}
-            onPress={() => onPhasePress(phase)}
-          >
-            <View style={[styles.legendDot, { backgroundColor: colors[index] }]} />
-            <Text style={styles.legendText}>
-              {getPhaseSymbol(phase)} {getPhaseMetadata(phase)?.name}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
+      {/* 🏷️ Légende des phases - Conditionnelle */}
+      {WHEEL_CONSTANTS.SHOW_LEGEND && (
+        <View style={styles.legend}>
+          {phases.map((phase, index) => (
+            <Pressable 
+              key={phase} 
+              style={styles.legendItem}
+              onPress={() => onPhasePress(phase)}
+            >
+              <View style={[styles.legendDot, { backgroundColor: colors[index] }]} />
+              <Text style={styles.legendText}>
+                {getPhaseSymbol(phase)} {getPhaseMetadata(phase)?.name}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
     </View>
   );
 }

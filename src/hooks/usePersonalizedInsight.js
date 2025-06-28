@@ -1,48 +1,201 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 File: src/hooks/usePersonalizedInsight.js - OPTIMIZED VERSION
-// 🧩 Type: Hook React Premium
-// 📚 Description: Hook insights avec cache intelligent + performance + états enrichis
-// 🕒 Version: 2.0 - 2025-06-27 - POLISH + PERFORMANCE
-// 🧭 Features: Cache hooks + États enrichis + Performance + Memoization avancée
+// 📄 File: src/hooks/usePersonalizedInsight.js - RÉVÉLATION VERSION
+// 🚀 CASCADE 3.1: Intégration patterns personnels dans insights
 // ─────────────────────────────────────────────────────────
-//
+
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useUserStore } from '../stores/useUserStore';
+import { useUserIntelligence } from '../stores/useUserIntelligence';
 import { useCycle } from './useCycle';
 import { getPersonalizedInsight, refreshInsightsCache } from '../services/InsightsEngine';
 
-// ✅ CACHE HOOK-LEVEL (différent du cache service)
+// ✅ PATTERNS DE RÉVÉLATION PERSONNELLE
+const REVELATION_PATTERNS = {
+  timePatterns: {
+    morning: (hour) => `J'ai remarqué que tu es souvent active vers ${hour}h du matin. Une lève-tôt ! `,
+    afternoon: (hour) => `Tu sembles préférer l'après-midi vers ${hour}h pour nos échanges. `,
+    evening: (hour) => `Tu aimes nos moments le soir vers ${hour}h. Ces instants de réflexion te font du bien. `,
+    late: (hour) => `Même tard vers ${hour}h, tu prends soin de toi. Cette constance m'impressionne. `
+  },
+  
+  phasePreferences: {
+    menstrual: {
+      high: (topics) => `En phase menstruelle, tu explores souvent ${topics[0]}. Ce besoin d'introspection te caractérise. `,
+      medium: () => `Cette phase semble t'inviter à ralentir. `,
+      low: () => `Les règles sont une période unique pour toi. `
+    },
+    follicular: {
+      high: (topics) => `Ta créativité explose en phase folliculaire, surtout autour de ${topics[0]}. `,
+      medium: () => `Cette phase te donne des ailes, n'est-ce pas ? `,
+      low: () => `Tu sens cette énergie qui remonte ? `
+    },
+    ovulatory: {
+      high: (topics) => `En ovulation, tu rayonnes ! ${topics[0]} te passionne particulièrement. `,
+      medium: () => `Cette période te donne confiance. `,
+      low: () => `Ton énergie est à son pic. `
+    },
+    luteal: {
+      high: (topics) => `Phase lutéale = ton moment ${topics[0]}. Tu as trouvé ton rythme ! `,
+      medium: () => `Cette période intense te révèle, j'en suis sûre. `,
+      low: () => `Cette phase a ses défis mais aussi ses cadeaux. `
+    }
+  },
+  
+  conversationPatterns: {
+    consistent: (count) => `Nos ${count} conversations révèlent ta régularité. Tu prends vraiment soin de toi ! `,
+    growing: (count) => `${count} échanges déjà ! Tu t'ouvres de plus en plus. `,
+    occasional: () => `Même si nos moments sont espacés, ils sont précieux. `
+  },
+  
+  cyclicPatterns: {
+    autonomous: () => `Tu commences à faire tes propres liens cycle-ressenti. Ça, c'est de l'autonomie ! `,
+    learning: () => `Je vois que tu observes tes patterns. Continue, c'est passionnant ! `,
+    discovering: () => `Chaque jour t'apprend quelque chose sur ton cycle. `
+  }
+};
+
+// ✅ CACHE HOOK-LEVEL amélioré
 const hookCache = new Map();
 const HOOK_CACHE_TTL = 5 * 60 * 1000; // 5min
 
 export function usePersonalizedInsight(options = {}) {
   const user = useUserStore();
+  const intelligence = useUserIntelligence();
   const { currentPhase } = useCycle();
   
-  // ✅ États enrichis
+  // États enrichis
   const [insight, setInsight] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [usedInsights, setUsedInsights] = useState([]);
   const [lastGenerated, setLastGenerated] = useState(null);
   const [generationCount, setGenerationCount] = useState(0);
+  const [revelationLevel, setRevelationLevel] = useState(0); // 🌟 NOUVEAU
   
-  // ✅ Refs optimisées
   const lastContextRef = useRef(null);
   const abortControllerRef = useRef(null);
   const isFirstRun = useRef(true);
 
-  // ✅ Options avec defaults intelligents
   const {
     enrichWithContext = true,
     autoRefresh = true,
     cacheEnabled = true,
     maxUsedInsights = 20,
+    enableRevelation = true, // 🌟 NOUVEAU
     ...serviceOptions
   } = options;
 
-  // ✅ Contexte memoized pour éviter recalculs
+  // ✅ ANALYSE INTELLIGENCE POUR RÉVÉLATION
+  const intelligenceAnalysis = useMemo(() => {
+    const learning = intelligence.learning;
+    if (!learning || !enableRevelation) return null;
+
+    const analysis = {
+      hasTimePatterns: learning.timePatterns?.favoriteHours?.length > 0,
+      hasPhasePatterns: false,
+      hasConversationHistory: learning.conversationPrefs?.successfulPrompts?.length > 0,
+      confidence: learning.confidence || 0
+    };
+
+    // Vérifier patterns phases
+    if (learning.phasePatterns) {
+      const phaseData = learning.phasePatterns[currentPhase];
+      analysis.hasPhasePatterns = phaseData?.topics?.length > 0 || phaseData?.mood !== null;
+      analysis.currentPhaseTopics = phaseData?.topics || [];
+      analysis.currentPhaseMood = phaseData?.mood;
+    }
+
+    // Niveau de révélation (0-3)
+    let level = 0;
+    if (analysis.hasTimePatterns) level++;
+    if (analysis.hasPhasePatterns) level++;
+    if (analysis.hasConversationHistory) level++;
+    analysis.level = level;
+
+    return analysis;
+  }, [
+    intelligence.learning,
+    currentPhase,
+    enableRevelation
+  ]);
+
+  // ✅ GÉNÉRATION RÉVÉLATION PERSONNELLE
+  const generatePersonalRevelation = useCallback((baseInsight) => {
+    if (!intelligenceAnalysis || intelligenceAnalysis.level === 0) {
+      return baseInsight;
+    }
+
+    const revelations = [];
+
+    // 1. Pattern temporel
+    if (intelligenceAnalysis.hasTimePatterns) {
+      const favoriteHour = intelligence.learning.timePatterns.favoriteHours[0];
+      let timeCategory = 'morning';
+      if (favoriteHour >= 12 && favoriteHour < 17) timeCategory = 'afternoon';
+      else if (favoriteHour >= 17 && favoriteHour < 22) timeCategory = 'evening';
+      else if (favoriteHour >= 22 || favoriteHour < 6) timeCategory = 'late';
+
+      revelations.push(REVELATION_PATTERNS.timePatterns[timeCategory](favoriteHour));
+    }
+
+    // 2. Pattern phase actuelle
+    if (intelligenceAnalysis.hasPhasePatterns) {
+      const topics = intelligenceAnalysis.currentPhaseTopics;
+      const phasePatterns = REVELATION_PATTERNS.phasePreferences[currentPhase];
+      
+      if (topics.length >= 2) {
+        revelations.push(phasePatterns.high(topics));
+      } else if (topics.length === 1) {
+        revelations.push(phasePatterns.medium());
+      } else {
+        revelations.push(phasePatterns.low());
+      }
+    }
+
+    // 3. Pattern conversationnel
+    if (intelligenceAnalysis.hasConversationHistory) {
+      const conversationCount = intelligence.learning.conversationPrefs.successfulPrompts.length;
+      if (conversationCount >= 5) {
+        revelations.push(REVELATION_PATTERNS.conversationPatterns.consistent(conversationCount));
+      } else if (conversationCount >= 2) {
+        revelations.push(REVELATION_PATTERNS.conversationPatterns.growing(conversationCount));
+      } else {
+        revelations.push(REVELATION_PATTERNS.conversationPatterns.occasional());
+      }
+    }
+
+    // 4. Pattern autonomie cyclique
+    const engagementStore = require('../stores/useEngagementStore').useEngagementStore.getState();
+    const autonomySignals = engagementStore?.metrics?.autonomySignals || 0;
+    
+    if (autonomySignals >= 3) {
+      revelations.push(REVELATION_PATTERNS.cyclicPatterns.autonomous());
+    } else if (autonomySignals >= 1) {
+      revelations.push(REVELATION_PATTERNS.cyclicPatterns.learning());
+    } else if (engagementStore?.metrics?.daysUsed >= 3) {
+      revelations.push(REVELATION_PATTERNS.cyclicPatterns.discovering());
+    }
+
+    // ✅ ASSEMBLAGE INTELLIGENT
+    if (revelations.length === 0) {
+      return baseInsight;
+    }
+
+    // Choisir 1-2 révélations selon niveau
+    const selectedRevelations = revelations.slice(0, Math.min(2, revelations.length));
+    const revelationText = selectedRevelations.join('');
+
+    // Intégrer avec l'insight de base
+    return `${revelationText}${baseInsight}`;
+
+  }, [
+    intelligenceAnalysis,
+    intelligence.learning,
+    currentPhase
+  ]);
+
+  // Contexte memoized
   const contextKey = useMemo(() => {
     if (!user.hasMinimumData()) return null;
     
@@ -52,7 +205,10 @@ export function usePersonalizedInsight(options = {}) {
       prenom: user.profile?.prenom,
       tone: user.melune?.tone,
       journey: user.profile?.journeyChoice,
-      hasMinimumData: true
+      hasMinimumData: true,
+      // 🌟 AJOUT: inclure niveau révélation dans le cache
+      revelationLevel: intelligenceAnalysis?.level || 0,
+      confidence: intelligenceAnalysis?.confidence || 0
     });
   }, [
     user.persona.assigned,
@@ -60,10 +216,12 @@ export function usePersonalizedInsight(options = {}) {
     user.profile?.prenom,
     user.melune?.tone,
     user.profile?.journeyChoice,
-    user.hasMinimumData()
+    user.hasMinimumData(),
+    intelligenceAnalysis?.level,
+    intelligenceAnalysis?.confidence
   ]);
 
-  // ✅ Vérification cache hook
+  // Cache functions (inchangées)
   const getCachedInsight = useCallback((key) => {
     if (!cacheEnabled) return null;
     
@@ -78,7 +236,6 @@ export function usePersonalizedInsight(options = {}) {
     return cached.data;
   }, [cacheEnabled]);
 
-  // ✅ Sauvegarde cache hook
   const setCachedInsight = useCallback((key, data) => {
     if (!cacheEnabled) return;
     
@@ -87,14 +244,13 @@ export function usePersonalizedInsight(options = {}) {
       timestamp: Date.now()
     });
     
-    // Nettoyer cache si trop plein
     if (hookCache.size > 10) {
       const firstKey = hookCache.keys().next().value;
       hookCache.delete(firstKey);
     }
   }, [cacheEnabled]);
 
-  // ✅ Génération insight optimisée
+  // ✅ GÉNÉRATION INSIGHT ENRICHIE
   const generateInsight = useCallback(async (forceRefresh = false) => {
     if (!contextKey) {
       setInsight(null);
@@ -102,13 +258,11 @@ export function usePersonalizedInsight(options = {}) {
       return null;
     }
 
-    // Annuler requête précédente
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
     abortControllerRef.current = new AbortController();
 
-    // Vérifier cache d'abord
     if (!forceRefresh) {
       const cached = getCachedInsight(contextKey);
       if (cached) {
@@ -123,7 +277,6 @@ export function usePersonalizedInsight(options = {}) {
     setError(null);
 
     try {
-      // Contexte unifié pour InsightsEngine
       const context = {
         phase: currentPhase,
         persona: user.persona.assigned,
@@ -132,7 +285,6 @@ export function usePersonalizedInsight(options = {}) {
         profile: user.profile,
       };
 
-      // Options pour le service
       const serviceOpts = {
         usedInsights: forceRefresh ? [] : usedInsights.slice(-maxUsedInsights),
         enrichWithContext,
@@ -142,14 +294,21 @@ export function usePersonalizedInsight(options = {}) {
 
       const result = await getPersonalizedInsight(context, serviceOpts);
 
-      // Vérifier si la requête n'a pas été annulée
       if (abortControllerRef.current?.signal.aborted) {
         return null;
       }
 
-      // ✅ Enrichir résultat avec métadonnées
+      // 🌟 RÉVÉLATION INTELLIGENCE
+      const enhancedContent = enableRevelation && result.content
+        ? generatePersonalRevelation(result.content)
+        : result.content;
+
       const enrichedResult = {
         ...result,
+        content: enhancedContent, // Contenu enrichi avec révélations
+        originalContent: result.content, // Contenu original conservé
+        revelationLevel: intelligenceAnalysis?.level || 0,
+        hasPersonalizedElements: enableRevelation && intelligenceAnalysis?.level > 0,
         generatedAt: Date.now(),
         contextKey,
         isFromCache: false
@@ -158,24 +317,22 @@ export function usePersonalizedInsight(options = {}) {
       setInsight(enrichedResult);
       setLastGenerated(Date.now());
       setGenerationCount(prev => prev + 1);
+      setRevelationLevel(intelligenceAnalysis?.level || 0);
       
-      // Tracking anti-répétition intelligent
       if (result.id && !usedInsights.includes(result.id)) {
         setUsedInsights(prev => {
           const updated = [...prev, result.id];
-          // Garder seulement les N derniers
           return updated.slice(-maxUsedInsights);
         });
       }
 
-      // Sauvegarder en cache
       setCachedInsight(contextKey, enrichedResult);
 
       return enrichedResult;
 
     } catch (err) {
       if (err.name === 'AbortError') {
-        return null; // Requête annulée
+        return null;
       }
       
       console.error('🚨 usePersonalizedInsight error:', err);
@@ -195,60 +352,35 @@ export function usePersonalizedInsight(options = {}) {
     serviceOptions,
     maxUsedInsights,
     getCachedInsight,
-    setCachedInsight
+    setCachedInsight,
+    enableRevelation,
+    generatePersonalRevelation,
+    intelligenceAnalysis
   ]);
 
-  // ✅ Auto-génération intelligente avec debounce
+  // Auto-génération (inchangée)
   useEffect(() => {
-    console.log('🪝 === AUTO-REFRESH EFFECT ===');
-    console.log('🪝 autoRefresh:', autoRefresh);
-    console.log('🪝 contextKey:', contextKey);
-    console.log('🪝 lastContextRef.current:', lastContextRef.current);
-    console.log('🪝 isFirstRun.current:', isFirstRun.current);
-    console.log('🪝 Current insight:', insight?.content?.substring(0, 50));
-    
-    if (!autoRefresh || !contextKey) {
-      console.log('🪝 Skipping auto-refresh (no autoRefresh or contextKey)');
-      return;
-    }
+    if (!autoRefresh || !contextKey) return;
 
-    // ✅ FIX : Générer si pas d'insight OU contexte changé
     const shouldGenerate = 
-      !insight ||                                              // Pas d'insight actuel
-      !insight.content ||                                      // Insight vide
-      lastContextRef.current !== contextKey ||                 // Contexte changé
-      isFirstRun.current;                                      // Premier run
+      !insight ||
+      !insight.content ||
+      lastContextRef.current !== contextKey ||
+      isFirstRun.current;
 
-    console.log('🪝 Should generate:', shouldGenerate);
-    console.log('🪝 Reasons:', {
-      noInsight: !insight,
-      noContent: !insight?.content,
-      contextChanged: lastContextRef.current !== contextKey,
-      firstRun: isFirstRun.current
-    });
+    if (!shouldGenerate) return;
 
-    if (!shouldGenerate) {
-      console.log('🪝 Skipping generation - insight already exists and context unchanged');
-      return;
-    }
-
-    console.log('🪝 Proceeding with generation...');
     lastContextRef.current = contextKey;
     isFirstRun.current = false;
 
-    // Debounce pour éviter trop de requêtes
     const timeoutId = setTimeout(() => {
-      console.log('🪝 Debounce timeout - calling generateInsight');
       generateInsight();
     }, 100);
 
-    return () => {
-      console.log('🪝 Cleaning up timeout');
-      clearTimeout(timeoutId);
-    };
-  }, [contextKey, generateInsight, autoRefresh, insight]); // ✅ AJOUT insight dans les deps
+    return () => clearTimeout(timeoutId);
+  }, [contextKey, generateInsight, autoRefresh, insight]);
 
-  // ✅ Cleanup au démontage
+  // Cleanup (inchangé)
   useEffect(() => {
     return () => {
       if (abortControllerRef.current) {
@@ -257,7 +389,7 @@ export function usePersonalizedInsight(options = {}) {
     };
   }, []);
 
-  // ✅ Fonctions utilitaires memoized
+  // Actions memoized
   const actions = useMemo(() => ({
     refresh: () => generateInsight(true),
     generate: () => generateInsight(false),
@@ -271,10 +403,11 @@ export function usePersonalizedInsight(options = {}) {
     }
   }), [generateInsight, contextKey, setCachedInsight]);
 
-  // ✅ États calculés memoized
+  // États calculés enrichis
   const computedState = useMemo(() => ({
     // Contenu facilement accessible
     content: insight?.content || null,
+    originalContent: insight?.originalContent || null, // 🌟 NOUVEAU
     hasInsight: !!insight?.content,
     
     // Métadonnées enrichies
@@ -284,6 +417,11 @@ export function usePersonalizedInsight(options = {}) {
     tone: insight?.tone || null,
     jezaApproval: insight?.jezaApproval || 0,
     
+    // 🌟 NOUVEAUX: Métadonnées révélation
+    revelationLevel,
+    hasPersonalizedElements: insight?.hasPersonalizedElements || false,
+    intelligenceConfidence: intelligenceAnalysis?.confidence || 0,
+    
     // États avancés
     usedInsightsCount: usedInsights.length,
     isReady: !!contextKey && !loading,
@@ -292,56 +430,75 @@ export function usePersonalizedInsight(options = {}) {
     generationCount,
     
     // Timing
-    isRecent: lastGenerated && (Date.now() - lastGenerated < 60000), // < 1min
+    isRecent: lastGenerated && (Date.now() - lastGenerated < 60000),
     age: lastGenerated ? Date.now() - lastGenerated : null,
     
-    // Qualité
+    // Qualité enrichie
     quality: insight?.relevanceScore > 80 ? 'excellent' : 
              insight?.relevanceScore > 60 ? 'good' : 
-             insight?.relevanceScore > 40 ? 'fair' : 'basic'
-  }), [insight, usedInsights.length, contextKey, loading, lastGenerated, generationCount]);
+             insight?.relevanceScore > 40 ? 'fair' : 'basic',
+    
+    // 🌟 NOUVEAU: Statut personnalisation
+    personalizationStatus: intelligenceAnalysis?.level >= 2 ? 'high' :
+                          intelligenceAnalysis?.level === 1 ? 'medium' : 'basic'
+  }), [
+    insight, 
+    usedInsights.length, 
+    contextKey, 
+    loading, 
+    lastGenerated, 
+    generationCount,
+    revelationLevel,
+    intelligenceAnalysis
+  ]);
 
   return {
-    // ✅ État principal
+    // État principal
     insight,
     loading,
     error,
     
-    // ✅ États calculés
+    // États calculés
     ...computedState,
     
-    // ✅ Actions
+    // Actions
     ...actions,
     
-    // ✅ Debug (dev uniquement)
+    // 🌟 NOUVEAU: Données intelligence pour debugging
+    intelligenceAnalysis: intelligenceAnalysis,
+    
+    // Debug (dev uniquement)
     ...(process.env.NODE_ENV === 'development' && {
       debug: {
         contextKey,
         usedInsights,
         cacheSize: hookCache.size,
-        generationCount
+        generationCount,
+        revelationLevel,
+        intelligenceLevel: intelligenceAnalysis?.level
       }
     })
   };
 }
 
-// ✅ HOOKS SPÉCIALISÉS OPTIMISÉS
-
+// Hooks spécialisés inchangés
 export function useOnboardingInsight() {
   return usePersonalizedInsight({
     enrichWithContext: true,
     autoRefresh: false,
-    cacheEnabled: false, // Toujours frais pour onboarding
-    maxUsedInsights: 5
+    cacheEnabled: false,
+    maxUsedInsights: 5,
+    enableRevelation: false // Pas de révélation en onboarding
   });
 }
 
 export function useNotebookInsight() {
   return usePersonalizedInsight({
-    enrichWithContext: false, // Contenu plus brut
+    enrichWithContext: false,
     autoRefresh: true,
     cacheEnabled: true,
-    maxUsedInsights: 15
+    maxUsedInsights: 15,
+    enableRevelation: true // 🌟 Révélation activée
   });
 }
 
@@ -350,11 +507,12 @@ export function useDailyInsight() {
     enrichWithContext: true,
     autoRefresh: true,
     cacheEnabled: true,
-    maxUsedInsights: 10
+    maxUsedInsights: 10,
+    enableRevelation: true // 🌟 Révélation activée
   });
 }
 
-// ✅ HOOK BATCH POUR PREVIEWS
+// Hook batch inchangé
 export function useInsightsPreviews(phases = [], count = 3) {
   const [previews, setPreviews] = useState({});
   const [loading, setLoading] = useState(false);
