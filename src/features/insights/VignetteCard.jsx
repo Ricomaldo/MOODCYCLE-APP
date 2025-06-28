@@ -1,6 +1,6 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 File: src/features/shared/VignetteCard.jsx
+// 📄 File: src/features/insights/VignetteCard.jsx
 // 🧩 Type: Composant Réutilisable
 // 📚 Description: Carte vignette avec actions navigation complètes
 // 🕒 Version: 1.1 - 2025-06-21 - DEBUG AJOUTÉ

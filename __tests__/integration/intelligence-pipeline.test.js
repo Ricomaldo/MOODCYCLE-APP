@@ -2,7 +2,7 @@
 // ─────────────────────────────────────────────────────────
 // 📄 Fichier : __tests__/integration/intelligence-pipeline.test.js
 // 🧩 Type : Test Intégration Pipeline Intelligence
-// 📚 Description : Tests intégration pipeline intelligence complet PersonalizationEngine → useSmartSuggestions → ChatView
+// 📚 Description : Tests intégration pipeline intelligence complet PersonalizationEngine → useSmartSuggestions → ChatModal
 // 🕒 Version : 2.0 - 2025-01-27
 // 🧭 Utilisé dans : validation connexions intelligence
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -12,7 +12,7 @@ import React from 'react';
 import { render, fireEvent, waitFor, act, renderHook } from '@testing-library/react-native';
 
 // ✅ IMPORTS CORRECTS depuis __tests__/integration/
-import ChatView from '../../app/(tabs)/chat/ChatView';
+import ChatModal from '../../src/features/chat/ChatModal';
 import { useSmartSuggestions } from '../../src/hooks/useSmartSuggestions';
 import { createPersonalizationEngine } from '../../src/services/PersonalizationEngine';
 
@@ -262,9 +262,9 @@ describe('🧠 Pipeline Intelligence Intégré - Tests Complets', () => {
   //  TESTS SIMPLIFIÉS POUR ÉVITER LES BOUCLES INFINIES
   // ──────────────────────────────────────────────────────
 
-  test('✅ ChatView affiche les éléments de base', () => {
-    // ✅ Test simplifié sans render ChatView complet
-    const mockChatViewProps = {
+  test('✅ ChatModal affiche les éléments de base', () => {
+    // ✅ Test simplifié sans render ChatModal complet
+    const mockChatModalProps = {
       intelligenceContext: {
         prompts: ['Comment te sens-tu ?'],
         actions: [{ type: 'chat', title: 'Explore', icon: '💭' }],
@@ -274,8 +274,8 @@ describe('🧠 Pipeline Intelligence Intégré - Tests Complets', () => {
     };
 
     // Tester seulement les données, pas le render complet
-    expect(mockChatViewProps.intelligenceContext.prompts).toHaveLength(1);
-    expect(mockChatViewProps.intelligenceContext.actions[0].type).toBe('chat');
+    expect(mockChatModalProps.intelligenceContext.prompts).toHaveLength(1);
+    expect(mockChatModalProps.intelligenceContext.actions[0].type).toBe('chat');
   });
 
   test('✅ Adaptation suggestions pour différents personas', () => {
@@ -303,7 +303,7 @@ describe('🧠 Pipeline Intelligence Intégré - Tests Complets', () => {
   test('✅ Pipeline intelligence complet performant', () => {
     const start = performance.now();
 
-    // ✅ Tester seulement le hook, pas ChatView
+    // ✅ Tester seulement le hook, pas ChatModal
     const { result } = renderHook(() => useSmartSuggestions());
     
     // Simuler interactions

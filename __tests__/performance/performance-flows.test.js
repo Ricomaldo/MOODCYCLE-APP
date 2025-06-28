@@ -15,7 +15,7 @@ import { render, fireEvent, waitFor, act, renderHook } from '@testing-library/re
 import { useSmartSuggestions } from '../../src/hooks/useSmartSuggestions';
 import { useVignettes } from '../../src/hooks/useVignettes';
 import { useAdaptiveInterface } from '../../src/hooks/useAdaptiveInterface';
-import ChatView from '../../app/(tabs)/chat/ChatView';
+import ChatModal from '../../src/features/chat/ChatModal';
 
 // ✅ MOCKS CENTRALISÉS
 import { mockUserData, mockIntelligence, mockChatStore, mockEngagementStore } from '../__mocks__/stores';

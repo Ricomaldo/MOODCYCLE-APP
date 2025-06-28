@@ -13,5 +13,5 @@ export default function Index() {
   // return <Redirect href="/onboarding/100-promesse" />;
 
   // Redirection normale vers l'app principale :
-  return <Redirect href="/(tabs)/home" />;
+  return <Redirect href="/(tabs)/cycle" />;
 }

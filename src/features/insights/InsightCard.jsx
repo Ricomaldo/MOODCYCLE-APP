@@ -1,11 +1,10 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 File: src/features/shared/InsightCard.jsx - ACTIONS VISIBLES
+// 📄 File: src/features/shared/InsightCard.jsx - GLASSMORPHISM
 // 🧩 Type: UI Component Premium
-// 📚 Description: Carte insight avec actions subtiles mais visibles
-// 🕒 Version: 7.0 - 2025-06-27 - ACTIONS VISIBLES + BORDER RADIUS UNIFIÉ
-// 🧭 Features: Actions contrastées + BorderRadius theme + UX claire
-// ─────────────────────────────────────────────────────────
+// 📚 Description: Carte insight avec effet glassmorphism signature
+// 🕒 Version: 8.0 - 2025-06-28 - GLASSMORPHISM + STYLE UNIFIÉ
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
 import React, { useState, useRef } from 'react';
 import { 
@@ -22,7 +21,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { BodyText, Caption } from '../../core/ui/Typography';
 import { useUserStore } from '../../stores/useUserStore';
 import { useNotebookStore } from '../../stores/useNotebookStore';
-import ShareableCard from './ShareableCard';
+import ShareableCard from '../shared/ShareableCard';
 
 export default function InsightCard({ 
   insight, 
@@ -38,21 +37,15 @@ export default function InsightCard({
   const { profile } = useUserStore();
   const { addEntry } = useNotebookStore();
   
-  // États
   const [isSharing, setIsSharing] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   
-  // Refs
   const shareCardRef = useRef();
   const saveIconAnim = useRef(new Animated.Value(1)).current;
   
-  // ✅ DONNÉES CALCULÉES
   const phaseColor = theme.colors.phases[phase];
-  const textColor = theme.getTextColorOnPhase(phase);
-  const isLightPhase = theme.phaseNeedsBlackText(phase);
   const userName = profile?.prenom || 'toi';
   
-  // ✅ FORMATAGE LABEL SOURCE
   const getSourceLabel = () => {
     const labels = {
       daily: 'Insight du jour',
@@ -74,14 +67,12 @@ export default function InsightCard({
     return names[phaseKey] || phaseKey;
   };
 
-  // ✅ ACTION HANDLERS
   const handleSave = async () => {
     try {
       if (Haptics.impactAsync) {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       }
 
-      // ✅ Extraire le contenu textuel de l'insight
       const insightContent = typeof insight === 'object' && insight.content ? insight.content : insight;
       
       const entry = {
@@ -101,7 +92,6 @@ export default function InsightCard({
       addEntry(entry.content, entry.type, [`#${phase}`, '#insight']);
       setIsSaved(true);
       
-      // Callback custom
       if (onSave) onSave(entry);
       
     } catch (error) {
@@ -116,7 +106,6 @@ export default function InsightCard({
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       }
 
-      // Attendre le rendu de ShareableCard
       setTimeout(async () => {
         const uri = await captureRef(shareCardRef, {
           format: 'png',
@@ -140,48 +129,41 @@ export default function InsightCard({
   return (
     <>
       <View style={[styles.container, style]}>
-        {/* ✅ HEADER AVEC SOURCE + ACTIONS VISIBLES */}
+        {/* Header avec source + actions */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <View style={[styles.sourceIndicator, { 
-              backgroundColor: isLightPhase ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.2)' 
-            }]}>
-              <BodyText style={{ color: textColor, fontSize: 12 }}>✨</BodyText>
+            <View style={styles.sourceIndicator}>
+              <BodyText style={styles.sourceIcon}>✨</BodyText>
             </View>
-            <Caption style={[styles.sourceLabel, { color: textColor }]}>
+            <Caption style={styles.sourceLabel}>
               {getSourceLabel()}
             </Caption>
           </View>
           
-          {/* ✅ ACTIONS VISIBLES ET CONTRASTÉES */}
           {showActions && (
             <View style={styles.actionsContainer}>
               <TouchableOpacity 
-                style={[styles.actionButton, {
-                  backgroundColor: isLightPhase ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.3)',
-                }]}
+                style={styles.actionButton}
                 onPress={handleSave}
               >
                 <Animated.View style={{ transform: [{ scale: saveIconAnim }] }}>
                   <Feather 
                     name={isSaved ? "bookmark" : "bookmark"} 
                     size={16} 
-                    color={isLightPhase ? theme.colors.primary : 'white'}
+                    color={phaseColor}
                     style={{ opacity: isSaved ? 1 : 0.8 }}
                   />
                 </Animated.View>
               </TouchableOpacity>
               
               <TouchableOpacity 
-                style={[styles.actionButton, {
-                  backgroundColor: isLightPhase ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.3)',
-                }]}
+                style={styles.actionButton}
                 onPress={handleShare}
               >
                 <Feather 
                   name="share" 
                   size={16} 
-                  color={isLightPhase ? theme.colors.secondary : 'white'}
+                  color={phaseColor}
                   style={{ opacity: 0.8 }}
                 />
               </TouchableOpacity>
@@ -189,39 +171,30 @@ export default function InsightCard({
           )}
         </View>
 
-        {/* ✅ CONTENU INSIGHT */}
+        {/* Contenu insight */}
         <View style={styles.content}>
-          <BodyText style={[styles.insightText, { color: textColor }]}>
+          <BodyText style={styles.insightText}>
             {typeof insight === 'object' && insight.content ? insight.content : insight}
           </BodyText>
         </View>
 
-        {/* ✅ FOOTER AVEC PHASE + PERSONA */}
+        {/* Footer avec phase + persona */}
         <View style={styles.footer}>
           <View style={styles.phaseInfo}>
-            <View style={[styles.phaseDot, { 
-              backgroundColor: textColor,
-              opacity: 0.6 
-            }]} />
-            <Caption style={[styles.phaseLabel, { color: textColor }]}>
+            <View style={[styles.phaseDot, { backgroundColor: phaseColor }]} />
+            <Caption style={styles.phaseLabel}>
               {getPhaseDisplayName(phase)}
             </Caption>
           </View>
           
           {persona && (
-            <Caption style={[styles.personaHint, { color: textColor }]}>
+            <Caption style={styles.personaHint}>
               {userName}
             </Caption>
           )}
         </View>
-
-        {/* ✅ GRADIENT BORDER */}
-        <View style={[styles.gradientBorder, { 
-          backgroundColor: isLightPhase ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.1)' 
-        }]} />
       </View>
 
-      {/* ✅ SHAREABLE CARD (HIDDEN) */}
       {isSharing && (
         <ShareableCard
           ref={shareCardRef}
@@ -237,28 +210,26 @@ export default function InsightCard({
 
 const getStyles = (theme, phase) => {
   const phaseColor = theme.colors.phases[phase];
-  const isLightPhase = theme.phaseNeedsBlackText(phase);
   
   return StyleSheet.create({
     container: {
-      backgroundColor: phaseColor,
-      borderRadius: theme.borderRadius.large, // ✅ UNIFIÉ
+      // ✅ GLASSMORPHISM SIGNATURE
+      backgroundColor: phaseColor + '15', // 15% opacity
+      backdropFilter: 'blur(20px)',
+      borderRadius: theme.borderRadius.large,
+      borderWidth: 1.5,
+      borderColor: phaseColor + '30',
       overflow: 'hidden',
       position: 'relative',
       
       // ✅ SHADOW PREMIUM COLORÉE
       shadowColor: phaseColor,
       shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.25,
-      shadowRadius: 16,
+      shadowOpacity: 0.15,
+      shadowRadius: 24,
       elevation: 8,
-      
-      // ✅ BORDER SUBTIL
-      borderWidth: 1,
-      borderColor: isLightPhase ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.15)',
     },
     
-    // ✅ HEADER AVEC ACTIONS VISIBLES
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -276,19 +247,27 @@ const getStyles = (theme, phase) => {
     sourceIndicator: {
       width: 24,
       height: 24,
-      borderRadius: theme.borderRadius.medium, // ✅ UNIFIÉ
+      borderRadius: theme.borderRadius.medium,
       alignItems: 'center',
       justifyContent: 'center',
+      backgroundColor: phaseColor + '20',
+      borderWidth: 1,
+      borderColor: phaseColor + '40',
+    },
+    sourceIcon: {
+      fontSize: 12,
+      color: phaseColor,
     },
     sourceLabel: {
       fontSize: 11,
       fontWeight: '600',
       textTransform: 'uppercase',
       letterSpacing: 0.5,
+      color: phaseColor,
       opacity: 0.8,
     },
     
-    // ✅ ACTIONS CONTRASTÉES ET VISIBLES
+    // ✅ ACTIONS GLASSMORPHISM
     actionsContainer: {
       flexDirection: 'row',
       gap: theme.spacing.s,
@@ -296,9 +275,13 @@ const getStyles = (theme, phase) => {
     actionButton: {
       width: 36,
       height: 36,
-      borderRadius: theme.borderRadius.medium, // ✅ UNIFIÉ
+      borderRadius: theme.borderRadius.medium,
       alignItems: 'center',
       justifyContent: 'center',
+      backgroundColor: 'rgba(255,255,255,0.8)',
+      backdropFilter: 'blur(10px)',
+      borderWidth: 1,
+      borderColor: phaseColor + '30',
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
@@ -306,7 +289,6 @@ const getStyles = (theme, phase) => {
       elevation: 2,
     },
     
-    // ✅ CONTENU
     content: {
       paddingHorizontal: theme.spacing.l,
       paddingVertical: theme.spacing.l,
@@ -317,9 +299,9 @@ const getStyles = (theme, phase) => {
       fontWeight: '500',
       fontFamily: theme.fonts.body,
       textAlign: 'left',
+      color: theme.colors.text,
     },
     
-    // ✅ FOOTER
     footer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
@@ -336,29 +318,22 @@ const getStyles = (theme, phase) => {
     phaseDot: {
       width: 6,
       height: 6,
-      borderRadius: theme.borderRadius.small, // ✅ UNIFIÉ (pill trop gros)
+      borderRadius: 3,
+      opacity: 0.8,
     },
     phaseLabel: {
       fontSize: 12,
       fontWeight: '500',
-      opacity: 0.7,
+      color: phaseColor,
+      opacity: 0.8,
       textTransform: 'capitalize',
     },
     personaHint: {
       fontSize: 12,
       fontWeight: '500',
-      opacity: 0.8,
+      color: phaseColor,
+      opacity: 0.7,
       fontStyle: 'italic',
-    },
-    
-    // ✅ GRADIENT BORDER
-    gradientBorder: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: 1,
-      borderRadius: theme.borderRadius.large, // ✅ UNIFIÉ
     },
   });
 };

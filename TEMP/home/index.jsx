@@ -1,18 +1,11 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 Fichier : app/(tabs)/chat/_layout.jsx
-// 🧩 Type : Composant Écran
-// 📚 Description : Composant affichant l’écran principal
+// 📄 Fichier : app/(tabs)/chat/index.jsx
+// 🧩 Type : Route d’écran (Screen Route)
+// 📚 Description : Route d’accès à la vue principale du chat (ChatModal)
 // 🕒 Version : 3.0 - 2025-06-21
-// 🧭 Utilisé dans : /notebook chat route
+// 🧭 Utilisé dans : navigation chat (onglet)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
-import { Stack } from "expo-router";
-
-export default function ChatLayout() {
-  return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="index" />
-    </Stack>
-  );
-}
+import HomeView from "./HomeView";
+export default HomeView;

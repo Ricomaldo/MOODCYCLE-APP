@@ -10,7 +10,7 @@ import React from 'react';
 import { View, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../../hooks/useTheme';
-import { Heading3, BodyText, Caption } from '../../../core/ui/Typography';
+import { Heading3, BodyText, Caption } from '../../ui/Typography';
 
 // 🍎 Documents légaux avec statuts pour Apple compliance
 const LEGAL_DOCUMENTS = [

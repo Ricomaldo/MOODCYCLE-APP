@@ -13,7 +13,7 @@ import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../../hooks/useTheme';
 import { Heading, BodyText } from '../../../core/ui/Typography';
 import { useUserStore } from '../../../stores/useUserStore';
-import MeluneAvatar from '../MeluneAvatar';
+import MeluneAvatar from '../../../features/shared/MeluneAvatar';
 
 // Styles d'avatar disponibles
 const AVATAR_STYLES = [

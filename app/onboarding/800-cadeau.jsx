@@ -16,7 +16,7 @@ import VignettesService from '../../src/services/VignettesService';
 import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
-import VignetteCard from '../../src/features/shared/VignetteCard';
+import VignetteCard from '../../src/features/insights/VignetteCard';
 import { BodyText } from '../../src/core/ui/Typography';
 import { useTheme } from '../../src/hooks/useTheme';
 

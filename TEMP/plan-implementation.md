@@ -106,7 +106,7 @@ const {
   <View style={styles.tagsContainer}>
 
 // ────────────────────────────────────────────────────────────
-// 📋 VÉRIFICATION ChatView.jsx
+// 📋 VÉRIFICATION ChatModal.jsx
 // ────────────────────────────────────────────────────────────
 
 // ✅ DÉJÀ INTÉGRÉ : Smart Suggestions
@@ -141,17 +141,17 @@ const guidanceIntensity = config.guidanceLevel; // 'low', 'medium', 'high'
 NIVEAU DISCOVERY (débutante) :
 - CycleView : 2 vignettes max, guidance visible
 - NotebookView : Filtres simplifiés, pas de tags avancés
-- ChatView : Prompts basiques, guidance intensive
+- ChatModal : Prompts basiques, guidance intensive
 
 NIVEAU LEARNING (intermédiaire) :
 - CycleView : 3 vignettes, progress bars  
 - NotebookView : Filtres complets, tags populaires
-- ChatView : Prompts avancés, guidance modérée
+- ChatModal : Prompts avancés, guidance modérée
 
 NIVEAU AUTONOMOUS (experte) :
 - CycleView : 4 vignettes, interface complète
 - NotebookView : Toutes fonctionnalités, analytics
-- ChatView : Prompts experts, guidance minimale
+- ChatModal : Prompts experts, guidance minimale
 */
 
 // ────────────────────────────────────────────────────────────
@@ -161,7 +161,7 @@ NIVEAU AUTONOMOUS (experte) :
 /*
 □ CycleView adapte nombre vignettes selon maturité
 □ NotebookView simplifie filtres pour discovery  
-□ ChatView adapte guidance selon niveau
+□ ChatModal adapte guidance selon niveau
 □ Transitions fluides entre niveaux
 □ Performance maintenue (pas de re-renders excessifs)
 □ Métriques engagement trackées correctement

@@ -2,21 +2,21 @@
 // ─────────────────────────────────────────────────────────
 // 📄 Fichier : src/core/layout/ScreenContainer.jsx
 // 🧩 Type : Composant utilitaire (layout)
-// 📚 Description : Container centralisant la gestion du SafeArea pour tous les écrans principaux
-// 🕒 Version : 3.0 - 2025-06-21
-// 🧭 Utilisé dans : tous les écrans principaux (tabs, onboarding, etc.)
+// 📚 Description : Container avec SafeArea + FloatingMelune intégrée
+// 🕒 Version : 4.0 - 2025-06-28 - ARCHITECTURE FINALE + MELUNE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
 import React from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useTheme } from "../../hooks/useTheme"; // Importer le hook thème
+import FloatingMelune from "./FloatingMelune";
 
 export default function ScreenContainer({
   children,
   style,
   edges = ["top", "bottom"],
-  hasTabs = false, // Nouvelle prop pour les écrans avec tabs
+  hasTabs = false,
+  showMelune = true, // Nouvelle prop pour contrôler Melune
 }) {
   const insets = useSafeAreaInsets();
 
@@ -32,6 +32,7 @@ export default function ScreenContainer({
       ]}
     >
       {children}
+      {showMelune && <FloatingMelune />}
     </View>
   );
 }

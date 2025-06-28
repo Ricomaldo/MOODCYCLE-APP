@@ -14,7 +14,7 @@ import { render, waitFor, act, renderHook } from '@testing-library/react-native'
 // ✅ IMPORTS PIPELINE VIGNETTES
 import { useVignettes, usePhaseVignettes, usePersonaVignettes } from '../../src/hooks/useVignettes';
 import VignettesService from '../../src/services/VignettesService';
-import CycleView from '../../app/(tabs)/cycle/CycleView';
+import ChatModal from '../../src/features/chat/ChatModal';
 
 // ✅ MOCKS CENTRALISÉS RÉUTILISÉS
 import { mockUserData, mockIntelligence, mockChatStore, mockEngagementStore } from '../__mocks__/stores';

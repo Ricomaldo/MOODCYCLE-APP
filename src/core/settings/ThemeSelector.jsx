@@ -1,6 +1,6 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 File: src/features/shared/ThemeSelector.jsx
+// 📄 File: src/core/settings/ThemeSelector.jsx
 // 🧩 Type: UI Component
 // 📚 Description: Sélecteur de thème (clair/sombre/système) pour les paramètres
 // 🕒 Version: 1.0 - 2025-01-15
@@ -12,7 +12,7 @@ import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../../hooks/useTheme';
-import { BodyText, Caption } from '../../core/ui/Typography';
+import { BodyText, Caption } from '../ui/Typography';
 
 const THEME_OPTIONS = [
   { 

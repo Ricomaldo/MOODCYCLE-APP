@@ -1,11 +1,10 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 File: src/features/chat/ChatBubble.jsx - ACTIONS VISIBLES
+// 📄 File: src/features/chat/ChatBubble.jsx - GLASSMORPHISM
 // 🧩 Type: UI Component
-// 📚 Description: Bulle chat avec actions subtiles mais visibles
-// 🕒 Version: 7.0 - 2025-06-27 - ACTIONS VISIBLES + BORDER RADIUS UNIFIÉ
-// 🧭 Pattern: Tap → Actions contrastées visibles
-// ─────────────────────────────────────────────────────────
+// 📚 Description: Bulle chat avec effet glassmorphism signature unifié
+// 🕒 Version: 8.0 - 2025-06-28 - GLASSMORPHISM + STYLE UNIFIÉ
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
 import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
@@ -14,7 +13,6 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { BodyText } from '../../core/ui/Typography';
 import { useTheme } from '../../hooks/useTheme';
-import { useUserStore } from '../../stores/useUserStore';
 import { useNotebookStore } from '../../stores/useNotebookStore';
 import { useCycle } from '../../hooks/useCycle';
 import MeluneAvatar from '../shared/MeluneAvatar';
@@ -30,9 +28,9 @@ export default function ChatBubble({
   const { theme } = useTheme();
   const { saveFromChat } = useNotebookStore();
   const { currentPhase } = useCycle();
-  const styles = getStyles(theme);
+  const styles = getStyles(theme, phase);
   
-  const [actionsVisible, setActionsVisible] = useState(false);
+  const [actionsVisible, setActionsVisible] = useState(true);
   
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const translateYAnim = useRef(new Animated.Value(5)).current;
@@ -68,7 +66,6 @@ export default function ChatBubble({
     transform: [{ translateY: translateYAnim }],
   };
 
-  // ✅ HANDLERS STANDARDISÉS
   const handleSave = () => {
     if (Haptics.impactAsync) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -77,7 +74,6 @@ export default function ChatBubble({
     const entryId = saveFromChat(message, 'melune');
     setActionsVisible(false);
     
-    // Callback externe si fourni
     if (onSave) onSave(entryId);
   };
 
@@ -99,7 +95,6 @@ export default function ChatBubble({
     });
   };
 
-  // ✅ TAP POUR RÉVÉLER ACTIONS
   const handleBubblePress = () => {
     if (!isUser && showActions) {
       setActionsVisible(!actionsVisible);
@@ -125,16 +120,15 @@ export default function ChatBubble({
         
         <View style={styles.bubbleAndActions}>
           <TouchableOpacity
-            style={[styles.meluneBubble, { backgroundColor: theme.colors.phases[phase] }]}
+            style={styles.meluneBubble}
             onPress={handleBubblePress}
             activeOpacity={0.9}
           >
-            <BodyText style={[styles.meluneText, { color: theme.getTextColorOnPhase(phase) }]}>
+            <BodyText style={styles.meluneText}>
               {message}
             </BodyText>
           </TouchableOpacity>
 
-          {/* ✅ ACTIONS VISIBLES ET CONTRASTÉES */}
           {showActions && (
             <Animated.View 
               style={[
@@ -146,7 +140,7 @@ export default function ChatBubble({
                 style={styles.actionButton}
                 onPress={handleSave}
               >
-                <Feather name="bookmark" size={16} color={theme.colors.primary} />
+                <Feather name="bookmark" size={16} color={theme.colors.phases[phase]} />
                 <BodyText style={styles.actionText}>Épingler</BodyText>
               </TouchableOpacity>
               
@@ -154,7 +148,7 @@ export default function ChatBubble({
                 style={styles.actionButton}
                 onPress={handleNote}
               >
-                <Feather name="edit-3" size={16} color={theme.colors.secondary} />
+                <Feather name="edit-3" size={16} color={theme.colors.phases[phase]} />
                 <BodyText style={styles.actionText}>Noter</BodyText>
               </TouchableOpacity>
             </Animated.View>
@@ -165,81 +159,101 @@ export default function ChatBubble({
   );
 }
 
-const getStyles = (theme) => StyleSheet.create({
-  userContainer: {
-    alignItems: 'flex-end',
-    marginVertical: 4,
-  },
-  userBubble: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.large, // ✅ UNIFIÉ
-    borderBottomRightRadius: theme.borderRadius.small, // ✅ UNIFIÉ
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    maxWidth: '75%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  userText: {
-    color: 'white',
-    fontSize: 16,
-    lineHeight: 20,
-  },
-  meluneContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginVertical: 8,
-    paddingRight: 40,
-  },
-  bubbleAndActions: {
-    flex: 1,
-    marginLeft: 8,
-  },
-  meluneBubble: {
-    borderRadius: theme.borderRadius.large, // ✅ UNIFIÉ
-    borderBottomLeftRadius: theme.borderRadius.small, // ✅ UNIFIÉ
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    maxWidth: '85%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  meluneText: {
-    fontSize: 16,
-    lineHeight: 22,
-  },
+const getStyles = (theme, phase) => {
+  const phaseColor = theme.colors.phases[phase];
   
-  // ✅ ACTIONS VISIBLES ET CONTRASTÉES
-  actionsContainer: {
-    flexDirection: 'row',
-    marginTop: 12,
-    gap: 12,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.large, // ✅ UNIFIÉ
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    gap: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  actionText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: theme.colors.text,
-  },
-});
+  return StyleSheet.create({
+    userContainer: {
+      alignItems: 'flex-end',
+      marginVertical: 4,
+    },
+    userBubble: {
+      // ✅ GLASSMORPHISM POUR USER AUSSI
+      backgroundColor: theme.colors.primary + '20',
+      backdropFilter: 'blur(20px)',
+      borderWidth: 1.5,
+      borderColor: theme.colors.primary + '40',
+      borderRadius: theme.borderRadius.large,
+      borderBottomRightRadius: theme.borderRadius.small,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      maxWidth: '75%',
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      elevation: 4,
+    },
+    userText: {
+      color: theme.colors.primary,
+      fontSize: 16,
+      lineHeight: 20,
+      fontWeight: '500',
+    },
+    
+    meluneContainer: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      marginVertical: 8,
+      paddingRight: 40,
+    },
+    bubbleAndActions: {
+      flex: 1,
+      marginLeft: 8,
+    },
+    meluneBubble: {
+      // ✅ GLASSMORPHISM SIGNATURE UNIFIÉ
+      backgroundColor: phaseColor + '15',
+      backdropFilter: 'blur(20px)',
+      borderWidth: 1.5,
+      borderColor: phaseColor + '30',
+      borderRadius: theme.borderRadius.large,
+      borderBottomLeftRadius: theme.borderRadius.small,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      maxWidth: '85%',
+      
+      // ✅ SHADOW COLORÉE PHASE
+      shadowColor: phaseColor,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      elevation: 4,
+    },
+    meluneText: {
+      fontSize: 16,
+      lineHeight: 22,
+      color: theme.colors.text,
+      fontWeight: '500',
+    },
+    
+    // ✅ ACTIONS GLASSMORPHISM
+    actionsContainer: {
+      flexDirection: 'row',
+      marginTop: 12,
+      gap: 12,
+    },
+    actionButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: 'rgba(255,255,255,0.8)',
+      backdropFilter: 'blur(10px)',
+      borderWidth: 1,
+      borderColor: phaseColor + '30',
+      borderRadius: theme.borderRadius.large,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      gap: 6,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
+      elevation: 3,
+    },
+    actionText: {
+      fontSize: 14,
+      fontWeight: '500',
+      color: theme.colors.text,
+    },
+  });
+};

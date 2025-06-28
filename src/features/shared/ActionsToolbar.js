@@ -1,6 +1,6 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 File: src/features/shared/ActionsToolbar.jsx - PATTERN UX UNIFIÉ
+// 📄 File: src/features/chat/ActionsToolbar.jsx - PATTERN UX UNIFIÉ
 // 🧩 Type: UI Component Universal
 // 📚 Description: Toolbar actions réutilisable pour insights/chat/notebook
 // 🕒 Version: 1.0 - 2025-06-27 - HARMONISATION UX

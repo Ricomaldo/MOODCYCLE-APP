@@ -1,6 +1,6 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 File: src/features/shared/ParametresButton.jsx
+// 📄 File: src/core/settings/ParametresButton.jsx
 // 🧩 Type: UI Component
 // 📚 Description: Bouton paramètres réutilisable pour la navigation
 // 🕒 Version: 1.0 - 2025-01-15

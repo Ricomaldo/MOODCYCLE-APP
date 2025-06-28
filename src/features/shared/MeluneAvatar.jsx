@@ -63,7 +63,7 @@ function MeluneAvatar({
     }
   }, [finalAvatarStyle]);
 
-  const sizeValue = size === 'large' ? 160 : size === 'medium' ? 120 : 80;
+  const sizeValue = size === 'large' ? 120 : size === 'medium' ? 80 : 60;
   const borderColor = theme.colors.phases?.[phase] || theme.colors.primary;
 
   useEffect(() => {

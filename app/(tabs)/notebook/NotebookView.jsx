@@ -2,32 +2,32 @@
 // ─────────────────────────────────────────────────────────
 // 📄 Fichier : app/(tabs)/notebook/NotebookView.jsx
 // 🧩 Type : Composant Écran Premium
-// 📚 Description : Carnet personnel avec design raffiné et UX fluide
-// 🕒 Version : 5.0 - 2025-06-21 - DESIGN PREMIUM
+// 📚 Description : Carnet personnel avec StandardHeader + design raffiné
+// 🕒 Version : 6.0 - 2025-06-28 - TRANSFORMATION UI + STANDARDHEADER
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { View, FlatList, TouchableOpacity, StyleSheet, Alert, Share, RefreshControl, Animated } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../../src/hooks/useTheme';
 import { useAdaptiveInterface } from '../../../src/hooks/useAdaptiveInterface';
 import { Heading, BodyText, Caption } from '../../../src/core/ui/Typography';
+import ScreenContainer from '../../../src/core/layout/ScreenContainer';
+import { NotebookHeader } from '../../../src/core/layout/SimpleHeader';
 import { useNotebookStore } from '../../../src/stores/useNotebookStore';
 import { useNavigationStore } from '../../../src/stores/useNavigationStore';
 import { useCycle } from '../../../src/hooks/useCycle';
 import QuickTrackingModal from '../../../src/features/notebook/QuickTrackingModal';
 import FreeWritingModal from '../../../src/features/notebook/FreeWritingModal';
-import EntryDetailModal from '../../../src/features/shared/EntryDetailModal';
+import EntryDetailModal from '../../../src/features/notebook/EntryDetailModal';
 import SwipeableEntryIOS from '../../../src/features/notebook/SwipeableEntryIOS';
 import ToolbarIOS from '../../../src/features/notebook/ToolbarIOS';
 import {
   AnimatedSearchBar,
 } from '../../../src/core/ui/AnimatedComponents';
-import ScreenContainer from '../../../src/core/layout/ScreenContainer';
 import { formatTrendSummary } from '../../../src/utils/trackingFormatters';
-import ParametresButton from '../../../src/features/shared/ParametresButton';
+import CalendarView from '../../../src/features/cycle/CalendarView';
 
 const FILTER_PILLS = [
   { id: 'all', label: 'Tout', icon: 'layers' },
@@ -36,36 +36,10 @@ const FILTER_PILLS = [
   { id: 'tracking', label: 'Tracking', icon: 'bar-chart-2' },
 ];
 
-// Déplacement de getStyles avant le composant pour éviter l'erreur "Property 'theme' doesn't exist"
 const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
-  },
-  header: {
-    height: 60,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: theme.spacing.l,
-    paddingHorizontal: theme.spacing.l,
-    position: 'relative',
-  },
-  title: {
-    textAlign: 'center',
-    fontSize: 24,
-    fontWeight: '700',
-    color: theme.colors.text,
-  },
-  searchToggle: {
-    position: 'absolute',
-    right: theme.spacing.l,
-    padding: theme.spacing.s,
-  },
-  parametresButton: {
-    position: 'absolute',
-    left: theme.spacing.l,
-    padding: theme.spacing.s,
   },
   
   // Contexte vignette premium
@@ -88,8 +62,6 @@ const getStyles = (theme) => StyleSheet.create({
     fontWeight: '500',
     flex: 1,
   },
-
-
 
   // Filtres design premium
   filtersContainer: {
@@ -322,12 +294,11 @@ const getStyles = (theme) => StyleSheet.create({
 });
 
 export default function NotebookView() {
-  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams();
   const { theme } = useTheme();
   const styles = getStyles(theme);
   
-  // Phase filters avec accès au thème (déplacé dans le composant)
+  // Phase filters avec accès au thème
   const PHASE_FILTERS = useMemo(() => [
     { id: 'menstrual', label: 'Mens.', color: theme?.colors?.phases?.menstrual || '#E53935' },
     { id: 'follicular', label: 'Foll.', color: theme?.colors?.phases?.follicular || '#F57C00' },
@@ -341,7 +312,6 @@ export default function NotebookView() {
     formatTrackingEmotional,
     calculateTrends,
     getPopularTags,
-    availableTags,
     deleteEntry,
     addEntry,
     addPersonalNote,
@@ -362,6 +332,7 @@ export default function NotebookView() {
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [vignetteContext, setVignetteContext] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [showCalendarView, setShowCalendarView] = useState(false);
   
   // Animation pour header premium
   const headerAnim = useRef(new Animated.Value(0)).current;
@@ -370,10 +341,8 @@ export default function NotebookView() {
   const handleVignetteNavigation = useCallback(() => {
     const { initialPrompt, sourcePhase, sourcePersona, vignetteId, mode } = params;
     
-    // Éviter les appels inutiles si les valeurs clés n'ont pas changé
     if (!initialPrompt && !mode && !sourcePhase) return;
     
-    // Si on a un prompt initial, on ouvre automatiquement la modal d'écriture
     if (initialPrompt) {
       setVignetteContext({
         prompt: initialPrompt,
@@ -401,20 +370,17 @@ export default function NotebookView() {
     }
   }, [params.initialPrompt, params.sourcePhase, params.mode, params.vignetteId, setNotebookFilter]);
 
-  // Navigation vignettes
   const handleVignetteNavigationRef = useRef(handleVignetteNavigation);
   handleVignetteNavigationRef.current = handleVignetteNavigation;
   
   useFocusEffect(
     useCallback(() => {
       if (params.context === 'vignette') {
-        // Vérification de sécurité
         if (handleVignetteNavigationRef.current) {
           handleVignetteNavigationRef.current();
         }
       }
       
-      // Animation header entrée
       Animated.spring(headerAnim, {
         toValue: 1,
         tension: 60,
@@ -445,7 +411,7 @@ export default function NotebookView() {
     getPopularTags()
   , [entries]);
 
-  // Formatters memoized avec couleurs phase
+  // Formatters memoized
   const formatters = useMemo(() => ({
     getEntryIcon: (type, phase) => {
       const phaseColors = {
@@ -610,29 +576,7 @@ export default function NotebookView() {
   if (entries.length === 0) {
     return (
       <ScreenContainer style={styles.container} hasTabs={true}>
-        <Animated.View 
-          style={[
-            styles.header,
-            {
-              opacity: headerAnim,
-              transform: [{
-                translateY: headerAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [-20, 0]
-                })
-              }]
-            }
-          ]}
-        >
-          <Heading style={styles.title}>Mon Carnet</Heading>
-          <ParametresButton 
-            color={theme.colors.primary}
-            style={styles.parametresButton}
-          />
-          <TouchableOpacity onPress={() => setShowSearch(!showSearch)} style={styles.searchToggle}>
-            <Feather name="search" size={24} color={theme.colors.primary} />
-          </TouchableOpacity>
-        </Animated.View>
+        <NotebookHeader />
         
         {renderVignetteContext()}
         
@@ -662,193 +606,176 @@ export default function NotebookView() {
 
   return (
     <ScreenContainer style={styles.container} hasTabs={true}>
-      
-      {/* Header animé */}
-      <Animated.View 
-        style={[
-          styles.header,
-          {
-            opacity: headerAnim,
-            transform: [{
-              translateY: headerAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: [-20, 0]
-              })
-            }]
-          }
-        ]}
-      >
-        <Heading style={styles.title}>Mon Carnet</Heading>
-        
-        {/* ✅ BOUTON PARAMÈTRES */}
-        <ParametresButton 
-          color={theme.colors.primary}
-          style={styles.parametresButton}
-        />
-        
-        <TouchableOpacity onPress={() => setShowSearch(!showSearch)} style={styles.searchToggle}>
-          <Feather name="search" size={24} color={theme.colors.primary} />
-        </TouchableOpacity>
-      </Animated.View>
+      <NotebookHeader />
 
-
-
-      {renderVignetteContext()}
-
-      <AnimatedSearchBar
-        visible={showSearch}
-        query={searchQuery}
-        onChangeText={setSearchQuery}
-        onClear={() => setSearchQuery('')}
+      <NotebookHeader 
+        onToggleCalendar={() => setShowCalendarView(!showCalendarView)}
+        onToggleSearch={() => setShowSearch(!showSearch)}
+        showCalendar={showCalendarView}
       />
 
-      {/* Filtres par type avec design premium */}
-      <View style={styles.filtersContainer}>
-        <FlatList
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          data={FILTER_PILLS.filter(pill => 
-            maturityLevel === 'autonomous' || 
-            ['all', 'personal', 'saved'].includes(pill.id)
-          )}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[styles.filterPill, filter === item.id && styles.filterPillActive]}
-              onPress={() => handleFilterChange(item.id)}
-            >
-              <Feather
-                name={item.icon}
-                size={16}
-                color={filter === item.id ? 'white' : theme.colors.textLight}
-              />
-              <BodyText style={[styles.filterText, filter === item.id && styles.filterTextActive]}>
-                {item.label}
-              </BodyText>
-            </TouchableOpacity>
-          )}
-        />
-      </View>
+      {showCalendarView ? (
+        <CalendarView onPhasePress={handlePhaseFilter} onDatePress={() => {}} />
+      ) : (
+        <>
+          {renderVignetteContext()}
 
-      {/* Filtres phases - seulement si entries avec phases */}
-      {entries.some(entry => entry.phase) && (
-        <View style={styles.phaseFiltersContainer}>
-          <FlatList
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            data={PHASE_FILTERS}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[
-                  styles.phasePill,
-                  { borderColor: item.color },
-                  phaseFilter === item.id && {
-                    backgroundColor: item.color + '20',
-                    borderWidth: 2,
-                  },
-                ]}
-                onPress={() => handlePhaseFilter(item.id)}
-              >
-                <View style={[styles.phaseIndicator, { backgroundColor: item.color }]} />
-                <BodyText
-                  style={[
-                    styles.phaseText,
-                    { color: phaseFilter === item.id ? item.color : theme.colors.textLight },
-                    phaseFilter === item.id && styles.phaseTextActive,
-                  ]}
+          <AnimatedSearchBar
+            visible={showSearch}
+            query={searchQuery}
+            onChangeText={setSearchQuery}
+            onClear={() => setSearchQuery('')}
+          />
+
+          {/* Filtres par type */}
+          <View style={styles.filtersContainer}>
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={FILTER_PILLS.filter(pill => 
+                maturityLevel === 'autonomous' || 
+                ['all', 'personal', 'saved'].includes(pill.id)
+              )}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[styles.filterPill, filter === item.id && styles.filterPillActive]}
+                  onPress={() => handleFilterChange(item.id)}
                 >
-                  {item.label}
-                </BodyText>
-              </TouchableOpacity>
-            )}
-          />
-        </View>
-      )}
-
-      {/* Tags populaires améliorés */}
-      {tagStats.length > 0 && features.advanced_tracking && (
-        <View style={styles.tagsContainer}>
-          <Caption style={styles.tagsTitle}>Tags populaires:</Caption>
-          <FlatList
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            data={tagStats}
-            keyExtractor={item => item.tag}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={[styles.tagFilter, selectedTags.includes(item.tag) && styles.tagFilterActive]}
-                onPress={() => handleTagFilter(item.tag)}
-              >
-                <BodyText
-                  style={[
-                    styles.tagFilterText,
-                    selectedTags.includes(item.tag) && styles.tagFilterTextActive,
-                  ]}
-                >
-                  {item.tag}
-                </BodyText>
-                <View style={styles.tagCount}>
-                  <Caption style={styles.tagCountText}>{item.count}</Caption>
-                </View>
-              </TouchableOpacity>
-            )}
-          />
-        </View>
-      )}
-
-      {/* Liste avec animations */}
-      <FlatList
-        data={filteredEntries}
-        renderItem={renderEntry}
-        keyExtractor={(item) => item.id}
-        style={styles.list}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={theme.colors.primary}
-            title="Actualisation..."
-            titleColor={theme.colors.textLight}
-          />
-        }
-        ListHeaderComponent={trendingInsight}
-        ListEmptyComponent={() => (
-          <View style={styles.emptyState}>
-            <Feather name="search" size={32} color={theme.colors.textLight + '60'} />
-            <BodyText style={styles.emptyText}>Aucune entrée trouvée</BodyText>
-            <Caption style={styles.emptySubtext}>Essaie de modifier tes filtres</Caption>
+                  <Feather
+                    name={item.icon}
+                    size={16}
+                    color={filter === item.id ? 'white' : theme.colors.textLight}
+                  />
+                  <BodyText style={[styles.filterText, filter === item.id && styles.filterTextActive]}>
+                    {item.label}
+                  </BodyText>
+                </TouchableOpacity>
+              )}
+            />
           </View>
-        )}
-      />
 
-      {/* Toolbar iOS premium */}
-      <ToolbarIOS
-        onWritePress={() => handleToolbarAction('write')}
-        onTrackPress={() => handleToolbarAction('track')}
-      />
+          {/* Filtres phases */}
+          {entries.some(entry => entry.phase) && (
+            <View style={styles.phaseFiltersContainer}>
+              <FlatList
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                data={PHASE_FILTERS}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[
+                      styles.phasePill,
+                      { borderColor: item.color },
+                      phaseFilter === item.id && {
+                        backgroundColor: item.color + '20',
+                        borderWidth: 2,
+                      },
+                    ]}
+                    onPress={() => handlePhaseFilter(item.id)}
+                  >
+                    <View style={[styles.phaseIndicator, { backgroundColor: item.color }]} />
+                    <BodyText
+                      style={[
+                        styles.phaseText,
+                        { color: phaseFilter === item.id ? item.color : theme.colors.textLight },
+                        phaseFilter === item.id && styles.phaseTextActive,
+                      ]}
+                    >
+                      {item.label}
+                    </BodyText>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          )}
 
-      {/* Modales */}
-      <QuickTrackingModal 
-        visible={showQuickTracking} 
-        onClose={() => setShowQuickTracking(false)}
-        defaultTags={vignetteContext?.suggestedTags}
-      />
+          {/* Tags populaires */}
+          {tagStats.length > 0 && features.advanced_tracking && (
+            <View style={styles.tagsContainer}>
+              <Caption style={styles.tagsTitle}>Tags populaires:</Caption>
+              <FlatList
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                data={tagStats}
+                keyExtractor={item => item.tag}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={[styles.tagFilter, selectedTags.includes(item.tag) && styles.tagFilterActive]}
+                    onPress={() => handleTagFilter(item.tag)}
+                  >
+                    <BodyText
+                      style={[
+                        styles.tagFilterText,
+                        selectedTags.includes(item.tag) && styles.tagFilterTextActive,
+                      ]}
+                    >
+                      {item.tag}
+                    </BodyText>
+                    <View style={styles.tagCount}>
+                      <Caption style={styles.tagCountText}>{item.count}</Caption>
+                    </View>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          )}
 
-      <FreeWritingModal 
-        visible={showFreeWriting} 
-        onClose={() => setShowFreeWriting(false)}
-        initialPrompt={vignetteContext?.prompt}
-        suggestedTags={vignetteContext?.suggestedTags}
-      />
+          {/* Liste avec animations */}
+          <FlatList
+            data={filteredEntries}
+            renderItem={renderEntry}
+            keyExtractor={(item) => item.id}
+            style={styles.list}
+            contentContainerStyle={styles.listContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor={theme.colors.primary}
+                title="Actualisation..."
+                titleColor={theme.colors.textLight}
+              />
+            }
+            ListHeaderComponent={trendingInsight}
+            ListEmptyComponent={() => (
+              <View style={styles.emptyState}>
+                <Feather name="search" size={32} color={theme.colors.textLight + '60'} />
+                <BodyText style={styles.emptyText}>Aucune entrée trouvée</BodyText>
+                <Caption style={styles.emptySubtext}>Essaie de modifier tes filtres</Caption>
+              </View>
+            )}
+          />
 
-      <EntryDetailModal
-        entries={selectedEntry ? [selectedEntry] : []}
-        visible={!!selectedEntry}
-        onClose={() => setSelectedEntry(null)}
-        showActions={true}
-      />
+          {/* Toolbar iOS premium */}
+          <ToolbarIOS
+            onWritePress={() => handleToolbarAction('write')}
+            onTrackPress={() => handleToolbarAction('track')}
+          />
+
+          {/* Modales */}
+          <QuickTrackingModal 
+            visible={showQuickTracking} 
+            onClose={() => setShowQuickTracking(false)}
+            defaultTags={vignetteContext?.suggestedTags}
+          />
+
+          <FreeWritingModal 
+            visible={showFreeWriting} 
+            onClose={() => setShowFreeWriting(false)}
+            initialPrompt={vignetteContext?.prompt}
+            suggestedTags={vignetteContext?.suggestedTags}
+          />
+
+          <EntryDetailModal
+            entries={selectedEntry ? [selectedEntry] : []}
+            visible={!!selectedEntry}
+            onClose={() => setSelectedEntry(null)}
+            showActions={true}
+          />
+        </>
+      )}
     </ScreenContainer>
   );
 }

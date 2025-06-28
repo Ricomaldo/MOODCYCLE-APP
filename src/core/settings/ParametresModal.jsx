@@ -1,6 +1,6 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 File: src/features/shared/ParametresModal.jsx
+// 📄 File: src/core/settings/ParametresModal.jsx
 // 🧩 Type: Modal Component
 // 📚 Description: Modal Paramètres avec onglets (Profil, Préférences, Persona, Légal)
 // 🕒 Version: 1.0 - 2025-01-15
@@ -20,7 +20,7 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { Heading2, BodyText, Caption } from '../../core/ui/Typography';
+import { Heading2, BodyText, Caption } from '../ui/Typography';
 import { useUserStore } from '../../stores/useUserStore';
 import { useCycle } from '../../hooks/useCycle';
 import { useTheme } from '../../hooks/useTheme';

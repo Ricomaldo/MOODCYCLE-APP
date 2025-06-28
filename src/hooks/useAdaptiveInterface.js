@@ -2,7 +2,7 @@
 // 🎣 useAdaptiveInterface.js - Hook Interface Adaptative Unifié
 // 📚 Description : Interface adaptative + révélations progressives + guidance contextuelle
 // 🕒 Version : 5.0 - 2025-06-21 - Merge avec useProgressiveReveal
-// 🧭 Utilisé dans : CycleView, ChatView, NotebookView, composants adaptatifs
+// 🧭 Utilisé dans : CycleView, ChatModal, NotebookView, composants adaptatifs
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 import { useMemo, useCallback } from 'react';

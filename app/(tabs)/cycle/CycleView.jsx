@@ -1,26 +1,25 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 File: app/(tabs)/cycle/CycleView.jsx - VERSION ALLÉGÉE FOCUS VISUALISATION
+// 📄 File: app/(tabs)/cycle/CycleView.jsx - AVEC CYCLEHEADER
 // 🧩 Type: Écran Principal Cycle
-// 📚 Description: Page cycle épurée - uniquement roue/calendrier + phase info
-// 🕒 Version: 4.0 - 2025-06-27 - ALLÉGÉE (insights transférés vers Accueil)
+// 📚 Description: Cycle avec header spécialisé + modal paramètres
+// 🕒 Version: 6.0 - 2025-06-28 - ARCHITECTURE FINALE
 // ─────────────────────────────────────────────────────────
 //
-import React from 'react';
+import React, { useState } from 'react';
 import { View, ScrollView, StyleSheet, RefreshControl, TouchableOpacity, Alert } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useTheme } from '../../../src/hooks/useTheme';
-import { Heading, BodyText } from '../../../src/core/ui/Typography';
+import { BodyText } from '../../../src/core/ui/Typography';
 import ScreenContainer from '../../../src/core/layout/ScreenContainer';
+import { CycleHeader } from '../../../src/core/layout/SimpleHeader';
 import CycleWheel from '../../../src/features/cycle/CycleWheel';
-import CalendarView from '../../../src/features/cycle/CalendarView';
 import { useCycle } from '../../../src/hooks/useCycle';
 import { useUserStore } from '../../../src/stores/useUserStore';
 import { PhaseIcon } from '../../../src/config/iconConstants';
-import EntryDetailModal from '../../../src/features/shared/EntryDetailModal';
 import QuickTrackingModal from '../../../src/features/notebook/QuickTrackingModal';
-import ParametresButton from '../../../src/features/shared/ParametresButton';
+import ParametresModal from '../../../src/core/settings/ParametresModal';
 
 export default function CycleView() {
   const cycleData = useCycle() || {};
@@ -28,44 +27,24 @@ export default function CycleView() {
   const { profile } = useUserStore();
   const { theme } = useTheme();
 
-  // ✅ Protection contre profile undefined pendant l'hydratation
   const safeProfile = profile || { prenom: null };
-  
-  // ✅ STATE POUR TOGGLE VUE (CONSERVÉ)
-  const [viewMode, setViewMode] = React.useState('wheel'); // 'wheel' ou 'calendar'
-  
-  // ✅ STATE POUR MODAL ENTRIES DU JOUR (CONSERVÉ)
-  const [selectedDayEntries, setSelectedDayEntries] = React.useState([]);
-  const [showDayDetail, setShowDayDetail] = React.useState(false);
-  
-  // ✅ NOUVEAU: État pour le modal de tracking
-  const [showQuickTracking, setShowQuickTracking] = React.useState(false);
-  
-  const [refreshing, setRefreshing] = React.useState(false);
+  const [showQuickTracking, setShowQuickTracking] = useState(false);
+  const [showParams, setShowParams] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
-    // Plus de refresh vignettes - seulement cycle
     setTimeout(() => setRefreshing(false), 1000);
   }, []);
 
-  // ✅ HANDLERS POUR LE CALENDRIER (CONSERVÉS)
   const handlePhasePress = React.useCallback((phase) => {
-    // ✅ NOUVEAU: Navigation vers la page de détail de phase
     router.push(`/(tabs)/cycle/phases/${phase}`);
   }, []);
-  
-  const handleDatePress = React.useCallback((dateString, dayEntries) => {
-    setSelectedDayEntries(dayEntries);
-    setShowDayDetail(true);
-  }, []);
 
-  // ✅ NOUVEAUX HANDLERS POUR LES ACTIONS
   const handleSymptomTracking = React.useCallback(() => {
     setShowQuickTracking(true);
   }, []);
 
-  // Fonction utilitaire pour la phase suivante
   const getNextPhase = (currentPhase) => {
     const phases = ['menstrual', 'follicular', 'ovulatory', 'luteal'];
     const currentIndex = phases.indexOf(currentPhase);
@@ -96,7 +75,6 @@ export default function CycleView() {
   }, [nextPeriodDate, daysUntilNextPeriod, currentPhase]);
 
   const handleHistory = React.useCallback(() => {
-    // Navigation vers le notebook avec filtres par phase
     router.push({
       pathname: '/(tabs)/notebook',
       params: {
@@ -107,13 +85,11 @@ export default function CycleView() {
   }, [currentPhase]);
 
   const handlePhaseNavigation = React.useCallback((phase) => {
-    // ✅ NOUVEAU: Navigation vers les pages de détail
     router.push(`/(tabs)/cycle/phases/${phase}`);
   }, []);
 
   const styles = getStyles(theme);
 
-  // Protection : si cycle est undefined, affichage d'un message temporaire
   if (!cycle) {
     return <ScreenContainer><BodyText>Cycle non initialisé</BodyText></ScreenContainer>;
   }
@@ -121,17 +97,20 @@ export default function CycleView() {
   if (!hasData) {
     return (
       <ScreenContainer style={styles.container} hasTabs={true}>
+        <CycleHeader onSettingsPress={() => setShowParams(true)} />
         <View style={styles.centerContent}>
           <BodyText style={styles.setupText}>
             Configure ton cycle pour commencer ton voyage avec Melune
           </BodyText>
         </View>
+        <ParametresModal visible={showParams} onClose={() => setShowParams(false)} />
       </ScreenContainer>
     );
   }
 
   return (
     <ScreenContainer style={styles.container} hasTabs={true}>
+      <CycleHeader onSettingsPress={() => setShowParams(true)} />
       
       <ScrollView 
         style={styles.scrollView}
@@ -145,30 +124,9 @@ export default function CycleView() {
           />
         }
       >
-        {/* ✅ HEADER AVEC TOGGLE ET PARAMÈTRES (CONSERVÉ) */}
+        
+        {/* Subtitle avec prédictions */}
         <View style={styles.header}>
-          <View style={styles.headerTop}>
-            <Heading style={styles.title}>Mon Cycle</Heading>
-            
-            {/* ✅ TOGGLE BUTTON (CONSERVÉ) */}
-            <TouchableOpacity 
-              style={styles.toggleButton}
-              onPress={() => setViewMode(viewMode === 'wheel' ? 'calendar' : 'wheel')}
-            >
-              <Feather 
-                name={viewMode === 'wheel' ? 'calendar' : 'target'} 
-                size={20} 
-                color={theme.colors.primary} 
-              />
-            </TouchableOpacity>
-            
-            {/* ✅ BOUTON PARAMÈTRES */}
-            <ParametresButton 
-              color={theme.colors.primary}
-              style={styles.parametresButton}
-            />
-          </View>
-          
           <BodyText style={styles.subtitle}>
             Jour {currentDay} • Phase {phaseInfo.name}
             {daysUntilNextPeriod !== null && (
@@ -179,31 +137,18 @@ export default function CycleView() {
           </BodyText>
         </View>
 
-        {/* ✅ VUE CONDITIONNELLE AVEC HAUTEUR FIXE (CONSERVÉE) */}
-        <View style={styles.viewContainer}>
-          {viewMode === 'wheel' ? (
-            /* Roue du cycle */
-            <View style={styles.wheelContainer}>
-              <CycleWheel 
-                currentPhase={currentPhase}
-                cycleDay={currentDay}
-                cycleLength={cycle?.length || 28}
-                userName={safeProfile.prenom || 'Emma'}
-                onPhasePress={handlePhasePress}
-              />
-            </View>
-          ) : (
-            /* Vue calendaire */
-            <View style={styles.calendarContainer}>
-              <CalendarView
-                onPhasePress={handlePhasePress}
-                onDatePress={handleDatePress}
-              />
-            </View>
-          )}
+        {/* Roue du cycle */}
+        <View style={styles.wheelContainer}>
+          <CycleWheel 
+            currentPhase={currentPhase}
+            cycleDay={currentDay}
+            cycleLength={cycle?.length || 28}
+            userName={safeProfile.prenom || 'Emma'}
+            onPhasePress={handlePhasePress}
+          />
         </View>
 
-        {/* ✅ PHASE INFO ENRICHIE (AMÉLIORÉE) */}
+        {/* Phase info */}
         <View style={styles.phaseInfoContainer}>
           <View style={styles.phaseHeader}>
             <PhaseIcon 
@@ -212,7 +157,7 @@ export default function CycleView() {
               color={theme.colors.phases[currentPhase]}
             />
             <View style={styles.phaseHeaderText}>
-              <Heading style={styles.phaseName}>{phaseInfo.name}</Heading>
+              <BodyText style={styles.phaseName}>{phaseInfo.name}</BodyText>
               <BodyText style={styles.phaseDay}>Jour {currentDay}</BodyText>
             </View>
           </View>
@@ -221,7 +166,6 @@ export default function CycleView() {
             {phaseInfo.description}
           </BodyText>
           
-          {/* ✅ NOUVELLES INFOS PHASE DÉTAILLÉES */}
           <View style={styles.phaseDetails}>
             <View style={styles.phaseDetailItem}>
               <BodyText style={styles.phaseDetailLabel}>Énergie</BodyText>
@@ -246,9 +190,9 @@ export default function CycleView() {
           </View>
         </View>
 
-        {/* ✅ NAVIGATION VERS PHASES DÉTAILLÉES (AMÉLIORÉE) */}
+        {/* Navigation phases */}
         <View style={styles.phasesNavigation}>
-          <Heading style={styles.sectionTitle}>Explorer les phases</Heading>
+          <BodyText style={styles.sectionTitle}>Explorer les phases</BodyText>
           
           <View style={styles.phasesGrid}>
             {['menstrual', 'follicular', 'ovulatory', 'luteal'].map((phase) => (
@@ -276,9 +220,9 @@ export default function CycleView() {
           </View>
         </View>
 
-        {/* ✅ RACCOURCIS ACTIONS CYCLE (AMÉLIORÉS) */}
+        {/* Actions rapides */}
         <View style={styles.actionsSection}>
-          <Heading style={styles.sectionTitle}>Actions rapides</Heading>
+          <BodyText style={styles.sectionTitle}>Actions rapides</BodyText>
           
           <View style={styles.actionsGrid}>
             <TouchableOpacity 
@@ -313,29 +257,24 @@ export default function CycleView() {
           </View>
         </View>
 
-        {/* Espacement bottom pour tab bar */}
         <View style={{ height: 20 }} />
       </ScrollView>
 
-      {/* ✅ MODAL DETAIL ENTRIES DU JOUR (CONSERVÉE) */}
-      <EntryDetailModal
-        entries={selectedDayEntries}
-        visible={showDayDetail}
-        onClose={() => setShowDayDetail(false)}
-        showActions={true}
-      />
-
-      {/* ✅ NOUVEAU: Modal de tracking rapide */}
       <QuickTrackingModal
         visible={showQuickTracking}
         onClose={() => setShowQuickTracking(false)}
         defaultTags={[`#${currentPhase}`]}
       />
+
+      <ParametresModal
+        visible={showParams}
+        onClose={() => setShowParams(false)}
+      />
     </ScreenContainer>
   );
 }
 
-// ✅ FONCTIONS UTILITAIRES PHASE
+// Fonctions utilitaires
 const getPhaseEnergyLevel = (phase) => {
   const energyLevels = {
     menstrual: 'Basse',
@@ -399,69 +338,28 @@ const getStyles = (theme) => StyleSheet.create({
     fontSize: 16,
   },
   
-  // ✅ HEADER AVEC TOGGLE (CONSERVÉ)
   header: {
     alignItems: 'center',
     marginBottom: theme.spacing.xl,
   },
-  headerTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginBottom: theme.spacing.xs,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    flex: 1,
-    textAlign: 'center',
-  },
-  toggleButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1.5,
-    borderColor: theme.colors.primary + '30',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: theme.colors.primary,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  parametresButton: {
-    // Styles spécifiques pour le bouton paramètres
-  },
   subtitle: {
     fontSize: 16,
     color: theme.colors.textLight,
+    textAlign: 'center',
+  },
+  prediction: {
+    fontSize: 14,
+    color: theme.colors.textLight,
+    fontStyle: 'italic',
   },
   
-  // ✅ CONTENEUR FIXE POUR ÉVITER LES SAUTS (CONSERVÉ)
-  viewContainer: {
-    height: 320,
-    marginBottom: theme.spacing.xl,
-    justifyContent: 'center',
-  },
-  
-  // ✅ CONTENEURS DE VUE (CONSERVÉS)
   wheelContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    height: '100%',
-  },
-  calendarContainer: {
-    height: '100%',
-    justifyContent: 'center',
+    height: 320,
+    marginBottom: theme.spacing.xl,
   },
   
-  // ✅ PHASE INFO ENRICHIE
   phaseInfoContainer: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.l,
@@ -497,8 +395,6 @@ const getStyles = (theme) => StyleSheet.create({
     lineHeight: 22,
     marginBottom: theme.spacing.l,
   },
-  
-  // ✅ DÉTAILS PHASE
   phaseDetails: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -521,7 +417,6 @@ const getStyles = (theme) => StyleSheet.create({
     textAlign: 'center',
   },
   
-  // ✅ SECTIONS
   phasesNavigation: {
     marginBottom: theme.spacing.xl,
   },
@@ -535,7 +430,6 @@ const getStyles = (theme) => StyleSheet.create({
     color: theme.colors.text,
   },
   
-  // ✅ NAVIGATION PHASES
   phasesGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -564,7 +458,6 @@ const getStyles = (theme) => StyleSheet.create({
     color: 'white',
   },
   
-  // ✅ ACTIONS RAPIDES
   actionsGrid: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -585,12 +478,5 @@ const getStyles = (theme) => StyleSheet.create({
     fontSize: 12,
     color: theme.colors.textLight,
     textAlign: 'center',
-  },
-  
-  // ✅ NOUVEAU: Style pour la prédiction
-  prediction: {
-    fontSize: 14,
-    color: theme.colors.textLight,
-    fontStyle: 'italic',
   },
 });
