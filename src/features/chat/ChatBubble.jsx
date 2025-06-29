@@ -14,7 +14,8 @@ import * as Haptics from 'expo-haptics';
 import { BodyText } from '../../core/ui/Typography';
 import { useTheme } from '../../hooks/useTheme';
 import { useNotebookStore } from '../../stores/useNotebookStore';
-import { useCycle } from '../../hooks/useCycle';
+import { useCycleStore } from '../../stores/useCycleStore';
+import { getCurrentPhase } from '../../utils/cycleCalculations';
 import MeluneAvatar from '../shared/MeluneAvatar';
 
 export default function ChatBubble({ 
@@ -27,7 +28,7 @@ export default function ChatBubble({
 }) {
   const { theme } = useTheme();
   const { saveFromChat } = useNotebookStore();
-  const { currentPhase } = useCycle();
+  const currentPhase = useCurrentPhase();
   const styles = getStyles(theme, phase);
   
   const [actionsVisible, setActionsVisible] = useState(true);

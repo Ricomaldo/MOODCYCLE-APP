@@ -13,7 +13,8 @@ import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../hooks/useTheme';
 import { Caption } from '../../core/ui/Typography';
 import { useNotebookStore } from '../../stores/useNotebookStore';
-import { useCycle } from '../../hooks/useCycle';
+import { useCycleStore } from '../../stores/useCycleStore';
+import { getCurrentPhase, getCurrentCycleDay } from '../../utils/cycleCalculations';
 import { 
   CALENDAR_CONSTANTS, 
   CALENDAR_STYLES, 
@@ -60,7 +61,11 @@ const CalendarView = memo(function CalendarView({
   });
 
   // ✅ Hooks - utiliser les vraies données du store
-  const { currentPhase, currentDay, cycle } = useCycle();
+  // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
+  const cycleData = useCycleStore((state) => state);
+  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
+  const currentDay = getCurrentCycleDay(cycleData.lastPeriodDate, cycleData.length);
+  const cycle = cycleData;
   const { getEntriesGroupedByDate } = useNotebookStore();
   const notebookEntries = getEntriesGroupedByDate();
   

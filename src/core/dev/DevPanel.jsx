@@ -14,9 +14,10 @@ import { useChatStore } from '../../stores/useChatStore';
 import { useNotebookStore } from '../../stores/useNotebookStore';
 import { useUserIntelligence } from '../../stores/useUserIntelligence';
 import { useEngagementStore } from '../../stores/useEngagementStore';
+import { useCycleStore } from '../../stores/useCycleStore';
 
 // Hooks
-import { useCycle } from '../../hooks/useCycle';
+
 
 // Config
 import { PERSONA_PROFILES } from '../../config/personaProfiles';
@@ -27,14 +28,17 @@ export default function DevPanel() {
   const [activeTab, setActiveTab] = useState('revelation');
 
   // Stores
-  const { profile, persona, updateProfile, updateCycle, setPersona, reset: resetUser } = useUserStore();
+  const { profile, persona, updateProfile, setPersona, reset: resetUser } = useUserStore();
   const { addMessage, clearMessages, getMessagesCount } = useChatStore();
   const { addEntry, addQuickTracking, reset: resetNotebook, entries } = useNotebookStore();
   const intelligence = useUserIntelligence();
   const engagement = useEngagementStore();
+  // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
+  const cycleData = useCycleStore((state) => state);
+  const updateCycle = useCycleStore((state) => state.updateCycle);
   
-  // Cycle hook
-  const cycle = useCycle();
+      // Cycle data
+    const cycle = cycleData;
 
   if (process.env.NODE_ENV === 'production') {
     return null;
@@ -222,6 +226,36 @@ export default function DevPanel() {
     jumpToDay(phaseDays[targetPhase]);
   };
 
+  const advanceOneDay = () => {
+    try {
+      const currentDay = cycle?.currentDay || 1;
+      const nextDay = currentDay + 1;
+      
+      // Si on dépasse 28 jours, on revient à J1
+      const targetDay = nextDay > 28 ? 1 : nextDay;
+      jumpToDay(targetDay);
+      
+      Alert.alert('🔄 Cycle', `Avancé à J${targetDay}`);
+    } catch (error) {
+      Alert.alert('❌ Erreur cycle');
+    }
+  };
+
+  const advanceDays = (daysToAdvance) => {
+    try {
+      const currentDay = cycle?.currentDay || 1;
+      const nextDay = currentDay + daysToAdvance;
+      
+      // Si on dépasse 28 jours, on calcule le modulo pour rester dans le cycle
+      const targetDay = nextDay > 28 ? ((nextDay - 1) % 28) + 1 : nextDay;
+      jumpToDay(targetDay);
+      
+      Alert.alert('🔄 Cycle', `Avancé de ${daysToAdvance} jours → J${targetDay}`);
+    } catch (error) {
+      Alert.alert('❌ Erreur cycle');
+    }
+  };
+
   // ═══════════════════════════════════════════════════════
   // 🎭 PERSONA CONTROL (simplifié)
   // ═══════════════════════════════════════════════════════
@@ -381,6 +415,34 @@ export default function DevPanel() {
                   ))}
                 </View>
 
+                <Text style={styles.subTitle}>Navigation Rapide :</Text>
+                <View style={styles.buttonGrid}>
+                  <TouchableOpacity
+                    style={[styles.dayJumpButton, { backgroundColor: '#00D4AA' }]}
+                    onPress={advanceOneDay}
+                  >
+                    <Text style={styles.dayJumpText}>J+1</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.dayJumpButton, { backgroundColor: '#00D4AA' }]}
+                    onPress={() => advanceDays(2)}
+                  >
+                    <Text style={styles.dayJumpText}>J+2</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.dayJumpButton, { backgroundColor: '#00D4AA' }]}
+                    onPress={() => advanceDays(3)}
+                  >
+                    <Text style={styles.dayJumpText}>J+3</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.dayJumpButton, { backgroundColor: '#00D4AA' }]}
+                    onPress={() => advanceDays(7)}
+                  >
+                    <Text style={styles.dayJumpText}>J+7</Text>
+                  </TouchableOpacity>
+                </View>
+
                 <Text style={styles.subTitle}>Jours Spécifiques :</Text>
                 <View style={styles.buttonGrid}>
                   {[1, 7, 14, 21, 28].map(day => (
@@ -423,7 +485,7 @@ export default function DevPanel() {
                 <Text style={styles.subTitle}>Navigation :</Text>
                 <View style={styles.buttonGrid}>
                   {[
-                    { route: '/(tabs)/home', label: 'Home' },
+                    { route: '/onboarding', label: 'Onboarding' },
                     { route: '/(tabs)/chat', label: 'Chat' },
                     { route: '/(tabs)/cycle', label: 'Cycle' },
                     { route: '/(tabs)/notebook', label: 'Carnet' }

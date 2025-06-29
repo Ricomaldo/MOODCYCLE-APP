@@ -15,7 +15,8 @@ import { Heading, BodyText, Caption } from '../../../src/core/ui/Typography';
 import ScreenContainer from '../../../src/core/layout/ScreenContainer';
 import InsightCard from '../../../src/features/shared/InsightCard';
 import { VignettesContainer } from '../../../src/features/shared/VignetteCard';
-import { useCycle } from '../../../src/hooks/useCycle';
+import { useCycleStore } from '../../../src/stores/useCycleStore';
+import { getCurrentPhase, getCurrentCycleDay } from '../../../src/utils/cycleCalculations';
 import { useVignettes } from '../../../src/hooks/useVignettes';
 import { usePersonalizedInsight } from '../../../src/hooks/usePersonalizedInsight';
 import { usePersona } from '../../../src/hooks/usePersona';
@@ -25,8 +26,11 @@ import MeluneAvatar from '../../../src/features/shared/MeluneAvatar';
 import ParametresButton from '../../../src/features/shared/ParametresButton';
 
 export default function AccueilView() {
-  const cycleData = useCycle() || {};
-  const { currentPhase, currentDay, phaseInfo, hasData, cycle } = cycleData;
+  // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
+  const cycleData = useCycleStore((state) => state) || {};
+  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
+  const currentDay = getCurrentCycleDay(cycleData.lastPeriodDate, cycleData.length);
+  const hasData = !!(cycleData.lastPeriodDate && cycleData.length);
   const { current: persona } = usePersona();
   const { profile } = useUserStore();
   const { theme } = useTheme();

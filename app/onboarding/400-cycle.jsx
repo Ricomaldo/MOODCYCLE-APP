@@ -12,7 +12,8 @@ import { View, TouchableOpacity, StyleSheet, Animated, ScrollView, Platform } fr
 import { router } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
-import { useCycle } from '../../src/hooks/useCycle';
+import { useCycleStore } from '../../src/stores/useCycleStore';
+import { getCurrentPhase, getCurrentCycleDay } from '../../src/utils/cycleCalculations';
 import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
@@ -63,13 +64,18 @@ export default function CycleScreen() {
   const styles = getStyles(theme);
   // 🧠 INTELLIGENCE + CYCLE HOOKS
   const intelligence = useOnboardingIntelligence('400-cycle');
-  const { 
-    currentPhase, 
-    currentDay, 
-    phaseMetadata,
-    updateCycle,
-    hasMinimumData 
-  } = useCycle();
+  // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
+  const cycleData = useCycleStore((state) => state);
+  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
+  const currentDay = getCurrentCycleDay(cycleData.lastPeriodDate, cycleData.length);
+  const startNewCycle = useCycleStore((state) => state.startNewCycle);
+  const updateCycle = useCycleStore((state) => state.updateCycle);
+  const updateCycleLength = useCycleStore((state) => state.updateCycleLength);
+  const updatePeriodDuration = useCycleStore((state) => state.updatePeriodDuration);
+  
+  // Données de phase
+  const phaseInfo = require('../../src/data/phases.json');
+  const hasData = () => !!(cycleData.lastPeriodDate && cycleData.length);
   
   // 🎨 Animations Standard
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -197,10 +203,10 @@ export default function CycleScreen() {
     // 🧠 Track finalisation cycle avec métadonnées riches
     intelligence.trackAction('cycle_data_completed', { 
       phase: currentPhase,
-      phaseMetadata: phaseMetadata[currentPhase],
+      phaseMetadata: phaseInfo[currentPhase],
       cycleLength,
       dayInCycle: currentDay,
-      hasMinimumData: hasMinimumData()
+      hasMinimumData: hasData()
     });
 
     // Navigation vers preferences
@@ -243,16 +249,16 @@ export default function CycleScreen() {
             {(detectedPhase || currentPhase) && (
               <View style={[
                 styles.phaseDetected,
-                { backgroundColor: phaseMetadata[detectedPhase || currentPhase]?.color + '20' }
+                { backgroundColor: phaseInfo[detectedPhase || currentPhase]?.color + '20' }
               ]}>
                 <BodyText style={[
                   styles.phaseText,
-                  { color: phaseMetadata[detectedPhase || currentPhase]?.color }
+                  { color: phaseInfo[detectedPhase || currentPhase]?.color }
                 ]}>
-                  {phaseMetadata[detectedPhase || currentPhase]?.symbol} Phase {detectedPhase || currentPhase}
+                  {phaseInfo[detectedPhase || currentPhase]?.symbol} Phase {detectedPhase || currentPhase}
                 </BodyText>
                 <BodyText style={styles.phaseSubText}>
-                  {phaseMetadata[detectedPhase || currentPhase]?.energy} • Jour {currentDay}
+                  {phaseInfo[detectedPhase || currentPhase]?.energy} • Jour {currentDay}
                 </BodyText>
               </View>
             )}
@@ -294,7 +300,6 @@ export default function CycleScreen() {
         );
         
       case STEPS.VALIDATION:
-        const phaseInfo = phaseMetadata[currentPhase];
         return (
           <View style={styles.stepContent}>
             <BodyText style={styles.stepTitle}>
@@ -318,8 +323,8 @@ export default function CycleScreen() {
                 <>
                   <View style={styles.summaryItem}>
                     <BodyText style={styles.summaryLabel}>Phase actuelle:</BodyText>
-                    <BodyText style={[styles.summaryValue, { color: phaseInfo.color }]}>
-                      {phaseInfo.symbol} {phaseInfo.name}
+                    <BodyText style={[styles.summaryValue, { color: phaseInfo[currentPhase]?.color }]}>
+                      {phaseInfo[currentPhase]?.symbol} {phaseInfo[currentPhase]?.name}
                     </BodyText>
                   </View>
                   
@@ -330,8 +335,8 @@ export default function CycleScreen() {
                   
                   <View style={styles.summaryItem}>
                     <BodyText style={styles.summaryLabel}>Énergie:</BodyText>
-                    <BodyText style={[styles.summaryValue, { color: phaseInfo.color }]}>
-                      {phaseInfo.energy}
+                    <BodyText style={[styles.summaryValue, { color: phaseInfo[currentPhase]?.color }]}>
+                      {phaseInfo[currentPhase]?.energy}
                     </BodyText>
                   </View>
                 </>

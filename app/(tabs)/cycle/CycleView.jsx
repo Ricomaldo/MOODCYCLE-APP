@@ -1,9 +1,9 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 File: app/(tabs)/cycle/CycleView.jsx - AVEC CYCLEHEADER
+// 📄 File: app/(tabs)/cycle/CycleView.jsx - NOUVELLE ARCHITECTURE
 // 🧩 Type: Écran Principal Cycle
-// 📚 Description: Cycle avec header spécialisé + modal paramètres
-// 🕒 Version: 6.0 - 2025-06-28 - ARCHITECTURE FINALE
+// 📚 Description: Cycle avec nouveau store dédié
+// 🕒 Version: 7.0 - 2025-06-28 - ARCHITECTURE SIMPLIFIÉE
 // ─────────────────────────────────────────────────────────
 //
 import React, { useState } from 'react';
@@ -15,15 +15,27 @@ import { BodyText } from '../../../src/core/ui/Typography';
 import ScreenContainer from '../../../src/core/layout/ScreenContainer';
 import { CycleHeader } from '../../../src/core/layout/SimpleHeader';
 import CycleWheel from '../../../src/features/cycle/CycleWheel';
-import { useCycle } from '../../../src/hooks/useCycle';
+import { useCycleStore } from '../../../src/stores/useCycleStore';
+import { getCurrentCycleDay, getCurrentPhase, getCurrentPhaseInfo, getNextPeriodDate, getDaysUntilNextPeriod } from '../../../src/utils/cycleCalculations';
 import { useUserStore } from '../../../src/stores/useUserStore';
 import { PhaseIcon } from '../../../src/config/iconConstants';
 import QuickTrackingModal from '../../../src/features/notebook/QuickTrackingModal';
 import ParametresModal from '../../../src/core/settings/ParametresModal';
 
 export default function CycleView() {
-  const cycleData = useCycle() || {};
-  const { currentPhase, currentDay, phaseInfo, hasData, cycle, nextPeriodDate, daysUntilNextPeriod } = cycleData;
+  // ✅ UTILISATION DIRECTE DU STORE ZUSTAND - ULTRA SIMPLE
+  const cycleData = useCycleStore((state) => state);
+  const startNewCycle = useCycleStore((state) => state.startNewCycle);
+  const endPeriod = useCycleStore((state) => state.endPeriod);
+  
+  // Calculs directs (pas de hooks complexes)
+  const currentDay = getCurrentCycleDay(cycleData.lastPeriodDate, cycleData.length);
+  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
+  const phaseInfo = getCurrentPhaseInfo(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
+  const nextPeriodDate = getNextPeriodDate(cycleData.lastPeriodDate, cycleData.length);
+  const daysUntilNextPeriod = getDaysUntilNextPeriod(cycleData.lastPeriodDate, cycleData.length);
+  const hasData = !!(cycleData.lastPeriodDate && cycleData.length);
+
   const { profile } = useUserStore();
   const { theme } = useTheme();
 
@@ -88,9 +100,20 @@ export default function CycleView() {
     router.push(`/(tabs)/cycle/phases/${phase}`);
   }, []);
 
+  // 🩸 Handlers pour le bouton règles - SIMPLIFIÉ
+  const handlePeriodStart = React.useCallback(() => {
+    console.log('🩸 Démarrage nouveau cycle');
+    startNewCycle();
+  }, [startNewCycle]);
+
+  const handlePeriodEnd = React.useCallback(() => {
+    console.log('✅ Fin des règles');
+    endPeriod();
+  }, [endPeriod]);
+
   const styles = getStyles(theme);
 
-  if (!cycle) {
+  if (!cycleData) {
     return <ScreenContainer><BodyText>Cycle non initialisé</BodyText></ScreenContainer>;
   }
 
@@ -140,11 +163,8 @@ export default function CycleView() {
         {/* Roue du cycle */}
         <View style={styles.wheelContainer}>
           <CycleWheel
-            currentPhase={currentPhase}
             size={240}
             userName={safeProfile.prenom || 'Emma'}
-            cycleDay={currentDay}
-            cycleLength={cycle?.length || 28}
             onPhasePress={handlePhasePress}
           />
         </View>
@@ -320,23 +340,23 @@ const getPhaseFocus = (phase) => {
 };
 
 const getPhaseDuration = (phase) => {
-  const durations = {
+  const phaseDurations = {
     menstrual: '3-7',
     follicular: '7-10',
     ovulatory: '3-5',
     luteal: '10-14'
   };
-  return durations[phase] || '5-7';
+  return phaseDurations[phase] || '?';
 };
 
 const getPhaseDisplayName = (phase) => {
-  const names = {
-    menstrual: 'Règles',
+  const phaseNames = {
+    menstrual: 'Menstruelle',
     follicular: 'Folliculaire',
-    ovulatory: 'Ovulation',
+    ovulatory: 'Ovulatoire',
     luteal: 'Lutéale'
   };
-  return names[phase] || phase;
+  return phaseNames[phase] || phase;
 };
 
 const getStyles = (theme) => StyleSheet.create({
@@ -506,7 +526,6 @@ const getStyles = (theme) => StyleSheet.create({
   periodButtonContainer: {
     marginBottom: theme.spacing.xl,
     alignItems: 'center',
-    
   },
   periodButton: {
     flexDirection: 'row',
@@ -539,15 +558,3 @@ const getStyles = (theme) => StyleSheet.create({
   },
 });
 
-// 🩸 Handlers pour le bouton règles
-const handlePeriodStart = () => {
-  // TODO: Logique pour marquer le début des règles
-  console.log('Début des règles marqué');
-  // Mettre à jour le cycle, recalculer les phases
-};
-
-const handlePeriodEnd = () => {
-  // TODO: Logique pour marquer la fin des règles  
-  console.log('Fin des règles marquée');
-  // Transition vers phase folliculaire
-};

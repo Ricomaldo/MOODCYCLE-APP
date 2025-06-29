@@ -35,7 +35,7 @@ jest.mock('../../src/stores/useUserStore');
 jest.mock('../../src/stores/useUserIntelligence');
 jest.mock('../../src/stores/useEngagementStore');
 jest.mock('../../src/stores/useChatStore');
-jest.mock('../../src/hooks/useCycle');
+jest.mock('../../src/stores/useCycleStore');
 jest.mock('../../src/hooks/usePersona');
 jest.mock('../../src/hooks/useTheme');
 jest.mock('../../src/services/VignettesService');
@@ -92,8 +92,10 @@ describe('⚡ Performance Flows E2E - Tests Complets', () => {
     useEngagementStore.mockReturnValue(mockEngagementData);
     useEngagementStore.getState = jest.fn().mockReturnValue(mockEngagementData);
 
-    // Hooks additionnels
-    require('../../src/hooks/useCycle').useCycle = jest.fn().mockReturnValue({
+    // Hooks additionnels - RESET à chaque test
+    const { getCycleData } = require('../../src/stores/useCycleStore');
+    getCycleData.mockReset();
+    getCycleData.mockReturnValue({
       currentPhase: 'menstrual',
       phaseInfo: { name: 'Menstruelle' },
       currentDay: 2,
@@ -218,7 +220,8 @@ describe('⚡ Performance Flows E2E - Tests Complets', () => {
       persona: { assigned: 'clara' }
     });
 
-    require('../../src/hooks/useCycle').useCycle.mockReturnValue({
+    const { getCycleData } = require('../../src/stores/useCycleStore');
+    getCycleData.mockReturnValue({
       currentPhase: 'ovulatory',
       phaseInfo: { name: 'Ovulatoire' },
       currentDay: 14,

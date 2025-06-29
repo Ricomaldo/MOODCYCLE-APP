@@ -11,6 +11,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import performanceMonitor from '../core/monitoring/PerformanceMonitor';
+import { useCycleStore } from './useCycleStore';
 
 // 🚀 Démarrer le monitoring de l'hydratation
 performanceMonitor.startStoreHydration('notebookStore');
@@ -48,8 +49,8 @@ export const useNotebookStore = create(
         // Import dynamique pour phase actuelle - utilise les nouvelles utils
         const { getCurrentPhase } = require("../utils/cycleCalculations");
         const { useUserStore } = require("./useUserStore");
-        const cycle = useUserStore.getState().cycle;
-        const currentPhase = getCurrentPhase(cycle.lastPeriodDate, cycle.length, cycle.periodDuration);
+        const cycleData = useCycleStore.getState().getCycleData();
+        const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
 
         const entry = {
           id: Date.now().toString(),
@@ -389,8 +390,8 @@ export const useNotebookStore = create(
       getPhaseBasedSuggestions: () => {
         const { getCurrentPhase } = require("../utils/cycleCalculations");
         const { useUserStore } = require("./useUserStore");
-        const cycle = useUserStore.getState().cycle;
-        const currentPhase = getCurrentPhase(cycle.lastPeriodDate, cycle.length, cycle.periodDuration);
+        const cycleData = useCycleStore.getState().getCycleData();
+        const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
 
         const suggestions = {
           menstrual: [

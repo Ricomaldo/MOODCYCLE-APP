@@ -34,7 +34,7 @@ jest.mock('../../src/stores/useUserStore');
 jest.mock('../../src/stores/useChatStore');
 jest.mock('../../src/stores/useUserIntelligence');
 jest.mock('../../src/stores/useEngagementStore');
-jest.mock('../../src/hooks/useCycle');
+jest.mock('../../src/stores/useCycleStore');
 jest.mock('../../src/hooks/usePersona');
 jest.mock('../../src/hooks/useTheme');
 jest.mock('../../src/hooks/useAdaptiveInterface');
@@ -76,7 +76,7 @@ describe('🎯 Pipeline Vignettes Intégré - Tests Complets', () => {
     useEngagementStore.mockReturnValue(mockEngagementStore);
 
     // Mock hooks additionnels
-    require('../../src/hooks/useCycle').useCycle = jest.fn().mockReturnValue({
+    require('../../src/stores/useCycleStore').useCycleData = jest.fn().mockReturnValue({
       currentPhase: 'menstrual',
       phaseInfo: { name: 'Menstruelle', description: 'Phase de repos' },
       currentDay: 2,
@@ -183,6 +183,17 @@ describe('🎯 Pipeline Vignettes Intégré - Tests Complets', () => {
   // ──────────────────────────────────────────────────────
 
   test('✅ useVignettes intègre correctement VignettesService', async () => {
+    // Force TOUS les mocks pour ce test spécifique - STORE ZUSTAND
+    const { useCycleStore } = require('../../src/stores/useCycleStore');
+    useCycleStore.mockReturnValue({
+      lastPeriodDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // Il y a 2 jours
+      length: 28,
+      periodDuration: 5,
+      currentDay: 2,
+      isRegular: true,
+      hasData: true
+    });
+
     const { result } = renderHook(() => useVignettes());
 
     // Attendre le chargement
@@ -222,6 +233,17 @@ describe('🎯 Pipeline Vignettes Intégré - Tests Complets', () => {
   });
 
   test('✅ useVignettes tracking engagement fonctionnel', async () => {
+    // Force TOUS les mocks pour ce test spécifique - STORE ZUSTAND
+    const { useCycleStore } = require('../../src/stores/useCycleStore');
+    useCycleStore.mockReturnValue({
+      lastPeriodDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // Il y a 2 jours
+      length: 28,
+      periodDuration: 5,
+      currentDay: 2,
+      isRegular: true,
+      hasData: true
+    });
+
     const { result } = renderHook(() => useVignettes());
 
     await waitFor(() => {
@@ -259,6 +281,17 @@ describe('🎯 Pipeline Vignettes Intégré - Tests Complets', () => {
   });
 
   test('✅ usePersonaVignettes spécialisé fonctionnel', async () => {
+    // Force TOUS les mocks pour ce test spécifique - STORE ZUSTAND
+    const { useCycleStore } = require('../../src/stores/useCycleStore');
+    useCycleStore.mockReturnValue({
+      lastPeriodDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // Il y a 2 jours
+      length: 28,
+      periodDuration: 5,
+      currentDay: 2,
+      isRegular: true,
+      hasData: true
+    });
+
     const { result } = renderHook(() => usePersonaVignettes('laure'));
 
     await waitFor(() => {
@@ -277,6 +310,17 @@ describe('🎯 Pipeline Vignettes Intégré - Tests Complets', () => {
     const personas = ['emma', 'laure', 'clara'];
     
     for (const persona of personas) {
+      // Force TOUS les mocks pour ce test spécifique - STORE ZUSTAND
+      const { useCycleStore } = require('../../src/stores/useCycleStore');
+      useCycleStore.mockReturnValue({
+        lastPeriodDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // Il y a 2 jours
+        length: 28,
+        periodDuration: 5,
+        currentDay: 2,
+        isRegular: true,
+        hasData: true
+      });
+
       useUserStore.mockReturnValue({
         ...mockUserData,
         persona: { assigned: persona }
@@ -303,12 +347,24 @@ describe('🎯 Pipeline Vignettes Intégré - Tests Complets', () => {
     const phases = ['menstrual', 'follicular', 'ovulatory', 'luteal'];
     
     for (const phase of phases) {
-      require('../../src/hooks/useCycle').useCycle.mockReturnValue({
-        currentPhase: phase,
-        phaseInfo: { name: phase },
-        currentDay: 2,
-        hasData: true,
-        cycle: { length: 28 }
+      // Force TOUS les mocks pour ce test spécifique - STORE ZUSTAND
+      const { useCycleStore } = require('../../src/stores/useCycleStore');
+      
+      // Calculer les dates pour chaque phase - DATES RÉCENTES
+      const phaseConfig = {
+        menstrual: { lastPeriodDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), currentDay: 2 }, // Il y a 2 jours
+        follicular: { lastPeriodDate: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000), currentDay: 12 }, // Il y a 12 jours
+        ovulatory: { lastPeriodDate: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000), currentDay: 14 }, // Il y a 14 jours
+        luteal: { lastPeriodDate: new Date(Date.now() - 22 * 24 * 60 * 60 * 1000), currentDay: 22 } // Il y a 22 jours
+      };
+      
+      useCycleStore.mockReturnValue({
+        lastPeriodDate: phaseConfig[phase].lastPeriodDate,
+        length: 28,
+        periodDuration: 5,
+        currentDay: phaseConfig[phase].currentDay,
+        isRegular: true,
+        hasData: true
       });
 
       const { result } = renderHook(() => useVignettes());
@@ -437,6 +493,17 @@ describe('🎯 Pipeline Vignettes Intégré - Tests Complets', () => {
   // ──────────────────────────────────────────────────────
 
   test('🎯 Cohérence expérience Emma menstruelle complète', async () => {
+    // Force TOUS les mocks pour ce test spécifique - STORE ZUSTAND
+    const { useCycleStore } = require('../../src/stores/useCycleStore');
+    useCycleStore.mockReturnValue({
+      lastPeriodDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // Il y a 2 jours
+      length: 28,
+      periodDuration: 5,
+      currentDay: 2,
+      isRegular: true,
+      hasData: true
+    });
+
     const { result } = renderHook(() => useVignettes());
 
     await waitFor(() => {
@@ -462,6 +529,17 @@ describe('🎯 Pipeline Vignettes Intégré - Tests Complets', () => {
   });
 
   test('✅ Pipeline complet : VignettesService → useVignettes → tracking', async () => {
+    // Force TOUS les mocks pour ce test spécifique - STORE ZUSTAND
+    const { useCycleStore } = require('../../src/stores/useCycleStore');
+    useCycleStore.mockReturnValue({
+      lastPeriodDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // Il y a 2 jours
+      length: 28,
+      periodDuration: 5,
+      currentDay: 2,
+      isRegular: true,
+      hasData: true
+    });
+
     const { result } = renderHook(() => useVignettes());
 
     // 1. Chargement vignettes

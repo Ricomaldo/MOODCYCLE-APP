@@ -5,7 +5,8 @@
 import { useMemo, useCallback } from 'react';
 import { useUserStore } from '../stores/useUserStore';
 import { useUserIntelligence } from '../stores/useUserIntelligence';
-import { useCycle } from './useCycle';
+import { useCycleStore } from '../stores/useCycleStore';
+import { getCurrentPhase } from '../utils/cycleCalculations';
 import { usePersona } from './usePersona';
 import { createPersonalizationEngine } from '../services/PersonalizationEngine';
 
@@ -49,7 +50,9 @@ const createStableSuggestions = (persona, currentPhase, intelligence, preference
 export function useSmartSuggestions() {
   const { preferences } = useUserStore();
   const { current: persona } = usePersona();
-  const { currentPhase } = useCycle();
+  // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
+  const cycleData = useCycleStore((state) => state);
+  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
   const intelligence = useUserIntelligence();
 
   // ✅ Stabilisation des dépendances

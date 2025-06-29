@@ -21,7 +21,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { BodyText, Caption } from '../../core/ui/Typography';
 import { useTheme } from '../../hooks/useTheme';
 import { useNotebookStore } from '../../stores/useNotebookStore';
-import { useCycle } from '../../hooks/useCycle';
+import { useCycleStore } from '../../stores/useCycleStore';
+import { getCurrentPhase } from '../../utils/cycleCalculations';
 
 const SWIPE_THRESHOLD = 80; // Distance minimum pour déclencher action
 
@@ -37,7 +38,9 @@ export default function SwipeableEntryIOS({
   const { theme } = useTheme();
   const styles = getStyles(theme);
   const { deleteEntry, addTagToEntry } = useNotebookStore();
-  const { currentPhase } = useCycle();
+  // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
+  const cycleData = useCycleStore((state) => state);
+  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
   const translateX = useRef(new Animated.Value(0)).current;
   const lastGestureTime = useRef(0);
   const entryTags = getEntryTags(item);

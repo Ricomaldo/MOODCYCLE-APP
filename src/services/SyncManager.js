@@ -11,6 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import { getApiRequestConfig } from '../config/api';
 import NetworkQueue from './NetworkQueue';
+import { useCycleStore } from '../stores/useCycleStore';
 
 const SYNC_STORAGE_KEY = 'sync_metadata_v1';
 const SYNC_INTERVAL = 5 * 60 * 1000; // 5 minutes
@@ -88,13 +89,12 @@ class SyncManager {
   
   async syncCycle() {
     try {
-      const { useUserStore } = require('../stores/useUserStore');
-      const cycle = useUserStore.getState().cycle;
+      const cycleData = useCycleStore.getState().getCycleData();
       
-      if (!cycle.lastPeriodDate) return;
+      if (!cycleData.lastPeriodDate) return;
       
       const lastSync = this.syncMetadata.lastSync.cycle || 0;
-      const hasChanges = this.detectChanges('cycle', cycle, lastSync);
+      const hasChanges = this.detectChanges('cycle', cycleData, lastSync);
       
       if (!hasChanges) return;
       
@@ -102,7 +102,7 @@ class SyncManager {
         url: `${getApiRequestConfig().baseURL}/api/sync/cycle`,
         method: 'POST',
         body: {
-          cycle,
+          cycle: cycleData,
           lastSync,
           timestamp: Date.now()
         },

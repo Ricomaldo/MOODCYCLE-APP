@@ -7,8 +7,10 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useUserStore } from '../stores/useUserStore';
 import { useUserIntelligence } from '../stores/useUserIntelligence';
-import { useCycle } from './useCycle';
 import { getPersonalizedInsight, refreshInsightsCache } from '../services/InsightsEngine';
+import { useCycleStore } from '../stores/useCycleStore';
+import { getCurrentPhase } from '../utils/cycleCalculations';
+import { useNotebookStore } from '../stores/useNotebookStore';
 
 // ✅ PATTERNS DE RÉVÉLATION PERSONNELLE
 const REVELATION_PATTERNS = {
@@ -62,7 +64,10 @@ const HOOK_CACHE_TTL = 5 * 60 * 1000; // 5min
 export function usePersonalizedInsight(options = {}) {
   const user = useUserStore();
   const intelligence = useUserIntelligence();
-  const { currentPhase } = useCycle();
+  // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
+  const cycleData = useCycleStore((state) => state);
+  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
+  const { entries } = useNotebookStore();
   
   // États enrichis
   const [insight, setInsight] = useState(null);

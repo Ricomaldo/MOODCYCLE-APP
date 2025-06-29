@@ -16,7 +16,8 @@ import { useTheme } from '../../hooks/useTheme';
 import { BodyText, Caption } from '../../core/ui/Typography';
 import { useUserStore } from '../../stores/useUserStore';
 import { useEngagementStore } from '../../stores/useEngagementStore';
-import { useCycle } from '../../hooks/useCycle';
+import { useCycleStore } from '../../stores/useCycleStore';
+import { getCurrentPhase } from '../../utils/cycleCalculations';
 
 
 export default function VignetteCard({ 
@@ -42,10 +43,11 @@ export default function VignetteCard({
   // ✅ HOOKS avec vérification d'erreur
   const userStore = useUserStore();
   const engagementStore = useEngagementStore();
-  const cycleData = useCycle();
+  // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
+  const cycleData = useCycleStore((state) => state);
+  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration) || 'menstrual';
 
   const persona = userStore?.persona || {};
-  const currentPhase = cycleData?.currentPhase || 'menstrual';
   const trackAction = engagementStore?.trackAction || (() => {});
 
   // ✅ ACTIONS NAVIGATION COMPLÈTES

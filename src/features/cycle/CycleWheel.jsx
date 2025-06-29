@@ -13,17 +13,22 @@ import Svg, { Circle, Path, G, Line, Text } from 'react-native-svg';
 import { useTheme } from '../../hooks/useTheme';
 import { CYCLE_DEFAULTS, PHASE_NAMES, WHEEL_CONSTANTS, THERAPEUTIC_WHEEL } from '../../config/cycleConstants';
 import { getPhaseSymbol, getPhaseMetadata } from '../../utils/formatters';
+import { useCycleStore } from '../../stores/useCycleStore';
+import { getCurrentPhase, getCurrentCycleDay } from '../../utils/cycleCalculations';
 
 export default function CycleWheel({
-  currentPhase = PHASE_NAMES.MENSTRUAL,
   size = 250,
   userName = 'Emma',
-  cycleDay = 8,
-  cycleLength = CYCLE_DEFAULTS.LENGTH,
   onPhasePress = () => {},
 }) {
   const { theme } = useTheme();
   const styles = getStyles(theme);
+  
+  // ✅ MIGRATION: Utilisation du store Zustand au lieu des props
+  const cycleData = useCycleStore((state) => state);
+  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
+  const cycleDay = getCurrentCycleDay(cycleData.lastPeriodDate, cycleData.length);
+  const cycleLength = cycleData.length;
   
   // Configuration des phases du cycle depuis les constantes
   const phases = Object.values(PHASE_NAMES);
@@ -44,11 +49,12 @@ export default function CycleWheel({
   const degreesPerArc = 90 / arcsPerQuart;
   const totalArcs = phases.length * arcsPerQuart;
 
-  // Extension pour les lignes de séparation
+  // ✨ Extension pour les lignes de séparation + espace pour badge jour
   const separatorExtension = WHEEL_CONSTANTS.SEPARATOR_EXTENSION;
-  const adjustedSize = size + 2 * separatorExtension;
-  const adjustedCenterX = radius + separatorExtension;
-  const adjustedCenterY = radius + separatorExtension;
+  const extraSpace = 50; // Espace supplémentaire pour badge jour et textes
+  const adjustedSize = size + 2 * separatorExtension + extraSpace;
+  const adjustedCenterX = radius + separatorExtension + extraSpace / 2;
+  const adjustedCenterY = radius + separatorExtension + extraSpace / 2;
 
   // Angle de rotation pour maintenir la position actuelle en haut
   const rotationAngle = -(((cycleDay - 0.5) / cycleLength) * 360);
@@ -240,6 +246,47 @@ export default function CycleWheel({
   const markerX = adjustedCenterX;
   const markerY = adjustedCenterY - (radius - strokeWidth / 2);
 
+  // ✨ AMÉLIORATION 1 : Agrandir le cercle intérieur
+  const enlargedInnerRadius = strokeWidth * 1.4; // Plus grand de 40%
+
+  // ✨ AMÉLIORATION 2 & 3 : Rayons colorés reliant cercle intérieur à la roue
+  const coloredRays = [];
+  const rayCount = 12; // Nombre de rayons
+  for (let i = 0; i < rayCount; i++) {
+    const angle = (i * 360 / rayCount) + rotationAngle;
+    const angleRad = ((angle - 90) * Math.PI) / 180;
+    
+    // Point de départ : bordure du cercle intérieur agrandi
+    const innerPoint = {
+      x: adjustedCenterX + enlargedInnerRadius * Math.cos(angleRad),
+      y: adjustedCenterY + enlargedInnerRadius * Math.sin(angleRad),
+    };
+    
+    // Point d'arrivée : bordure intérieure de la roue
+    const outerPoint = {
+      x: adjustedCenterX + innerRadius * Math.cos(angleRad),
+      y: adjustedCenterY + innerRadius * Math.sin(angleRad),
+    };
+    
+    // Calculer la couleur du segment correspondant au rayon
+    const normalizedAngle = ((angle - rotationAngle + 360) % 360);
+    const arcIndex = Math.floor((normalizedAngle / 360) * totalArcs);
+    const rayColor = getArcColor(arcIndex);
+    
+    coloredRays.push(
+      <Line
+        key={`ray-${i}`}
+        x1={innerPoint.x}
+        y1={innerPoint.y}
+        x2={outerPoint.x}
+        y2={outerPoint.y}
+        stroke={rayColor}
+        strokeWidth={2}
+        opacity={0.7}
+      />
+    );
+  }
+
   return (
     <View style={[styles.container, { width: size, height: size }]}>
       <Svg width={adjustedSize} height={adjustedSize}>
@@ -248,28 +295,30 @@ export default function CycleWheel({
           {separatorLines}
           {/* 🔮 Axes cardinaux thérapeutiques */}
           {cardinalAxes}
+          {/* ✨ Rayons colorés reliant cercle intérieur à roue */}
+          {coloredRays}
         </G>
 
         {/* 🔮 Descriptions énergétiques courbes */}
         {phaseDescriptions}
 
-        {/* Cercle central avec décoration mandala */}
+        {/* ✨ Cercle central agrandi avec décoration mandala */}
         <Circle
           cx={adjustedCenterX}
           cy={adjustedCenterY}
-          r={strokeWidth}
+          r={enlargedInnerRadius}
           fill={theme.colors.background}
           stroke={theme.colors.border}
           strokeWidth={1}
           opacity={0.9}
         />
 
-        {/* 🔮 Cercle intérieur décoratif */}
+        {/* ✨ Cercle intérieur décoratif agrandi */}
         {THERAPEUTIC_WHEEL.MANDALA_STYLE.INNER_CIRCLE_DECORATION && (
           <Circle
             cx={adjustedCenterX}
             cy={adjustedCenterY}
-            r={strokeWidth - THERAPEUTIC_WHEEL.MANDALA_STYLE.INNER_CIRCLE_RADIUS}
+            r={enlargedInnerRadius - THERAPEUTIC_WHEEL.MANDALA_STYLE.INNER_CIRCLE_RADIUS}
             fill="none"
             stroke={theme.colors.phases[currentPhase]}
             strokeWidth={2}
@@ -292,8 +341,32 @@ export default function CycleWheel({
           {displayName}
         </Text>
 
-        {/* Marqueur de position fixe en haut */}
-        <Circle cx={markerX} cy={markerY} r={WHEEL_CONSTANTS.MARKER_RADIUS} fill="white" stroke="#333" strokeWidth={2} />
+        {/* ✨ Curseur triangulaire avec ombre portée */}
+        {/* Ombre du triangle */}
+        <Path
+          d={`M ${markerX + 2} ${markerY - 6} L ${markerX - 4} ${markerY + 6} L ${markerX + 8} ${markerY + 6} Z`}
+          fill="rgba(0,0,0,0.3)"
+        />
+        {/* Triangle principal pointant vers la roue */}
+        <Path
+          d={`M ${markerX} ${markerY - 8} L ${markerX - 6} ${markerY + 4} L ${markerX + 6} ${markerY + 4} Z`}
+          fill={theme.colors.phases[currentPhase]}
+          stroke="white"
+          strokeWidth={2}
+        />
+        
+        {/* ✨ Badge jour à côté du curseur */}
+        <Text
+          x={markerX + 20}
+          y={markerY}
+          textAnchor="middle"
+          alignmentBaseline="middle"
+          fontSize={12}
+          fontWeight="600"
+          fill={theme.colors.phases[currentPhase]}
+        >
+          J{cycleDay}
+        </Text>
       </Svg>
 
       {/* 🏷️ Légende des phases - Conditionnelle */}

@@ -99,3 +99,34 @@ export const mockEngagementStore = {
     { action: 'explore', priority: 'high', context: 'cycle_tracking' }
   ])
 };
+
+export const mockCycleStore = {
+  lastPeriodDate: new Date().toISOString(),
+  length: 28,
+  periodDuration: 5,
+  isRegular: true,
+  trackingExperience: 'basic',
+  startNewCycle: jest.fn(),
+  endPeriod: jest.fn(),
+  updateCycle: jest.fn(),
+  resetCycle: jest.fn(),
+};
+
+export const mockCycleData = {
+  lastPeriodDate: new Date().toISOString(),
+  length: 28,
+  periodDuration: 5,
+  isRegular: true,
+  trackingExperience: 'basic',
+  currentPhase: 'follicular',
+  currentDay: 8,
+  phaseInfo: {
+    name: 'Folliculaire',
+    description: 'Phase de renouveau',
+    color: '#4CAF50',
+    emoji: '🌱'
+  },
+  hasData: true,
+  nextPeriodDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString(),
+  daysUntilNextPeriod: 20
+};

@@ -11,6 +11,232 @@
 import { CYCLE_DEFAULTS } from '../config/cycleConstants';
 
 // ═══════════════════════════════════════════════════════
+// 🔄 CYCLE OBSERVATION MODES
+// ═══════════════════════════════════════════════════════
+
+export const CYCLE_MODES = {
+  PREDICTIVE: 'predictive',  // Mode actuel (calculs uniquement)
+  HYBRID: 'hybrid',         // Observation + prédictif
+  OBSERVATION: 'observation' // Patterns utilisatrice pure
+};
+
+/**
+ * Détermine le mode cycle optimal selon maturité utilisatrice
+ * @param {Object} userIntelligence - Store intelligence utilisateur
+ * @param {string} engagementLevel - Niveau engagement (discovery/learning/autonomous)
+ * @returns {string} Mode cycle optimal
+ */
+export const getCycleMode = (userIntelligence, engagementLevel) => {
+  // Fallback défaut = mode actuel pour backward compatibility
+  if (!userIntelligence || !engagementLevel) {
+    return CYCLE_MODES.PREDICTIVE;
+  }
+
+  const { observationPatterns, learning } = userIntelligence;
+  const confidence = learning?.confidence || 0;
+  const hasObservations = observationPatterns?.lastObservations?.length > 0;
+  const observationConsistency = observationPatterns?.consistency || 0;
+
+  // Mode forcé par utilisatrice
+  if (observationPatterns?.preferredMode) {
+    return observationPatterns.preferredMode;
+  }
+
+  // Logique auto-switching selon maturité
+  switch (engagementLevel) {
+    case 'autonomous':
+      // Autonome + observations consistantes = observation pure
+      if (hasObservations && observationConsistency > 0.7) {
+        return CYCLE_MODES.OBSERVATION;
+      }
+      // Sinon hybrid pour transition douce
+      return CYCLE_MODES.HYBRID;
+      
+    case 'learning':
+      // Learning + confiance moyenne = hybrid
+      if (confidence > 40 && hasObservations) {
+        return CYCLE_MODES.HYBRID;
+      }
+      // Sinon prédictif avec invitations observer
+      return CYCLE_MODES.PREDICTIVE;
+      
+    case 'discovery':
+    default:
+      // Débutantes = prédictif (mode actuel)
+      return CYCLE_MODES.PREDICTIVE;
+  }
+};
+
+/**
+ * Version adaptative de getCurrentPhase avec support modes
+ * BACKWARD COMPATIBLE - Signature identique
+ * @param {Date|string} lastPeriodDate 
+ * @param {number} cycleLength 
+ * @param {number} periodDuration 
+ * @param {Object} options - Options étendues (optionnel)
+ * @returns {string} Phase actuelle
+ */
+export const getCurrentPhaseAdaptive = (
+  lastPeriodDate, 
+  cycleLength = CYCLE_DEFAULTS.LENGTH, 
+  periodDuration = CYCLE_DEFAULTS.PERIOD_DURATION,
+  options = {}
+) => {
+  const { mode = 'auto', userIntelligence, engagementLevel } = options;
+  
+  // Déterminer mode si auto
+  const effectiveMode = mode === 'auto' 
+    ? getCycleMode(userIntelligence, engagementLevel)
+    : mode;
+
+  // Mode PREDICTIVE = comportement actuel exact
+  if (effectiveMode === CYCLE_MODES.PREDICTIVE) {
+    return getCurrentPhase(lastPeriodDate, cycleLength, periodDuration);
+  }
+
+  // Mode HYBRID = observation avec fallback prédictif
+  if (effectiveMode === CYCLE_MODES.HYBRID) {
+    const observedPhase = getObservedPhase(userIntelligence);
+    if (observedPhase && observedPhase.confidence > 0.5) {
+      return observedPhase.phase;
+    }
+    // Fallback sur calculs
+    return getCurrentPhase(lastPeriodDate, cycleLength, periodDuration);
+  }
+
+  // Mode OBSERVATION = patterns utilisatrice uniquement
+  if (effectiveMode === CYCLE_MODES.OBSERVATION) {
+    const observedPhase = getObservedPhase(userIntelligence);
+    if (observedPhase) {
+      return observedPhase.phase;
+    }
+    // Fallback sécurité si aucune observation
+    console.warn('Mode observation sans données, fallback predictive');
+    return getCurrentPhase(lastPeriodDate, cycleLength, periodDuration);
+  }
+
+  // Défaut = comportement actuel
+  return getCurrentPhase(lastPeriodDate, cycleLength, periodDuration);
+};
+
+/**
+ * Helper privé - Récupère phase observée depuis intelligence
+ * @private
+ */
+const getObservedPhase = (userIntelligence) => {
+  // GARDE NULL SAFETY
+  if (!userIntelligence?.observationPatterns?.lastObservations) {
+    return null;
+  }
+  
+  if (!userIntelligence.observationPatterns.lastObservations.length) {
+    return null;
+  }
+
+  const recent = userIntelligence.observationPatterns.lastObservations[0];
+  
+  // Analyse patterns pour déterminer phase
+  const patterns = analyzeObservationPatterns(
+    userIntelligence.observationPatterns.lastObservations
+  );
+  
+  return {
+    phase: patterns.mostLikelyPhase || 'menstrual',
+    confidence: patterns.confidence || 0,
+    basedOn: patterns.signals || []
+  };
+};
+
+/**
+ * Helper privé - Analyse patterns observations
+ * @private
+ */
+const analyzeObservationPatterns = (observations) => {
+  if (!observations || observations.length === 0) {
+    return { mostLikelyPhase: null, confidence: 0 };
+  }
+
+  // Analyse simple basée sur les patterns récents
+  const recentObs = observations.slice(0, 5);
+  const phaseScores = {
+    menstrual: 0,
+    follicular: 0,
+    ovulatory: 0,
+    luteal: 0
+  };
+
+  recentObs.forEach(obs => {
+    // Scoring basé sur symptômes/ressentis
+    if (obs.symptoms?.includes('cramps') || obs.mood === 'low_energy') {
+      phaseScores.menstrual += 1;
+    }
+    if (obs.energy === 'rising' || obs.mood === 'optimistic') {
+      phaseScores.follicular += 1;
+    }
+    if (obs.energy === 'peak' || obs.mood === 'confident') {
+      phaseScores.ovulatory += 1;
+    }
+    if (obs.mood === 'sensitive' || obs.symptoms?.includes('pms')) {
+      phaseScores.luteal += 1;
+    }
+  });
+
+  // Déterminer phase la plus probable
+  const maxScore = Math.max(...Object.values(phaseScores));
+  const mostLikelyPhase = Object.keys(phaseScores).find(
+    phase => phaseScores[phase] === maxScore
+  );
+
+  return {
+    mostLikelyPhase,
+    confidence: maxScore / recentObs.length,
+    signals: Object.entries(phaseScores)
+      .filter(([_, score]) => score > 0)
+      .map(([phase, score]) => ({ phase, score }))
+  };
+};
+
+// ═══════════════════════════════════════════════════════
+// 🔧 HELPERS OBSERVATION
+// ═══════════════════════════════════════════════════════
+
+/**
+ * Détermine si utilisatrice ready pour observation
+ */
+export const isReadyForObservationMode = (userIntelligence, engagementMetrics) => {
+  const hasEnoughData = userIntelligence?.observationPatterns?.lastObservations?.length >= 10;
+  const hasGoodConsistency = userIntelligence?.observationPatterns?.consistency > 0.6;
+  const isEngaged = engagementMetrics?.daysUsed >= 14;
+  
+  return hasEnoughData && hasGoodConsistency && isEngaged;
+};
+
+/**
+ * Génère guidance contextuelle selon mode
+ */
+export const getCycleModeGuidance = (currentMode, phase) => {
+  const guidance = {
+    [CYCLE_MODES.PREDICTIVE]: {
+      message: "Je calcule ta phase selon tes dernières règles",
+      action: "Note tes ressentis pour personnaliser",
+      icon: "📊"
+    },
+    [CYCLE_MODES.HYBRID]: {
+      message: "J'apprends de tes observations pour affiner",
+      action: "Continue à observer tes patterns",
+      icon: "🔄"
+    },
+    [CYCLE_MODES.OBSERVATION]: {
+      message: "Je me base sur tes ressentis uniques",
+      action: "Tu connais ton corps mieux que quiconque",
+      icon: "🌟"
+    }
+  };
+
+  return guidance[currentMode] || guidance[CYCLE_MODES.PREDICTIVE];
+};
+
+// ═══════════════════════════════════════════════════════
 // 🧮 CALCULS DE BASE
 // ═══════════════════════════════════════════════════════
 

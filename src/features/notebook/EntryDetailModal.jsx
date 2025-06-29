@@ -29,7 +29,8 @@ import { captureRef } from 'react-native-view-shot';
 import { useTheme } from '../../hooks/useTheme';
 import { Heading2, BodyText, Caption } from '../../core/ui/Typography';
 import { useNotebookStore } from '../../stores/useNotebookStore';
-import { useCycle } from '../../hooks/useCycle';
+import { useCycleStore } from '../../stores/useCycleStore';
+import { getCurrentPhase } from '../../utils/cycleCalculations';
 import ShareableCard from '../shared/ShareableCard';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -46,7 +47,9 @@ export default function EntryDetailModal({
   const styles = getStyles(theme);
   const insets = useSafeAreaInsets();
   const { deleteEntry, formatTrackingEmotional, calculateTrends, addTagToEntry } = useNotebookStore();
-  const { currentPhase } = useCycle();
+  // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
+  const cycleData = useCycleStore((state) => state);
+  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
   
   // États
   const [currentIndex, setCurrentIndex] = useState(initialIndex);

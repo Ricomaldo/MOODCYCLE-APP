@@ -9,6 +9,7 @@
 import React from "react";
 import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { usePathname } from "expo-router";
 import FloatingMelune from "./FloatingMelune";
 
 export default function ScreenContainer({
@@ -19,6 +20,13 @@ export default function ScreenContainer({
   showMelune = true, // Nouvelle prop pour contrôler Melune
 }) {
   const insets = useSafeAreaInsets();
+  const pathname = usePathname();
+  
+  // Détecter si on est dans l'onboarding
+  const isOnboarding = pathname?.startsWith('/onboarding');
+  
+  // Ne pas afficher Melune dans l'onboarding
+  const shouldShowMelune = showMelune && !isOnboarding;
 
   return (
     <View
@@ -32,7 +40,7 @@ export default function ScreenContainer({
       ]}
     >
       {children}
-      {showMelune && <FloatingMelune />}
+      {shouldShowMelune && <FloatingMelune />}
     </View>
   );
 }

@@ -59,12 +59,42 @@ const VOICE_TONES = [
   }
 ];
 
+// Positions disponibles pour Melune
+const MELUNE_POSITIONS = [
+  {
+    id: 'bottom-right',
+    name: 'Bas droite',
+    description: 'Position classique, accessible au pouce droit',
+    icon: '↘️'
+  },
+  {
+    id: 'bottom-left',
+    name: 'Bas gauche',
+    description: 'Accessible au pouce gauche',
+    icon: '↙️'
+  },
+  {
+    id: 'top-right',
+    name: 'Haut droite',
+    description: 'Discrète en haut à droite',
+    icon: '↗️'
+  },
+  {
+    id: 'top-left',
+    name: 'Haut gauche',
+    description: 'Discrète en haut à gauche',
+    icon: '↖️'
+  }
+];
+
 export default function MeluneTab({ onDataChange }) {
   const { melune, updateMelune } = useUserStore();
   const { theme } = useTheme();
   const styles = getStyles(theme);
   const [selectedAvatar, setSelectedAvatar] = useState(melune?.avatarStyle || 'classic');
   const [selectedTone, setSelectedTone] = useState(melune?.tone || 'friendly');
+  const [selectedPosition, setSelectedPosition] = useState(melune?.position || 'bottom-right');
+  const [isAnimated, setIsAnimated] = useState(melune?.animated !== false);
   const [hasChanges, setHasChanges] = useState(false);
 
   // ✅ DEBUG : Ajout de logs pour tracer le problème
@@ -79,17 +109,23 @@ export default function MeluneTab({ onDataChange }) {
   useEffect(() => {
     setSelectedAvatar(melune?.avatarStyle || 'classic');
     setSelectedTone(melune?.tone || 'friendly');
-  }, [melune?.avatarStyle, melune?.tone]);
+    setSelectedPosition(melune?.position || 'bottom-right');
+    setIsAnimated(melune?.animated !== false);
+  }, [melune?.avatarStyle, melune?.tone, melune?.position, melune?.animated]);
 
   // Détecter les changements
   useEffect(() => {
     const hasAvatarChange = selectedAvatar !== (melune?.avatarStyle || 'classic');
     const hasToneChange = selectedTone !== (melune?.tone || 'friendly');
-    const hasAnyChange = hasAvatarChange || hasToneChange;
+    const hasPositionChange = selectedPosition !== (melune?.position || 'bottom-right');
+    const hasAnimationChange = isAnimated !== (melune?.animated !== false);
+    const hasAnyChange = hasAvatarChange || hasToneChange || hasPositionChange || hasAnimationChange;
     
     console.log('🔄 Change detection:', {
       hasAvatarChange,
       hasToneChange,
+      hasPositionChange,
+      hasAnimationChange,
       hasAnyChange,
       currentStore: melune?.avatarStyle,
       selectedAvatar
@@ -97,23 +133,27 @@ export default function MeluneTab({ onDataChange }) {
     
     setHasChanges(hasAnyChange);
     onDataChange?.(hasAnyChange);
-  }, [selectedAvatar, selectedTone, melune?.avatarStyle, melune?.tone, onDataChange]);
+  }, [selectedAvatar, selectedTone, selectedPosition, isAnimated, melune?.avatarStyle, melune?.tone, melune?.position, melune?.animated, onDataChange]);
 
   // ✅ Auto-save CORRIGÉ avec useCallback pour stabiliser la fonction
   const handleSave = useCallback(() => {
     console.log('💾 Saving to store:', {
       avatarStyle: selectedAvatar,
-      tone: selectedTone
+      tone: selectedTone,
+      position: selectedPosition,
+      animated: isAnimated
     });
     
     updateMelune({
       avatarStyle: selectedAvatar,
-      tone: selectedTone
+      tone: selectedTone,
+      position: selectedPosition,
+      animated: isAnimated
     });
     
     setHasChanges(false);
     onDataChange?.(false);
-  }, [selectedAvatar, selectedTone, updateMelune, onDataChange]);
+  }, [selectedAvatar, selectedTone, selectedPosition, isAnimated, updateMelune, onDataChange]);
 
   // Auto-save en temps réel - CORRECTION FINALE
   useEffect(() => {
@@ -250,6 +290,88 @@ export default function MeluneTab({ onDataChange }) {
         </View>
       </View>
 
+      {/* Position de Melune */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Feather name="map-pin" size={20} color={theme.colors.primary} />
+          <BodyText style={styles.sectionTitle}>Position de Melune</BodyText>
+        </View>
+        
+        <View style={styles.positionGrid}>
+          {MELUNE_POSITIONS.map((position) => (
+            <TouchableOpacity
+              key={position.id}
+              style={[
+                styles.positionCard,
+                selectedPosition === position.id && styles.positionCardSelected
+              ]}
+              onPress={() => setSelectedPosition(position.id)}
+              activeOpacity={0.7}
+            >
+              <BodyText style={styles.positionIcon}>{position.icon}</BodyText>
+              <BodyText style={[
+                styles.positionName,
+                selectedPosition === position.id && styles.positionNameSelected
+              ]}>
+                {position.name}
+              </BodyText>
+              <BodyText style={styles.positionDescription}>
+                {position.description}
+              </BodyText>
+              {selectedPosition === position.id && (
+                <View style={styles.checkmarkSmall}>
+                  <Feather name="check" size={16} color={theme.colors.primary} />
+                </View>
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {/* Animation de Melune */}
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Feather name="zap" size={20} color={theme.colors.primary} />
+          <BodyText style={styles.sectionTitle}>Animation</BodyText>
+        </View>
+        
+        <TouchableOpacity
+          style={[
+            styles.animationToggle,
+            isAnimated && styles.animationToggleActive
+          ]}
+          onPress={() => setIsAnimated(!isAnimated)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.animationToggleContent}>
+            <View style={styles.animationInfo}>
+              <BodyText style={[
+                styles.animationTitle,
+                isAnimated && styles.animationTitleActive
+              ]}>
+                🧚‍♀️ Melune animée
+              </BodyText>
+              <BodyText style={styles.animationDescription}>
+                {isAnimated 
+                  ? 'Melune bouge et flotte comme une vraie fée capricieuse'
+                  : 'Melune reste statique à sa position'
+                }
+              </BodyText>
+            </View>
+            
+            <View style={[
+              styles.toggleSwitch,
+              isAnimated && styles.toggleSwitchActive
+            ]}>
+              <View style={[
+                styles.toggleThumb,
+                isAnimated && styles.toggleThumbActive
+              ]} />
+            </View>
+          </View>
+        </TouchableOpacity>
+      </View>
+
       {/* Aperçu personnalisé */}
       <View style={styles.previewSection}>
         <View style={styles.sectionHeader}>
@@ -262,7 +384,7 @@ export default function MeluneTab({ onDataChange }) {
             <MeluneAvatar 
               size="large" 
               avatarStyle={selectedAvatar}
-              animated={true}
+              animated={isAnimated}
             />
           </View>
           
@@ -271,6 +393,11 @@ export default function MeluneTab({ onDataChange }) {
               {VOICE_TONES.find(t => t.id === selectedTone)?.example}
             </BodyText>
           </View>
+          
+          <BodyText style={styles.previewInfo}>
+            Position : {MELUNE_POSITIONS.find(p => p.id === selectedPosition)?.name} • 
+            Animation : {isAnimated ? 'Activée' : 'Désactivée'}
+          </BodyText>
         </View>
       </View>
 
@@ -446,6 +573,123 @@ const getStyles = (theme) => StyleSheet.create({
     textAlign: 'center',
     fontSize: 15,
     lineHeight: 22,
+  },
+  previewInfo: {
+    textAlign: 'center',
+    fontSize: 12,
+    color: theme.colors.textLight,
+    marginTop: theme.spacing.m,
+  },
+  
+  // Position Grid
+  positionGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: theme.spacing.l,
+    gap: theme.spacing.m,
+  },
+  positionCard: {
+    width: '47%',
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.medium,
+    padding: theme.spacing.l,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+    position: 'relative',
+  },
+  positionCardSelected: {
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primary + '05',
+  },
+  positionIcon: {
+    fontSize: 24,
+    marginBottom: theme.spacing.s,
+  },
+  positionName: {
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: theme.spacing.xs,
+  },
+  positionNameSelected: {
+    color: theme.colors.primary,
+  },
+  positionDescription: {
+    fontSize: 12,
+    color: theme.colors.textLight,
+    textAlign: 'center',
+    lineHeight: 16,
+  },
+  checkmarkSmall: {
+    position: 'absolute',
+    top: theme.spacing.s,
+    right: theme.spacing.s,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: theme.colors.primary + '10',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
+  // Animation Toggle
+  animationToggle: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.medium,
+    marginHorizontal: theme.spacing.l,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  animationToggleActive: {
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primary + '05',
+  },
+  animationToggleContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: theme.spacing.l,
+  },
+  animationInfo: {
+    flex: 1,
+  },
+  animationTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: theme.spacing.xs,
+  },
+  animationTitleActive: {
+    color: theme.colors.primary,
+  },
+  animationDescription: {
+    fontSize: 14,
+    color: theme.colors.textLight,
+    lineHeight: 20,
+  },
+  toggleSwitch: {
+    width: 50,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: theme.colors.border,
+    padding: 2,
+    justifyContent: 'center',
+  },
+  toggleSwitchActive: {
+    backgroundColor: theme.colors.primary,
+  },
+  toggleThumb: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: theme.colors.white,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  toggleThumbActive: {
+    transform: [{ translateX: 20 }],
   },
   
   // Checkmark

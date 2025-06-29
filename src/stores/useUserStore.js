@@ -41,16 +41,7 @@ export const useUserStore = create(
         rituals: 3,      // Rituels bien-être
       },
 
-      // ═══════════════════════════════════════════════════════
-      // 🌙 CYCLE MENSTRUEL (DONNÉES UNIQUEMENT)
-      // ═══════════════════════════════════════════════════════
-      cycle: {
-        lastPeriodDate: null,     // Date dernières règles
-        length: 28,               // Durée cycle
-        periodDuration: 5,        // Durée règles
-        isRegular: null,          // Régularité
-        trackingExperience: null, // 'never', 'basic', 'advanced'
-      },
+
 
       // ═══════════════════════════════════════════════════════
       // 🎭 PERSONA CALCULÉ
@@ -69,6 +60,8 @@ export const useUserStore = create(
         avatarStyle: "classic",    // 'classic', 'modern', 'mystique'
         tone: "friendly",          // 'friendly', 'professional', 'inspiring'
         personalityMatch: null,
+        position: "bottom-right",  // 'bottom-right', 'bottom-left', 'top-right', 'top-left'
+        animated: true,            // true/false pour les animations
       },
 
       // ═══════════════════════════════════════════════════════
@@ -92,10 +85,7 @@ export const useUserStore = create(
           preferences: { ...state.preferences, ...data },
         })),
 
-      updateCycle: (data) =>
-        set((state) => ({
-          cycle: { ...state.cycle, ...data },
-        })),
+
 
       updateMelune: (data) =>
         set((state) => ({
@@ -149,24 +139,9 @@ export const useUserStore = create(
       // Export données pour services externes
       getContextForAPI: () => {
         const state = get();
-        const { getCurrentPhase } = require("../utils/cycleCalculations");
-        
-        // ✅ Protection contre cycle undefined
-        const safeCycle = state.cycle || {
-          lastPeriodDate: null,
-          length: 28,
-          periodDuration: 5
-        };
-        
-        const phase = getCurrentPhase(
-          safeCycle.lastPeriodDate, 
-          safeCycle.length, 
-          safeCycle.periodDuration
-        );
         
         return {
           persona: state.persona?.assigned,
-          phase, // ✅ Phase dynamique calculée
           preferences: state.preferences || {},
           profile: state.profile || {},
         };
@@ -216,6 +191,8 @@ export const useUserStore = create(
             avatarStyle: "classic",
             tone: "friendly",
             personalityMatch: null,
+            position: "bottom-right",
+            animated: true,
           },
           syncMetadata: {
             lastSyncAt: null,
@@ -229,7 +206,6 @@ export const useUserStore = create(
       partialize: (state) => ({
         profile: state.profile,
         preferences: state.preferences,
-        cycle: state.cycle,
         persona: state.persona,
         melune: state.melune,
         syncMetadata: state.syncMetadata,

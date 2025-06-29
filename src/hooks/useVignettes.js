@@ -5,10 +5,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useUserStore } from '../stores/useUserStore';
 import { useEngagementStore } from '../stores/useEngagementStore';
-import { useCycle } from './useCycle';
+import { useCycleStore } from '../stores/useCycleStore';
+import { getCurrentPhase } from '../utils/cycleCalculations';
 import { useAdaptiveInterface } from './useAdaptiveInterface';
 import { useSmartSuggestions } from './useSmartSuggestions';
 import VignettesService from '../services/VignettesService';
+import vignettesData from '../data/vignettes.json';
 
 export function useVignettes(forcePhase = null, forcePersona = null) {
   const [vignettes, setVignettes] = useState([]);
@@ -16,12 +18,15 @@ export function useVignettes(forcePhase = null, forcePersona = null) {
   const [error, setError] = useState(null);
 
   // Stores & hooks
-  const { persona } = useUserStore();
-  const cycleData = forcePhase ? null : useCycle();
-  const cycleCurrentPhase = cycleData?.currentPhase || 'follicular';
-  const currentPhase = forcePhase || cycleCurrentPhase;
+  const { persona, profile } = useUserStore();
+  // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
+  const cycleData = forcePhase ? null : useCycleStore((state) => state);
+  const calculatedPhase = cycleData ? getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration) : 'follicular';
+  const currentPhase = forcePhase || calculatedPhase;
+  const currentDay = cycleData?.currentDay || 1;
   const { trackAction } = useEngagementStore();
-  const { layout } = useAdaptiveInterface();
+  const adaptiveInterface = useAdaptiveInterface();
+  const layout = adaptiveInterface?.layout || { config: { adaptiveVignettes: 3, maturityLevel: 'learning' } };
   const suggestions = useSmartSuggestions();
 
   // ✅ Protection contre l'hydratation et les valeurs undefined
@@ -29,13 +34,13 @@ export function useVignettes(forcePhase = null, forcePersona = null) {
   const currentPersona = forcePersona || safePersona.assigned;
 
   // Assurer que layout et layout.config existent avant de les utiliser
-  const adaptiveVignettesLimit = layout?.config?.adaptiveVignettes || 3;
+  const adaptiveVignettesLimit = layout.config?.adaptiveVignettes || 3;
   const firstSuggestionAction = suggestions?.contextualActions?.[0];
 
   // ✅ LOGIQUE ADAPTATIVE SIMPLE - fixée pour éviter les boucles
   const adaptiveLimit = useMemo(() => {
     // Valeur statique basée sur le maturity level seulement
-    const maturityLevel = layout?.config?.maturityLevel;
+    const maturityLevel = layout.config?.maturityLevel;
     
     switch(maturityLevel) {
       case 'autonomous': return 4;
@@ -43,7 +48,7 @@ export function useVignettes(forcePhase = null, forcePersona = null) {
       case 'discovery': return 2;
       default: return 3; // valeur par défaut
     }
-  }, [layout?.config?.maturityLevel]);
+  }, [layout.config?.maturityLevel]);
 
   // ──────────────────────────────────────────────────────
   // 🔄 CHARGEMENT VIGNETTES
@@ -178,3 +183,14 @@ export function usePhaseVignettes(phase) {
 export function usePersonaVignettes(persona) {
   return useVignettes(null, persona);
 }
+
+// Fonction utilitaire pour les noms de phases
+const getPhaseDisplayName = (phase) => {
+  const phaseNames = {
+    menstrual: 'menstruelle',
+    follicular: 'folliculaire', 
+    ovulatory: 'ovulatoire',
+    luteal: 'lutéale'
+  };
+  return phaseNames[phase] || phase;
+};

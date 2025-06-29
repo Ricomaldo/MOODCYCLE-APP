@@ -48,6 +48,63 @@ export const useUserIntelligence = create(
       },
 
       // ───────────────────────────────────────────────────────
+      // 🔄 OBSERVATION PATTERNS (NOUVEAU)
+      // ───────────────────────────────────────────────────────
+      observationPatterns: {
+        // Cohérence des observations (0-1)
+        consistency: 0,
+        
+        // Confiance dans les patterns détectés (0-100)
+        confidence: 0,
+        
+        // Mode préféré par utilisatrice
+        preferredMode: null, // 'predictive' | 'hybrid' | 'observation' | null
+        
+        // Historique observations récentes
+        lastObservations: [], // Max 30 dernières
+        
+        // Patterns détectés par phase
+        phasePatterns: {
+          menstrual: { 
+            typicalSymptoms: [], 
+            typicalMoods: [], 
+            typicalEnergy: null,
+            occurrences: 0 
+          },
+          follicular: { 
+            typicalSymptoms: [], 
+            typicalMoods: [], 
+            typicalEnergy: null,
+            occurrences: 0 
+          },
+          ovulatory: { 
+            typicalSymptoms: [], 
+            typicalMoods: [], 
+            typicalEnergy: null,
+            occurrences: 0 
+          },
+          luteal: { 
+            typicalSymptoms: [], 
+            typicalMoods: [], 
+            typicalEnergy: null,
+            occurrences: 0 
+          }
+        },
+        
+        // Signaux d'auto-observation
+        autonomySignals: {
+          correctsPredictions: 0,    // Fois où elle corrige la phase prédite
+          manualPhaseChanges: 0,     // Changements manuels de phase
+          detailedObservations: 0,   // Observations très détaillées
+          patternRecognitions: 0     // Elle identifie ses patterns
+        },
+        
+        // Métadonnées
+        lastAnalyzed: null,
+        totalObservations: 0
+      },
+
+      // ───────────────────────────────────────────────────────
       // 📈 TRACKING INTERACTIONS
       // ───────────────────────────────────────────────────────
       
@@ -135,6 +192,168 @@ export const useUserIntelligence = create(
           }
           return { learning: newLearning };
         });
+      },
+
+      // ───────────────────────────────────────────────────────
+      // 📝 TRACKING OBSERVATIONS
+      // ───────────────────────────────────────────────────────
+      
+      trackObservation: (observation) => {
+        const now = Date.now();
+        
+        set(state => {
+          const newObservationPatterns = { ...state.observationPatterns };
+          
+          // Ajouter observation à l'historique
+          const newObservation = {
+            id: `obs_${now}`,
+            timestamp: now,
+            ...observation,
+            // Enrichir avec contexte si disponible
+            deviceTime: new Date().toISOString(),
+            dayOfWeek: new Date().getDay()
+          };
+          
+          newObservationPatterns.lastObservations = [
+            newObservation,
+            ...newObservationPatterns.lastObservations
+          ].slice(0, 30); // Garder max 30
+          
+          newObservationPatterns.totalObservations += 1;
+          
+          // Analyser patterns si phase fournie
+          if (observation.phase && observation.phase !== 'unknown') {
+            const phasePattern = newObservationPatterns.phasePatterns[observation.phase];
+            if (phasePattern) {
+              phasePattern.occurrences += 1;
+              
+              // Accumuler symptômes typiques
+              if (observation.symptoms?.length > 0) {
+                observation.symptoms.forEach(symptom => {
+                  if (!phasePattern.typicalSymptoms.includes(symptom)) {
+                    phasePattern.typicalSymptoms.push(symptom);
+                  }
+                });
+              }
+              
+              // Accumuler moods typiques
+              if (observation.mood) {
+                if (!phasePattern.typicalMoods.includes(observation.mood)) {
+                  phasePattern.typicalMoods.push(observation.mood);
+                }
+              }
+              
+              // Tracker énergie dominante
+              if (observation.energy) {
+                phasePattern.typicalEnergy = observation.energy;
+              }
+            }
+          }
+          
+          return { observationPatterns: newObservationPatterns };
+        });
+        
+        // Recalculer consistance après ajout
+        get().updateObservationConsistency();
+      },
+
+      // ───────────────────────────────────────────────────────
+      // 🎯 TRACKING SIGNAUX AUTONOMIE
+      // ───────────────────────────────────────────────────────
+      
+      trackAutonomySignal: (signalType, metadata = {}) => {
+        set(state => {
+          const newObservationPatterns = { ...state.observationPatterns };
+          const signals = newObservationPatterns.autonomySignals;
+          
+          switch (signalType) {
+            case 'corrects_prediction':
+              signals.correctsPredictions += 1;
+              break;
+            case 'manual_phase_change':
+              signals.manualPhaseChanges += 1;
+              break;
+            case 'detailed_observation':
+              signals.detailedObservations += 1;
+              break;
+            case 'pattern_recognition':
+              signals.patternRecognitions += 1;
+              break;
+          }
+          
+          return { observationPatterns: newObservationPatterns };
+        });
+      },
+
+      // ───────────────────────────────────────────────────────
+      // 📊 ANALYSE CONSISTANCE
+      // ───────────────────────────────────────────────────────
+      
+      updateObservationConsistency: () => {
+        set(state => {
+          const { lastObservations, phasePatterns } = state.observationPatterns;
+          
+          if (lastObservations.length < 5) {
+            return state; // Pas assez de données
+          }
+          
+          // Calculer consistance basée sur régularité des patterns
+          let consistencyScore = 0;
+          let factors = 0;
+          
+          // Facteur 1: Régularité des observations
+          const daysSinceFirst = Math.floor(
+            (Date.now() - lastObservations[lastObservations.length - 1].timestamp) / 
+            (1000 * 60 * 60 * 24)
+          );
+          const observationRate = lastObservations.length / Math.max(daysSinceFirst, 1);
+          if (observationRate > 0.5) { // Plus d'une obs tous les 2 jours
+            consistencyScore += 0.3;
+            factors++;
+          }
+          
+          // Facteur 2: Cohérence des patterns par phase
+          Object.values(phasePatterns).forEach(pattern => {
+            if (pattern.occurrences >= 2 && pattern.typicalSymptoms.length > 0) {
+              consistencyScore += 0.1;
+              factors++;
+            }
+          });
+          
+          // Facteur 3: Signaux d'autonomie
+          const totalSignals = Object.values(state.observationPatterns.autonomySignals)
+            .reduce((sum, val) => sum + val, 0);
+          if (totalSignals > 5) {
+            consistencyScore += 0.2;
+            factors++;
+          }
+          
+          // Normaliser entre 0 et 1
+          const finalConsistency = Math.min(1, consistencyScore);
+          const confidence = Math.round(finalConsistency * 100);
+          
+          return {
+            observationPatterns: {
+              ...state.observationPatterns,
+              consistency: finalConsistency,
+              confidence,
+              lastAnalyzed: Date.now()
+            }
+          };
+        });
+      },
+
+      // ───────────────────────────────────────────────────────
+      // 🔄 MODE PRÉFÉRENCE
+      // ───────────────────────────────────────────────────────
+      
+      setPreferredCycleMode: (mode) => {
+        set(state => ({
+          observationPatterns: {
+            ...state.observationPatterns,
+            preferredMode: mode
+          }
+        }));
       },
 
       // ───────────────────────────────────────────────────────
@@ -242,6 +461,44 @@ export const useUserIntelligence = create(
       },
 
       // ───────────────────────────────────────────────────────
+      // 📊 GETTERS OBSERVATION
+      // ───────────────────────────────────────────────────────
+      
+      getObservationReadiness: () => {
+        const { observationPatterns } = get();
+        
+        return {
+          hasEnoughData: observationPatterns.totalObservations >= 10,
+          hasGoodConsistency: observationPatterns.consistency > 0.6,
+          readyForHybrid: observationPatterns.totalObservations >= 5 && 
+                         observationPatterns.consistency > 0.4,
+          readyForObservation: observationPatterns.totalObservations >= 20 && 
+                              observationPatterns.consistency > 0.7,
+          confidence: observationPatterns.confidence
+        };
+      },
+      
+      getMostObservedPhase: () => {
+        const { phasePatterns } = get().observationPatterns;
+        
+        let maxOccurrences = 0;
+        let mostObserved = null;
+        
+        Object.entries(phasePatterns).forEach(([phase, pattern]) => {
+          if (pattern.occurrences > maxOccurrences) {
+            maxOccurrences = pattern.occurrences;
+            mostObserved = phase;
+          }
+        });
+        
+        return {
+          phase: mostObserved,
+          occurrences: maxOccurrences,
+          confidence: maxOccurrences / get().observationPatterns.totalObservations
+        };
+      },
+
+      // ───────────────────────────────────────────────────────
       // 🔄 UTILITAIRES
       // ───────────────────────────────────────────────────────
       
@@ -281,13 +538,36 @@ export const useUserIntelligence = create(
             notebook: { shown: 0, clicked: 0, rate: 0 },
             phase_detail: { shown: 0, clicked: 0, rate: 0 }
           }
+        },
+        observationPatterns: {
+          consistency: 0,
+          confidence: 0,
+          preferredMode: null,
+          lastObservations: [],
+          phasePatterns: {
+            menstrual: { typicalSymptoms: [], typicalMoods: [], typicalEnergy: null, occurrences: 0 },
+            follicular: { typicalSymptoms: [], typicalMoods: [], typicalEnergy: null, occurrences: 0 },
+            ovulatory: { typicalSymptoms: [], typicalMoods: [], typicalEnergy: null, occurrences: 0 },
+            luteal: { typicalSymptoms: [], typicalMoods: [], typicalEnergy: null, occurrences: 0 }
+          },
+          autonomySignals: {
+            correctsPredictions: 0,
+            manualPhaseChanges: 0,
+            detailedObservations: 0,
+            patternRecognitions: 0
+          },
+          lastAnalyzed: null,
+          totalObservations: 0
         }
       })
     }),
     {
       name: "user-intelligence-storage",
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: (state) => ({ learning: state.learning })
+      partialize: (state) => ({ 
+        learning: state.learning,
+        observationPatterns: state.observationPatterns 
+      })
     }
   )
 );

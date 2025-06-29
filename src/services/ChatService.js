@@ -14,6 +14,7 @@ import { useUserIntelligence } from '../stores/useUserIntelligence.js';
 import { getApiRequestConfig, getEndpointUrl } from '../config/api.js';
 import { getCurrentPhase } from '../utils/cycleCalculations.js';
 import NetworkQueue from './NetworkQueue.js';
+import { useCycleStore, getCycleData } from '../stores/useCycleStore';
 
 const DEVICE_ID_KEY = 'device_id_v1';
 
@@ -365,7 +366,8 @@ class ChatService {
       }
       
       // ✅ Protection contre cycle undefined
-      const safeCycle = userStore.cycle || {
+      const cycleData = getCycleData();
+      const safeCycle = cycleData || {
         lastPeriodDate: null,
         length: 28,
         periodDuration: 5
@@ -592,7 +594,8 @@ class ChatService {
       const userStore = useUserStore.getState();
       
       // ✅ Protection contre cycle undefined
-      const safeCycle = userStore.cycle || {
+      const cycleData = getCycleData();
+      const safeCycle = cycleData || {
         lastPeriodDate: null,
         length: 28,
         periodDuration: 5
@@ -657,6 +660,52 @@ class ChatService {
       isInitialized: this.isInitialized,
       conversationContext: this.conversationContext
     };
+  }
+
+  async generateContextualResponse(message, options = {}) {
+    try {
+      // Obtenir le contexte utilisateur
+      const userStore = useUserStore.getState();
+      const cycleData = getCycleData();
+      
+      // Protection contre cycle undefined
+      const safeCycle = cycleData || {
+        lastPeriodDate: null,
+        length: 28,
+        periodDuration: 5
+      };
+
+      const currentPhase = getCurrentPhase(
+        safeCycle.lastPeriodDate,
+        safeCycle.length,
+        safeCycle.periodDuration
+      );
+      // ... existing code ...
+    } catch (error) {
+      console.error('Erreur génération réponse:', error);
+    }
+  }
+
+  async getChatContext() {
+    try {
+      const userStore = useUserStore.getState();
+      const cycleData = getCycleData();
+      
+      const safeCycle = cycleData || {
+        lastPeriodDate: null,
+        length: 28,
+        periodDuration: 5
+      };
+
+      const currentPhase = getCurrentPhase(
+        safeCycle.lastPeriodDate,
+        safeCycle.length,
+        safeCycle.periodDuration
+      );
+      // ... existing code ...
+    } catch (error) {
+      console.error('Erreur contexte chat:', error);
+    }
   }
 }
 

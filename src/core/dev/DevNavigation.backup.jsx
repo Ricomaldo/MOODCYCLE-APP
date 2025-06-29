@@ -13,7 +13,8 @@ import { View, TouchableOpacity, StyleSheet, Alert, ScrollView, Text } from 'rea
 import { useRouter } from 'expo-router';
 
 // Core hooks
-import { useCycle } from '../../hooks/useCycle';
+import { useCycleStore } from '../../stores/useCycleStore';
+import { getCurrentPhase, getCurrentCycleDay } from '../../utils/cycleCalculations';
 
 // Stores
 import { useUserStore } from '../../stores/useUserStore';
@@ -41,7 +42,10 @@ export default function DevNavigation() {
   const initializedRef = useRef(false);
   
   // Hooks et stores
-  const cycle = useCycle();
+      // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
+  const cycleData = useCycleStore((state) => state);
+  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
+  const currentDay = getCurrentCycleDay(cycleData.lastPeriodDate, cycleData.length);
   const { profile, preferences, persona, melune, reset: resetUser, updateProfile, updatePreferences, updateMelune, setPersona } = useUserStore();
   const { devMode } = useAppStore();
   const { messages, clearMessages, getMessagesCount } = useChatStore();
@@ -409,7 +413,7 @@ export default function DevNavigation() {
       const dayInCycle = phaseDays[targetPhase];
       const newDate = new Date();
       newDate.setDate(newDate.getDate() - dayInCycle);
-      const { updateCycle } = useUserStore.getState();
+      const { updateCycle } = useCycleStore.getState();
       updateCycle({ lastPeriodDate: newDate.toISOString() });
       
       // Refresh vignettes pour nouvelle phase
@@ -500,8 +504,8 @@ export default function DevNavigation() {
           style: 'destructive',
           onPress: () => {
             try {
-              const { updateCycle } = useUserStore.getState();
-              updateCycle({
+                      const { updateCycle } = useCycleStore.getState();
+        updateCycle({
                 lastPeriodDate: null,
                 length: 28,
                 periodDuration: 5,

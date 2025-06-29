@@ -14,6 +14,7 @@ import { useUserIntelligence } from '../stores/useUserIntelligence';
 import { createPersonalizationEngine } from '../services/PersonalizationEngine';
 import { createAdaptiveGuidance } from '../services/AdaptiveGuidance';
 import { createOnboardingContinuum } from '../services/OnboardingContinuum';
+import { useCycleStore } from '../stores/useCycleStore';
 
 export const useOnboardingIntelligence = (screenName) => {
   const userStore = useUserStore();
@@ -45,7 +46,8 @@ export const useOnboardingIntelligence = (screenName) => {
 
     // Si on a un persona, on peut personnaliser
     if (userStore.persona.assigned && maturity.current) {
-      const guidance = createAdaptiveGuidance(userStore, { maturity }, userStore.cycle.currentPhase || 'follicular');
+      const cycleData = useCycleStore.getState().getCycleData();
+      const guidance = createAdaptiveGuidance(userStore, { maturity }, cycleData.currentPhase || 'follicular');
       const contextualMessage = guidance.generateContextualMessage(
         userStore.persona.assigned,
         maturity.current,
@@ -61,15 +63,16 @@ export const useOnboardingIntelligence = (screenName) => {
   const getPersonalizedPrompts = () => {
     if (!userStore.persona.assigned) return [];
     
+    const cycleData = useCycleStore.getState().getCycleData();
     const engine = createPersonalizationEngine(
       intelligenceStore,
       userStore.preferences,
-      userStore.cycle.currentPhase || 'follicular',
+      cycleData.currentPhase || 'follicular',
       userStore.persona.assigned
     );
     
     return engine.generatePersonalizedPrompts(
-      userStore.cycle.currentPhase || 'follicular',
+      cycleData.currentPhase || 'follicular',
       userStore.persona.assigned,
       userStore.preferences,
       intelligenceStore.learning
@@ -78,6 +81,7 @@ export const useOnboardingIntelligence = (screenName) => {
 
   // Calcul suggestion persona en temps réel
   const calculatePersonaSuggestion = (newData = {}) => {
+    const cycleData = useCycleStore.getState().getCycleData();
     const combinedData = {
       ...userStore.profile,
       ...newData
@@ -116,6 +120,15 @@ export const useOnboardingIntelligence = (screenName) => {
     }
   };
 
+  const getContextualData = () => {
+    const cycleData = useCycleStore.getState().getCycleData();
+    
+    return {
+      cycle: cycleData,
+      updateCycle: useCycleStore.getState().updateCycle,
+    };
+  };
+
   return {
     // État
     isReady,
@@ -136,7 +149,7 @@ export const useOnboardingIntelligence = (screenName) => {
     // Helpers
     updateProfile: userStore.updateProfile,
     updatePreferences: userStore.updatePreferences,
-    updateCycle: userStore.updateCycle,
-    setPersona: userStore.setPersona
+    setPersona: userStore.setPersona,
+    ...getContextualData()
   };
 };

@@ -13,7 +13,8 @@ import * as Haptics from 'expo-haptics';
 import { useTheme } from '../../hooks/useTheme';
 import { Heading2, BodyText, Caption } from '../../core/ui/Typography';
 import { useNotebookStore } from '../../stores/useNotebookStore';
-import { useCycle } from '../../hooks/useCycle';
+import { useCycleStore } from '../../stores/useCycleStore';
+import { getCurrentPhase } from '../../utils/cycleCalculations';
 
 const MOOD_OPTIONS = [
   { emoji: '😢', label: 'Maussade', value: 'sad' },
@@ -35,7 +36,9 @@ export default function QuickTrackingModal({ visible, onClose, defaultTags = [] 
   const { theme } = useTheme();
   const styles = getStyles(theme);
   const { addQuickTracking } = useNotebookStore();
-  const { currentPhase } = useCycle();
+  // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
+  const cycleData = useCycleStore((state) => state);
+  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
   
   const [energy, setEnergy] = useState(3);
   const [mood, setMood] = useState('neutral');

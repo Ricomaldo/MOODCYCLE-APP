@@ -11,7 +11,8 @@ import { useTheme } from '../../hooks/useTheme';
 import { BodyText, Caption } from '../../core/ui/Typography';
 import { useUserIntelligence } from '../../stores/useUserIntelligence';
 import { useEngagementStore } from '../../stores/useEngagementStore';
-import { useCycle } from '../../hooks/useCycle';
+import { useCycleStore } from '../../stores/useCycleStore';
+import { getCurrentPhase } from '../../utils/cycleCalculations';
 
 // ✅ INTÉGRATION DANS ACCUEILVIEW
 /*
@@ -40,7 +41,9 @@ export default function PersonalPatterns({ style, minimal = false }) {
   const { theme } = useTheme();
   const { learning } = useUserIntelligence();
   const { metrics } = useEngagementStore();
-  const { currentPhase } = useCycle();
+  // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
+  const cycleData = useCycleStore((state) => state);
+  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
   
   // Animation d'apparition
   const fadeAnim = React.useRef(new Animated.Value(0)).current;

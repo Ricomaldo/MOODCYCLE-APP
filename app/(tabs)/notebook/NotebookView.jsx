@@ -17,7 +17,8 @@ import ScreenContainer from '../../../src/core/layout/ScreenContainer';
 import { NotebookHeader } from '../../../src/core/layout/SimpleHeader';
 import { useNotebookStore } from '../../../src/stores/useNotebookStore';
 import { useNavigationStore } from '../../../src/stores/useNavigationStore';
-import { useCycle } from '../../../src/hooks/useCycle';
+import { useCycleStore } from '../../../src/stores/useCycleStore';
+import { getCurrentPhase } from '../../../src/utils/cycleCalculations';
 import QuickTrackingModal from '../../../src/features/notebook/QuickTrackingModal';
 import FreeWritingModal from '../../../src/features/notebook/FreeWritingModal';
 import EntryDetailModal from '../../../src/features/notebook/EntryDetailModal';
@@ -325,7 +326,9 @@ export default function NotebookView() {
     addPersonalNote,
   } = useNotebookStore();
 
-  const { currentPhase } = useCycle();
+  // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
+  const cycleData = useCycleStore((state) => state);
+  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
   const { notebookFilters, setNotebookFilter } = useNavigationStore();
   const { features, config, maturityLevel } = useAdaptiveInterface();
 

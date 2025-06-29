@@ -28,7 +28,8 @@ import { useTheme } from '../../hooks/useTheme';
 import { Heading2, BodyText, Caption } from '../../core/ui/Typography';
 import { useNotebookStore } from '../../stores/useNotebookStore';
 import { useUserStore } from '../../stores/useUserStore';
-import { useCycle } from '../../hooks/useCycle';
+import { useCycleStore } from '../../stores/useCycleStore';
+import { getCurrentPhase } from '../../utils/cycleCalculations';
 import { PhaseIcon } from '../../config/iconConstants';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -86,7 +87,9 @@ export default function FreeWritingModal({
   const insets = useSafeAreaInsets();
   const { addEntry } = useNotebookStore();
   const { persona, firstName } = useUserStore();
-  const { currentPhase } = useCycle();
+  // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
+  const cycleData = useCycleStore((state) => state);
+  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
 
   // États principaux
   const [content, setContent] = useState('');

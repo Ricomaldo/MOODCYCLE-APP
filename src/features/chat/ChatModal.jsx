@@ -29,7 +29,8 @@ import ChatService from "../../services/ChatService";
 import { useUserStore } from "../../stores/useUserStore";
 import { useChatStore } from "../../stores/useChatStore";
 import { useNotebookStore } from "../../stores/useNotebookStore";
-import { useCycle } from '../../hooks/useCycle';
+import { useCycleStore } from '../../stores/useCycleStore';
+import { getCurrentPhase } from '../../utils/cycleCalculations';
 import { useSmartSuggestions, useSmartChatSuggestions } from '../../hooks/useSmartSuggestions';
 import { useAdaptiveInterface } from '../../hooks/useAdaptiveInterface';
 
@@ -176,7 +177,9 @@ export default function ChatModal() {
 
   const { profile } = useUserStore();
   const { addMessage } = useChatStore();
-  const { currentPhase } = useCycle();
+  // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
+  const cycleData = useCycleStore((state) => state);
+  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
   const { addEntry } = useNotebookStore();
   
   const smartSuggestions = useSmartSuggestions();

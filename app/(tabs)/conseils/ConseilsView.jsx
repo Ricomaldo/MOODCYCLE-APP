@@ -17,15 +17,19 @@ import ScreenContainer from '../../../src/core/layout/ScreenContainer';
 import { ConseilsHeader } from '../../../src/core/layout/SimpleHeader';
 import InsightCard from '../../../src/features/insights/InsightCard';
 import { VignettesContainer } from '../../../src/features/insights/VignetteCard';
-import { useCycle } from '../../../src/hooks/useCycle';
+import { useCycleStore } from '../../../src/stores/useCycleStore';
+import { getCurrentPhase, getCurrentCycleDay } from '../../../src/utils/cycleCalculations';
 import { useVignettes } from '../../../src/hooks/useVignettes';
 import { usePersonalizedInsight } from '../../../src/hooks/usePersonalizedInsight';
 import { useUserStore } from '../../../src/stores/useUserStore';
 import { PhaseIcon } from '../../../src/config/iconConstants';
 
 export default function ConseilsView() {
-  const cycleData = useCycle() || {};
-  const { currentPhase, currentDay, phaseInfo, hasData } = cycleData;
+  // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
+  const cycleData = useCycleStore((state) => state) || {};
+  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
+  const currentDay = getCurrentCycleDay(cycleData.lastPeriodDate, cycleData.length);
+  const hasData = !!(cycleData.lastPeriodDate && cycleData.length);
   const { profile } = useUserStore();
   const { theme } = useTheme();
 

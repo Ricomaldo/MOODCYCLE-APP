@@ -22,7 +22,8 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Heading2, BodyText, Caption } from '../ui/Typography';
 import { useUserStore } from '../../stores/useUserStore';
-import { useCycle } from '../../hooks/useCycle';
+import { useCycleStore } from '../../stores/useCycleStore';
+import { getCurrentPhase } from '../../utils/cycleCalculations';
 import { useTheme } from '../../hooks/useTheme';
 
 // Import des onglets
@@ -51,7 +52,9 @@ export default function ParametresModal({ visible, onClose }) {
   
   // Store & hooks
   const { updateProfile, updatePreferences, updateMelune } = useUserStore();
-  const { currentPhase } = useCycle();
+  // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
+  const cycleData = useCycleStore((state) => state);
+  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
   const { theme } = useTheme();
   const styles = getStyles(theme);
   
