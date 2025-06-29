@@ -21,6 +21,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { BodyText, Caption } from '../../core/ui/Typography';
 import { useUserStore } from '../../stores/useUserStore';
 import { useNotebookStore } from '../../stores/useNotebookStore';
+import { useTerminology } from '../../hooks/useTerminology';
 import ShareableCard from '../shared/ShareableCard';
 
 export default function InsightCard({ 
@@ -36,6 +37,7 @@ export default function InsightCard({
   const styles = getStyles(theme, phase);
   const { profile } = useUserStore();
   const { addEntry } = useNotebookStore();
+  const { getArchetypeLabel } = useTerminology();
   
   const [isSharing, setIsSharing] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -50,21 +52,11 @@ export default function InsightCard({
     const labels = {
       daily: 'Insight du jour',
       personalized: 'Pour toi',
-      phase: `Phase ${getPhaseDisplayName(phase)}`,
+      phase: `${getArchetypeLabel(phase)}`,
       api: 'Conseil personnalisé',
       fallback: 'Inspiration'
     };
     return labels[source] || 'Conseil personnalisé';
-  };
-  
-  const getPhaseDisplayName = (phaseKey) => {
-    const names = {
-      menstrual: 'menstruelle',
-      follicular: 'folliculaire', 
-      ovulatory: 'ovulatoire',
-      luteal: 'lutéale'
-    };
-    return names[phaseKey] || phaseKey;
   };
 
   const handleSave = async () => {
@@ -183,7 +175,7 @@ export default function InsightCard({
           <View style={styles.phaseInfo}>
             <View style={[styles.phaseDot, { backgroundColor: phaseColor }]} />
             <Caption style={styles.phaseLabel}>
-              {getPhaseDisplayName(phase)}
+              {getArchetypeLabel(phase)}
             </Caption>
           </View>
           

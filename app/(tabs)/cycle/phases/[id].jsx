@@ -1,12 +1,3 @@
-//
-// ─────────────────────────────────────────────────────────
-// 📄 Fichier : app/(tabs)/cycle/phases/[id].jsx
-// 🧩 Type : Composant Écran
-// 📚 Description : Composant affichant l'écran principal
-// 🕒 Version : 3.0 - 2025-06-21
-// 🧭 Utilisé dans : /notebook cycle route
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//
 import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { useState, useEffect } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -16,6 +7,7 @@ import * as Haptics from 'expo-haptics';
 import { useTheme } from "../../../../src/hooks/useTheme";
 import ContentManager from "../../../../src/services/ContentManager";
 import { Heading, BodyText, Caption } from "../../../../src/core/ui/Typography";
+import { useTerminology } from "../../../../src/hooks/useTerminology";
 
 export default function PhaseDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -24,13 +16,14 @@ export default function PhaseDetailScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { theme } = useTheme();
+  const { getPhaseLabel } = useTerminology();
   const styles = getStyles(theme);
 
   useEffect(() => {
     const loadPhaseData = async () => {
       try {
         const phases = await ContentManager.getPhases();
-        setPhaseData(phases[id]); // id depuis useLocalSearchParams
+        setPhaseData(phases[id]);
       } catch (error) {
         console.log("📱 Fallback vers phases.json local");
         const phases = require("../../../../src/data/phases.json");
@@ -58,7 +51,8 @@ export default function PhaseDetailScreen() {
     );
   }
 
-  // Calcul automatique de la couleur de texte selon le fond de la phase
+  // Extraction editableContent
+  const { editableContent, characteristics } = phaseData;
   const headerTextColor = theme.getTextColorOn(phaseData.color);
 
   return (
@@ -82,8 +76,14 @@ export default function PhaseDetailScreen() {
           </BodyText>
         </View>
         <Heading style={[styles.title, { color: headerTextColor }]}>
-          {phaseData.name}
+          {getPhaseLabel(id)}
         </Heading>
+        {/* Badge contenu Jeza */}
+        <View style={[styles.badge, { backgroundColor: headerTextColor + '20' }]}>
+          <Caption style={[styles.badgeText, { color: headerTextColor }]}>
+            ✨ Contenu personnalisé par Jeza
+          </Caption>
+        </View>
       </View>
 
       <ScrollView style={styles.scrollView}>
@@ -95,30 +95,85 @@ export default function PhaseDetailScreen() {
           </View>
 
           <BodyText style={styles.description}>
-            {phaseData.description}
+            {editableContent.description}
           </BodyText>
 
-          <Heading style={styles.sectionTitle}>Caractéristiques</Heading>
+          {/* Caractéristiques physiques */}
+          <Heading style={styles.sectionTitle}>Caractéristiques physiques</Heading>
           <View style={styles.section}>
-            {phaseData.characteristics.physical.map((item, index) => (
+            {characteristics.physical.map((item, index) => (
               <BodyText key={index} style={styles.listItem}>
                 • {item}
               </BodyText>
             ))}
           </View>
 
-          <Heading style={styles.sectionTitle}>Conseils</Heading>
+          {/* Caractéristiques émotionnelles */}
+          <Heading style={styles.sectionTitle}>Ressenti émotionnel</Heading>
           <View style={styles.section}>
-            {phaseData.advice.nutrition.map((item, index) => (
+            {characteristics.emotional.map((item, index) => (
               <BodyText key={index} style={styles.listItem}>
                 • {item}
               </BodyText>
             ))}
           </View>
 
-          <BodyText style={styles.affirmation}>
-            "{phaseData.affirmation}"
-          </BodyText>
+          {/* Conseils Nutrition */}
+          <Heading style={styles.sectionTitle}>Nutrition</Heading>
+          <View style={styles.section}>
+            {editableContent.advice.nutrition.map((item, index) => (
+              <BodyText key={index} style={styles.listItem}>
+                🥗 {item}
+              </BodyText>
+            ))}
+          </View>
+
+          {/* Conseils Activités */}
+          <Heading style={styles.sectionTitle}>Activités conseillées</Heading>
+          <View style={styles.section}>
+            {editableContent.advice.activities.map((item, index) => (
+              <BodyText key={index} style={styles.listItem}>
+                🌟 {item}
+              </BodyText>
+            ))}
+          </View>
+
+          {/* Conseils Self-care */}
+          <Heading style={styles.sectionTitle}>Prendre soin de soi</Heading>
+          <View style={styles.section}>
+            {editableContent.advice.selfcare.map((item, index) => (
+              <BodyText key={index} style={styles.listItem}>
+                💝 {item}
+              </BodyText>
+            ))}
+          </View>
+
+          {/* À éviter */}
+          <Heading style={styles.sectionTitle}>À éviter</Heading>
+          <View style={styles.section}>
+            {editableContent.advice.avoid.map((item, index) => (
+              <BodyText key={index} style={styles.listItem}>
+                ⚠️ {item}
+              </BodyText>
+            ))}
+          </View>
+
+          {/* Rituels & Pratiques */}
+          <Heading style={styles.sectionTitle}>Rituels & Pratiques</Heading>
+          <View style={styles.section}>
+            {editableContent.rituals.map((ritual, index) => (
+              <View key={index} style={styles.ritualItem}>
+                <BodyText style={styles.ritual}>🌸 {ritual}</BodyText>
+              </View>
+            ))}
+          </View>
+
+          {/* Affirmation */}
+          <View style={styles.affirmationSection}>
+            <BodyText style={styles.affirmation}>
+              "{editableContent.affirmation}"
+            </BodyText>
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -151,6 +206,17 @@ const getStyles = (theme) => StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
   },
+  badge: {
+    marginTop: theme.spacing.s,
+    paddingHorizontal: theme.spacing.m,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.m,
+    alignSelf: "center",
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
   scrollView: {
     flex: 1,
   },
@@ -160,29 +226,28 @@ const getStyles = (theme) => StyleSheet.create({
   durationRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: theme.spacing.s,
+    marginBottom: theme.spacing.m,
   },
   symbolSmall: {
-    fontSize: 16,
-    color: theme.colors.text,
+    fontSize: 20,
     marginRight: theme.spacing.xs,
   },
   duration: {
-    fontSize: 18,
-    color: theme.colors.text,
+    fontSize: 16,
+    color: theme.colors.textSecondary,
   },
   description: {
     fontSize: 16,
     color: theme.colors.text,
-    marginBottom: theme.spacing.m,
+    marginBottom: theme.spacing.l,
     lineHeight: 24,
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: "bold",
     color: theme.colors.text,
-    marginTop: theme.spacing.m,
-    marginBottom: theme.spacing.s,
+    marginTop: theme.spacing.l,
+    marginBottom: theme.spacing.m,
   },
   section: {
     marginBottom: theme.spacing.m,
@@ -190,14 +255,27 @@ const getStyles = (theme) => StyleSheet.create({
   listItem: {
     fontSize: 16,
     color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
+    marginBottom: theme.spacing.s,
+    lineHeight: 22,
+  },
+  ritualItem: {
+    marginBottom: theme.spacing.m,
+  },
+  ritual: {
+    fontSize: 16,
+    color: theme.colors.text,
+    lineHeight: 22,
+  },
+  affirmationSection: {
+    marginTop: theme.spacing.xl,
+    marginBottom: theme.spacing.xl,
+    paddingHorizontal: theme.spacing.l,
   },
   affirmation: {
     fontSize: 18,
     fontStyle: "italic",
     color: theme.colors.text,
     textAlign: "center",
-    marginTop: theme.spacing.l,
-    paddingHorizontal: theme.spacing.m,
+    lineHeight: 26,
   },
 });

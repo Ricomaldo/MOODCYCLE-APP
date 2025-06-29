@@ -1,9 +1,9 @@
 //
 // ─────────────────────────────────────────────────────────
 // 📄 File: app/(tabs)/conseils/ConseilsView.jsx
-// 🧩 Type: Écran Conseils (ex-HomeView)
-// 📚 Description: Insights + vignettes prioritaires + navigation rapide
-// 🕒 Version: 1.0 - 2025-06-28 - TRANSFORMATION UI (ex-HomeView)
+// 🧩 Type: Écran Conseils avec Observations
+// 📚 Description: Insights + vignettes + intelligence observation
+// 🕒 Version: 1.1 - 2025-06-29 - AJOUT OBSERVATIONS
 // ─────────────────────────────────────────────────────────
 //
 import React from 'react';
@@ -23,18 +23,26 @@ import { useVignettes } from '../../../src/hooks/useVignettes';
 import { usePersonalizedInsight } from '../../../src/hooks/usePersonalizedInsight';
 import { useUserStore } from '../../../src/stores/useUserStore';
 import { PhaseIcon } from '../../../src/config/iconConstants';
+import { useTerminology } from '../../../src/hooks/useTerminology';
 
 export default function ConseilsView() {
   // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
   const cycleData = useCycleStore((state) => state) || {};
+  const observations = useCycleStore((state) => state.observations || []);
   const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
   const currentDay = getCurrentCycleDay(cycleData.lastPeriodDate, cycleData.length);
   const hasData = !!(cycleData.lastPeriodDate && cycleData.length);
   const { profile } = useUserStore();
   const { theme } = useTheme();
+  const { getPhaseLabel } = useTerminology();
 
   // Protection contre profile undefined
   const safeProfile = profile || { prenom: null };
+  
+  // 🆕 Détecter si les insights sont basés sur observations
+  const hasObservations = observations.length >= 3;
+  const currentPhaseObservations = observations.filter(obs => obs.phase === currentPhase);
+  const isObservationBased = currentPhaseObservations.length >= 2;
   
   // Insight du jour personnalisé
   const {
@@ -99,6 +107,8 @@ export default function ConseilsView() {
     router.push(`/(tabs)/${destination}`);
   };
 
+  // ✅ Info phase via hook terminologie (phaseInfo legacy supprimé)
+
   const styles = getStyles(theme);
 
   if (!hasData) {
@@ -146,9 +156,19 @@ export default function ConseilsView() {
             color={theme.colors.phases[currentPhase]}
           />
           <Caption style={styles.cycleStatusText}>
-            Jour {currentDay} • {phaseInfo.name}
+            Jour {currentDay} • {getPhaseLabel(currentPhase)}
           </Caption>
         </View>
+
+        {/* 🆕 Badge observation si applicable */}
+        {isObservationBased && (
+          <View style={styles.observationBadge}>
+            <Feather name="eye" size={14} color={theme.colors.secondary} />
+            <Caption style={styles.observationBadgeText}>
+              Basé sur tes ressentis
+            </Caption>
+          </View>
+        )}
 
         {/* Insight du jour - Zone centrale */}
         <View style={styles.insightSection}>
@@ -184,6 +204,7 @@ export default function ConseilsView() {
                 insight={insight.content} 
                 phase={currentPhase}
                 style={styles.insightCard}
+                isObservationBased={isObservationBased}
               />
             </Animated.View>
           ) : (
@@ -221,6 +242,34 @@ export default function ConseilsView() {
             </BodyText>
           )}
         </View>
+
+        {/* 🆕 Section Intelligence si observations */}
+        {hasObservations && (
+          <View style={styles.intelligenceSection}>
+            <View style={styles.intelligenceHeader}>
+              <Feather name="brain" size={16} color={theme.colors.primary} />
+              <Caption style={styles.intelligenceTitle}>
+                Melune apprend de toi
+              </Caption>
+            </View>
+            
+            <View style={styles.intelligenceStats}>
+              <View style={styles.statItem}>
+                <BodyText style={styles.statValue}>{observations.length}</BodyText>
+                <Caption style={styles.statLabel}>observations</Caption>
+              </View>
+              
+              {currentPhaseObservations.length > 0 && (
+                <View style={styles.statItem}>
+                  <BodyText style={styles.statValue}>
+                    {currentPhaseObservations.length}
+                  </BodyText>
+                  <Caption style={styles.statLabel}>cette phase</Caption>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
 
         {/* Navigation rapide */}
         <View style={styles.quickNavSection}>
@@ -322,6 +371,25 @@ const getStyles = (theme) => StyleSheet.create({
     color: theme.colors.textLight,
   },
   
+  // 🆕 Badge observation
+  observationBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.xs,
+    marginBottom: theme.spacing.m,
+    backgroundColor: theme.colors.secondary + '20',
+    paddingHorizontal: theme.spacing.m,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.pill,
+    alignSelf: 'center',
+  },
+  observationBadgeText: {
+    fontSize: 12,
+    color: theme.colors.secondary,
+    fontWeight: '600',
+  },
+  
   // Sections
   insightSection: {
     marginBottom: theme.spacing.xl,
@@ -402,6 +470,43 @@ const getStyles = (theme) => StyleSheet.create({
     fontSize: 14,
     fontStyle: 'italic',
     padding: theme.spacing.l,
+  },
+  
+  // 🆕 Intelligence section
+  intelligenceSection: {
+    backgroundColor: theme.colors.primary + '10',
+    borderRadius: theme.borderRadius.medium,
+    padding: theme.spacing.m,
+    marginBottom: theme.spacing.xl,
+  },
+  intelligenceHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+    marginBottom: theme.spacing.s,
+    justifyContent: 'center',
+  },
+  intelligenceTitle: {
+    fontSize: 13,
+    color: theme.colors.primary,
+    fontWeight: '600',
+  },
+  intelligenceStats: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: theme.spacing.xl,
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: theme.colors.primary,
+  },
+  statLabel: {
+    fontSize: 11,
+    color: theme.colors.textLight,
   },
   
   // Navigation rapide

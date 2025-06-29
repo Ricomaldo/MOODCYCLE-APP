@@ -69,7 +69,7 @@ src/
 #### **🗣️ ChatModal** 
 - ✅ **useSmartSuggestions** : Prompts personnalisés par persona + phase
 - ✅ **useAdaptiveInterface** : Interface adaptée maturité utilisateur
-- ✅ **useCurrentPhase** : Contexte cyclique temps réel
+- ✅ **getCurrentPhase** : Contexte cyclique temps réel via cycleCalculations
 
 #### **💡 ConseilsView**
 - ✅ **usePersonalizedInsight** : Insights personnalisés par contexte
@@ -78,7 +78,7 @@ src/
 
 #### **📝 NotebookView** (Partiel)
 - ✅ **useAdaptiveInterface** : Interface évolutive selon maturité
-- ✅ **useCurrentPhase** : Contexte phase pour suggestions
+- ✅ **getCurrentPhase** : Contexte phase pour suggestions via cycleCalculations
 - 🟡 **Manque** : useSmartSuggestions pour prompts d'écriture
 
 ### **🟡 COMPOSANTS PARTIELLEMENT CONNECTÉS**

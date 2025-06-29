@@ -28,7 +28,8 @@ export default function ChatBubble({
 }) {
   const { theme } = useTheme();
   const { saveFromChat } = useNotebookStore();
-  const currentPhase = useCurrentPhase();
+  const cycleData = useCycleStore((state) => state);
+  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
   const styles = getStyles(theme, phase);
   
   const [actionsVisible, setActionsVisible] = useState(true);

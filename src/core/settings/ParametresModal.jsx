@@ -31,12 +31,14 @@ import ProfilTab from './tabs/ProfilTab';
 import PreferencesTab from './tabs/PreferencesTab';
 import MeluneTab from './tabs/MeluneTab';
 import LegalTab from './tabs/LegalTab';
+import TerminologyTab from './tabs/TerminologyTab';
 
 const { width } = Dimensions.get('window');
 
 const TABS = [
   { id: 'profil', name: 'Profil', icon: 'user' },
   { id: 'preferences', name: 'Préférences', icon: 'sliders' },
+  { id: 'terminology', name: 'Terminologie', icon: 'type' },
   { id: 'melune', name: 'Melune', icon: 'heart' },
   { id: 'legal', name: 'Légal', icon: 'shield' }
 ];
@@ -144,6 +146,8 @@ export default function ParametresModal({ visible, onClose }) {
         return <ProfilTab {...commonProps} />;
       case 'preferences':
         return <PreferencesTab {...commonProps} />;
+      case 'terminology':
+        return <TerminologyTab {...commonProps} />;
       case 'melune':
         return <MeluneTab {...commonProps} />;
       case 'legal':

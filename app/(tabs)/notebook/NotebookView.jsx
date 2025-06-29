@@ -607,8 +607,6 @@ export default function NotebookView() {
 
   return (
     <ScreenContainer style={styles.container} hasTabs={true}>
-      <NotebookHeader />
-
       <NotebookHeader 
         onToggleCalendar={() => setShowCalendarView(!showCalendarView)}
         onToggleSearch={() => setShowSearch(!showSearch)}
@@ -753,25 +751,23 @@ export default function NotebookView() {
           <ToolbarIOS
             onWritePress={() => handleToolbarAction('write')}
           />
-
-          {/* Modales */}
-
-
-          <FreeWritingModal 
-            visible={showFreeWriting} 
-            onClose={() => setShowFreeWriting(false)}
-            initialPrompt={vignetteContext?.prompt}
-            suggestedTags={vignetteContext?.suggestedTags}
-          />
-
-          <EntryDetailModal
-            entries={selectedEntry ? [selectedEntry] : []}
-            visible={!!selectedEntry}
-            onClose={() => setSelectedEntry(null)}
-            showActions={true}
-          />
         </>
       )}
+
+      {/* Modales - TOUJOURS visibles, pas dans le bloc conditionnel */}
+      <FreeWritingModal 
+        visible={showFreeWriting} 
+        onClose={() => setShowFreeWriting(false)}
+        initialPrompt={vignetteContext?.prompt}
+        suggestedTags={vignetteContext?.suggestedTags}
+      />
+
+      <EntryDetailModal
+        entries={selectedEntry ? [selectedEntry] : []}
+        visible={!!selectedEntry}
+        onClose={() => setSelectedEntry(null)}
+        showActions={true}
+      />
     </ScreenContainer>
   );
 }

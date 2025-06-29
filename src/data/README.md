@@ -1,5 +1,80 @@
 # Système de Personnalisation IA - MoodCycle
 
+## 🚨 **MISSION CAPITALE - UPGRADE PHASES.JSON**
+
+### ⚠️ **ALERTE CRITIQUE - API ADMIN À METTRE À JOUR**
+
+**Date** : 26 juin 2025  
+**Priorité** : CRITIQUE  
+**Impact** : Système de personnalisation IA  
+
+### 🔄 **Changements Majeurs dans phases.json**
+
+#### **Nouvelle Structure `editableContent`**
+```json
+{
+  "editableContent": {
+    "description": "Contenu enrichi et personnalisé",
+    "advice": {
+      "nutrition": [...],
+      "activities": [...], 
+      "selfcare": [...],
+      "avoid": [...]
+    },
+    "rituals": [...],
+    "affirmation": "..."
+  }
+}
+```
+
+#### **Enrichissements Contextuels Réduits**
+- **AVANT** : 5 enrichissements par phase (20 total)
+- **MAINTENANT** : 1 enrichissement par phase (4 total)
+- **MISSING** : 16 enrichissements à recréer via API admin
+
+### 🎯 **Actions Requises - API Admin**
+
+#### **1. Migration Structure**
+```javascript
+// Ancien format → Nouveau format
+const oldPhase = {
+  description: "...",
+  advice: {...},
+  rituals: [...],
+  affirmation: "..."
+};
+
+const newPhase = {
+  editableContent: {
+    description: oldPhase.description,
+    advice: oldPhase.advice,
+    rituals: oldPhase.rituals,
+    affirmation: oldPhase.affirmation
+  }
+};
+```
+
+#### **2. Recréation Enrichissements Contextuels**
+- **16 enrichissements manquants** à recréer
+- **Structure cible** : 5 personas × 4 phases = 20 enrichissements
+- **Format** : `{targetPersona, targetPreferences, targetJourney, tone, contextualText}`
+
+#### **3. Validation Contenu**
+- ✅ **4 phases** avec `editableContent` complet
+- ❌ **16 enrichissements** à recréer
+- ❌ **API admin** à adapter à la nouvelle structure
+
+### 📊 **État de Migration**
+
+| Élément | Status | Actions |
+|---------|--------|---------|
+| `editableContent` | ✅ **COMPLET** | 4 phases migrées |
+| `contextualEnrichments` | ❌ **INCOMPLET** | 16/20 manquants |
+| API Admin | ❌ **À METTRE À JOUR** | Structure + Contenu |
+| Tests | ❌ **À ADAPTER** | Nouvelle structure |
+
+---
+
 ## 🎯 Architecture des Données
 
 ### Génération de Conseils Personnalisés
@@ -8,6 +83,37 @@ Conseil = phases.contextualEnrichments + prénom + insight.personaVariants + clo
 ```
 
 ## 📁 Fichiers Principaux
+
+### `phases.json` (15KB - **4 phases avec editableContent**)
+- **Statut** : ✅ Structure migrée, ❌ Enrichissements incomplets
+- **Nouveauté** : Structure `editableContent` pour API admin
+- **Manquant** : 16 enrichissements contextuels (5 personas × 4 phases - 4 existants)
+
+```json
+{
+  "menstrual": {
+    "editableContent": {
+      "description": "Temps de renouvellement profond...",
+      "advice": {
+        "nutrition": [...],
+        "activities": [...],
+        "selfcare": [...],
+        "avoid": [...]
+      },
+      "rituals": [...],
+      "affirmation": "..."
+    },
+    "contextualEnrichments": [
+      // ❌ SEULEMENT 1/5 enrichissements présents
+    ]
+  }
+}
+```
+
+### `phases.backup.json` (15KB - **Ancienne structure complète**)
+- **Statut** : Sauvegarde de l'ancienne structure
+- **Contient** : 20 enrichissements contextuels complets
+- **Usage** : Référence pour recréer les enrichissements manquants
 
 ### `insights.json` (Production - **178 insights** validés)
 - **Statut** : Contenu validé sans variantes persona
@@ -44,22 +150,6 @@ Conseil = phases.contextualEnrichments + prénom + insight.personaVariants + clo
   },
   "targetPersonas": ["emma", "laure", "sylvie", "christine", "clara"],
   "journeyChoice": "body_disconnect"
-}
-```
-
-### `phases.json` (15KB - **20 enrichissements** contextuels)
-- **Rôle** : Enrichissements contextuels par phase cyclique
-- **Sélection** : persona + préférences + journey
-- **Usage** : Préfixe contextuel des conseils
-
-```json
-{
-  "id": "menstrual_emma_body_disconnect_01",
-  "targetPersona": "emma",
-  "targetPreferences": ["symptoms"],
-  "targetJourney": "body_disconnect",
-  "tone": "friendly",
-  "contextualText": "Cette pause mensuelle t'invite à découvrir la sagesse de ton corps et à honorer tes besoins authentiques"
 }
 ```
 
@@ -110,10 +200,12 @@ Conseil = phases.contextualEnrichments + prénom + insight.personaVariants + clo
 
 ## 🔄 État de Migration
 
-**Aujourd'hui (25 juin)** :
+**Aujourd'hui (26 juin)** :
 - ✅ **178 insights** validés dans `insights.json`
+- ✅ **4 phases** avec `editableContent` complet dans `phases.json`
+- ❌ **16 enrichissements contextuels** manquants dans `phases.json`
 - 🔄 **13 insights** avec variantes dans `insights.future.json`
-- 🎯 Édition des 165 variantes restantes en cours via interface admin
+- 🎯 **MISSION CAPITALE** : API admin à mettre à jour pour nouvelle structure
 
 ## 🚀 Système Cible
 

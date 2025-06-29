@@ -39,6 +39,7 @@ export const useUserStore = create(
         phases: 3,       // Énergie cyclique
         lithotherapy: 3, // Lithothérapie
         rituals: 3,      // Rituels bien-être
+        terminology: 'medical', // ✨ NOUVEAU - Terminologie cyclique
       },
 
 
@@ -173,6 +174,7 @@ export const useUserStore = create(
             phases: 3,
             lithotherapy: 3,
             rituals: 3,
+            terminology: 'medical',
           },
           cycle: {
             lastPeriodDate: null,

@@ -214,13 +214,4 @@ export function usePersonaVignettes(persona) {
   return useVignettes(null, persona);
 }
 
-// Fonction utilitaire pour les noms de phases
-const getPhaseDisplayName = (phase) => {
-  const phaseNames = {
-    menstrual: 'menstruelle',
-    follicular: 'folliculaire', 
-    ovulatory: 'ovulatoire',
-    luteal: 'lutéale'
-  };
-  return phaseNames[phase] || phase;
-};
+// ✅ Fonction utilitaire supprimée - utiliser useTerminology() à la place
