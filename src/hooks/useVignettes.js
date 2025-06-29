@@ -6,10 +6,12 @@ import { useState, useEffect, useMemo } from 'react';
 import { useUserStore } from '../stores/useUserStore';
 import { useEngagementStore } from '../stores/useEngagementStore';
 import { useCycleStore } from '../stores/useCycleStore';
-import { getCurrentPhase } from '../utils/cycleCalculations';
+import { useUserIntelligence } from '../stores/useUserIntelligence';
+import { getCurrentPhase, getCurrentPhaseAdaptive, getCycleMode } from '../utils/cycleCalculations';
 import { useAdaptiveInterface } from './useAdaptiveInterface';
 import { useSmartSuggestions } from './useSmartSuggestions';
 import VignettesService from '../services/VignettesService';
+import CycleObservationEngine from '../services/CycleObservationEngine';
 import vignettesData from '../data/vignettes.json';
 
 export function useVignettes(forcePhase = null, forcePersona = null) {
@@ -19,12 +21,26 @@ export function useVignettes(forcePhase = null, forcePersona = null) {
 
   // Stores & hooks
   const { persona, profile } = useUserStore();
+  const intelligence = useUserIntelligence();
+  const { trackAction } = useEngagementStore();
+  const engagementData = useEngagementStore((state) => state);
   // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
   const cycleData = forcePhase ? null : useCycleStore((state) => state);
-  const calculatedPhase = cycleData ? getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration) : 'follicular';
+  
+  // MODIFICATION : Utiliser phase adaptive
+  const calculatedPhase = cycleData ? getCurrentPhaseAdaptive(
+    cycleData.lastPeriodDate, 
+    cycleData.length, 
+    cycleData.periodDuration,
+    {
+      mode: 'auto',
+      userIntelligence: intelligence,
+      engagementLevel: engagementData?.maturity?.current
+    }
+  ) : 'follicular';
+  
   const currentPhase = forcePhase || calculatedPhase;
   const currentDay = cycleData?.currentDay || 1;
-  const { trackAction } = useEngagementStore();
   const adaptiveInterface = useAdaptiveInterface();
   const layout = adaptiveInterface?.layout || { config: { adaptiveVignettes: 3, maturityLevel: 'learning' } };
   const suggestions = useSmartSuggestions();
@@ -36,6 +52,14 @@ export function useVignettes(forcePhase = null, forcePersona = null) {
   // Assurer que layout et layout.config existent avant de les utiliser
   const adaptiveVignettesLimit = layout.config?.adaptiveVignettes || 3;
   const firstSuggestionAction = suggestions?.contextualActions?.[0];
+
+  // AJOUT : Guidance observation si mode actif
+  const cycleMode = getCycleMode(intelligence, engagementData?.maturity?.current);
+  const observationGuidance = CycleObservationEngine.getObservationGuidance(
+    currentPhase,
+    intelligence,
+    engagementData?.maturity?.current
+  );
 
   // ✅ LOGIQUE ADAPTATIVE SIMPLE - fixée pour éviter les boucles
   const adaptiveLimit = useMemo(() => {
@@ -161,6 +185,12 @@ export function useVignettes(forcePhase = null, forcePersona = null) {
     hasSmartSuggestions: !!firstSuggestionAction,
     totalAvailable: Array.isArray(vignettes) ? vignettes.length : 0,
     maxDisplayed: adaptiveLimit,
+    
+    // AJOUT dans return : Nouveaux champs observation
+    cycleMode,
+    observationGuidance,
+    isObservationMode: cycleMode !== 'predictive',
+    observationConfidence: observationGuidance.confidence || 0,
     
     // Debug
     rawVignettes: vignettes,

@@ -9,6 +9,7 @@ import { useCycleStore } from '../stores/useCycleStore';
 import { getCurrentPhase } from '../utils/cycleCalculations';
 import { usePersona } from './usePersona';
 import { createPersonalizationEngine } from '../services/PersonalizationEngine';
+import CycleObservationEngine from '../services/CycleObservationEngine';
 
 // ───────────────────────────────────────────────────────────
 // 🎯 HOOK PRINCIPAL SUGGESTIONS INTELLIGENTES
@@ -73,14 +74,38 @@ export function useSmartSuggestions() {
       stablePreferences
     );
 
+    let contextualActions = experience.contextualActions || [];
+
+    // AJOUT : Suggestions observation si pertinent
+    const observationReadiness = intelligence.getObservationReadiness?.();
+    
+    if (observationReadiness && !observationReadiness.hasEnoughData) {
+      // Ajouter suggestion d'observation
+      const observationAction = {
+        type: 'observation',
+        title: 'Note tes ressentis du jour',
+        label: 'Observer mon cycle',
+        prompt: CycleObservationEngine.getSuggestedObservations(
+          stablePhase, 
+          intelligence.observationPatterns?.lastObservations || []
+        )[0]?.prompt,
+        icon: '📝',
+        priority: 'medium',
+        confidence: 80
+      };
+      
+      // Insérer en 2e position
+      contextualActions.splice(1, 0, observationAction);
+    }
+
     return {
-      actions: experience.contextualActions || [],
+      actions: contextualActions,
       prompts: experience.personalizedPrompts || [],
       confidence: experience.personalization?.confidence || 0,
       dataPoints: experience.personalization?.dataPoints || {},
       recommendations: experience.personalization?.recommendations || []
     };
-  }, [stablePersona, stablePhase, stableIntelligence, stablePreferences]);
+  }, [stablePersona, stablePhase, stableIntelligence, stablePreferences, intelligence]);
 
   // ──────────────────────────────────────────────────────
   // 📊 TRACKING UTILISATION

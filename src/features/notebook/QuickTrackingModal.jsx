@@ -3,7 +3,7 @@
 // 📄 File: src/features/notebook/QuickTrackingModal.jsx
 // 🧩 Type: UI Component Premium
 // 📚 Description: Modal de tracking élégant avec symptômes étendus
-// 🕒 Version: 4.0 - 2025-06-21 - DESIGN PREMIUM
+// 🕒 Version: 4.1 - 2025-06-29 - AJOUT OBSERVATIONS CYCLE
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
 import React, { useState } from 'react';
@@ -36,32 +36,42 @@ export default function QuickTrackingModal({ visible, onClose, defaultTags = [] 
   const { theme } = useTheme();
   const styles = getStyles(theme);
   const { addQuickTracking } = useNotebookStore();
-  // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
   const cycleData = useCycleStore((state) => state);
+  const addObservation = useCycleStore((state) => state.addObservation);
   const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
   
   const [energy, setEnergy] = useState(3);
   const [mood, setMood] = useState('neutral');
   const [symptoms, setSymptoms] = useState([]);
-  const [activeTab, setActiveTab] = useState('physical'); // 'physical' ou 'emotional'
+  const [activeTab, setActiveTab] = useState('sorciere'); // 'sorciere', 'jeune_fille', 'mere', 'enchanteresse'
   
-  // Déplacer les constantes de symptômes à l'intérieur du composant pour accéder au thème
-  const SYMPTOMS_PHYSICAL = [
+  // Symptômes groupés par archétypes Miranda Gray
+  const SYMPTOMS_SORCIERE = [
+    { id: 'intuition', label: 'Intuition forte', emoji: '🔮', color: theme.colors.phases.menstrual },
+    { id: 'introspection', label: 'Besoin solitude', emoji: '🌙', color: theme.colors.phases.menstrual },
     { id: 'crampes', label: 'Crampes', emoji: '🤕', color: theme.colors.phases.menstrual },
-    { id: 'fatigue', label: 'Fatigue', emoji: '😴', color: theme.colors.phases.luteal },
-    { id: 'maux_tete', label: 'Maux de tête', emoji: '🤯', color: theme.colors.warning },
-    { id: 'ballonnements', label: 'Ballonnements', emoji: '🎈', color: theme.colors.phases.follicular },
-    { id: 'douleurs', label: 'Douleurs', emoji: '💢', color: theme.colors.error },
-    { id: 'nausees', label: 'Nausées', emoji: '🤢', color: theme.colors.phases.ovulatory },
+    { id: 'fatigue', label: 'Fatigue sacrée', emoji: '😴', color: theme.colors.phases.menstrual },
   ];
 
-  const SYMPTOMS_EMOTIONAL = [
-    { id: 'sensibilite', label: 'Sensibilité', emoji: '🥺', color: theme.colors.phases.ovulatory },
-    { id: 'irritabilite', label: 'Irritabilité', emoji: '😤', color: theme.colors.phases.luteal },
-    { id: 'anxiete', label: 'Anxiété', emoji: '😰', color: theme.colors.warning },
-    { id: 'joie', label: 'Joie', emoji: '😊', color: theme.colors.success },
-    { id: 'tristesse', label: 'Tristesse', emoji: '😢', color: theme.colors.phases.menstrual },
-    { id: 'zen', label: 'Zen', emoji: '😌', color: theme.colors.phases.follicular },
+  const SYMPTOMS_JEUNE_FILLE = [
+    { id: 'creativite', label: 'Créativité', emoji: '✨', color: theme.colors.phases.follicular },
+    { id: 'energie', label: 'Énergie montante', emoji: '🌱', color: theme.colors.phases.follicular },
+    { id: 'curiosite', label: 'Curiosité', emoji: '👀', color: theme.colors.phases.follicular },
+    { id: 'optimisme', label: 'Optimisme', emoji: '😊', color: theme.colors.phases.follicular },
+  ];
+
+  const SYMPTOMS_MERE = [
+    { id: 'rayonnement', label: 'Rayonnement', emoji: '☀️', color: theme.colors.phases.ovulatory },
+    { id: 'communication', label: 'Facilité sociale', emoji: '💬', color: theme.colors.phases.ovulatory },
+    { id: 'sensualite', label: 'Sensualité', emoji: '🌺', color: theme.colors.phases.ovulatory },
+    { id: 'confiance', label: 'Confiance', emoji: '👑', color: theme.colors.phases.ovulatory },
+  ];
+
+  const SYMPTOMS_ENCHANTERESSE = [
+    { id: 'organisation', label: 'Besoin organiser', emoji: '📋', color: theme.colors.phases.luteal },
+    { id: 'intensite', label: 'Intensité émotionnelle', emoji: '🌪️', color: theme.colors.phases.luteal },
+    { id: 'clairvoyance', label: 'Clairvoyance', emoji: '👁️', color: theme.colors.phases.luteal },
+    { id: 'transformation', label: 'Énergie transformation', emoji: '🦋', color: theme.colors.phases.luteal },
   ];
   
   // Animations
@@ -103,7 +113,19 @@ export default function QuickTrackingModal({ visible, onClose, defaultTags = [] 
     const moodOption = MOOD_OPTIONS.find(opt => opt.value === mood);
     const moodLabel = moodOption ? moodOption.value : mood;
     
+    // 🆕 DOUBLE SAUVEGARDE : Notebook ET Cycle
     addQuickTracking(moodLabel, energy, symptoms);
+    
+    // 🆕 AJOUTER L'OBSERVATION AU CYCLE
+    // Convertir mood en valeur numérique pour feeling
+    const feelingValue = mood === 'sad' ? 1 : 
+                        mood === 'neutral' ? 3 : 
+                        mood === 'good' ? 4 : 
+                        mood === 'great' ? 4.5 : 
+                        mood === 'amazing' ? 5 : 3;
+    
+    const notes = symptoms.length > 0 ? `Symptômes: ${symptoms.join(', ')}` : '';
+    addObservation(feelingValue, energy, notes);
 
     // Reset et fermer
     setEnergy(3);
@@ -236,37 +258,64 @@ export default function QuickTrackingModal({ visible, onClose, defaultTags = [] 
 
             {/* Symptômes avec tabs */}
             <View style={styles.section}>
-              <BodyText style={styles.sectionTitle}>Symptômes (optionnel)</BodyText>
+              <BodyText style={styles.sectionTitle}>Énergies ressenties (optionnel)</BodyText>
               
-              {/* Tabs */}
-              <View style={styles.tabs}>
-                <TouchableOpacity
-                  style={[styles.tab, activeTab === 'physical' && styles.tabActive]}
-                  onPress={() => setActiveTab('physical')}
-                >
-                  <BodyText style={[
-                    styles.tabText,
-                    activeTab === 'physical' && styles.tabTextActive
-                  ]}>
-                    Physique
-                  </BodyText>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.tab, activeTab === 'emotional' && styles.tabActive]}
-                  onPress={() => setActiveTab('emotional')}
-                >
-                  <BodyText style={[
-                    styles.tabText,
-                    activeTab === 'emotional' && styles.tabTextActive
-                  ]}>
-                    Émotionnel
-                  </BodyText>
-                </TouchableOpacity>
-              </View>
+              {/* Tabs Archétypes */}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsContainer}>
+                <View style={styles.tabs}>
+                  <TouchableOpacity
+                    style={[styles.tab, activeTab === 'sorciere' && styles.tabActive]}
+                    onPress={() => setActiveTab('sorciere')}
+                  >
+                    <BodyText style={[
+                      styles.tabText,
+                      activeTab === 'sorciere' && styles.tabTextActive
+                    ]}>
+                      🌙 Sorcière
+                    </BodyText>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.tab, activeTab === 'jeune_fille' && styles.tabActive]}
+                    onPress={() => setActiveTab('jeune_fille')}
+                  >
+                    <BodyText style={[
+                      styles.tabText,
+                      activeTab === 'jeune_fille' && styles.tabTextActive
+                    ]}>
+                      🌸 Jeune Fille
+                    </BodyText>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.tab, activeTab === 'mere' && styles.tabActive]}
+                    onPress={() => setActiveTab('mere')}
+                  >
+                    <BodyText style={[
+                      styles.tabText,
+                      activeTab === 'mere' && styles.tabTextActive
+                    ]}>
+                      ☀️ Mère
+                    </BodyText>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.tab, activeTab === 'enchanteresse' && styles.tabActive]}
+                    onPress={() => setActiveTab('enchanteresse')}
+                  >
+                    <BodyText style={[
+                      styles.tabText,
+                      activeTab === 'enchanteresse' && styles.tabTextActive
+                    ]}>
+                      🦋 Enchanteresse
+                    </BodyText>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
               
               {/* Symptômes grid */}
               <View style={styles.symptomsGrid}>
-                {(activeTab === 'physical' ? SYMPTOMS_PHYSICAL : SYMPTOMS_EMOTIONAL).map((symptom) => (
+                {(activeTab === 'sorciere' ? SYMPTOMS_SORCIERE : 
+                  activeTab === 'jeune_fille' ? SYMPTOMS_JEUNE_FILLE :
+                  activeTab === 'mere' ? SYMPTOMS_MERE :
+                  SYMPTOMS_ENCHANTERESSE).map((symptom) => (
                   <TouchableOpacity
                     key={symptom.id}
                     style={[
@@ -461,9 +510,11 @@ const getStyles = (theme) => StyleSheet.create({
   },
 
   // Symptômes styles premium
+  tabsContainer: {
+    marginBottom: theme.spacing.s,
+  },
   tabs: {
     flexDirection: 'row',
-    marginBottom: theme.spacing.m,
     backgroundColor: theme.colors.background,
     borderRadius: theme.borderRadius.medium,
     padding: 4,

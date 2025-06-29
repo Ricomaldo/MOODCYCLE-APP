@@ -80,6 +80,20 @@ const PROGRESSIVE_FEATURES = {
     level: 'learning',
     condition: (metrics) => metrics.insightsSaved >= 1,
     description: "Partage insights & expériences"
+  },
+
+  // AJOUT : Nouvelles features observation
+  observation_mode: {
+    level: 'learning',
+    condition: (metrics) => metrics.daysUsed >= 7 && 
+                           metrics.notebookEntriesCreated >= 5,
+    description: "Mode observation du cycle"
+  },
+  
+  pattern_detection: {
+    level: 'autonomous',
+    condition: (metrics) => metrics.autonomySignals >= 3,
+    description: "Détection patterns personnalisés"
   }
 };
 

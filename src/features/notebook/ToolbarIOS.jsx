@@ -35,7 +35,11 @@ export default function ToolbarIOS({ onWritePress, onTrackPress }) {
       <View style={styles.toolbarContent}>
         {/* Bouton Écrire */}
         <TouchableOpacity
-          style={[styles.toolbarButton, styles.writeButton]}
+          style={[
+            styles.toolbarButton, 
+            styles.writeButton,
+            !onTrackPress && styles.singleButton
+          ]}
           onPress={handleWritePress}
           activeOpacity={0.8}
         >
@@ -43,16 +47,17 @@ export default function ToolbarIOS({ onWritePress, onTrackPress }) {
           <BodyText style={styles.writeButtonText}>Écrire</BodyText>
         </TouchableOpacity>
 
-        {/* Bouton Tracker */}
-        <TouchableOpacity
-          style={[styles.toolbarButton, styles.trackButton]}
-          onPress={handleTrackPress}
-          activeOpacity={0.8}
-        >
-          <Feather name="bar-chart-2" size={20} color={theme.colors.primary} />
-
-          <BodyText style={styles.trackButtonText}>Tracker</BodyText>
-        </TouchableOpacity>
+        {/* Bouton Tracker - conditionnel */}
+        {onTrackPress && (
+          <TouchableOpacity
+            style={[styles.toolbarButton, styles.trackButton]}
+            onPress={handleTrackPress}
+            activeOpacity={0.8}
+          >
+            <Feather name="bar-chart-2" size={20} color={theme.colors.primary} />
+            <BodyText style={styles.trackButtonText}>Tracker</BodyText>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );
@@ -118,5 +123,9 @@ const getStyles = (theme) => StyleSheet.create({
     color: theme.colors.primary,
     fontSize: 16,
     fontWeight: '500',
+  },
+  singleButton: {
+    flex: 0,
+    minWidth: '60%',
   },
 });

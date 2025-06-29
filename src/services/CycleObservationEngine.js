@@ -1,337 +1,248 @@
-// ═══════════════════════════════════════════════════════════
-// 🔄 CycleObservationEngine.js - Service Observation Cycle
-// ═══════════════════════════════════════════════════════════
+//
+// ─────────────────────────────────────────────────────────
+// 📄 File: src/services/CycleObservationEngine.js
+// 🧩 Type: Service
+// 📚 Description: Moteur d'observation et apprentissage cycle
+// 🕒 Version: 1.0 - 2025-06-21
+// 🧭 Used in: hooks, components
+// ─────────────────────────────────────────────────────────
+//
 
-import { getCurrentPhase, PHASE_METADATA } from '../utils/cycleCalculations';
+import { CYCLE_MODES } from '../utils/cycleCalculations';
 
-// ───────────────────────────────────────────────────────────
-// 📊 CONSTANTES OBSERVATION
-// ───────────────────────────────────────────────────────────
-
-const OBSERVATION_KEYWORDS = {
-  menstrual: {
-    symptoms: ['règles', 'saignements', 'crampes', 'douleurs', 'fatigue intense'],
-    moods: ['repli', 'introspection', 'besoin repos', 'sensible'],
-    energy: ['basse', 'épuisée', 'calme']
-  },
-  follicular: {
-    symptoms: ['légèreté', 'clarté mentale', 'appétit normal'],
-    moods: ['optimiste', 'créative', 'motivée', 'curieuse'],
-    energy: ['montante', 'stable', 'dynamique']
-  },
-  ovulatory: {
-    symptoms: ['glaire', 'libido haute', 'peau lumineuse'],
-    moods: ['confiante', 'sociable', 'communicative', 'rayonnante'],
-    energy: ['pic', 'maximale', 'débordante']
-  },
-  luteal: {
-    symptoms: ['tension seins', 'ballonnements', 'fringales', 'SPM'],
-    moods: ['irritable', 'émotive', 'anxieuse', 'critique'],
-    energy: ['déclinante', 'variable', 'instable']
-  }
-};
-
-const GUIDANCE_TEMPLATES = {
-  discovery: {
-    menstrual: "Comment te sens-tu pendant tes règles ? Note tes ressentis 🌙",
-    follicular: "Ton énergie remonte ? Observe ce qui change en toi 🌱",
-    ovulatory: "Tu rayonnes ? C'est le moment de noter ta vitalité ☀️",
-    luteal: "Des changements d'humeur ? C'est normal, observe-les 🍂"
-  },
-  learning: {
-    menstrual: "Je remarque que tu as souvent {symptom} en phase menstruelle",
-    follicular: "Tes patterns montrent une belle énergie {energy} à cette période",
-    ovulatory: "Tu sembles {mood} pendant l'ovulation, c'est ton pattern !",
-    luteal: "J'ai noté que tu ressens {symptom} en phase lutéale"
-  },
-  autonomous: {
-    menstrual: "Tes observations confirment : {pattern}",
-    follicular: "Ton corps suit son rythme unique : {pattern}",
-    ovulatory: "Tu connais bien cette phase : {pattern}",
-    luteal: "Tes patterns lutéaux sont clairs : {pattern}"
-  }
-};
-
-// ───────────────────────────────────────────────────────────
-// 🎯 CLASSE PRINCIPALE
-// ───────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════
+// 🎯 MOTEUR OBSERVATION CYCLE
+// ═══════════════════════════════════════════════════════
 
 class CycleObservationEngine {
-  
   /**
-   * Détermine la phase actuelle depuis observations
-   * @param {Object} cycleData - Données cycle (lastPeriodDate, length, etc)
-   * @param {Object} userIntelligence - Store intelligence utilisateur
-   * @returns {Object} { phase, confidence, method, signals }
+   * Génère des suggestions d'observation contextuelles
    */
-  static getCurrentPhaseFromObservation(cycleData, userIntelligence) {
-    if (!userIntelligence?.observationPatterns?.lastObservations?.length) {
-      // Fallback sur calculs prédictifs
+  static getSuggestedObservations(currentPhase, lastObservations = []) {
+    const phaseObservations = {
+      menstrual: [
+        {
+          prompt: "Comment te sens-tu physiquement aujourd'hui ?",
+          type: 'symptoms',
+          focus: ['cramps', 'fatigue', 'mood'],
+          icon: '🌙'
+        },
+        {
+          prompt: "Quel est ton niveau d'énergie en ce moment ?",
+          type: 'energy',
+          focus: ['rest', 'recovery'],
+          icon: '💤'
+        }
+      ],
+      follicular: [
+        {
+          prompt: "Sens-tu ton énergie qui remonte ?",
+          type: 'energy',
+          focus: ['rising', 'motivation'],
+          icon: '🌱'
+        },
+        {
+          prompt: "As-tu des projets qui t'inspirent ?",
+          type: 'mood',
+          focus: ['creativity', 'planning'],
+          icon: '✨'
+        }
+      ],
+      ovulatory: [
+        {
+          prompt: "Te sens-tu confiante et rayonnante ?",
+          type: 'mood',
+          focus: ['confidence', 'social'],
+          icon: '☀️'
+        },
+        {
+          prompt: "Comment vis-tu ce pic d'énergie ?",
+          type: 'energy',
+          focus: ['peak', 'connection'],
+          icon: '🔥'
+        }
+      ],
+      luteal: [
+        {
+          prompt: "As-tu besoin de plus de calme aujourd'hui ?",
+          type: 'mood',
+          focus: ['sensitivity', 'introspection'],
+          icon: '🍂'
+        },
+        {
+          prompt: "Ressens-tu des tensions physiques ?",
+          type: 'symptoms',
+          focus: ['pms', 'tension'],
+          icon: '⚡'
+        }
+      ]
+    };
+
+    // Éviter les observations récentes similaires
+    const recentTypes = lastObservations.slice(0, 3).map(obs => obs.type);
+    const suggestions = phaseObservations[currentPhase] || [];
+    
+    return suggestions.filter(suggestion => 
+      !recentTypes.includes(suggestion.type)
+    ).slice(0, 2);
+  }
+
+  /**
+   * Génère une guidance d'observation contextuelle
+   */
+  static getObservationGuidance(currentPhase, intelligence, engagementLevel) {
+    const observationPatterns = intelligence?.observationPatterns;
+    
+    if (!observationPatterns) {
       return {
-        phase: getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration),
+        message: "Commence à observer tes ressentis pour personnaliser ton expérience",
         confidence: 0,
-        method: 'predictive',
-        signals: []
+        mode: CYCLE_MODES.PREDICTIVE
       };
     }
 
-    const observations = userIntelligence.observationPatterns.lastObservations;
-    const recentObs = observations.slice(0, 7); // Dernière semaine
-    
-    // Analyser patterns récents
-    const phaseScores = this._analyzeRecentObservations(recentObs);
-    const predictedPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
-    
-    // Déterminer phase avec plus de confiance
-    const { phase, confidence } = this._determinePhaseWithConfidence(
-      phaseScores, 
-      predictedPhase,
-      userIntelligence.observationPatterns
-    );
-    
-    return {
-      phase,
-      confidence,
-      method: confidence > 0.6 ? 'observation' : 'hybrid',
-      signals: phaseScores[phase]?.signals || []
-    };
-  }
+    const { consistency, totalObservations, confidence } = observationPatterns;
 
-  /**
-   * Génère guidance personnalisée selon observations
-   * @param {string} currentPhase - Phase actuelle
-   * @param {Object} userIntelligence - Intelligence utilisateur
-   * @param {string} maturityLevel - discovery/learning/autonomous
-   * @returns {Object} { message, action, insights }
-   */
-  static getObservationGuidance(currentPhase, userIntelligence, maturityLevel = 'discovery') {
-    const templates = GUIDANCE_TEMPLATES[maturityLevel];
-    const observationPatterns = userIntelligence?.observationPatterns;
-    
-    // Guidance basique si pas de patterns
-    if (!observationPatterns || observationPatterns.totalObservations < 3) {
+    // Guidance selon progression
+    if (totalObservations < 5) {
       return {
-        message: templates[currentPhase],
-        action: "Note tes ressentis quotidiens",
-        insights: [],
-        personalized: false
+        message: "Continue d'observer pour que j'apprenne tes patterns uniques",
+        confidence: confidence || 0,
+        mode: CYCLE_MODES.PREDICTIVE,
+        nextStep: "Ajoute quelques observations de plus"
       };
     }
 
-    // Guidance personnalisée selon patterns
-    const phasePattern = observationPatterns.phasePatterns[currentPhase];
-    const insights = this._generatePersonalizedInsights(phasePattern, currentPhase);
-    
-    // Construire message personnalisé
-    let message = templates[currentPhase];
-    
-    if (maturityLevel !== 'discovery' && phasePattern?.occurrences > 0) {
-      // Remplacer placeholders avec vraies données
-      message = message
-        .replace('{symptom}', phasePattern.typicalSymptoms[0] || 'certains symptômes')
-        .replace('{mood}', phasePattern.typicalMoods[0] || 'dans un certain état')
-        .replace('{energy}', phasePattern.typicalEnergy || 'particulière')
-        .replace('{pattern}', insights[0] || 'ton rythme est unique');
+    if (totalObservations >= 5 && consistency > 0.4) {
+      return {
+        message: "Je commence à voir tes patterns ! Mode hybride activé",
+        confidence: confidence || 0,
+        mode: CYCLE_MODES.HYBRID,
+        nextStep: "Continues pour encore plus de précision"
+      };
     }
-    
+
+    if (totalObservations >= 20 && consistency > 0.7) {
+      return {
+        message: "Je me base maintenant sur tes ressentis uniques",
+        confidence: confidence || 0,
+        mode: CYCLE_MODES.OBSERVATION,
+        nextStep: "Tu connais ton corps mieux que quiconque"
+      };
+    }
+
     return {
-      message,
-      action: this._getContextualAction(currentPhase, maturityLevel),
-      insights,
-      personalized: true,
-      confidence: observationPatterns.confidence
+      message: "J'apprends de tes observations pour t'accompagner",
+      confidence: confidence || 0,
+      mode: CYCLE_MODES.PREDICTIVE
     };
   }
 
   /**
-   * Analyse si utilisatrice corrige les prédictions
+   * Détecte et traite une correction de prédiction
    */
-  static detectPredictionCorrection(observedPhase, predictedPhase, userIntelligenceStore) {
+  static detectPredictionCorrection(observedPhase, predictedPhase, intelligence) {
     if (observedPhase !== predictedPhase) {
-      // Tracker signal d'autonomie via le store passé en paramètre
-      if (userIntelligenceStore?.trackAutonomySignal) {
-        userIntelligenceStore.trackAutonomySignal('corrects_prediction', {
-          observed: observedPhase,
-          predicted: predictedPhase,
-          timestamp: Date.now()
-        });
-      }
+      intelligence.trackAutonomySignal('corrects_prediction', {
+        observed: observedPhase,
+        predicted: predictedPhase,
+        timestamp: Date.now()
+      });
       
       return {
-        corrected: true,
-        message: "J'ai noté que tu es en phase " + PHASE_METADATA[observedPhase].name + 
-                " plutôt que " + PHASE_METADATA[predictedPhase].name
+        correctionDetected: true,
+        message: "Merci pour cette correction ! J'apprends de tes observations"
       };
     }
     
-    return { corrected: false };
+    return { correctionDetected: false };
   }
 
   /**
-   * Suggère observations manquantes pour améliorer précision
+   * Génère des prompts d'observation intelligents
    */
-  static getSuggestedObservations(currentPhase, existingObservations) {
-    const suggestions = [];
-    const keywords = OBSERVATION_KEYWORDS[currentPhase];
+  static getIntelligentObservationPrompts(currentPhase, observationHistory = []) {
+    const basePrompts = this.getSuggestedObservations(currentPhase, observationHistory);
     
-    // Vérifier ce qui manque
-    if (!existingObservations.some(obs => obs.energy)) {
-      suggestions.push({
-        type: 'energy',
-        prompt: "Comment est ton niveau d'énergie aujourd'hui ?",
-        options: keywords.energy
-      });
-    }
-    
-    if (!existingObservations.some(obs => obs.mood)) {
-      suggestions.push({
-        type: 'mood',
-        prompt: "Comment te sens-tu émotionnellement ?",
-        options: keywords.moods
-      });
-    }
-    
-    if (!existingObservations.some(obs => obs.symptoms?.length > 0)) {
-      suggestions.push({
+    // Adapter selon historique
+    const hasSymptomFocus = observationHistory.some(obs => obs.symptoms?.length > 0);
+    const hasMoodFocus = observationHistory.some(obs => obs.mood);
+    const hasEnergyFocus = observationHistory.some(obs => obs.energy);
+
+    // Encourager diversité d'observation
+    if (!hasSymptomFocus) {
+      basePrompts.unshift({
+        prompt: "Ressens-tu des sensations physiques particulières ?",
         type: 'symptoms',
-        prompt: "As-tu des symptômes particuliers ?",
-        options: keywords.symptoms
+        focus: ['physical', 'body_awareness'],
+        icon: '🎯',
+        priority: 'high'
       });
     }
-    
-    return suggestions.slice(0, 2); // Max 2 suggestions
-  }
 
-  // ───────────────────────────────────────────────────────────
-  // 🔧 MÉTHODES PRIVÉES
-  // ───────────────────────────────────────────────────────────
-
-  static _analyzeRecentObservations(observations) {
-    // GARDE PERFORMANCE : Limiter à 50 observations max
-    if (observations.length > 50) {
-      observations = observations.slice(0, 50);
-    }
-    
-    const phaseScores = {
-      menstrual: { score: 0, signals: [] },
-      follicular: { score: 0, signals: [] },
-      ovulatory: { score: 0, signals: [] },
-      luteal: { score: 0, signals: [] }
-    };
-
-    observations.forEach(obs => {
-      Object.entries(OBSERVATION_KEYWORDS).forEach(([phase, keywords]) => {
-        let matchScore = 0;
-        
-        // Analyser symptômes
-        if (obs.symptoms?.length > 0) {
-          const symptomMatches = obs.symptoms.filter(s => 
-            keywords.symptoms.some(kw => s.toLowerCase().includes(kw))
-          );
-          if (symptomMatches.length > 0) {
-            matchScore += symptomMatches.length * 2;
-            phaseScores[phase].signals.push(...symptomMatches.map(s => ({ type: 'symptom', value: s })));
-          }
-        }
-        
-        // Analyser mood
-        if (obs.mood && keywords.moods.some(m => obs.mood.toLowerCase().includes(m))) {
-          matchScore += 3;
-          phaseScores[phase].signals.push({ type: 'mood', value: obs.mood });
-        }
-        
-        // Analyser énergie
-        if (obs.energy && keywords.energy.some(e => obs.energy.toLowerCase().includes(e))) {
-          matchScore += 2;
-          phaseScores[phase].signals.push({ type: 'energy', value: obs.energy });
-        }
-        
-        phaseScores[phase].score += matchScore;
+    if (!hasMoodFocus) {
+      basePrompts.unshift({
+        prompt: "Comment décrirais-tu ton état émotionnel ?",
+        type: 'mood',
+        focus: ['emotional', 'feelings'],
+        icon: '💝',
+        priority: 'high'
       });
-    });
+    }
 
-    return phaseScores;
+    return basePrompts.slice(0, 3);
   }
 
-  static _determinePhaseWithConfidence(phaseScores, predictedPhase, patterns) {
-    // Trouver phase avec score max
-    let maxScore = 0;
-    let bestPhase = predictedPhase;
-    
-    Object.entries(phaseScores).forEach(([phase, data]) => {
-      if (data.score > maxScore) {
-        maxScore = data.score;
-        bestPhase = phase;
-      }
-    });
-    
-    // Calculer confiance
-    const totalScore = Object.values(phaseScores).reduce((sum, data) => sum + data.score, 0);
-    const confidence = totalScore > 0 ? maxScore / totalScore : 0;
-    
-    // Boost confiance si cohérent avec patterns historiques
-    const historicalBoost = patterns.phasePatterns[bestPhase]?.occurrences > 5 ? 0.2 : 0;
-    
+  /**
+   * Analyse la qualité d'une observation
+   */
+  static analyzeObservationQuality(observation) {
+    let qualityScore = 0;
+    const feedback = [];
+
+    // Scoring détail
+    if (observation.symptoms?.length > 0) {
+      qualityScore += 30;
+      feedback.push("Bien détaillé physiquement");
+    }
+
+    if (observation.mood) {
+      qualityScore += 25;
+      feedback.push("État émotionnel noté");
+    }
+
+    if (observation.energy) {
+      qualityScore += 25;
+      feedback.push("Niveau d'énergie capturé");
+    }
+
+    if (observation.notes && observation.notes.length > 10) {
+      qualityScore += 20;
+      feedback.push("Notes personnelles riches");
+    }
+
     return {
-      phase: confidence > 0.4 ? bestPhase : predictedPhase,
-      confidence: Math.min(1, confidence + historicalBoost)
+      score: qualityScore,
+      quality: qualityScore > 60 ? 'excellent' : qualityScore > 30 ? 'good' : 'basic',
+      feedback: feedback.join(", "),
+      suggestions: this.getQualityImprovementSuggestions(qualityScore)
     };
   }
 
-  static _generatePersonalizedInsights(phasePattern, currentPhase) {
-    const insights = [];
-    
-    if (!phasePattern || phasePattern.occurrences === 0) {
-      return insights;
+  /**
+   * Suggestions pour améliorer la qualité d'observation
+   */
+  static getQualityImprovementSuggestions(currentScore) {
+    if (currentScore > 70) {
+      return ["Parfait ! Continue comme ça"];
     }
-    
-    // Insight sur symptômes récurrents
-    if (phasePattern.typicalSymptoms.length > 0) {
-      insights.push(
-        `Tu ressens souvent ${phasePattern.typicalSymptoms.slice(0, 2).join(' et ')} en phase ${PHASE_METADATA[currentPhase].name.toLowerCase()}`
-      );
-    }
-    
-    // Insight sur mood dominant
-    if (phasePattern.typicalMoods.length > 0) {
-      insights.push(
-        `Ton mood ${phasePattern.typicalMoods[0]} revient régulièrement à cette période`
-      );
-    }
-    
-    // Insight sur énergie
-    if (phasePattern.typicalEnergy) {
-      insights.push(
-        `Ton énergie est généralement ${phasePattern.typicalEnergy} pendant cette phase`
-      );
-    }
-    
-    return insights;
-  }
 
-  static _getContextualAction(phase, maturityLevel) {
-    const actions = {
-      discovery: {
-        menstrual: "Note ton niveau d'énergie et tes ressentis",
-        follicular: "Observe ce qui te donne de l'élan",
-        ovulatory: "Remarque tes interactions sociales",
-        luteal: "Sois attentive aux changements subtils"
-      },
-      learning: {
-        menstrual: "Compare avec tes cycles précédents",
-        follicular: "Identifie tes patterns créatifs",
-        ovulatory: "Note tes pics de confiance",
-        luteal: "Repère tes déclencheurs émotionnels"
-      },
-      autonomous: {
-        menstrual: "Honore ton besoin de repos",
-        follicular: "Lance tes projets importants",
-        ovulatory: "Profite de ton rayonnement",
-        luteal: "Pratique l'auto-compassion"
-      }
-    };
-    
-    return actions[maturityLevel]?.[phase] || "Continue tes observations";
+    const suggestions = [];
+    if (currentScore < 30) suggestions.push("Ajoute quelques détails sur ton ressenti physique");
+    if (currentScore < 50) suggestions.push("Note ton humeur du moment");
+    if (currentScore < 70) suggestions.push("Décris ton niveau d'énergie");
+
+    return suggestions;
   }
 }
 

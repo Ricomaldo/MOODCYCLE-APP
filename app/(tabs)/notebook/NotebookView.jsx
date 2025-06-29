@@ -19,7 +19,7 @@ import { useNotebookStore } from '../../../src/stores/useNotebookStore';
 import { useNavigationStore } from '../../../src/stores/useNavigationStore';
 import { useCycleStore } from '../../../src/stores/useCycleStore';
 import { getCurrentPhase } from '../../../src/utils/cycleCalculations';
-import QuickTrackingModal from '../../../src/features/notebook/QuickTrackingModal';
+
 import FreeWritingModal from '../../../src/features/notebook/FreeWritingModal';
 import EntryDetailModal from '../../../src/features/notebook/EntryDetailModal';
 import SwipeableEntryIOS from '../../../src/features/notebook/SwipeableEntryIOS';
@@ -338,7 +338,7 @@ export default function NotebookView() {
   const selectedTags = notebookFilters.tags || [];
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
-  const [showQuickTracking, setShowQuickTracking] = useState(false);
+
   const [showFreeWriting, setShowFreeWriting] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [vignetteContext, setVignetteContext] = useState(null);
@@ -363,14 +363,6 @@ export default function NotebookView() {
         suggestedTags: [`#${sourcePhase}`, '#vignette', '#guidé']
       });
       setShowFreeWriting(true);
-    } else if (mode === 'track') {
-      setVignetteContext({
-        phase: sourcePhase,
-        persona: sourcePersona,
-        vignetteId,
-        suggestedTags: [`#${sourcePhase}`, '#tracking', '#vignette']
-      });
-      setShowQuickTracking(true);
     } else if (sourcePhase) {
       setVignetteContext({
         phase: sourcePhase,
@@ -486,8 +478,6 @@ export default function NotebookView() {
   const handleToolbarAction = useCallback((action) => {
     if (action === 'write') {
       setShowFreeWriting(true);
-    } else if (action === 'track') {
-      setShowQuickTracking(true);
     }
   }, []);
 
@@ -762,15 +752,10 @@ export default function NotebookView() {
           {/* Toolbar iOS premium */}
           <ToolbarIOS
             onWritePress={() => handleToolbarAction('write')}
-            onTrackPress={() => handleToolbarAction('track')}
           />
 
           {/* Modales */}
-          <QuickTrackingModal 
-            visible={showQuickTracking} 
-            onClose={() => setShowQuickTracking(false)}
-            defaultTags={vignetteContext?.suggestedTags}
-          />
+
 
           <FreeWritingModal 
             visible={showFreeWriting} 

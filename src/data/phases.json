@@ -1,346 +1,298 @@
 {
-  "menstrual": {
-    "id": "menstrual",
-    "name": "Phase menstruelle",
-    "slug": "menstruelle", 
-    "color": "#E53935",
-    "duration": "Jours 1-5",
-    "energy": "Basse",
-    "mood": "Introspective",
-    "description": "Phase de renouvellement et d'introspection profonde. Ton corps fait le grand nettoyage.",
-    "characteristics": {
-      "physical": ["Règles", "Crampes possibles", "Fatigue naturelle", "Sensibilité accrue"],
-      "emotional": ["Besoin de calme", "Intuition forte", "Émotions à fleur de peau", "Envie de cocooning"],
-      "energy": "Énergie au plus bas, c'est normal et nécessaire"
-    },
-    "advice": {
-      "nutrition": ["Fer (épinards, lentilles)", "Magnésium (chocolat noir)", "Tisanes apaisantes", "Hydratation ++"],
-      "activities": ["Yoga doux", "Méditation", "Lecture", "Bain chaud", "Repos"],
-      "selfcare": ["Bouillotte", "Massage abdominal", "Coucher tôt", "Dire non aux sollicitations"],
-      "avoid": ["Sport intense", "Décisions importantes", "Surcharge sociale"]
-    },
-    "rituals": [
-      "Rituel du cocon : créer un espace douillet",
-      "Journaling intuitif au réveil",
-      "Tisane rouge avec intention",
-      "Massage à l'huile chaude"
-    ],
-    "affirmation": "Je m'accorde le droit de ralentir et d'écouter mon corps.",
-    "symbol": "🌸",
-    "icon": {
-      "name": "droplet",
-      "type": "feather"
-    },
-    "element": "Eau",
-    "archetype": "La Sage",
-    "melune": {
-      "tone": "douce, apaisante, réconfortante, calme",
-      "tempo": "communication lente, phrases courtes, ton posé",
-      "vocabulary": ["repos", "introspection", "apaisement", "cocon", "validation", "douceur"],
-      "communicationStyle": "validation expérience + conseils récupération",
-      "focus": "validation douleurs, normalisation fatigue, conseils apaisement",
-      "avoid": ["suggérer activités intenses", "ton énergique ou pressant", "minimiser inconforts"],
-      "encouragementStyle": "reconnaissance du courage à ralentir"
-    },
-    "contextualEnrichments": [
-      {
-        "id": "menstrual_emma_body_disconnect_01",
-        "targetPersona": "emma",
-        "targetPreferences": ["symptoms"],
-        "targetJourney": "body_disconnect",
-        "tone": "friendly",
-        "contextualText": "Cette pause mensuelle t'invite à découvrir la sagesse de ton corps et à honorer tes besoins authentiques"
+    "menstrual": {
+      "id": "menstrual",
+      "name": "Phase menstruelle",
+      "slug": "menstruelle",
+      "color": "#E53935",
+      "duration": "Jours 1-5",
+      "energy": "Introspection",
+      "mood": "Sagesse intérieure",
+      "symbol": "🌙",
+      "icon": {
+        "name": "droplet",
+        "type": "feather"
       },
-      {
-        "id": "menstrual_laure_emotional_control_01", 
-        "targetPersona": "laure",
-        "targetPreferences": ["phases"],
-        "targetJourney": "emotional_control",
-        "tone": "professional",
-        "contextualText": "Cette phase d'introspection développe ton intelligence émotionnelle et révèle tes priorités essentielles"
+      "element": "Eau",
+      "archetype": "La Sage",
+      
+      "melune": {
+        "tone": "douce, apaisante, réconfortante, validante",
+        "tempo": "communication lente, phrases courtes, ton posé",
+        "vocabulary": ["repos", "introspection", "sagesse", "cocon", "validation", "douceur", "ressenti", "écoute"],
+        "communicationStyle": "validation expérience + invitation à l'écoute intérieure",
+        "focus": "honorer le besoin de repos, normaliser l'introspection, guider vers la sagesse intérieure",
+        "avoid": ["suggérer activités intenses", "ton énergique", "minimiser le besoin de ralentir"],
+        "encouragementStyle": "reconnaissance de la sagesse qui émerge dans le silence"
       },
-      {
-        "id": "menstrual_sylvie_hiding_nature_01",
-        "targetPersona": "sylvie",
-        "targetPreferences": ["wellbeing"],
-        "targetJourney": "hiding_nature", 
-        "tone": "inspiring",
-        "contextualText": "Embrasse cette période comme un cadeau précieux - ton corps t'enseigne l'art de ralentir dans un monde qui accélère"
+  
+      "editableContent": {
+        "description": "Temps de renouvellement profond et de connexion à ta sagesse intérieure. Ton corps fait le grand nettoyage énergétique et se prépare à accueillir un nouveau cycle de créativité.",
+        
+        "advice": {
+          "nutrition": [
+            "Fer pour soutenir ton énergie (épinards, lentilles, chocolat noir)",
+            "Aliments réconfortants et nourrissants", 
+            "Tisanes apaisantes pour honorer ce temps",
+            "Hydratation douce et constante"
+          ],
+          "activities": [
+            "Yoga restauratif et mouvements doux",
+            "Méditation et respiration consciente", 
+            "Lecture inspirante et journaling intuitif",
+            "Bain chaud aux huiles essentielles",
+            "Siestes et repos sans culpabilité"
+          ],
+          "selfcare": [
+            "Bouillotte et chaleur réconfortante",
+            "Auto-massage abdominal avec bienveillance",
+            "Coucher tôt pour honorer ton rythme",
+            "Permission de dire non aux sollicitations"
+          ],
+          "avoid": [
+            "Sport intense qui épuise",
+            "Décisions importantes ou stressantes", 
+            "Surcharge sociale et overstimulation"
+          ]
+        },
+        
+        "rituals": [
+          "Rituel du cocon sacré : créer un espace douillet et protecteur",
+          "Journaling intuitif au réveil pour accueillir les insights",
+          "Tisane rouge avec intention de purification et renouveau",
+          "Massage à l'huile chaude pour honorer ton corps"
+        ],
+        
+        "affirmation": "Je m'accorde le droit sacré de ralentir et d'écouter la sagesse de mon corps."
       },
-      {
-        "id": "menstrual_christine_wisdom_transmission_01",
-        "targetPersona": "christine",
-        "targetPreferences": ["tracking"],
-        "targetJourney": "body_disconnect",
-        "tone": "inspiring",
-        "contextualText": "Cette sagesse cyclique que tu as développée devient un trésor à transmettre aux femmes qui t'entourent"
+  
+      "characteristics": {
+        "physical": ["Menstruations comme purification naturelle", "Fatigue bienveillante qui invite au repos", "Sensibilité accrue aux énergies", "Corps qui demande douceur et attention"],
+        "emotional": ["Besoin naturel de calme et d'introspection", "Intuition particulièrement forte et fiable", "Émotions à fleur de peau comme messagers", "Envie de cocooning et de protection"],
+        "energy": "Énergie tournée vers l'intérieur pour la régénération - c'est un cadeau, pas une limitation"
       },
-      {
-        "id": "menstrual_clara_data_optimization_01",
-        "targetPersona": "clara", 
-        "targetPreferences": ["tracking"],
-        "targetJourney": "emotional_control",
-        "tone": "friendly",
-        "contextualText": "Observer ces patterns révèle l'intelligence remarquable de tes cycles - data qui transforme ta relation à ton corps"
+  
+      "contextualEnrichments": [
+        {
+          "id": "menstrual_emma_body_disconnect_01",
+          "targetPersona": "emma",
+          "targetPreferences": ["symptoms"],
+          "targetJourney": "body_disconnect",
+          "tone": "friendly",
+          "contextualText": "Cette pause mensuelle t'invite à redécouvrir la sagesse profonde de ton corps et à honorer tes besoins authentiques sans jugement"
+        }
+      ]
+    },
+    
+    "follicular": {
+      "id": "follicular",
+      "name": "Phase pré-ovulatoire",
+      "slug": "folliculaire",
+      "color": "#4CAF50",
+      "duration": "Jours 6-13",
+      "energy": "Renaissance",
+      "mood": "Dynamisme créatif",
+      "symbol": "🌱",
+      "icon": {
+        "name": "sunrise",
+        "type": "feather"
+      },
+      "element": "Air",
+      "archetype": "La Jeune Fille",
+
+      "melune": {
+        "tone": "encourageante, dynamisante, inspirante, optimiste",
+        "tempo": "communication fluide, rythme ascendant",
+        "vocabulary": ["élan", "créativité", "clarté", "nouveauté", "inspiration", "croissance", "possibles"],
+        "communicationStyle": "encouragement à l'action + célébration de l'énergie montante",
+        "focus": "canaliser l'énergie créatrice, encourager les nouveaux projets, célébrer la clarté mentale",
+        "avoid": ["pression excessive", "comparaisons", "minimiser l'enthousiasme"],
+        "encouragementStyle": "célébration de l'élan vital et de l'inspiration créatrice"
+      },
+
+      "editableContent": {
+        "description": "Phase de renaissance et d'éveil créatif. Ton énergie remonte comme la sève au printemps, t'invitant à explorer de nouveaux possibles avec confiance et clarté.",
+        
+        "advice": {
+          "nutrition": [
+            "Protéines vivifiantes (œufs, légumineuses, poissons)",
+            "Légumes verts pour soutenir la croissance énergétique", 
+            "Graines germées et aliments frais",
+            "Hydratation dynamisante avec des eaux infusées"
+          ],
+          "activities": [
+            "Sport modéré qui fait du bien au corps",
+            "Lancement de nouveaux projets créatifs", 
+            "Apprentissages et formations inspirantes",
+            "Exploration et découvertes"
+          ],
+          "selfcare": [
+            "Routine beauté qui fait du bien",
+            "Planification douce de tes projets", 
+            "Expression créative sous toutes ses formes",
+            "Temps de qualité avec toi-même"
+          ],
+          "avoid": [
+            "Se surmener malgré l'énergie retrouvée",
+            "Promettre plus que ce que tu peux tenir"
+          ]
+        },
+        
+        "rituals": [
+          "Rituel du nouveau départ avec intention claire",
+          "Écriture des nouvelles intentions et visions",
+          "Promenade matinale consciente dans la nature",
+          "Méditation sur les possibles qui s'ouvrent"
+        ],
+        
+        "affirmation": "Je grandis et j'explore avec confiance mes nouveaux possibles, en harmonie avec mon élan naturel."
+      },
+
+      "characteristics": {
+        "physical": ["Énergie physique qui remonte progressivement", "Corps qui retrouve sa vitalité", "Envie de mouvement et d'activité", "Récupération naturelle et régénération"],
+        "emotional": ["Optimisme et confiance en soi grandissants", "Humeur plus lumineuse et stable", "Motivation naturelle pour l'action", "Ouverture aux nouveautés"],
+        "energy": "Énergie ascendante, créatrice et dynamisante - parfaite pour commencer"
       }
-    ]
-  },
-  "follicular": {
-    "id": "follicular",
-    "name": "Phase folliculaire", 
-    "slug": "folliculaire",
-    "color": "#F57C00",
-    "duration": "Jours 6-13",
-    "energy": "Croissante",
-    "mood": "Optimiste",
-    "description": "Phase de renaissance et créativité. Ton énergie remonte comme la sève au printemps.",
-    "characteristics": {
-      "physical": ["Énergie en hausse", "Peau plus claire", "Libido qui revient", "Force physique"],
-      "emotional": ["Optimisme naturel", "Envie de nouveauté", "Confiance grandissante", "Curiosité éveillée"],
-      "energy": "Montée progressive, parfait pour commencer"
     },
-    "advice": {
-      "nutrition": ["Protéines (œufs, poisson)", "Légumes verts", "Graines germées", "Fruits frais"],
-      "activities": ["Sport modéré", "Nouveaux projets", "Apprentissage", "Socialisation douce"],
-      "selfcare": ["Routine beauté", "Planification", "Créativité", "Exploration"],
-      "avoid": ["Se surmener", "Promettre trop", "Ignorer les signaux de fatigue"]
-    },
-    "rituals": [
-      "Rituel du nouveau départ",
-      "Écriture de intentions", 
-      "Promenade matinale consciente",
-      "Création artistique libre"
-    ],
-    "affirmation": "Je grandis et j'explore avec confiance mes nouveaux possibles.",
-    "symbol": "🌱",
-    "icon": {
-      "name": "feather",
-      "type": "feather"
-    },
-    "element": "Air", 
-    "archetype": "L'Exploratrice",
-    "melune": {
-      "tone": "enthousiaste, inspirante, encourageante, optimiste",
-      "tempo": "communication dynamique, phrases variées, ton enjoué",
-      "vocabulary": ["croissance", "nouveaux débuts", "créativité", "exploration", "possibilités", "éveil"],
-      "communicationStyle": "encouragement vers nouvelles initiatives",
-      "focus": "nouvelles initiatives, créativité, socialisation, planification",
-      "avoid": ["suggestions de repli sur soi", "ton trop calme ou méditatif", "limiter les possibilités"],
-      "encouragementStyle": "célébration du renouveau et des possibles"
-    },
-    "contextualEnrichments": [
-      {
-        "id": "follicular_emma_discovery_01",
-        "targetPersona": "emma",
-        "targetPreferences": ["phases"],
-        "targetJourney": "body_disconnect", 
-        "tone": "friendly",
-        "contextualText": "Cette renaissance t'offre une nouvelle chance de découvrir qui tu deviens - laisse émerger tes possibles"
+  
+    "ovulatory": {
+      "id": "ovulatory", 
+      "name": "Phase ovulatoire",
+      "slug": "ovulatoire",
+      "color": "#FF9800",
+      "duration": "Jours 14-20",
+      "energy": "Rayonnement",
+      "mood": "Pleine puissance",
+      "symbol": "☀️",
+      "icon": {
+        "name": "sun",
+        "type": "feather"
       },
-      {
-        "id": "follicular_laure_productivity_01",
-        "targetPersona": "laure",
-        "targetPreferences": ["symptoms"],
-        "targetJourney": "emotional_control",
-        "tone": "professional", 
-        "contextualText": "Canalise cette énergie croissante pour créer et innover - ton corps soutient naturellement tes ambitions"
+      "element": "Feu",
+      "archetype": "La Mère",
+
+      "melune": {
+        "tone": "rayonnante, chaleureuse, nourrissante, puissante",
+        "tempo": "communication énergique mais stable, présence forte",
+        "vocabulary": ["rayonnement", "puissance", "connexion", "générosité", "plénitude", "partage", "magnificence"],
+        "communicationStyle": "célébration de la puissance + encouragement au partage",
+        "focus": "honorer le rayonnement naturel, encourager la connexion aux autres, célébrer la plénitude",
+        "avoid": ["épuisement par sur-don", "oubli de ses propres besoins"],
+        "encouragementStyle": "reconnaissance de la magnificence naturelle et du pouvoir nourricier"
       },
-      {
-        "id": "follicular_sylvie_renewal_01",
-        "targetPersona": "sylvie",
-        "targetPreferences": ["wellbeing"],
-        "targetJourney": "hiding_nature",
-        "tone": "inspiring",
-        "contextualText": "Chaque cycle révèle une facette nouvelle de qui tu es - célèbre cette capacité de renaissance à tout âge"
+
+      "editableContent": {
+        "description": "Phase de pleine puissance et de rayonnement naturel. Tu incarnes l'énergie de l'été, rayonnant ta lumière intérieure et ta capacité naturelle à nourrir et connecter.",
+        
+        "advice": {
+          "nutrition": [
+            "Légumes colorés riches en antioxydants",
+            "Fruits frais pour célébrer la vitalité", 
+            "Bonnes graisses pour soutenir l'énergie",
+            "Repas partagés et conviviaux"
+          ],
+          "activities": [
+            "Sport intense si le corps le demande",
+            "Présentations et prises de parole", 
+            "Négociations et discussions importantes",
+            "Activités sociales et de connexion"
+          ],
+          "selfcare": [
+            "Permission de rayonner naturellement",
+            "Moments de partage authentique", 
+            "Expression de ton leadership naturel",
+            "Célébration de ta magnificence"
+          ],
+          "avoid": [
+            "Gaspiller cette précieuse énergie",
+            "S'isoler au lieu de partager son rayonnement"
+          ]
+        },
+        
+        "rituals": [
+          "Rituel de rayonnement et de gratitude",
+          "Affirmations de puissance et de magnificence",
+          "Danse libre pour célébrer ton corps",
+          "Moments de connexion profonde avec tes proches"
+        ],
+        
+        "affirmation": "Je rayonne ma lumière intérieure naturelle et j'ose briller pleinement, nourrissant le monde de ma présence."
       },
-      {
-        "id": "follicular_christine_mentoring_01", 
-        "targetPersona": "christine",
-        "targetPreferences": ["phases"],
-        "targetJourney": "emotional_control",
-        "tone": "inspiring",
-        "contextualText": "Ton expérience des renaissances cycliques devient une lumière pour guider les femmes vers leur épanouissement"
-      },
-      {
-        "id": "follicular_clara_innovation_01",
-        "targetPersona": "clara",
-        "targetPreferences": ["tracking"],
-        "targetJourney": "body_disconnect",
-        "tone": "friendly", 
-        "contextualText": "Cette phase créative optimise naturellement tes capacités d'innovation - parfait timing pour tes projets"
+
+      "characteristics": {
+        "physical": ["Énergie et vitalité à leur apogée", "Corps rayonnant et magnétique", "Capacité physique optimale", "Température corporelle légèrement plus élevée"],
+        "emotional": ["Empathie et connexion aux autres maximales", "Confiance en soi et assurance naturelles", "Générosité et désir de partager", "Joie de vivre et optimisme"],
+        "energy": "Énergie solaire, magnétique et nourrissante - moment parfait pour briller et connecter"
       }
-    ]
-  },
-  "ovulatory": {
-    "id": "ovulatory",
-    "name": "Phase ovulatoire",
-    "slug": "ovulatoire", 
-    "color": "#0097A7",
-    "duration": "Jours 14-17",
-    "energy": "Maximum",
-    "mood": "Rayonnante",
-    "description": "Phase de pleine puissance et connexion. Tu rayonnes naturellement.",
-    "characteristics": {
-      "physical": ["Énergie au top", "Peau éclatante", "Libido élevée", "Force et endurance"],
-      "emotional": ["Confiance totale", "Charisme naturel", "Empathie forte", "Communication fluide"],
-      "energy": "Pic énergétique, parfait pour tout oser"
     },
-    "advice": {
-      "nutrition": ["Légumes colorés", "Fruits antioxydants", "Bonnes graisses", "Hydratation"],
-      "activities": ["Sport intense", "Présentations", "Négociations", "Sorties sociales"],
-      "selfcare": ["Rayonner naturellement", "Partager", "Leader", "Exprimer"],
-      "avoid": ["Gaspiller cette énergie", "S'isoler", "Sous-estimer sa force"]
-    },
-    "rituals": [
-      "Rituel de rayonnement",
-      "Affirmations puissantes",
-      "Danse libre et joyeuse", 
-      "Connexion avec d'autres femmes"
-    ],
-    "affirmation": "Je rayonne ma lumière intérieure et j'ose briller pleinement.",
-    "symbol": "🌼",
-    "icon": {
-      "name": "sun",
-      "type": "feather"
-    },
-    "element": "Feu",
-    "archetype": "La Déesse",
-    "melune": {
-      "tone": "confiante, rayonnante, affirmée, communicative",
-      "tempo": "communication fluide, phrases éloquentes, ton assuré",
-      "vocabulary": ["confiance", "rayonnement", "connexion", "leadership", "expression", "charisme"],
-      "communicationStyle": "amplification de la confiance naturelle",
-      "focus": "communication, présentation, réseautage, expression personnelle, leadership",
-      "avoid": ["suggérer l'isolement", "ton hésitant ou réservé", "sous-estimer capacités sociales"],
-      "encouragementStyle": "célébration du rayonnement et de la puissance"
-    },
-    "contextualEnrichments": [
-      {
-        "id": "ovulatory_emma_confidence_01",
-        "targetPersona": "emma",
-        "targetPreferences": ["phases"],
-        "targetJourney": "body_disconnect",
-        "tone": "friendly",
-        "contextualText": "Sens cette confiance naturelle qui émane de toi - c'est ta vraie nature qui rayonne sans effort"
+  
+    "luteal": {
+      "id": "luteal",
+      "name": "Phase pré-menstruelle", 
+      "slug": "luteale",
+      "color": "#9C27B0",
+      "duration": "Jours 21-28",
+      "energy": "Transformation",
+      "mood": "Intuition créatrice",
+      "symbol": "🍂",
+      "icon": {
+        "name": "moon",
+        "type": "feather"
       },
-      {
-        "id": "ovulatory_laure_leadership_01",
-        "targetPersona": "laure", 
-        "targetPreferences": ["symptoms"],
-        "targetJourney": "hiding_nature",
-        "tone": "professional",
-        "contextualText": "Cette puissance authentique révèle tes capacités de leadership - assume cette force qui t'habite naturellement"
+      "element": "Terre",
+      "archetype": "L'Enchanteresse",
+
+      "melune": {
+        "tone": "compréhensive, intuitive, transformatrice, bienveillante",
+        "tempo": "communication plus posée, respect des fluctuations",
+        "vocabulary": ["transformation", "intuition", "créativité", "sensibilité", "discernement", "purification", "préparation"],
+        "communicationStyle": "validation de la sensibilité + guidance pour la transformation",
+        "focus": "honorer l'intuition accrue, canaliser la créativité, accepter les fluctuations",
+        "avoid": ["jugement sur l'hypersensibilité", "pression à la performance", "décisions importantes"],
+        "encouragementStyle": "célébration du pouvoir transformateur et de l'intuition profonde"
       },
-      {
-        "id": "ovulatory_sylvie_radiance_01",
-        "targetPersona": "sylvie",
-        "targetPreferences": ["wellbeing"],
-        "targetJourney": "emotional_control",
-        "tone": "inspiring",
-        "contextualText": "Tu incarnes la plénitude féminine - cette énergie magnétique inspire et élève celles qui t'entourent"
+
+      "editableContent": {
+        "description": "Phase de transformation et d'intuition créatrice. Ton énergie se tourne vers l'intérieur pour préparer un nouveau cycle, révélant des trésors de créativité et de discernement.",
+        
+        "advice": {
+          "nutrition": [
+            "Glucides complexes pour stabiliser l'humeur",
+            "Magnésium pour apaiser le système nerveux", 
+            "Oméga-3 pour nourrir le cerveau créatif",
+            "Aliments réconfortants et enracinants"
+          ],
+          "activities": [
+            "Finalisation et conclusion des projets en cours",
+            "Rangement et organisation de l'espace", 
+            "Planification douce du cycle suivant",
+            "Activités créatives et artistiques"
+          ],
+          "selfcare": [
+            "Écoute profonde de ton intuition",
+            "Établissement de limites claires et bienveillantes", 
+            "Sommeil prolongé et réparateur",
+            "Moments de solitude créatrice"
+          ],
+          "avoid": [
+            "Lancement de nouveaux projets majeurs",
+            "Décisions importantes sous l'influence des fluctuations"
+          ]
+        },
+        
+        "rituals": [
+          "Rituel de clôture et de bilan du cycle",
+          "Méditation guidée pour accueillir les transformations",
+          "Tri énergétique et libération de ce qui ne sert plus",
+          "Écriture créative et expression artistique"
+        ],
+        
+        "affirmation": "Je fais confiance à mon intuition profonde et j'honore mes limites comme des guides précieux vers ma vérité."
       },
-      {
-        "id": "ovulatory_christine_wisdom_sharing_01",
-        "targetPersona": "christine",
-        "targetPreferences": ["phases"],
-        "targetJourney": "hiding_nature",
-        "tone": "inspiring", 
-        "contextualText": "Cette sagesse rayonnante que tu portes illumine le chemin d'autres femmes vers leur propre épanouissement"
-      },
-      {
-        "id": "ovulatory_clara_peak_performance_01",
-        "targetPersona": "clara",
-        "targetPreferences": ["tracking"],
-        "targetJourney": "emotional_control",
-        "tone": "friendly",
-        "contextualText": "Tes métriques confirment ce pic de performance - utilise cette énergie maximale pour tes défis les plus ambitieux"
+
+      "characteristics": {
+        "physical": ["Corps qui se prépare à la phase suivante", "Sensibilité accrue comme radar intuitif", "Énergie qui fluctue naturellement", "Besoin de sommeil plus important"],
+        "emotional": ["Hypersensibilité comme superpouvoir d'intuition", "Émotions intenses porteuses de messages", "Capacité critique accrue pour discerner", "Créativité débordante à canaliser"],
+        "energy": "Énergie transformatrice et intuitive - parfaite pour créer et purifier"
       }
-    ]
-  },
-  "luteal": {
-    "id": "luteal", 
-    "name": "Phase lutéale",
-    "slug": "luteale",
-    "color": "#673AB7",
-    "duration": "Jours 18-28", 
-    "energy": "Décroissante",
-    "mood": "Intuitive",
-    "description": "Phase d'organisation et de préparation. Ton intuition est ton superpouvoir.",
-    "characteristics": {
-      "physical": ["Énergie qui baisse", "Seins sensibles", "Appétit changeant", "Besoin de ralentir"],
-      "emotional": ["Intuition aiguisée", "Perfectionnisme", "Sensibilité++", "Besoin de tri"],
-      "energy": "Déclin progressif, parfait pour finaliser"
-    },
-    "advice": {
-      "nutrition": ["Glucides complexes", "Magnésium", "Oméga-3", "Tisanes calmantes"],
-      "activities": ["Finaliser projets", "Ranger", "Planifier", "Activités calmes"],
-      "selfcare": ["Écouter intuition", "Limites claires", "Sommeil++", "Moins de social"],
-      "avoid": ["Nouveaux projets", "Décisions sous stress", "Critique de soi"]
-    },
-    "rituals": [
-      "Rituel de clôture et bilan",
-      "Méditation guidée profonde",
-      "Tri et libération", 
-      "Préparation au cycle suivant"
-    ],
-    "affirmation": "Je fais confiance à mon intuition et j'honore mes limites.",
-    "symbol": "🌀",
-    "icon": {
-      "name": "wind",
-      "type": "feather"
-    },
-    "element": "Terre",
-    "archetype": "La Prêtresse",
-    "melune": {
-      "tone": "organisée, intuitive, réfléchie, préparatoire",
-      "tempo": "communication structurée, phrases précises, ton équilibré",
-      "vocabulary": ["organisation", "intuition", "préparation", "finalisation", "limites", "introspection"],
-      "communicationStyle": "guidance vers finalisation et introspection",
-      "focus": "organisation, finalisation projets, gestion sensibilité, préparation cycle suivant",
-      "avoid": ["suggérer nouvelles initiatives", "ton trop léger face défis émotionnels", "ignorer sensibilités accrues"],
-      "encouragementStyle": "valorisation de l'intuition et respect des limites"
-    },
-    "contextualEnrichments": [
-      {
-        "id": "luteal_emma_intuition_01", 
-        "targetPersona": "emma",
-        "targetPreferences": ["wellbeing"],
-        "targetJourney": "hiding_nature",
-        "tone": "friendly",
-        "contextualText": "Cette sensibilité accrue révèle ton intuition profonde - apprends à faire confiance à cette sagesse intérieure"
-      },
-      {
-        "id": "luteal_laure_boundaries_01",
-        "targetPersona": "laure",
-        "targetPreferences": ["phases"],
-        "targetJourney": "emotional_control", 
-        "tone": "professional",
-        "contextualText": "Maîtrise cette période pour développer des limites saines - ton corps t'enseigne l'art de dire non avec amour"
-      },
-      {
-        "id": "luteal_sylvie_transition_mastery_01",
-        "targetPersona": "sylvie",
-        "targetPreferences": ["tracking"],
-        "targetJourney": "hiding_nature",
-        "tone": "inspiring",
-        "contextualText": "Cette sagesse des transitions que tu développes devient ta plus grande force pour naviguer tous les changements de la vie"
-      },
-      {
-        "id": "luteal_christine_completion_wisdom_01",
-        "targetPersona": "christine",
-        "targetPreferences": ["wellbeing"],
-        "targetJourney": "body_disconnect",
-        "tone": "inspiring",
-        "contextualText": "L'art de clôturer avec grâce que tu maîtrises inspire les femmes à honorer chaque fin comme un nouveau commencement"
-      },
-      {
-        "id": "luteal_clara_pattern_recognition_01",
-        "targetPersona": "clara",
-        "targetPreferences": ["symptoms"],
-        "targetJourney": "body_disconnect", 
-        "tone": "friendly",
-        "contextualText": "Ces signaux précis t'invitent à reconnecter avec tes besoins profonds - data émotionnelle aussi précieuse que technique"
-      }
-    ]
+    }
   }
-}
