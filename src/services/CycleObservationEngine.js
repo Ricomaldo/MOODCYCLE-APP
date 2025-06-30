@@ -103,29 +103,34 @@ class CycleObservationEngine {
 
     const { consistency, totalObservations, confidence } = observationPatterns;
 
+    // Validation des données
+    const validConsistency = typeof consistency === 'number' && consistency >= 0 && consistency <= 1 ? consistency : 0;
+    const validTotalObservations = typeof totalObservations === 'number' && totalObservations >= 0 ? totalObservations : 0;
+    const validConfidence = typeof confidence === 'number' && confidence >= 0 && confidence <= 1 ? confidence : validConsistency;
+
     // Guidance selon progression
-    if (totalObservations < 5) {
+    if (validTotalObservations < 5) {
       return {
         message: "Continue d'observer pour que j'apprenne tes patterns uniques",
-        confidence: confidence || 0,
+        confidence: validConfidence,
         mode: CYCLE_MODES.PREDICTIVE,
         nextStep: "Ajoute quelques observations de plus"
       };
     }
 
-    if (totalObservations >= 5 && consistency > 0.4) {
+    if (validTotalObservations >= 5 && validConsistency > 0.4 && validTotalObservations < 20) {
       return {
         message: "Je commence à voir tes patterns ! Mode hybride activé",
-        confidence: confidence || 0,
+        confidence: validConfidence,
         mode: CYCLE_MODES.HYBRID,
         nextStep: "Continues pour encore plus de précision"
       };
     }
 
-    if (totalObservations >= 20 && consistency > 0.7) {
+    if (validTotalObservations >= 20 && validConsistency > 0.7) {
       return {
         message: "Je me base maintenant sur tes ressentis uniques",
-        confidence: confidence || 0,
+        confidence: validConfidence,
         mode: CYCLE_MODES.OBSERVATION,
         nextStep: "Tu connais ton corps mieux que quiconque"
       };
@@ -133,7 +138,7 @@ class CycleObservationEngine {
 
     return {
       message: "J'apprends de tes observations pour t'accompagner",
-      confidence: confidence || 0,
+      confidence: validConfidence,
       mode: CYCLE_MODES.PREDICTIVE
     };
   }
@@ -143,11 +148,14 @@ class CycleObservationEngine {
    */
   static detectPredictionCorrection(observedPhase, predictedPhase, intelligence) {
     if (observedPhase !== predictedPhase) {
-      intelligence.trackAutonomySignal('corrects_prediction', {
-        observed: observedPhase,
-        predicted: predictedPhase,
-        timestamp: Date.now()
-      });
+      // Track correction si intelligence a la méthode
+      if (intelligence && typeof intelligence.trackAutonomySignal === 'function') {
+        intelligence.trackAutonomySignal('corrects_prediction', {
+          observed: observedPhase,
+          predicted: predictedPhase,
+          timestamp: Date.now()
+        });
+      }
       
       return {
         correctionDetected: true,
@@ -190,18 +198,37 @@ class CycleObservationEngine {
       });
     }
 
-    return basePrompts.slice(0, 3);
+    if (!hasEnergyFocus) {
+      basePrompts.unshift({
+        prompt: "Comment te sens-tu niveau énergie ?",
+        type: 'energy',
+        focus: ['energy', 'vitality'],
+        icon: '⚡',
+        priority: 'high'
+      });
+    }
+
+    return basePrompts.slice(0, 2);
   }
 
   /**
    * Analyse la qualité d'une observation
    */
   static analyzeObservationQuality(observation) {
+    if (!observation) {
+      return {
+        score: 0,
+        quality: 'none',
+        details: 'Aucune observation fournie',
+        suggestions: ['Commence par ajouter une observation de base']
+      };
+    }
+
     let qualityScore = 0;
     const feedback = [];
 
     // Scoring détail
-    if (observation.symptoms?.length > 0) {
+    if (observation.symptoms && observation.symptoms.length > 0) {
       qualityScore += 30;
       feedback.push("Bien détaillé physiquement");
     }
@@ -216,16 +243,27 @@ class CycleObservationEngine {
       feedback.push("Niveau d'énergie capturé");
     }
 
+    if (observation.feeling) {
+      qualityScore += 20;
+      feedback.push("Ressenti général noté");
+    }
+
     if (observation.notes && observation.notes.length > 10) {
       qualityScore += 20;
       feedback.push("Notes personnelles riches");
+    } else if (observation.notes && observation.notes.length > 3) {
+      qualityScore += 10;
+      feedback.push("Notes courtes mais utiles");
     }
 
+    // Normaliser le score sur 120 pour éviter que tout soit à 1
+    const normalizedScore = Math.min(qualityScore / 120, 1);
+
     return {
-      score: qualityScore,
-      quality: qualityScore > 60 ? 'excellent' : qualityScore > 30 ? 'good' : 'basic',
-      feedback: feedback.join(", "),
-      suggestions: this.getQualityImprovementSuggestions(qualityScore)
+      score: normalizedScore,
+      quality: normalizedScore > 0.6 ? 'excellent' : normalizedScore > 0.3 ? 'good' : 'basic',
+      details: feedback.length > 0 ? feedback.join(", ") : "Observation basique",
+      suggestions: this.getQualityImprovementSuggestions(normalizedScore)
     };
   }
 
@@ -233,16 +271,26 @@ class CycleObservationEngine {
    * Suggestions pour améliorer la qualité d'observation
    */
   static getQualityImprovementSuggestions(currentScore) {
-    if (currentScore > 70) {
-      return ["Parfait ! Continue comme ça"];
+    if (typeof currentScore !== 'number' || currentScore < 0) {
+      return ["Ajoute quelques détails sur ton ressenti"];
     }
 
-    const suggestions = [];
-    if (currentScore < 30) suggestions.push("Ajoute quelques détails sur ton ressenti physique");
-    if (currentScore < 50) suggestions.push("Note ton humeur du moment");
-    if (currentScore < 70) suggestions.push("Décris ton niveau d'énergie");
+    if (currentScore > 0.7) {
+      return ["Parfait ! Continue comme ça, tes observations sont excellentes"];
+    }
 
-    return suggestions;
+    if (currentScore < 0.3) {
+      return [
+        "Essaie de détailler davantage ton ressenti physique",
+        "Note tes ressentis du moment"
+      ];
+    }
+
+    if (currentScore >= 0.3 && currentScore <= 0.5) {
+      return ["enrichir avec quelques mots sur ton énergie"];
+    }
+
+    return ["Continue d'observer tes ressentis"];
   }
 }
 

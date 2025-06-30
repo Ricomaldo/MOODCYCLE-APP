@@ -3,11 +3,11 @@
 // 📄 File: app/(tabs)/conseils/ConseilsView.jsx
 // 🧩 Type: Écran Conseils avec Observations
 // 📚 Description: Insights + vignettes + intelligence observation
-// 🕒 Version: 1.1 - 2025-06-29 - AJOUT OBSERVATIONS
+// 🕒 Version: 1.2 - 2025-06-29 - BLOC 2 Intelligence Visible
 // ─────────────────────────────────────────────────────────
 //
 import React from 'react';
-import { View, ScrollView, StyleSheet, RefreshControl, TouchableOpacity, Animated, Easing, Platform } from 'react-native';
+import { View, ScrollView, StyleSheet, RefreshControl, TouchableOpacity, Animated, Easing, Platform, Text } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -243,33 +243,51 @@ export default function ConseilsView() {
           )}
         </View>
 
-        {/* 🆕 Section Intelligence si observations */}
-        {hasObservations && (
-          <View style={styles.intelligenceSection}>
-            <View style={styles.intelligenceHeader}>
-              <Feather name="brain" size={16} color={theme.colors.primary} />
-              <Caption style={styles.intelligenceTitle}>
-                Melune apprend de toi
-              </Caption>
-            </View>
-            
-            <View style={styles.intelligenceStats}>
+        {/* 🆕 Section Intelligence TOUJOURS VISIBLE - MODIFIÉ BLOC 2 */}
+        <View style={styles.intelligenceSection}>
+          <View style={styles.intelligenceHeader}>
+            <Text style={{ fontSize: 16, color: theme.colors.primary }}>🛠️</Text>
+            <Caption style={styles.intelligenceTitle}>
+              Melune apprend de toi
+            </Caption>
+          </View>
+          
+          <View style={styles.intelligenceStats}>
+            {observations.length === 0 ? (
+              // 🌟 État invitation - 0 observations
+              <View style={styles.inviteContainer}>
+                <BodyText style={styles.inviteText}>
+                  Commence quand tu te sens prête 🌱
+                </BodyText>
+              </View>
+            ) : observations.length < 3 ? (
+              // 🌟 État débutant - 1-2 observations
               <View style={styles.statItem}>
                 <BodyText style={styles.statValue}>{observations.length}</BodyText>
-                <Caption style={styles.statLabel}>observations</Caption>
+                <Caption style={styles.statLabel}>
+                  {observations.length === 1 ? "premier ressenti" : "premiers ressentis"}
+                </Caption>
               </View>
-              
-              {currentPhaseObservations.length > 0 && (
+            ) : (
+              // 🌟 État confirmé - 3+ observations
+              <>
                 <View style={styles.statItem}>
-                  <BodyText style={styles.statValue}>
-                    {currentPhaseObservations.length}
-                  </BodyText>
-                  <Caption style={styles.statLabel}>cette phase</Caption>
+                  <BodyText style={styles.statValue}>{observations.length}</BodyText>
+                  <Caption style={styles.statLabel}>observations</Caption>
                 </View>
-              )}
-            </View>
+                
+                {currentPhaseObservations.length > 0 && (
+                  <View style={styles.statItem}>
+                    <BodyText style={styles.statValue}>
+                      {currentPhaseObservations.length}
+                    </BodyText>
+                    <Caption style={styles.statLabel}>cette phase</Caption>
+                  </View>
+                )}
+              </>
+            )}
           </View>
-        )}
+        </View>
 
         {/* Navigation rapide */}
         <View style={styles.quickNavSection}>
@@ -472,7 +490,7 @@ const getStyles = (theme) => StyleSheet.create({
     padding: theme.spacing.l,
   },
   
-  // 🆕 Intelligence section
+  // 🆕 Intelligence section MODIFIÉE BLOC 2
   intelligenceSection: {
     backgroundColor: theme.colors.primary + '10',
     borderRadius: theme.borderRadius.medium,
@@ -507,6 +525,16 @@ const getStyles = (theme) => StyleSheet.create({
   statLabel: {
     fontSize: 11,
     color: theme.colors.textLight,
+  },
+  // 🆕 NOUVEAUX STYLES BLOC 2
+  inviteContainer: {
+    alignItems: 'center',
+    padding: theme.spacing.s,
+  },
+  inviteText: {
+    fontSize: 14,
+    color: theme.colors.textLight,
+    fontStyle: 'italic',
   },
   
   // Navigation rapide

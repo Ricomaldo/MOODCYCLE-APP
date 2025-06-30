@@ -3,7 +3,7 @@
 // 📄 File: app/(tabs)/cycle/CycleView.jsx - AVEC OBSERVATIONS
 // 🧩 Type: Écran Principal Cycle
 // 📚 Description: Cycle avec observations Miranda Gray
-// 🕒 Version: 7.1 - 2025-06-29 - AJOUT OBSERVATIONS
+// 🕒 Version: 7.2 - 2025-06-29 - BLOC 2 Badge Compteur
 // ─────────────────────────────────────────────────────────
 //
 import React, { useState } from 'react';
@@ -46,6 +46,10 @@ export default function CycleView() {
   const [showQuickTracking, setShowQuickTracking] = useState(false);
   const [showParams, setShowParams] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [showLastObservation, setShowLastObservation] = useState(false);
+
+  // 🆕 Récupérer dernière observation
+  const lastObservation = observations[observations.length - 1];
 
   // 🆕 Calcul tendances observations
   const getObservationInsights = () => {
@@ -152,6 +156,30 @@ export default function CycleView() {
     endPeriod();
   }, [endPeriod]);
 
+  // 🆕 BLOC 2 - Handler badge tap
+  const handleBadgeTap = React.useCallback(() => {
+    if (lastObservation) {
+      setShowLastObservation(!showLastObservation);
+    }
+  }, [lastObservation, showLastObservation]);
+
+  const formatLastObservation = () => {
+    if (!lastObservation) return '';
+    
+    const date = new Date(lastObservation.timestamp);
+    const timeAgo = Math.floor((Date.now() - date) / (1000 * 60 * 60 * 24));
+    const timeText = timeAgo === 0 ? "aujourd'hui" : 
+                     timeAgo === 1 ? "hier" : 
+                     `il y a ${timeAgo} jours`;
+    
+    const energyText = lastObservation.energy === 5 ? "pleine d'énergie" :
+                       lastObservation.energy === 4 ? "énergique" :
+                       lastObservation.energy === 3 ? "équilibrée" :
+                       lastObservation.energy === 2 ? "calme" : "douce";
+    
+    return `Tu te sentais ${energyText} ${timeText}`;
+  };
+
   const styles = getStyles(theme);
 
   if (!cycleData) {
@@ -233,7 +261,7 @@ export default function CycleView() {
           )}
         </View>
 
-        {/* 🆕 Bouton Comment te sens-tu */}
+        {/* 🆕 Bouton Comment te sens-tu AVEC BADGE - MODIFIÉ BLOC 2 */}
         <TouchableOpacity 
           style={styles.observationButton}
           onPress={handleSymptomTracking}
@@ -243,7 +271,26 @@ export default function CycleView() {
             <BodyText style={styles.observationButtonText}>
               Comment te sens-tu aujourd'hui ?
             </BodyText>
+            {observations.length > 0 && (
+              <TouchableOpacity 
+                style={[styles.observationBadge, {
+                  backgroundColor: theme.colors.phases[currentPhase] + '30'
+                }]}
+                onPress={handleBadgeTap}
+              >
+                <Caption style={styles.badgeText}>{observations.length}</Caption>
+              </TouchableOpacity>
+            )}
           </View>
+          
+          {/* 🆕 Affichage dernière observation au tap */}
+          {showLastObservation && lastObservation && (
+            <View style={styles.lastObservationContainer}>
+              <Caption style={styles.lastObservationText}>
+                {formatLastObservation()}
+              </Caption>
+            </View>
+          )}
         </TouchableOpacity>
 
         {/* Phase info */}
@@ -627,7 +674,7 @@ const getStyles = (theme) => StyleSheet.create({
     marginLeft: theme.spacing.s,
   },
   
-  // 🆕 Styles Observations
+  // 🆕 Styles Observations MODIFIÉS BLOC 2
   observationButton: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.l,
@@ -635,6 +682,7 @@ const getStyles = (theme) => StyleSheet.create({
     borderWidth: 2,
     borderColor: theme.colors.primary + '30',
     borderStyle: 'dashed',
+    position: 'relative', // Pour le badge absolute
   },
   observationButtonContent: {
     flexDirection: 'row',
@@ -647,6 +695,37 @@ const getStyles = (theme) => StyleSheet.create({
     color: theme.colors.primary,
     fontSize: 16,
     fontWeight: '500',
+  },
+  // 🆕 BADGE COMPTEUR BLOC 2
+  observationBadge: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    minWidth: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: theme.colors.background,
+  },
+  badgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: theme.colors.text,
+  },
+  // 🆕 DERNIÈRE OBSERVATION BLOC 2
+  lastObservationContainer: {
+    paddingHorizontal: theme.spacing.l,
+    paddingBottom: theme.spacing.m,
+    paddingTop: theme.spacing.xs,
+  },
+  lastObservationText: {
+    fontSize: 13,
+    color: theme.colors.textLight,
+    fontStyle: 'italic',
+    textAlign: 'center',
   },
   
   observationsContainer: {

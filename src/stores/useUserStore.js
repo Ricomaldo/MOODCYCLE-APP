@@ -23,7 +23,7 @@ export const useUserStore = create(
       // 👤 PROFIL UTILISATEUR
       // ═══════════════════════════════════════════════════════
       profile: {
-        prenom: null,
+        prenom: "Emma",
         ageRange: null, // '18-25', '26-35', '36-45', '46-55', '55+'
         journeyChoice: null, // 'body', 'nature', 'emotions'
         completed: false,
@@ -48,8 +48,8 @@ export const useUserStore = create(
       // 🎭 PERSONA CALCULÉ
       // ═══════════════════════════════════════════════════════
       persona: {
-        assigned: null,      // 'emma', 'laure', 'sylvie', 'christine', 'clara'
-        confidence: 0,       // 0-1
+        assigned: "emma",      // 'emma', 'laure', 'sylvie', 'christine', 'clara'
+        confidence: 0.8,       // 0-1
         lastCalculated: null,
         scores: {},          // Debug scores
       },
@@ -162,7 +162,7 @@ export const useUserStore = create(
       reset: () =>
         set({
           profile: {
-            prenom: null,
+            prenom: "Emma",
             ageRange: null,
             journeyChoice: null,
             completed: false,
@@ -176,16 +176,10 @@ export const useUserStore = create(
             rituals: 3,
             terminology: 'medical',
           },
-          cycle: {
-            lastPeriodDate: null,
-            length: 28,
-            periodDuration: 5,
-            isRegular: null,
-            trackingExperience: null,
-          },
+
           persona: {
-            assigned: null,
-            confidence: 0,
+            assigned: "emma",
+            confidence: 0.8,
             lastCalculated: null,
             scores: {},
           },

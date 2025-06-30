@@ -23,7 +23,14 @@ export const mockUserData = {
     length: 28,
     periodDuration: 5
   },
-  melune: { tone: 'friendly' }
+  melune: { tone: 'friendly' },
+  hasMinimumData: jest.fn().mockReturnValue(true),
+  getContextForAPI: jest.fn().mockReturnValue({
+    persona: { assigned: 'emma' },
+    preferences: { symptoms: 5, moods: 4, phyto: 2, phases: 3, rituals: 1 },
+    profile: { prenom: 'Sarah' },
+    melune: { tone: 'friendly' }
+  })
 };
 
 export const mockIntelligence = {
@@ -63,7 +70,12 @@ export const mockChatStore = {
   setTyping: jest.fn(),
   setWaitingResponse: jest.fn(),
   getConversationContext: jest.fn().mockReturnValue([]),
-  getMessagesCount: jest.fn().mockReturnValue({ total: 0, user: 0, melune: 0 })
+  getMessagesCount: jest.fn().mockReturnValue({ total: 0, user: 0, melune: 0 }),
+  getContextualSuggestions: jest.fn().mockReturnValue([
+    'Comment te sens-tu ?',
+    'As-tu remarqué des changements ?',
+    'Veux-tu en parler ?'
+  ])
 };
 
 export const mockNotebookStore = {
@@ -106,10 +118,21 @@ export const mockCycleStore = {
   periodDuration: 5,
   isRegular: true,
   trackingExperience: 'basic',
+  observations: [],
   startNewCycle: jest.fn(),
   endPeriod: jest.fn(),
   updateCycle: jest.fn(),
   resetCycle: jest.fn(),
+  addObservation: jest.fn((feeling, energy, notes) => {
+    const observation = {
+      id: Date.now(),
+      feeling: Math.max(1, Math.min(5, feeling || 3)),
+      energy: Math.max(1, Math.min(5, energy || 3)),
+      notes: (notes || '').substring(0, 500),
+      timestamp: new Date().toISOString()
+    };
+    mockCycleStore.observations.push(observation);
+  })
 };
 
 export const mockCycleData = {
@@ -129,4 +152,10 @@ export const mockCycleData = {
   hasData: true,
   nextPeriodDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString(),
   daysUntilNextPeriod: 20
+};
+
+export const mockNetworkQueue = {
+  enqueueChatMessage: jest.fn().mockResolvedValue(true),
+  enqueue: jest.fn().mockResolvedValue(true),
+  process: jest.fn().mockResolvedValue(true)
 };

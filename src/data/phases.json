@@ -79,6 +79,46 @@
           "targetJourney": "body_disconnect",
           "tone": "friendly",
           "contextualText": "Cette pause mensuelle t'invite à redécouvrir la sagesse profonde de ton corps et à honorer tes besoins authentiques sans jugement"
+        },
+        {
+          "id": "menstrual_laure_emotional_control_01",
+          "targetPersona": "laure",
+          "targetPreferences": ["phases"],
+          "targetJourney": "emotional_control",
+          "tone": "professional",
+          "contextualText": "Cette phase de basse énergie est optimale pour l'analyse et la planification stratégique de ton cycle"
+        },
+        {
+          "id": "menstrual_sylvie_hiding_nature_01",
+          "targetPersona": "sylvie",
+          "targetPreferences": ["tracking"],
+          "targetJourney": "hiding_nature",
+          "tone": "inspiring",
+          "contextualText": "Ce temps de recueillement révèle la sagesse ancestrale de ton corps - chaque cycle est un enseignement"
+        },
+        {
+          "id": "menstrual_christine_understanding_01",
+          "targetPersona": "christine",
+          "targetPreferences": ["wellbeing"],
+          "targetJourney": "understanding",
+          "tone": "inspiring",
+          "contextualText": "Cette phase sacrée t'offre une fenêtre unique sur ton essence féminine profonde"
+        },
+        {
+          "id": "menstrual_clara_analysis_01",
+          "targetPersona": "clara",
+          "targetPreferences": ["phases"],
+          "targetJourney": "analysis",
+          "tone": "professional",
+          "contextualText": "Cette période de régénération cellulaire est cruciale pour optimiser ton bien-être global"
+        },
+        {
+          "id": "menstrual_generic_01",
+          "targetPersona": null,
+          "targetJourney": null,
+          "targetPreferences": null,
+          "tone": "friendly",
+          "contextualText": "Cette phase de renouvellement t'invite à honorer ton besoin naturel de ralentir"
         }
       ]
     },
@@ -151,7 +191,58 @@
         "physical": ["Énergie physique qui remonte progressivement", "Corps qui retrouve sa vitalité", "Envie de mouvement et d'activité", "Récupération naturelle et régénération"],
         "emotional": ["Optimisme et confiance en soi grandissants", "Humeur plus lumineuse et stable", "Motivation naturelle pour l'action", "Ouverture aux nouveautés"],
         "energy": "Énergie ascendante, créatrice et dynamisante - parfaite pour commencer"
-      }
+      },
+
+      "contextualEnrichments": [
+        {
+          "id": "follicular_emma_body_disconnect_01",
+          "targetPersona": "emma",
+          "targetPreferences": ["symptoms"],
+          "targetJourney": "body_disconnect",
+          "tone": "friendly",
+          "contextualText": "Cette énergie montante t'invite à redécouvrir la joie de bouger et de créer avec ton corps"
+        },
+        {
+          "id": "follicular_laure_emotional_control_01",
+          "targetPersona": "laure",
+          "targetPreferences": ["phases"],
+          "targetJourney": "emotional_control",
+          "tone": "professional",
+          "contextualText": "Cette phase de reconstruction énergétique est idéale pour lancer de nouveaux projets professionnels"
+        },
+        {
+          "id": "follicular_sylvie_hiding_nature_01",
+          "targetPersona": "sylvie",
+          "targetPreferences": ["tracking"],
+          "targetJourney": "hiding_nature",
+          "tone": "inspiring",
+          "contextualText": "Cette renaissance cyclique révèle ta capacité naturelle à créer et à grandir"
+        },
+        {
+          "id": "follicular_christine_understanding_01",
+          "targetPersona": "christine",
+          "targetPreferences": ["wellbeing"],
+          "targetJourney": "understanding",
+          "tone": "inspiring",
+          "contextualText": "Cette phase de croissance t'offre une clarté mentale exceptionnelle pour tes apprentissages"
+        },
+        {
+          "id": "follicular_clara_analysis_01",
+          "targetPersona": "clara",
+          "targetPreferences": ["phases"],
+          "targetJourney": "analysis",
+          "tone": "professional",
+          "contextualText": "Cette période de régénération cellulaire optimise tes capacités cognitives et créatives"
+        },
+        {
+          "id": "follicular_generic_01",
+          "targetPersona": null,
+          "targetJourney": null,
+          "targetPreferences": null,
+          "tone": "friendly",
+          "contextualText": "Cette énergie montante t'invite à explorer de nouveaux possibles avec confiance"
+        }
+      ]
     },
   
     "ovulatory": {
@@ -222,7 +313,58 @@
         "physical": ["Énergie et vitalité à leur apogée", "Corps rayonnant et magnétique", "Capacité physique optimale", "Température corporelle légèrement plus élevée"],
         "emotional": ["Empathie et connexion aux autres maximales", "Confiance en soi et assurance naturelles", "Générosité et désir de partager", "Joie de vivre et optimisme"],
         "energy": "Énergie solaire, magnétique et nourrissante - moment parfait pour briller et connecter"
-      }
+      },
+
+      "contextualEnrichments": [
+        {
+          "id": "ovulatory_emma_body_disconnect_01",
+          "targetPersona": "emma",
+          "targetPreferences": ["symptoms"],
+          "targetJourney": "body_disconnect",
+          "tone": "friendly",
+          "contextualText": "Cette énergie rayonnante t'invite à célébrer la beauté et la puissance de ton corps"
+        },
+        {
+          "id": "ovulatory_laure_emotional_control_01",
+          "targetPersona": "laure",
+          "targetPreferences": ["phases"],
+          "targetJourney": "emotional_control",
+          "tone": "professional",
+          "contextualText": "Cette phase d'apogée énergétique est optimale pour les présentations et négociations importantes"
+        },
+        {
+          "id": "ovulatory_sylvie_hiding_nature_01",
+          "targetPersona": "sylvie",
+          "targetPreferences": ["tracking"],
+          "targetJourney": "hiding_nature",
+          "tone": "inspiring",
+          "contextualText": "Cette pleine lune intérieure révèle ta capacité naturelle à rayonner et inspirer"
+        },
+        {
+          "id": "ovulatory_christine_understanding_01",
+          "targetPersona": "christine",
+          "targetPreferences": ["wellbeing"],
+          "targetJourney": "understanding",
+          "tone": "inspiring",
+          "contextualText": "Cette phase de magnificence t'offre une connexion profonde avec ton essence divine"
+        },
+        {
+          "id": "ovulatory_clara_analysis_01",
+          "targetPersona": "clara",
+          "targetPreferences": ["phases"],
+          "targetJourney": "analysis",
+          "tone": "professional",
+          "contextualText": "Cette période d'optimisation hormonale maximise tes performances cognitives et sociales"
+        },
+        {
+          "id": "ovulatory_generic_01",
+          "targetPersona": null,
+          "targetJourney": null,
+          "targetPreferences": null,
+          "tone": "friendly",
+          "contextualText": "Cette énergie rayonnante t'invite à briller pleinement et partager ta lumière"
+        }
+      ]
     },
   
     "luteal": {
@@ -293,6 +435,57 @@
         "physical": ["Corps qui se prépare à la phase suivante", "Sensibilité accrue comme radar intuitif", "Énergie qui fluctue naturellement", "Besoin de sommeil plus important"],
         "emotional": ["Hypersensibilité comme superpouvoir d'intuition", "Émotions intenses porteuses de messages", "Capacité critique accrue pour discerner", "Créativité débordante à canaliser"],
         "energy": "Énergie transformatrice et intuitive - parfaite pour créer et purifier"
-      }
+      },
+
+      "contextualEnrichments": [
+        {
+          "id": "luteal_emma_body_disconnect_01",
+          "targetPersona": "emma",
+          "targetPreferences": ["symptoms"],
+          "targetJourney": "body_disconnect",
+          "tone": "friendly",
+          "contextualText": "Cette sensibilité accrue t'invite à écouter les messages de ton corps avec bienveillance"
+        },
+        {
+          "id": "luteal_laure_emotional_control_01",
+          "targetPersona": "laure",
+          "targetPreferences": ["phases"],
+          "targetJourney": "emotional_control",
+          "tone": "professional",
+          "contextualText": "Cette phase d'introspection est idéale pour finaliser les projets et établir des limites saines"
+        },
+        {
+          "id": "luteal_sylvie_hiding_nature_01",
+          "targetPersona": "sylvie",
+          "targetPreferences": ["tracking"],
+          "targetJourney": "hiding_nature",
+          "tone": "inspiring",
+          "contextualText": "Cette sagesse des transitions révèle ta capacité naturelle à transformer et créer"
+        },
+        {
+          "id": "luteal_christine_understanding_01",
+          "targetPersona": "christine",
+          "targetPreferences": ["wellbeing"],
+          "targetJourney": "understanding",
+          "tone": "inspiring",
+          "contextualText": "Cette phase de transformation t'offre une sagesse intuitive exceptionnelle"
+        },
+        {
+          "id": "luteal_clara_analysis_01",
+          "targetPersona": "clara",
+          "targetPreferences": ["phases"],
+          "targetJourney": "analysis",
+          "tone": "professional",
+          "contextualText": "Cette période de préparation hormonale optimise tes capacités d'analyse et de discernement"
+        },
+        {
+          "id": "luteal_generic_01",
+          "targetPersona": null,
+          "targetJourney": null,
+          "targetPreferences": null,
+          "tone": "friendly",
+          "contextualText": "Cette phase de transformation t'invite à honorer ton intuition et ta créativité"
+        }
+      ]
     }
   }

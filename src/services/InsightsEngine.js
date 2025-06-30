@@ -151,17 +151,54 @@ const enrichInsightWithContext = async (baseContent, context) => {
     let contextualPrefix = '';
     
     if (phasesData && phasesData[phase]?.contextualEnrichments) {
-      // Chercher enrichissement correspondant au contexte
-      const matchingEnrichment = phasesData[phase].contextualEnrichments.find(enrichment => 
-        enrichment.targetPhase === phase &&
+      // 🆕 LOGIQUE DE MATCHING AMÉLIORÉE
+      const availableEnrichments = phasesData[phase].contextualEnrichments;
+      console.log(`🔍 Recherche enrichissements pour ${phase}/${persona}/${journeyChoice}`);
+      console.log(`📊 Préférences disponibles:`, preferences);
+      console.log(`🎯 Enrichissements disponibles:`, availableEnrichments.length);
+      
+      // 1. Chercher enrichissement exact (persona + journey + preferences)
+      let matchingEnrichment = availableEnrichments.find(enrichment => 
         enrichment.targetPersona === persona &&
         enrichment.targetJourney === journeyChoice &&
-        enrichment.targetPreferences?.some(pref => preferences?.[pref] >= 4)
+        enrichment.targetPreferences?.some(pref => preferences?.[pref] >= 3) // ✅ Seuil abaissé à 3
       );
+      
+      if (matchingEnrichment) {
+        console.log(`✅ Enrichissement exact trouvé: ${matchingEnrichment.id}`);
+      } else {
+        // 2. Fallback: chercher par persona seulement
+        matchingEnrichment = availableEnrichments.find(enrichment => 
+          enrichment.targetPersona === persona
+        );
+        
+        if (matchingEnrichment) {
+          console.log(`✅ Enrichissement par persona trouvé: ${matchingEnrichment.id}`);
+        } else {
+          // 3. Fallback: enrichissement générique de la phase
+          matchingEnrichment = availableEnrichments.find(enrichment => 
+            !enrichment.targetPersona && !enrichment.targetJourney
+          );
+          
+          if (matchingEnrichment) {
+            console.log(`✅ Enrichissement générique trouvé: ${matchingEnrichment.id}`);
+          } else {
+            console.log(`⚠️ Aucun enrichissement trouvé pour ${phase}/${persona}/${journeyChoice}`);
+            console.log(`📋 Enrichissements disponibles:`, availableEnrichments.map(e => ({
+              id: e.id,
+              persona: e.targetPersona,
+              journey: e.targetJourney,
+              prefs: e.targetPreferences
+            })));
+          }
+        }
+      }
       
       if (matchingEnrichment) {
         contextualPrefix = matchingEnrichment.contextualText + '. ';
       }
+    } else {
+      console.log(`⚠️ Pas d'enrichissements disponibles pour la phase ${phase}`);
     }
     
     // ✅ PHASE 2: Prénom personnalisation
@@ -187,12 +224,14 @@ const enrichInsightWithContext = async (baseContent, context) => {
     // ✅ ASSEMBLAGE FINAL: contextualEnrichments + prénom + insight + closing.journey
     const finalInsight = contextualPrefix + enriched + journeyClosing;
     
+    console.log(`🎯 Insight final:`, finalInsight.substring(0, 100) + '...');
+    
     return finalInsight;
     
   } catch (error) {
     console.warn('🚨 Erreur enrichissement contextuel:', error);
     
-    // Fallback simple si échec
+    // Fallback simple si échoue
     let enriched = baseContent;
     if (prenom && !enriched.toLowerCase().includes(prenom.toLowerCase())) {
       enriched = `${prenom}, ${enriched.charAt(0).toLowerCase() + enriched.slice(1)}`;
@@ -243,7 +282,7 @@ const getSmartFallback = async (context) => {
 };
 
 // ✅ FONCTION PRINCIPALE OPTIMISÉE
-export const getPersonalizedInsight = async (context, options = {}) => {
+const getPersonalizedInsight = async (context, options = {}) => {
   const { phase, persona, preferences, melune, profile } = context;
   const { usedInsights = [], enrichWithContext = true } = options;
 
@@ -344,7 +383,7 @@ export const getPersonalizedInsight = async (context, options = {}) => {
 };
 
 // ✅ UTILITAIRES AVANCÉS
-export const getInsightPreview = async (context, count = 3) => {
+const getInsightPreview = async (context, count = 3) => {
   const insights = [];
   const usedIds = [];
   
@@ -363,13 +402,98 @@ export const getInsightPreview = async (context, count = 3) => {
   return insights;
 };
 
-export const refreshInsightsCache = () => {
+const refreshInsightsCache = () => {
   insightsCache.cache.clear();
+  console.log('🔄 Cache insights vidé');
 };
 
-export const getInsightsByPhase = async (phase, persona, limit = 5) => {
+// 🆕 FORCER REFRESH CACHE PHASES
+const refreshPhasesCache = async () => {
+  try {
+    await ContentManager.forceRefresh('phases');
+    console.log('🔄 Cache phases vidé - prochain appel utilisera les nouvelles données');
+    return true;
+  } catch (error) {
+    console.error('🚨 Erreur refresh cache phases:', error);
+    return false;
+  }
+};
+
+// 🆕 REFRESH COMPLET
+const refreshAllCaches = async () => {
+  try {
+    await ContentManager.forceRefresh();
+    insightsCache.cache.clear();
+    console.log('🔄 Tous les caches vidés');
+    return true;
+  } catch (error) {
+    console.error('🚨 Erreur refresh caches:', error);
+    return false;
+  }
+};
+
+const getInsightsByPhase = async (phase, persona, limit = 5) => {
   const context = { phase, persona };
   return getInsightPreview(context, limit);
+};
+
+// 🆕 FONCTION DEBUG ENRICHISSEMENTS
+const debugEnrichments = async (context) => {
+  const { phase, persona, profile, preferences } = context;
+  const journeyChoice = profile?.journeyChoice || 'body';
+  
+  console.log('🔍 === DEBUG ENRICHISSEMENTS ===');
+  console.log('📊 Contexte:', { phase, persona, journeyChoice, preferences });
+  
+  try {
+    const phasesData = await ContentManager.getPhases();
+    
+    if (!phasesData) {
+      console.log('❌ Pas de données phases disponibles');
+      return;
+    }
+    
+    if (!phasesData[phase]) {
+      console.log(`❌ Phase ${phase} non trouvée dans les données`);
+      return;
+    }
+    
+    const enrichments = phasesData[phase].contextualEnrichments;
+    console.log(`📋 Enrichissements disponibles pour ${phase}:`, enrichments?.length || 0);
+    
+    if (!enrichments || enrichments.length === 0) {
+      console.log('❌ Aucun enrichissement disponible pour cette phase');
+      return;
+    }
+    
+    console.log('📝 Détail des enrichissements:');
+    enrichments.forEach((enrichment, index) => {
+      console.log(`${index + 1}. ${enrichment.id}:`);
+      console.log(`   - Persona: ${enrichment.targetPersona}`);
+      console.log(`   - Journey: ${enrichment.targetJourney}`);
+      console.log(`   - Preferences: ${enrichment.targetPreferences?.join(', ')}`);
+      console.log(`   - Tone: ${enrichment.tone}`);
+      console.log(`   - Text: ${enrichment.contextualText.substring(0, 50)}...`);
+      
+      // Vérifier matching
+      const personaMatch = !enrichment.targetPersona || enrichment.targetPersona === persona;
+      const journeyMatch = !enrichment.targetJourney || enrichment.targetJourney === journeyChoice;
+      const prefMatch = !enrichment.targetPreferences || 
+        enrichment.targetPreferences.some(pref => preferences?.[pref] >= 3);
+      
+      console.log(`   - Matching: Persona=${personaMatch}, Journey=${journeyMatch}, Prefs=${prefMatch}`);
+    });
+    
+    // Test enrichissement complet
+    const testContent = "Test insight content";
+    const enriched = await enrichInsightWithContext(testContent, context);
+    console.log('🎯 Test enrichissement:', enriched);
+    
+  } catch (error) {
+    console.error('🚨 Erreur debug enrichissements:', error);
+  }
+  
+  console.log('🔍 === FIN DEBUG ===');
 };
 
 // ✅ EXPORTS
@@ -377,5 +501,12 @@ export {
   enrichInsightWithContext,
   calculateInsightScore, 
   getSmartFallback,
-  insightsCache
+  insightsCache,
+  getPersonalizedInsight,
+  getInsightPreview,
+  getInsightsByPhase,
+  refreshInsightsCache,
+  refreshPhasesCache,
+  refreshAllCaches,
+  debugEnrichments
 };

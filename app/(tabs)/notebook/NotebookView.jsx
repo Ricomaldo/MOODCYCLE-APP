@@ -9,6 +9,7 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { View, FlatList, TouchableOpacity, StyleSheet, Alert, Share, RefreshControl, Animated } from 'react-native';
 import { useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../../src/hooks/useTheme';
 import { useAdaptiveInterface } from '../../../src/hooks/useAdaptiveInterface';
@@ -23,7 +24,6 @@ import { getCurrentPhase } from '../../../src/utils/cycleCalculations';
 import FreeWritingModal from '../../../src/features/notebook/FreeWritingModal';
 import EntryDetailModal from '../../../src/features/notebook/EntryDetailModal';
 import SwipeableEntryIOS from '../../../src/features/notebook/SwipeableEntryIOS';
-import ToolbarIOS from '../../../src/features/notebook/ToolbarIOS';
 import {
   AnimatedSearchBar,
 } from '../../../src/core/ui/AnimatedComponents';
@@ -37,7 +37,7 @@ const FILTER_PILLS = [
   { id: 'tracking', label: 'Tracking', icon: 'bar-chart-2' },
 ];
 
-const getStyles = (theme) => StyleSheet.create({
+const getStyles = (theme, insets) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
@@ -64,132 +64,20 @@ const getStyles = (theme) => StyleSheet.create({
     flex: 1,
   },
 
-  // Filtres design premium
-  filtersContainer: {
-    paddingHorizontal: theme.spacing.l,
-    marginBottom: theme.spacing.m,
-  },
-  filterPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'white',
-    borderRadius: theme.borderRadius.pill,
-    paddingHorizontal: theme.spacing.m,
-    paddingVertical: theme.spacing.s + 2,
-    marginRight: theme.spacing.s,
-    gap: theme.spacing.xs,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  filterPillActive: {
-    backgroundColor: theme.colors.primary,
-    shadowColor: theme.colors.primary,
-    shadowOpacity: 0.3,
-  },
-  filterText: {
-    fontSize: 14,
-    color: theme.colors.textLight,
-    fontWeight: '500',
-  },
-  filterTextActive: {
-    color: 'white',
-    fontWeight: '600',
-  },
-
-  // Filtres phases premium
-  phaseFiltersContainer: {
-    paddingHorizontal: theme.spacing.l,
-    marginBottom: theme.spacing.m,
-  },
-  phasePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.8)',
-    backdropFilter: 'blur(10px)',
-    borderWidth: 1.5,
-    borderRadius: theme.borderRadius.pill,
-    paddingHorizontal: theme.spacing.m,
-    paddingVertical: theme.spacing.s,
-    marginRight: theme.spacing.s,
-    gap: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  
+  // Indicator pour phase (utilisé dans le menu compact)
   phaseIndicator: {
     width: 8,
     height: 8,
     borderRadius: 4,
   },
-  phaseText: {
-    fontSize: 13,
-    fontWeight: '500',
-  },
-  phaseTextActive: {
-    fontWeight: '700',
-  },
-
-  // Tags améliorés
-  tagsContainer: {
-    paddingHorizontal: theme.spacing.l,
-    marginBottom: theme.spacing.m,
-  },
-  tagsTitle: {
-    marginBottom: theme.spacing.s,
-    color: theme.colors.textLight,
-    fontSize: 12,
-  },
-  tagFilter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-    borderRadius: theme.borderRadius.pill,
-    paddingLeft: theme.spacing.m,
-    paddingRight: theme.spacing.xs,
-    paddingVertical: theme.spacing.xs + 2,
-    marginRight: theme.spacing.s,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  tagFilterActive: {
-    backgroundColor: theme.colors.primary + '15',
-    borderColor: theme.colors.primary,
-  },
-  tagFilterText: {
-    fontSize: 12,
-    color: theme.colors.textLight,
-    fontWeight: '500',
-  },
-  tagFilterTextActive: {
-    color: theme.colors.primary,
-    fontWeight: '600',
-  },
-  tagCount: {
-    backgroundColor: theme.colors.textLight + '20',
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    marginLeft: 4,
-  },
-  tagCountText: {
-    fontSize: 10,
-    color: theme.colors.textLight,
-    fontWeight: '600',
-  },
 
   // Trend card premium
   trendCard: {
     backgroundColor: 'white',
-    marginHorizontal: theme.spacing.l,
-    padding: theme.spacing.l,
+    marginHorizontal: 12,
+    padding: 16,
     borderRadius: theme.borderRadius.medium,
-    marginBottom: theme.spacing.l,
+    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -298,14 +186,132 @@ const getStyles = (theme) => StyleSheet.create({
     flex: 1,
   },
   listContent: {
-    paddingBottom: 100, // Pour la toolbar
+    paddingBottom: 80,
+    paddingHorizontal: 12,
+  },
+
+  // FAB iOS pour écrire
+  fabButton: {
+    position: 'absolute',
+    right: 20,
+    bottom: insets.bottom + 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: theme.colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: theme.colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 1000,
+  },
+
+  // Bouton filtre compact
+  filterButton: {
+    position: 'absolute',
+    left: 20,
+    bottom: insets.bottom + 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: theme.colors.border + '40',
+    zIndex: 1000,
+  },
+
+  filterDot: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: theme.colors.primary,
+  },
+
+  // Menu filtre
+  filterMenu: {
+    position: 'absolute',
+    left: 20,
+    bottom: insets.bottom + 80,
+    right: 20,
+    backgroundColor: 'rgba(255,255,255,0.98)',
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: theme.colors.border + '30',
+    zIndex: 999,
+  },
+
+  filterSection: {
+    marginBottom: 16,
+  },
+
+  filterSectionTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: theme.colors.textLight,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+
+  compactFilterRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+
+  compactFilterPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.background,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    gap: 4,
+  },
+
+  compactFilterPillActive: {
+    backgroundColor: theme.colors.primary + '15',
+    borderColor: theme.colors.primary,
+  },
+
+  compactFilterText: {
+    fontSize: 12,
+    color: theme.colors.textLight,
+    fontWeight: '500',
+  },
+
+  compactFilterTextActive: {
+    color: theme.colors.primary,
+    fontWeight: '600',
   },
 });
 
 export default function NotebookView() {
   const params = useLocalSearchParams();
   const { theme } = useTheme();
-  const styles = getStyles(theme);
+  const insets = useSafeAreaInsets();
+  const styles = getStyles(theme, insets);
   
   // Phase filters avec accès au thème
   const PHASE_FILTERS = useMemo(() => [
@@ -338,6 +344,7 @@ export default function NotebookView() {
   const selectedTags = notebookFilters.tags || [];
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
 
   const [showFreeWriting, setShowFreeWriting] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState(null);
@@ -475,12 +482,6 @@ export default function NotebookView() {
     setRefreshing(false);
   }, []);
 
-  const handleToolbarAction = useCallback((action) => {
-    if (action === 'write') {
-      setShowFreeWriting(true);
-    }
-  }, []);
-
   // Trending insight amélioré
   const trendingInsight = useMemo(() => {
     const trends = calculateTrends();
@@ -573,6 +574,125 @@ export default function NotebookView() {
     );
   };
 
+  // Menu filtre compact
+  const hasActiveFilters = filter !== 'all' || phaseFilter || selectedTags.length > 0;
+  
+  const renderFilterMenu = () => {
+    if (!showFilterMenu) return null;
+
+    return (
+      <Animated.View 
+        style={[
+          styles.filterMenu,
+          {
+            opacity: headerAnim,
+            transform: [{
+              translateY: headerAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [20, 0]
+              })
+            }]
+          }
+        ]}
+      >
+        {/* Filtres par type */}
+        <View style={styles.filterSection}>
+          <Caption style={styles.filterSectionTitle}>Type</Caption>
+          <View style={styles.compactFilterRow}>
+            {FILTER_PILLS.filter(pill => 
+              maturityLevel === 'autonomous' || 
+              ['all', 'personal', 'saved'].includes(pill.id)
+            ).map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                style={[
+                  styles.compactFilterPill, 
+                  filter === item.id && styles.compactFilterPillActive
+                ]}
+                onPress={() => handleFilterChange(item.id)}
+              >
+                <Feather
+                  name={item.icon}
+                  size={12}
+                  color={filter === item.id ? theme.colors.primary : theme.colors.textLight}
+                />
+                <BodyText style={[
+                  styles.compactFilterText, 
+                  filter === item.id && styles.compactFilterTextActive
+                ]}>
+                  {item.label}
+                </BodyText>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Filtres phases */}
+        {entries.some(entry => entry.phase) && (
+          <View style={styles.filterSection}>
+            <Caption style={styles.filterSectionTitle}>Phase</Caption>
+            <View style={styles.compactFilterRow}>
+              {PHASE_FILTERS.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[
+                    styles.compactFilterPill,
+                    phaseFilter === item.id && styles.compactFilterPillActive,
+                  ]}
+                  onPress={() => handlePhaseFilter(item.id)}
+                >
+                  <View style={[styles.phaseIndicator, { backgroundColor: item.color }]} />
+                  <BodyText
+                    style={[
+                      styles.compactFilterText,
+                      phaseFilter === item.id && styles.compactFilterTextActive,
+                    ]}
+                  >
+                    {item.label}
+                  </BodyText>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Tags populaires */}
+        {tagStats.length > 0 && features.advanced_tracking && (
+          <View style={[styles.filterSection, { marginBottom: 0 }]}>
+            <Caption style={styles.filterSectionTitle}>Tags populaires</Caption>
+            <View style={styles.compactFilterRow}>
+              {tagStats.slice(0, 6).map((item) => (
+                <TouchableOpacity
+                  key={item.tag}
+                  style={[
+                    styles.compactFilterPill, 
+                    selectedTags.includes(item.tag) && styles.compactFilterPillActive
+                  ]}
+                  onPress={() => handleTagFilter(item.tag)}
+                >
+                  <BodyText
+                    style={[
+                      styles.compactFilterText,
+                      selectedTags.includes(item.tag) && styles.compactFilterTextActive,
+                    ]}
+                  >
+                    {item.tag}
+                  </BodyText>
+                  <Caption style={[
+                    styles.compactFilterText,
+                    { fontSize: 10, opacity: 0.7 }
+                  ]}>
+                    {item.count}
+                  </Caption>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+      </Animated.View>
+    );
+  };
+
   // État vide amélioré
   if (entries.length === 0) {
     return (
@@ -626,100 +746,7 @@ export default function NotebookView() {
             onClear={() => setSearchQuery('')}
           />
 
-          {/* Filtres par type */}
-          <View style={styles.filtersContainer}>
-            <FlatList
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              data={FILTER_PILLS.filter(pill => 
-                maturityLevel === 'autonomous' || 
-                ['all', 'personal', 'saved'].includes(pill.id)
-              )}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[styles.filterPill, filter === item.id && styles.filterPillActive]}
-                  onPress={() => handleFilterChange(item.id)}
-                >
-                  <Feather
-                    name={item.icon}
-                    size={16}
-                    color={filter === item.id ? 'white' : theme.colors.textLight}
-                  />
-                  <BodyText style={[styles.filterText, filter === item.id && styles.filterTextActive]}>
-                    {item.label}
-                  </BodyText>
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-
-          {/* Filtres phases */}
-          {entries.some(entry => entry.phase) && (
-            <View style={styles.phaseFiltersContainer}>
-              <FlatList
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                data={PHASE_FILTERS}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={[
-                      styles.phasePill,
-                      { borderColor: item.color },
-                      phaseFilter === item.id && {
-                        backgroundColor: item.color + '20',
-                        borderWidth: 2,
-                      },
-                    ]}
-                    onPress={() => handlePhaseFilter(item.id)}
-                  >
-                    <View style={[styles.phaseIndicator, { backgroundColor: item.color }]} />
-                    <BodyText
-                      style={[
-                        styles.phaseText,
-                        { color: phaseFilter === item.id ? item.color : theme.colors.textLight },
-                        phaseFilter === item.id && styles.phaseTextActive,
-                      ]}
-                    >
-                      {item.label}
-                    </BodyText>
-                  </TouchableOpacity>
-                )}
-              />
-            </View>
-          )}
-
-          {/* Tags populaires */}
-          {tagStats.length > 0 && features.advanced_tracking && (
-            <View style={styles.tagsContainer}>
-              <Caption style={styles.tagsTitle}>Tags populaires:</Caption>
-              <FlatList
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                data={tagStats}
-                keyExtractor={item => item.tag}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={[styles.tagFilter, selectedTags.includes(item.tag) && styles.tagFilterActive]}
-                    onPress={() => handleTagFilter(item.tag)}
-                  >
-                    <BodyText
-                      style={[
-                        styles.tagFilterText,
-                        selectedTags.includes(item.tag) && styles.tagFilterTextActive,
-                      ]}
-                    >
-                      {item.tag}
-                    </BodyText>
-                    <View style={styles.tagCount}>
-                      <Caption style={styles.tagCountText}>{item.count}</Caption>
-                    </View>
-                  </TouchableOpacity>
-                )}
-              />
-            </View>
-          )}
+          {renderFilterMenu()}
 
           {/* Liste avec animations */}
           <FlatList
@@ -746,13 +773,27 @@ export default function NotebookView() {
               </View>
             )}
           />
-
-          {/* Toolbar iOS premium */}
-          <ToolbarIOS
-            onWritePress={() => handleToolbarAction('write')}
-          />
         </>
       )}
+
+      {/* FAB iOS pour écrire - TOUJOURS visible */}
+      <TouchableOpacity
+        style={styles.fabButton}
+        onPress={() => setShowFreeWriting(true)}
+        activeOpacity={0.8}
+      >
+        <Feather name="edit-3" size={22} color="white" />
+      </TouchableOpacity>
+
+      {/* Bouton filtre compact - TOUJOURS visible */}
+      <TouchableOpacity
+        style={styles.filterButton}
+        onPress={() => setShowFilterMenu(!showFilterMenu)}
+        activeOpacity={0.8}
+      >
+        <Feather name="filter" size={20} color={theme.colors.primary} />
+        {hasActiveFilters && <View style={styles.filterDot} />}
+      </TouchableOpacity>
 
       {/* Modales - TOUJOURS visibles, pas dans le bloc conditionnel */}
       <FreeWritingModal 

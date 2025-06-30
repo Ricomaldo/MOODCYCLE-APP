@@ -204,6 +204,20 @@ export default function DevPanel() {
     );
   };
 
+  // 🆕 FONCTIONS POUR LES NOUVELLES FONCTIONNALITÉS
+  const simulateFakeObservations = () => {
+    const fakeObservations = [
+      { id: '1', timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), feeling: 2, energy: 2, notes: 'Fatigue, besoin de repos', phase: 'menstrual', cycleDay: 3 },
+      { id: '2', timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), feeling: 4, energy: 4, notes: 'Énergie qui revient, créativité', phase: 'follicular', cycleDay: 8 },
+      { id: '3', timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), feeling: 5, energy: 5, notes: 'Très énergique, sociale', phase: 'ovulatory', cycleDay: 14 },
+      { id: '4', timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), feeling: 3, energy: 3, notes: 'Émotions sensibles', phase: 'luteal', cycleDay: 22 },
+      { id: '5', timestamp: new Date().toISOString(), feeling: 2, energy: 2, notes: 'Fatigue prémenstruelle', phase: 'luteal', cycleDay: 26 }
+    ];
+    
+    useCycleStore.getState().observations = fakeObservations;
+    Alert.alert('✅ Observations Factices', `${fakeObservations.length} observations ajoutées`);
+  };
+
   // ═══════════════════════════════════════════════════════
   // 🔄 CYCLE CONTROL (simplifié)
   // ═══════════════════════════════════════════════════════
@@ -394,6 +408,25 @@ export default function DevPanel() {
                 <TouchableOpacity style={styles.resetButton} onPress={resetIntelligence}>
                   <Text style={styles.resetButtonText}>🧹 Reset Intelligence</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.debugButton} 
+                  onPress={() => {
+                    const hasObs = cycle?.observations?.length > 0;
+                    if (hasObs) {
+                      // Clear observations
+                      useCycleStore.getState().observations = [];
+                    } else {
+                      // Add fake observations
+                      simulateFakeObservations();
+                    }
+                    Alert.alert('🔄 Observations', hasObs ? 'Cleared' : 'Added fake data');
+                  }}
+                >
+                  <Text style={styles.debugButtonText}>
+                    {cycle?.observations?.length > 0 ? '🗑️ Clear Observations' : '➕ Add Fake Obs'}
+                  </Text>
+                </TouchableOpacity>
               </View>
             )}
 
@@ -455,6 +488,24 @@ export default function DevPanel() {
                     </TouchableOpacity>
                   ))}
                 </View>
+
+                <Text style={styles.subTitle}>Simulation Complète :</Text>
+                <TouchableOpacity
+                  style={[styles.dayJumpButton, { backgroundColor: '#FF6B6B', width: '100%' }]}
+                  onPress={() => {
+                    let day = 1;
+                    const interval = setInterval(() => {
+                      jumpToDay(day);
+                      day++;
+                      if (day > 28) {
+                        clearInterval(interval);
+                        Alert.alert('✅ Cycle Complet', 'J1 → J28 simulé');
+                      }
+                    }, 500);
+                  }}
+                >
+                  <Text style={styles.dayJumpText}>🎬 Simuler J1→J28</Text>
+                </TouchableOpacity>
               </View>
             )}
 

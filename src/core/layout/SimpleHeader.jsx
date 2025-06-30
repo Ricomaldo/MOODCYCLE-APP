@@ -75,14 +75,13 @@ export function NotebookHeader({
 
 const getStyles = (theme) => StyleSheet.create({
   header: {
-    height: 60,
+    height: 52,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: theme.spacing.l,
+    paddingHorizontal: 16,
     backgroundColor: theme.colors.background,
-    borderBottomWidth: 0.5,
-    borderBottomColor: theme.colors.border,
+    borderBottomWidth: 0,
   },
   
   title: {

@@ -139,7 +139,7 @@ class ChatService {
       if (msg.type === 'user') {
         // Extraction basique de topics
         const content = msg.content.toLowerCase();
-        if (content.includes('fatigue') || content.includes('énergie')) topics.push('energy');
+        if (content.includes('fatigue') || content.includes('fatiguée') || content.includes('énergie')) topics.push('energy');
         if (content.includes('humeur') || content.includes('émotions')) topics.push('mood');
         if (content.includes('douleur') || content.includes('mal')) topics.push('pain');
         if (content.includes('alimentation') || content.includes('manger')) topics.push('nutrition');
@@ -244,12 +244,15 @@ class ChatService {
       timestamp: new Date().toISOString()
     });
 
+    // ✅ Déclarer enrichedContext au début pour éviter l'erreur dans le catch
+    let enrichedContext;
+
     try {
       // ✅ Préparer contexte optimisé
       const optimizedContext = this.prepareConversationContext(message, conversationContext);
       
       // ✅ NOUVEAU : Contexte enrichi depuis stores
-      const enrichedContext = await this.buildEnrichedContext(message);
+      enrichedContext = await this.buildEnrichedContext(message);
       
       // ✅ Fusionner contextes
       const finalContext = {
@@ -702,11 +705,38 @@ class ChatService {
         safeCycle.length,
         safeCycle.periodDuration
       );
-      // ... existing code ...
+
+      return {
+        persona: userStore.persona?.assigned || 'emma',
+        phase: currentPhase,
+        intelligence: {
+          conversationLength: 0,
+          patterns: {},
+          timeOfDay: new Date().getHours()
+        },
+        cycle: safeCycle,
+        user: userStore
+      };
     } catch (error) {
       console.error('Erreur contexte chat:', error);
+      return {
+        persona: 'emma',
+        phase: 'menstrual',
+        intelligence: {
+          conversationLength: 0,
+          patterns: {},
+          timeOfDay: new Date().getHours()
+        },
+        cycle: {
+          lastPeriodDate: null,
+          length: 28,
+          periodDuration: 5
+        },
+        user: {}
+      };
     }
   }
 }
 
+export { ChatService };
 export default new ChatService();

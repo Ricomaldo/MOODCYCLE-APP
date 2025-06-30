@@ -1,78 +1,123 @@
-# 🛠️ DEV TOOLBOX - Guide Rapide
+# 🧠 DevPanel - Tutoriel Développeur
 
-## 🚀 **ACCÈS**
+## 🎯 **Qu'est-ce que le DevPanel ?**
 
-**Toggle 🛠️** → Coin supérieur droit, toujours visible
+Le DevPanel est votre **tableau de bord de développement** qui vous permet de :
+- Tester rapidement différents scénarios utilisateur
+- Naviguer instantanément dans le cycle menstruel
+- Simuler des données pour vos tests
+- Déboguer l'intelligence artificielle
 
-## 📋 **CONTENU**
+## 🚀 **Comment l'ouvrir ?**
 
-### **👤 PERSONAS** - Simuler Utilisateurs
+1. **Cherchez l'icône 🧠** en haut à droite de votre écran
+2. **Tapez dessus** → Le panel s'ouvre
+3. **Tapez sur ✕** pour le fermer
+
+> ⚠️ **Visible uniquement en développement** (pas en production)
+
+## 📱 **Les 4 Onglets Principaux**
+
+### 🌟 **Test** - Intelligence & Observations
+**Que faire ici ?**
+- Simuler différents profils d'utilisatrices
+- Ajouter des observations factices pour tester
+- Voir les données d'apprentissage de l'IA
+
+**Boutons utiles :**
+- `🌙 Active le Soir` → Simule une utilisatrice qui utilise l'app le soir
+- `🌅 Matinale Créative` → Simule une utilisatrice créative du matin
+- `➕ Add Fake Obs` → Ajoute 5 observations d'exemple
+- `🗑️ Clear Observations` → Supprime toutes les observations
+
+### 🔄 **Cycle** - Navigation Temporelle
+**Que faire ici ?**
+- Sauter à n'importe quel jour du cycle
+- Tester différentes phases
+- Simuler un cycle complet
+
+**Exemples pratiques :**
+- Clic sur `men` → Vous êtes en période de règles
+- Clic sur `J14` → Vous êtes au jour 14 (ovulation)
+- Clic sur `🎬 Simuler J1→J28` → Regarde le cycle défiler automatiquement
+
+### 🎭 **Persona** - Profils Utilisateur
+**Que faire ici ?**
+- Tester différents types d'utilisatrices
+- Voir comment l'app s'adapte à chaque profil
+
+**Les personas disponibles :**
+- **Emma** → Jeune, découvre son cycle
+- **Clara** → Experte, utilise tout
+- **Miranda** → Coach, accompagne d'autres
+
+### 🧹 **Utils** - Outils & Reset
+**Que faire ici ?**
+- Naviguer rapidement vers différentes pages
+- Voir les statistiques actuelles
+- Tout remettre à zéro
+
+## 🎓 **Scénarios de Test Pratiques**
+
+### **Test 1 : Découverte d'une nouvelle utilisatrice**
 ```
-Emma  → 18-25 ans, découverte cycle
-Laure → 26-40 ans, professionnel  
-Clara → Power user, tout maxé
-```
-**Clic = transformation complète** (profil + préférences + avatar)
-
-### **🔄 CYCLE** - Manipulation Temporelle  
-```
-men → Règles J2        fol → Montante J10
-ovu → Pic énergie J15   lut → Descendante J22
-```
-**Clic = saut direct** à la phase (recalcul automatique des dates)
-
-### **⚡ ACTIONS** - Tests Rapides
-```
-📊 Générer Données → Messages + entrées notebook
-📈 Performance    → Dashboard métriques temps réel  
-🗑️ Reset          → Efface tout, retour état initial
+1. Onglet Persona → Clic "Emma"
+2. Onglet Test → Clic "🌱 Débutante" 
+3. Naviguez dans l'app → Voyez les conseils adaptés
 ```
 
-## 🎯 **USAGE TYPIQUE**
-
-### **Tester Persona Emma**
+### **Test 2 : Utilisatrice experte en phase ovulatoire**
 ```
-1. Clic 🛠️ → Clic "Emma"
-2. Navigue dans l'app
-3. Observe changements ton/conseils
+1. Onglet Persona → Clic "Clara"
+2. Onglet Cycle → Clic "ovu" (ovulatoire)
+3. Allez dans Conseils → Voyez le contenu adapté
 ```
 
-### **Tester Phase Ovulatoire**
+### **Test 3 : Cycle complet avec données**
 ```
-1. Clic 🛠️ → Section Cycle → "ovu"  
-2. Navigue cycle → Vois vignettes J15
-3. Compare avec phase "lut" → Vois différences
-```
-
-### **Tester avec Données**
-```
-1. Clic 🛠️ → "📊 Générer Données"
-2. Va dans Chat → Messages générés
-3. Va dans Notebook → Entrées créées
+1. Onglet Test → Clic "➕ Add Fake Obs"
+2. Onglet Cycle → Clic "🎬 Simuler J1→J28"
+3. Observez les changements dans l'app
 ```
 
-### **Monitor Performance**
+### **Test 4 : Reset complet**
 ```
-1. Clic 🛠️ → "📈 Performance"
-2. Dashboard full-screen avec métriques live
-3. Toggle Verbose pour logs détaillés
+1. Onglet Utils → Clic "🗑️ Reset Complet"
+2. Confirmez → Tout est remis à zéro
+3. Recommencez vos tests
 ```
 
-## 📊 **STATUS BAR** 
+## 📊 **Comprendre la Barre de Status**
 
-`Emma | follicular J10 | 5m 3e`
+En haut du panel, vous voyez : `auto | follicular J10 | Conf: 25%`
 
-- **Emma** = Persona actuel
-- **follicular J10** = Phase + jour cycle  
-- **5m 3e** = Messages chat + entrées notebook
+- **auto** = Persona actuel (ou "auto" si aucun)
+- **follicular J10** = Phase actuelle + jour du cycle
+- **Conf: 25%** = Niveau de confiance de l'IA (0-100%)
 
-## ⚠️ **NOTES**
+## 💡 **Conseils d'Utilisation**
 
-- **Mode DEV uniquement** (invisible en prod)
-- **Persistence** stores → changements sauvés
-- **Reset propre** → restaure état initial complet
-- **Sans popup** → actions directes pour fluidité
+### **Pour tester une nouvelle fonctionnalité :**
+1. Choisissez un persona adapté
+2. Mettez-vous dans la bonne phase du cycle
+3. Ajoutez des données si nécessaire
+4. Testez votre fonctionnalité
+
+### **Pour déboguer un problème :**
+1. Reproduisez les conditions du bug
+2. Utilisez le bouton "🐛 Debug Intelligence"
+3. Consultez les logs dans la console
+
+### **Pour nettoyer après vos tests :**
+1. Onglet Utils → "🗑️ Reset Complet"
+2. Ou onglet Test → "🧹 Reset Intelligence" (plus ciblé)
+
+## 🚨 **Attention**
+
+- Les changements sont **sauvegardés** (stores persistants)
+- Pensez à **reset** entre vos différents tests
+- Le panel **disparaît en production** automatiquement
 
 ---
 
-*Plus besoin de 3 docs ! Tout est là.* 🎯 
+**C'est tout ! Vous êtes prêt à développer efficacement avec le DevPanel** 🚀 

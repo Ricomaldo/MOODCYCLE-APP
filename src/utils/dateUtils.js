@@ -17,11 +17,27 @@
 
 /**
  * Calcule la différence en jours entre deux dates
+ * @param {Date|string|number} date1 - Première date (ou seule date si date2 non fournie)
+ * @param {Date|string|number} date2 - Deuxième date (par défaut: maintenant)
+ * @returns {number} Différence en jours (positif si date1 > date2, négatif sinon)
  */
 export const getDaysDifference = (date1, date2 = new Date()) => {
-  const d1 = new Date(date1);
-  const d2 = new Date(date2);
-  return Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
+  if (!date1 || isNaN(new Date(date1).getTime())) {
+    return 0;
+  }
+  if (!date2 || isNaN(new Date(date2).getTime())) {
+    return 0;
+  }
+  
+  const targetDate = new Date(date1);
+  const compareDate = new Date(date2);
+  
+  // Normaliser à minuit pour éviter les problèmes d'heures
+  targetDate.setHours(0, 0, 0, 0);
+  compareDate.setHours(0, 0, 0, 0);
+  
+  const diffTime = targetDate - compareDate;
+  return Math.round(diffTime / (1000 * 60 * 60 * 24));
 };
 
 /**
@@ -56,6 +72,9 @@ export const formatTime = (timestamp) => {
  * Crée une date relative (il y a X jours)
  */
 export const getDateDaysAgo = (daysAgo) => {
+  if (typeof daysAgo !== 'number' || isNaN(daysAgo)) {
+    return new Date().toISOString();
+  }
   const date = new Date();
   date.setDate(date.getDate() - daysAgo);
   return date.toISOString();
@@ -64,9 +83,12 @@ export const getDateDaysAgo = (daysAgo) => {
 /**
  * Crée une date future (dans X jours)
  */
-export const getDateDaysFromNow = (daysFromNow) => {
+export const getDateDaysFromNow = (days) => {
+  if (typeof days !== 'number' || isNaN(days)) {
+    return new Date().toISOString();
+  }
   const date = new Date();
-  date.setDate(date.getDate() + daysFromNow);
+  date.setDate(date.getDate() + days);
   return date.toISOString();
 };
 

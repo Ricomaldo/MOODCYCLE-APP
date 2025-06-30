@@ -3,10 +3,10 @@
 // 📄 File: src/features/shared/InsightCard.jsx - GLASSMORPHISM
 // 🧩 Type: UI Component Premium
 // 📚 Description: Carte insight avec effet glassmorphism signature
-// 🕒 Version: 8.0 - 2025-06-28 - GLASSMORPHISM + STYLE UNIFIÉ
+// 🕒 Version: 8.1 - 2025-06-29 - BLOC 2 Préfixe Observations
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   View, 
   StyleSheet, 
@@ -23,6 +23,8 @@ import { useUserStore } from '../../stores/useUserStore';
 import { useNotebookStore } from '../../stores/useNotebookStore';
 import { useTerminology } from '../../hooks/useTerminology';
 import ShareableCard from '../shared/ShareableCard';
+// 🆕 DEBUG: Import pour tester les enrichissements
+// import { debugEnrichments } from '../../services/InsightsEngine';
 
 export default function InsightCard({ 
   insight, 
@@ -31,13 +33,19 @@ export default function InsightCard({
   persona = null,
   showActions = true,
   onSave = null,
-  style
+  style,
+  isObservationBased = false  // 🆕 BLOC 2
 }) {
   const { theme } = useTheme();
   const styles = getStyles(theme, phase);
   const { profile } = useUserStore();
   const { addEntry } = useNotebookStore();
   const { getArchetypeLabel } = useTerminology();
+  
+  // 🆕 DEBUG: Pour tester les enrichissements, décommentez ces lignes :
+  // useEffect(() => {
+  //   debugEnrichments({ phase, persona, profile, preferences: profile?.preferences });
+  // }, [phase, persona, profile]);
   
   const [isSharing, setIsSharing] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -163,8 +171,15 @@ export default function InsightCard({
           )}
         </View>
 
-        {/* Contenu insight */}
+        {/* Contenu insight avec préfixe observation */}
         <View style={styles.content}>
+          {/* 🆕 BLOC 2 - Préfixe observation */}
+          {isObservationBased && (
+            <BodyText style={styles.observationPrefix}>
+              J'ai remarqué que...
+            </BodyText>
+          )}
+          
           <BodyText style={styles.insightText}>
             {typeof insight === 'object' && insight.content ? insight.content : insight}
           </BodyText>
@@ -284,6 +299,16 @@ const getStyles = (theme, phase) => {
     content: {
       paddingHorizontal: theme.spacing.l,
       paddingVertical: theme.spacing.l,
+    },
+    // 🆕 BLOC 2 - Style préfixe observation
+    observationPrefix: {
+      fontSize: 15,
+      lineHeight: 24,
+      fontWeight: '600',
+      fontFamily: theme.fonts.body,
+      fontStyle: 'italic',
+      color: theme.colors.secondary,
+      marginBottom: theme.spacing.xs,
     },
     insightText: {
       fontSize: 17,
