@@ -36,6 +36,7 @@ export default function CadeauScreen() {
   const [personalizedInsight, setPersonalizedInsight] = useState(null);
   const [firstVignette, setFirstVignette] = useState(null);
   const [error, setError] = useState(false);
+  const [intelligenceRecap, setIntelligenceRecap] = useState(null);
 
   useEffect(() => {
     // Animation entrée
@@ -77,24 +78,56 @@ export default function CadeauScreen() {
     try {
       setIsLoading(true);
       
-      // 🧠 1. Récupérer données complètes
+      // 🧠 1. Récupérer données complètes + OBSERVATIONS
+      const cycleData = intelligence.cycle;
+      const observations = cycleData?.observations || [];
+      
       const userContext = {
-        phase: intelligence.userProfile.currentPhase || 'menstrual',
+        phase: intelligence.userProfile.currentPhase || cycleData?.currentPhase || 'menstrual',
         persona: intelligence.currentPersona || 'emma',
-        preferences: intelligence.userProfile.preferences,
+        preferences: intelligence.userProfile.preferences || {},
         melune: { tone: 'friendly' },
-        profile: intelligence.userProfile
+        profile: intelligence.userProfile,
+        observations: observations,
+        hasObservations: observations.length > 0,
+        cycleData: cycleData
       };
 
-      // 🧠 2. Générer insight personnalisé
-      const insightResult = await getPersonalizedInsight(userContext, {
+      // 🧠 2. Créer récap intelligence visible
+      const recap = {
+        persona: userContext.persona,
+        phase: userContext.phase,
+        observations: observations.length,
+        preferences: Object.keys(userContext.preferences).length,
+        cycleConfigured: !!(cycleData?.lastPeriodDate && cycleData?.length),
+        intelligenceLevel: calculateIntelligenceLevel(userContext)
+      };
+      setIntelligenceRecap(recap);
+
+      // 🧠 3. Générer insight personnalisé ENRICHI
+      const enrichedContext = {
+        ...userContext,
+        recentObservation: observations.length > 0 ? observations[observations.length - 1] : null,
+        hasPersonalData: observations.length > 0 || recap.cycleConfigured
+      };
+
+      const insightResult = await getPersonalizedInsight(enrichedContext, {
         enrichWithContext: true,
-        usedInsights: []
+        usedInsights: [],
+        includeObservations: observations.length > 0
       });
       
-      setPersonalizedInsight(insightResult);
+      // Personnaliser insight avec prénom et observations
+      const personalizedContent = `${intelligence.userProfile.prenom || 'Ma belle'}, ${insightResult.content}${
+        observations.length > 0 ? ` Tes observations révèlent déjà des patterns intéressants !` : ''
+      }`;
+      
+      setPersonalizedInsight({
+        ...insightResult,
+        content: personalizedContent
+      });
 
-      // 🧠 3. Récupérer vignettes pour phase + persona
+      // 🧠 4. Récupérer vignettes pour phase + persona
       const vignettes = await VignettesService.getVignettes(
         userContext.phase,
         userContext.persona
@@ -111,13 +144,13 @@ export default function CadeauScreen() {
         setFirstVignette(enrichedVignette);
       }
 
-      // 🧠 4. Marquer profil comme complété
+      // 🧠 5. Marquer profil comme complété
       intelligence.updateProfile({ 
         completed: true,
         onboardingCompletedAt: Date.now()
       });
       
-      // 🧠 5. Track completion avec toutes les métriques
+      // 🧠 6. Track completion avec toutes les métriques
       intelligence.trackAction('onboarding_completed', {
         duration: Date.now() - (intelligence.userProfile.startDate || Date.now()),
         persona: intelligence.currentPersona,
@@ -148,6 +181,26 @@ export default function CadeauScreen() {
         source: 'fallback'
       });
     }
+  };
+
+  const calculateIntelligenceLevel = (context) => {
+    let score = 0;
+    
+    // Base persona + phase
+    if (context.persona && context.persona !== 'emma') score += 20;
+    if (context.phase) score += 15;
+    
+    // Observations
+    if (context.observations.length > 0) score += 25;
+    if (context.observations.length >= 2) score += 15;
+    
+    // Préférences configurées
+    if (Object.keys(context.preferences).length > 0) score += 15;
+    
+    // Cycle configuré
+    if (context.cycleData?.lastPeriodDate) score += 10;
+    
+    return Math.min(score, 100);
   };
 
   const handleFinishOnboarding = () => {
@@ -187,10 +240,13 @@ export default function CadeauScreen() {
               }]
             }}
           >
-            <BodyText style={styles.sparkle}>✨</BodyText>
+            <BodyText style={styles.sparkle}>🧠</BodyText>
           </Animated.View>
           <BodyText style={styles.loadingText}>
-            Je prépare ton expérience personnalisée...
+            J'analyse tes données pour créer ton expérience unique...
+          </BodyText>
+          <BodyText style={styles.loadingSubtext}>
+            Persona • Phase • Observations • Préférences
           </BodyText>
         </View>
       );
@@ -198,6 +254,56 @@ export default function CadeauScreen() {
 
     return (
       <>
+        {/* NOUVEAU : Récap Intelligence */}
+        {intelligenceRecap && (
+          <Animated.View 
+            style={[
+              styles.intelligenceContainer,
+              {
+                opacity: vignetteAnim,
+                transform: [{
+                  translateY: vignetteAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [20, 0],
+                  })
+                }]
+              }
+            ]}
+          >
+            <BodyText style={styles.intelligenceTitle}>
+              ✨ Ce que j'ai appris de toi
+            </BodyText>
+            
+            <View style={styles.intelligenceGrid}>
+              <View style={styles.intelligenceItem}>
+                <BodyText style={styles.intelligenceIcon}>🎭</BodyText>
+                <BodyText style={styles.intelligenceLabel}>Persona</BodyText>
+                <BodyText style={styles.intelligenceValue}>{intelligenceRecap.persona}</BodyText>
+              </View>
+              
+              <View style={styles.intelligenceItem}>
+                <BodyText style={styles.intelligenceIcon}>🌙</BodyText>
+                <BodyText style={styles.intelligenceLabel}>Phase</BodyText>
+                <BodyText style={styles.intelligenceValue}>{intelligenceRecap.phase}</BodyText>
+              </View>
+              
+              {intelligenceRecap.observations > 0 && (
+                <View style={styles.intelligenceItem}>
+                  <BodyText style={styles.intelligenceIcon}>💫</BodyText>
+                  <BodyText style={styles.intelligenceLabel}>Observations</BodyText>
+                  <BodyText style={styles.intelligenceValue}>{intelligenceRecap.observations} captées</BodyText>
+                </View>
+              )}
+              
+              <View style={styles.intelligenceItem}>
+                <BodyText style={styles.intelligenceIcon}>🎯</BodyText>
+                <BodyText style={styles.intelligenceLabel}>Personnalisation</BodyText>
+                <BodyText style={styles.intelligenceValue}>{intelligenceRecap.intelligenceLevel}%</BodyText>
+              </View>
+            </View>
+          </Animated.View>
+        )}
+
         {/* Insight personnalisé */}
         {personalizedInsight && (
           <Animated.View 
@@ -223,7 +329,7 @@ export default function CadeauScreen() {
               </BodyText>
               {personalizedInsight.source !== 'fallback' && (
                 <BodyText style={styles.insightMeta}>
-                  Personnalisé pour {intelligence.currentPersona} en phase {intelligence.userProfile.currentPhase || 'menstruelle'}
+                  Généré selon ton profil unique ✨
                 </BodyText>
               )}
             </View>
@@ -302,8 +408,8 @@ export default function CadeauScreen() {
           >
             <BodyText style={styles.meluneMessage}>
               {isLoading ? 
-                "Un instant, je personnalise ton expérience..." :
-                `${intelligence.userProfile.prenom || 'Ma belle'}, ton voyage commence maintenant !`
+                "Un instant, j'analyse tes données pour créer ton expérience unique..." :
+                `${intelligence.userProfile.prenom || 'Ma belle'}, ton aventure personnalisée commence !`
               }
             </BodyText>
           </Animated.View>
@@ -476,5 +582,60 @@ const getStyles = (theme) => StyleSheet.create({
   sparkle3: {
     bottom: '20%',
     left: '80%',
+  },
+  
+  intelligenceContainer: {
+    backgroundColor: theme.colors.surface,
+    padding: theme.spacing.l,
+    borderRadius: theme.borderRadius.large,
+    marginBottom: theme.spacing.xl,
+    borderWidth: 1,
+    borderColor: theme.colors.primary + '20',
+  },
+  
+  intelligenceTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+    textAlign: 'center',
+    marginBottom: theme.spacing.m,
+  },
+  
+  intelligenceGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-around',
+    gap: theme.spacing.m,
+  },
+  
+  intelligenceItem: {
+    alignItems: 'center',
+    minWidth: '40%',
+  },
+  
+  intelligenceIcon: {
+    fontSize: 24,
+    marginBottom: theme.spacing.xs,
+  },
+  
+  intelligenceLabel: {
+    fontSize: 12,
+    color: theme.colors.textLight,
+    marginBottom: theme.spacing.xs,
+  },
+  
+  intelligenceValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.text,
+    textAlign: 'center',
+  },
+  
+  loadingSubtext: {
+    fontSize: 12,
+    color: theme.colors.textLight,
+    textAlign: 'center',
+    marginTop: theme.spacing.s,
+    fontStyle: 'italic',
   },
 });

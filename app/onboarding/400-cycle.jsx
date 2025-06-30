@@ -26,6 +26,7 @@ const STEPS = {
   INTRO: 'intro',
   DATE: 'date', 
   DURATION: 'duration',
+  OBSERVATION: 'observation',
   VALIDATION: 'validation'
 };
 
@@ -59,6 +60,12 @@ const getPhaseMessage = (phase, persona = 'emma') => {
   return phaseData.description;
 };
 
+// Ajout des labels et couleurs pour les sliders
+const ENERGY_LABELS = ['Épuisée', 'Fatiguée', 'Équilibrée', 'Énergique', 'Débordante'];
+const MOOD_LABELS = ['Brouillard', 'Fluctuant', 'Stable', 'Positif', 'Cristalline'];
+const ENERGY_COLORS = ['#0e3a5e', '#1976d2', '#26c6da', '#4dd0e1', '#00e5ff'];
+const MOOD_COLORS = ['#6d4c9c', '#9575cd', '#ba68c8', '#f06292', '#ffd1dc'];
+
 export default function CycleScreen() {
   const { theme } = useTheme();
   const styles = getStyles(theme);
@@ -88,6 +95,7 @@ export default function CycleScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [detectedPhase, setDetectedPhase] = useState(null);
   const [dynamicMessage, setDynamicMessage] = useState(intelligence.meluneMessage);
+  const [observation, setObservation] = useState({ energy: 3, mood: 3 });
 
   useEffect(() => {
     // 🎨 Animation d'entrée
@@ -166,6 +174,10 @@ export default function CycleScreen() {
     }, 100);
   };
 
+  const handleObservationChange = (key, value) => {
+    setObservation((prev) => ({ ...prev, [key]: value }));
+  };
+
   const handleStepNext = () => {
     switch (currentStep) {
       case STEPS.INTRO:
@@ -175,6 +187,9 @@ export default function CycleScreen() {
         setCurrentStep(STEPS.DURATION);
         break;
       case STEPS.DURATION:
+        setCurrentStep(STEPS.OBSERVATION);
+        break;
+      case STEPS.OBSERVATION:
         setCurrentStep(STEPS.VALIDATION);
         break;
       case STEPS.VALIDATION:
@@ -208,6 +223,11 @@ export default function CycleScreen() {
       dayInCycle: currentDay,
       hasMinimumData: hasData()
     });
+
+    // Ajout de l'observation dans le store
+    if (observation.energy && observation.mood) {
+      useCycleStore.getState().addObservation(observation.mood, observation.energy, 'Observation onboarding');
+    }
 
     // Navigation vers preferences
     router.push('/onboarding/500-preferences');
@@ -299,6 +319,52 @@ export default function CycleScreen() {
           </View>
         );
         
+      case STEPS.OBSERVATION:
+        return (
+          <View style={styles.stepContent}>
+            <BodyText style={styles.stepTitle}>
+              Comment te sens-tu dans ton corps aujourd'hui ?
+            </BodyText>
+            <BodyText style={styles.stepSubtext}>
+              Tes ressentis m'aident à personnaliser ton expérience.
+            </BodyText>
+            {/* Slider Énergie */}
+            <View style={styles.sliderBlock}>
+              <BodyText style={styles.sliderLabel}>Énergie physique</BodyText>
+              <View style={styles.sliderRow}>
+                {ENERGY_LABELS.map((label, idx) => (
+                  <TouchableOpacity
+                    key={label}
+                    style={[
+                      styles.sliderDot,
+                      { backgroundColor: idx + 1 <= observation.energy ? ENERGY_COLORS[idx] : '#e0e0e0' }
+                    ]}
+                    onPress={() => handleObservationChange('energy', idx + 1)}
+                  />
+                ))}
+              </View>
+              <BodyText style={styles.sliderValue}>{ENERGY_LABELS[observation.energy - 1]}</BodyText>
+            </View>
+            {/* Slider Ressenti global */}
+            <View style={styles.sliderBlock}>
+              <BodyText style={styles.sliderLabel}>Clarté mentale</BodyText>
+              <View style={styles.sliderRow}>
+                {MOOD_LABELS.map((label, idx) => (
+                  <TouchableOpacity
+                    key={label}
+                    style={[
+                      styles.sliderDot,
+                      { backgroundColor: idx + 1 <= observation.mood ? MOOD_COLORS[idx] : '#e0e0e0' }
+                    ]}
+                    onPress={() => handleObservationChange('mood', idx + 1)}
+                  />
+                ))}
+              </View>
+              <BodyText style={styles.sliderValue}>{MOOD_LABELS[observation.mood - 1]}</BodyText>
+            </View>
+          </View>
+        );
+        
       case STEPS.VALIDATION:
         return (
           <View style={styles.stepContent}>
@@ -355,6 +421,7 @@ export default function CycleScreen() {
       case STEPS.INTRO: return 'Commençons';
       case STEPS.DATE: return 'Suivant';
       case STEPS.DURATION: return 'Suivant';
+      case STEPS.OBSERVATION: return 'Suivant';
       case STEPS.VALIDATION: return 'Parfait !';
       default: return 'Suivant';
     }
@@ -447,6 +514,17 @@ export default function CycleScreen() {
           minimumDate={new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)} // 3 mois max
         />
       )}
+
+      {/* Ajout du badge intelligence visible */}
+      <View style={{ position: 'absolute', top: 16, right: 16, zIndex: 10 }}>
+        <View style={{
+          width: 40, height: 40, borderRadius: 20, backgroundColor: theme.colors.primary + '20',
+          alignItems: 'center', justifyContent: 'center', shadowColor: theme.colors.primary, shadowOpacity: 0.2, shadowRadius: 4
+        }}>
+          <BodyText style={{ fontSize: 22 }}>🧠</BodyText>
+        </View>
+        <BodyText style={{ fontSize: 10, color: theme.colors.primary, textAlign: 'center' }}>Melune apprend de toi</BodyText>
+      </View>
     </ScreenContainer>
   );
 }
@@ -642,5 +720,34 @@ const getStyles = (theme) => StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     fontFamily: theme.fonts.body,
+  },
+  
+  sliderBlock: {
+    marginBottom: theme.spacing.l,
+  },
+  
+  sliderLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: theme.spacing.m,
+  },
+  
+  sliderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  
+  sliderDot: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#e0e0e0',
+    marginHorizontal: theme.spacing.s,
+  },
+  
+  sliderValue: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

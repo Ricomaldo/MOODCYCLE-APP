@@ -11,6 +11,12 @@
 // ⚠️  LOGIQUE CYCLE SUPPRIMÉE - Maintenant dans useUserStore
 // ⚠️  Plus de calculateCurrentPhase, getCurrentCycleDay etc.
 
+const normalizeToMidnight = (date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
 /**
  * 🗓️ UTILITAIRES DATES GÉNÉRIQUES SEULEMENT
  */
@@ -19,7 +25,7 @@
  * Calcule la différence en jours entre deux dates
  * @param {Date|string|number} date1 - Première date (ou seule date si date2 non fournie)
  * @param {Date|string|number} date2 - Deuxième date (par défaut: maintenant)
- * @returns {number} Différence en jours (positif si date1 > date2, négatif sinon)
+ * @returns {number} Différence en jours (positif si date2 > date1)
  */
 export const getDaysDifference = (date1, date2 = new Date()) => {
   if (!date1 || isNaN(new Date(date1).getTime())) {
@@ -29,15 +35,10 @@ export const getDaysDifference = (date1, date2 = new Date()) => {
     return 0;
   }
   
-  const targetDate = new Date(date1);
-  const compareDate = new Date(date2);
+  const d1 = normalizeToMidnight(date1);
+  const d2 = normalizeToMidnight(date2);
   
-  // Normaliser à minuit pour éviter les problèmes d'heures
-  targetDate.setHours(0, 0, 0, 0);
-  compareDate.setHours(0, 0, 0, 0);
-  
-  const diffTime = targetDate - compareDate;
-  return Math.round(diffTime / (1000 * 60 * 60 * 24));
+  return Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
 };
 
 /**

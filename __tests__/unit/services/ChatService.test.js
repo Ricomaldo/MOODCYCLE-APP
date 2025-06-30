@@ -18,16 +18,6 @@ jest.mock('../../../src/stores/useChatStore');
 jest.mock('../../../src/stores/useEngagementStore');
 jest.mock('../../../src/utils/cycleCalculations');
 
-// Mock NetworkQueue
-jest.mock('../../../src/services/NetworkQueue', () => ({
-  __esModule: true,
-  default: {
-    enqueueChatMessage: jest.fn().mockResolvedValue(true),
-    enqueue: jest.fn().mockResolvedValue(true),
-    process: jest.fn().mockResolvedValue(true)
-  }
-}));
-
 // Mock AsyncStorage
 jest.mock('@react-native-async-storage/async-storage', () => ({
   setItem: jest.fn(),

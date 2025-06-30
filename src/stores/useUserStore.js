@@ -23,7 +23,7 @@ export const useUserStore = create(
       // 👤 PROFIL UTILISATEUR
       // ═══════════════════════════════════════════════════════
       profile: {
-        prenom: "Emma",
+        prenom: null,
         ageRange: null, // '18-25', '26-35', '36-45', '46-55', '55+'
         journeyChoice: null, // 'body', 'nature', 'emotions'
         completed: false,
@@ -162,7 +162,7 @@ export const useUserStore = create(
       reset: () =>
         set({
           profile: {
-            prenom: "Emma",
+            prenom: null,
             ageRange: null,
             journeyChoice: null,
             completed: false,
