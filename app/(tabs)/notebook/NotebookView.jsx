@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../../src/hooks/useTheme';
 import { useAdaptiveInterface } from '../../../src/hooks/useAdaptiveInterface';
+import { useTerminology } from '../../../src/hooks/useTerminology';
 import { Heading, BodyText, Caption } from '../../../src/core/ui/Typography';
 import ScreenContainer from '../../../src/core/layout/ScreenContainer';
 import { NotebookHeader } from '../../../src/core/layout/SimpleHeader';
@@ -313,13 +314,16 @@ export default function NotebookView() {
   const insets = useSafeAreaInsets();
   const styles = getStyles(theme, insets);
   
-  // Phase filters avec accès au thème
+  // ✅ Hook terminologie pour affichage dynamique des phases (défini en premier)
+  const { getPhaseLabel } = useTerminology();
+  
+  // Phase filters avec accès au thème et terminologie dynamique
   const PHASE_FILTERS = useMemo(() => [
-    { id: 'menstrual', label: 'Mens.', color: theme?.colors?.phases?.menstrual || '#E53935' },
-    { id: 'follicular', label: 'Foll.', color: theme?.colors?.phases?.follicular || '#F57C00' },
-    { id: 'ovulatory', label: 'Ovu.', color: theme?.colors?.phases?.ovulatory || '#0097A7' },
-    { id: 'luteal', label: 'Lutéale', color: theme?.colors?.phases?.luteal || '#673AB7' },
-  ], [theme]);
+    { id: 'menstrual', label: getPhaseLabel('menstrual')?.slice(0, 8) || 'Mens.', color: theme?.colors?.phases?.menstrual || '#E53935' },
+    { id: 'follicular', label: getPhaseLabel('follicular')?.slice(0, 8) || 'Foll.', color: theme?.colors?.phases?.follicular || '#F57C00' },
+    { id: 'ovulatory', label: getPhaseLabel('ovulatory')?.slice(0, 8) || 'Ovu.', color: theme?.colors?.phases?.ovulatory || '#0097A7' },
+    { id: 'luteal', label: getPhaseLabel('luteal')?.slice(0, 8) || 'Lutéale', color: theme?.colors?.phases?.luteal || '#673AB7' },
+  ], [theme, getPhaseLabel]);
   
   const {
     entries,
@@ -567,7 +571,7 @@ export default function NotebookView() {
       >
         <Feather name="compass" size={16} color={theme.colors.primary} />
         <BodyText style={styles.vignetteContextText}>
-          Guidance {vignetteContext.phase}
+          Guidance {getPhaseLabel(vignetteContext.phase)}
           {vignetteContext.prompt && ` • ${vignetteContext.prompt.slice(0, 30)}...`}
         </BodyText>
       </Animated.View>

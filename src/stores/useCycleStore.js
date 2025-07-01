@@ -42,8 +42,9 @@ export const useCycleStore = create(
       
       // 🎯 ACTIONS SIMPLES
       startNewCycle: (date = new Date()) => {
+        const validDate = date instanceof Date && !isNaN(date) ? date : new Date();
         set({
-          lastPeriodDate: date.toISOString(),
+          lastPeriodDate: validDate.toISOString(),
           periodDuration: CYCLE_DEFAULTS.PERIOD_DURATION
         });
       },
@@ -71,30 +72,41 @@ export const useCycleStore = create(
       },
 
       // 🆕 OBSERVATION
-      addObservation: (feeling, energy, notes = '') => {
+      addObservation: (feeling = 3, energy = 3, notes = '') => {
         const state = get();
-        
-        // Protection cycle non-init
         if (!state.lastPeriodDate) {
           console.warn('Cannot add observation: no cycle initialized');
-          return;
+          return; // Pas de cycle actif
         }
         
-        const observation = {
-          id: Date.now().toString(),
+        // Normaliser les valeurs (0 ou valeurs négatives deviennent 1, valeurs > 5 deviennent 5)
+        const normalizedFeeling = feeling === null || feeling === undefined ? 3 : Math.max(1, Math.min(5, feeling));
+        const normalizedEnergy = energy === null || energy === undefined ? 3 : Math.max(1, Math.min(5, energy));
+        const truncatedNotes = (notes || '').slice(0, 500);
+        
+        // Calculer la phase et le jour du cycle
+        const currentPhase = getCurrentPhase(state.lastPeriodDate, state.length, state.periodDuration);
+        const currentDay = getCurrentCycleDay(state.lastPeriodDate, state.length);
+        
+        const newObservation = {
+          id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // ID unique
+          feeling: normalizedFeeling,
+          energy: normalizedEnergy,
+          notes: truncatedNotes,
           timestamp: new Date().toISOString(),
-          feeling: feeling || 3,  // Default neutre
-          energy: Math.max(1, Math.min(5, energy || 3)),
-          notes: notes.substring(0, 500),
-          phase: getCurrentPhase(state.lastPeriodDate, state.length, state.periodDuration),
-          cycleDay: getCurrentCycleDay(state.lastPeriodDate, state.length)
+          phase: currentPhase,
+          cycleDay: currentDay
         };
-        
-        // Limite AVANT concat (max 90 jours)
-        const observations = state.observations.slice(-89);
-        observations.push(observation);
-        
-        set({ observations });
+
+        set(state => {
+          const updatedObservations = [...state.observations, newObservation]
+            .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+            .slice(-90); // Limiter à 90 observations
+
+          return {
+            observations: updatedObservations
+          };
+        });
       },
     }),
     {

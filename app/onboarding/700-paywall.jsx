@@ -271,24 +271,24 @@ export default function PaywallScreen() {
           >
             <BodyText style={styles.solidaireTitle}>{SOLIDAIRE_OPTION.title}</BodyText>
             <BodyText style={styles.solidaireSubtitle}>{SOLIDAIRE_OPTION.subtitle}</BodyText>
-            
+                
             <View style={styles.solidaireBenefits}>
               {SOLIDAIRE_OPTION.benefits.map((benefit, index) => (
                 <BodyText key={index} style={styles.solidaireBenefit}>
                   {benefit}
                 </BodyText>
               ))}
-            </View>
-            
-            <TouchableOpacity
+                </View>
+                
+          <TouchableOpacity
               style={styles.solidaireButton}
               onPress={handleSolidaire}
-              activeOpacity={0.7}
-            >
+            activeOpacity={0.7}
+          >
               <BodyText style={styles.solidaireButtonText}>
                 {SOLIDAIRE_OPTION.cta}
-              </BodyText>
-            </TouchableOpacity>
+            </BodyText>
+          </TouchableOpacity>
           </Animated.View>
 
           {/* Footer transparent */}

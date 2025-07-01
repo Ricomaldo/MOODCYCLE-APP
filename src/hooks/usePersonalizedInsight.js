@@ -398,6 +398,7 @@ export function usePersonalizedInsight(options = {}) {
   const actions = useMemo(() => ({
     refresh: () => generateInsight(true),
     generate: () => generateInsight(false),
+    generateInsight,  // ← AJOUTER CETTE LIGNE
     resetUsedInsights: () => {
       setUsedInsights([]);
       setCachedInsight(contextKey + '_used', []);
@@ -429,6 +430,7 @@ export function usePersonalizedInsight(options = {}) {
     
     // États avancés
     usedInsightsCount: usedInsights.length,
+    usedInsights,  // ← AJOUTER CETTE LIGNE
     isReady: !!contextKey && !loading,
     isFromCache: insight?.isFromCache || false,
     lastGenerated,
@@ -466,7 +468,7 @@ export function usePersonalizedInsight(options = {}) {
     // États calculés
     ...computedState,
     
-    // Actions
+    // Actions (doit être après pour ne pas être écrasé)
     ...actions,
     
     // 🌟 NOUVEAU: Données intelligence pour debugging

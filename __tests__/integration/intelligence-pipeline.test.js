@@ -22,7 +22,6 @@ import { mockNavigation } from '../__mocks__/navigation';
 
 // Stores mocks
 import { useUserStore } from '../../src/stores/useUserStore';
-import { useChatStore } from '../../src/stores/useChatStore';
 import { useUserIntelligence } from '../../src/stores/useUserIntelligence';
 
 // ───────────────────────────────────────────────────────────
@@ -30,7 +29,6 @@ import { useUserIntelligence } from '../../src/stores/useUserIntelligence';
 // ───────────────────────────────────────────────────────────
 
 jest.mock('../../src/stores/useUserStore');
-jest.mock('../../src/stores/useChatStore');
 jest.mock('../../src/stores/useUserIntelligence');
 jest.mock('../../src/stores/useCycleStore');
 jest.mock('../../src/hooks/usePersona');
@@ -51,9 +49,8 @@ describe('🧠 Pipeline Intelligence Intégré - Tests Complets', () => {
     jest.useFakeTimers();
     
     // ✅ UTILISER MOCKS CENTRALISÉS
-    useUserStore.mockReturnValue(mockUserData);
+    useUserStore.mockReturnValue(mockUserData.useUserStore());
     useUserIntelligence.mockReturnValue(mockIntelligence);
-    useChatStore.mockReturnValue(mockChatStore);
 
     // Mock cycle & persona - RESET à chaque test
     const { getCycleData } = require('../../src/stores/useCycleStore');
@@ -83,7 +80,7 @@ describe('🧠 Pipeline Intelligence Intégré - Tests Complets', () => {
   test('✅ PersonalizationEngine génère le bon format pour useSmartSuggestions', () => {
     const engine = createPersonalizationEngine(
       mockIntelligence,
-      mockUserData.preferences,
+      mockUserData.useUserStore().preferences,
       'menstrual',
       'emma'
     );
@@ -163,7 +160,7 @@ describe('🧠 Pipeline Intelligence Intégré - Tests Complets', () => {
     
     personas.forEach(persona => {
       useUserStore.mockReturnValue({
-        ...mockUserData,
+        ...mockUserData.useUserStore(),
         persona: { assigned: persona }
       });
 
@@ -288,7 +285,7 @@ describe('🧠 Pipeline Intelligence Intégré - Tests Complets', () => {
     
     personas.forEach(persona => {
       useUserStore.mockReturnValue({
-        ...mockUserData,
+        ...mockUserData.useUserStore(),
         persona: { assigned: persona }
       });
 

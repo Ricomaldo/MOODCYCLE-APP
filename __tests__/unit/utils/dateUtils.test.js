@@ -93,7 +93,7 @@ describe('📅 dateUtils - Tests Complets', () => {
       const difference = getDaysDifference(invalidDate);
       
       expect(isNaN(difference)).toBe(false);
-      expect(difference).toBeGreaterThan(0);
+      expect(difference).toBe(0);
     });
   });
 

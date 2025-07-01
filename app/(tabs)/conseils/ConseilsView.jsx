@@ -99,8 +99,26 @@ export default function ConseilsView() {
     setRefreshing(false);
   }, [refreshInsight, refreshVignettes]);
 
-  const handleVignettePress = (vignette) => {
+  const handleVignettePress = async (data) => {
+    const { vignette, currentPhase, persona, action, navigationParams } = data;
+    
+    // Track engagement si pas déjà fait
     trackEngagement(vignette);
+    
+    try {
+      console.log('🧭 ConseilsView navigation:', action);
+      
+      // Navigation directe avec les paramètres fournis par VignetteCard
+      await router.push(navigationParams);
+      
+    } catch (error) {
+      console.error('🚨 Erreur navigation ConseilsView:', error);
+      // Fallback vers cycle
+      router.push('/(tabs)/cycle');
+    }
+    
+    // Retourne false pour empêcher navigation automatique dans VignetteCard
+    return false;
   };
 
   const handleQuickNav = (destination) => {

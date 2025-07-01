@@ -18,5 +18,8 @@
         "titleBar.inactiveBackground": "#00008099",
         "titleBar.inactiveForeground": "#e7e7e799"
     },
-    "peacock.color": "navy"
+    "peacock.color": "navy",
+    "workbench.preferredDarkColorTheme": "Default Dark+",
+    "workbench.preferredLightColorTheme": "Default Light+",
+    "window.autoDetectColorScheme": true
 }

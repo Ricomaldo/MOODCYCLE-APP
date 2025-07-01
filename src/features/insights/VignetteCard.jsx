@@ -50,7 +50,7 @@ export default function VignetteCard({
   const persona = userStore?.persona || {};
   const trackAction = engagementStore?.trackAction || (() => {});
 
-  // ✅ ACTIONS NAVIGATION COMPLÈTES
+  // ✅ ACTIONS NAVIGATION AVEC GESTION CALLBACK PRIORITAIRE
   const handlePress = async () => {
     try {
       console.log('🎯 VignetteCard handlePress START:', vignette.id);
@@ -72,13 +72,29 @@ export default function VignetteCard({
         });
       }
 
-      // Callback personnalisé si fourni
+      // ✅ NOUVEAU: Callback prioritaire avec données complètes
       if (onPress && typeof onPress === 'function') {
-        console.log('🎯 Callback personnalisé appelé');
-        onPress(vignette);
+        console.log('🎯 Callback personnalisé avec navigation déléguée');
+        const callbackData = {
+          vignette,
+          currentPhase,
+          persona: persona.assigned,
+          action: vignette.action,
+          navigationParams: getNavigationParams()
+        };
+        
+        // Callback reçoit toutes les données et gère la navigation
+        const callbackResult = onPress(callbackData);
+        
+        // Si callback retourne true, on continue avec navigation automatique
+        // Si callback retourne false/undefined, on délègue complètement
+        if (callbackResult !== true) {
+          console.log('🎯 Navigation déléguée au parent');
+          return;
+        }
       }
 
-      // ✅ NAVIGATION AUTOMATIQUE
+      // ✅ FALLBACK: Navigation automatique si pas de callback ou callback accepte
       console.log('🚀 Navigation automatique START');
       await handleNavigation();
       console.log('✅ Navigation automatique COMPLETE');
@@ -96,22 +112,94 @@ export default function VignetteCard({
     }
   };
 
+  // ✅ NOUVEAU: Helper pour paramètres navigation
+  const getNavigationParams = () => {
+    const baseParams = {
+      vignetteId: vignette.id,
+      sourcePhase: currentPhase,
+      sourcePersona: persona.assigned,
+      context: 'vignette'
+    };
+
+    switch (vignette.action) {
+      case 'chat':
+        return {
+          pathname: '/(tabs)/notebook',
+          params: {
+            ...baseParams,
+            mode: 'write',
+            initialPrompt: vignette.prompt,
+            chatMode: 'true'
+          }
+        };
+      case 'notebook':
+        return {
+          pathname: '/(tabs)/notebook',
+          params: {
+            ...baseParams,
+            mode: 'write',
+            initialPrompt: vignette.prompt
+          }
+        };
+      case 'quick_track':
+        return {
+          pathname: '/(tabs)/notebook',
+          params: {
+            ...baseParams,
+            mode: 'track'
+          }
+        };
+      case 'phase_detail':
+        return {
+          pathname: `/(tabs)/cycle/phases/${currentPhase}`,
+          params: {
+            sourceVignette: vignette.id,
+            context: 'vignette'
+          }
+        };
+      case 'insights':
+        return {
+          pathname: '/(tabs)/conseils',
+          params: {
+            phase: currentPhase,
+            persona: persona.assigned,
+            sourceVignette: vignette.id,
+            focus: 'insights'
+          }
+        };
+      case 'explore':
+        return {
+          pathname: '/(tabs)/cycle',
+          params: {
+            focus: vignette.focusArea || currentPhase,
+            sourceVignette: vignette.id
+          }
+        };
+      default:
+        return {
+          pathname: '/(tabs)/cycle',
+          params: baseParams
+        };
+    }
+  };
+
   const handleNavigation = async () => {
     try {
       console.log('🧭 Navigation pour action:', vignette.action);
 
       switch (vignette.action) {
         case 'chat':
-          console.log('💬 Navigation vers chat');
+          console.log('💬 Navigation vers chat (notebook avec prompt)');
           router.push({
-            pathname: '/(tabs)/chat',
+            pathname: '/(tabs)/notebook',
             params: {
-              initialMessage: vignette.prompt,
+              mode: 'write',
+              initialPrompt: vignette.prompt,
               sourcePhase: currentPhase,
               sourcePersona: persona.assigned,
               vignetteId: vignette.id,
               context: 'vignette',
-              autoSend: 'false'
+              chatMode: 'true'
             }
           });
           break;
@@ -148,7 +236,7 @@ export default function VignetteCard({
         case 'phase_detail':
           console.log('🌙 Navigation vers phase detail');
           router.push({
-            pathname: `/cycle/phases/${currentPhase}`,
+            pathname: `/(tabs)/cycle/phases/${currentPhase}`,
             params: {
               sourceVignette: vignette.id,
               context: 'vignette'
@@ -157,13 +245,14 @@ export default function VignetteCard({
           break;
 
         case 'insights':
-          console.log('💡 Navigation vers insights');
+          console.log('💡 Navigation vers insights (conseils)');
           router.push({
-            pathname: '/insights',
+            pathname: '/(tabs)/conseils',
             params: {
               phase: currentPhase,
               persona: persona.assigned,
-              sourceVignette: vignette.id
+              sourceVignette: vignette.id,
+              focus: 'insights'
             }
           });
           break;
