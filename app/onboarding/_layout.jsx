@@ -128,7 +128,17 @@ export default function OnboardingLayout() {
         }}
       />
       <Stack.Screen 
-        name="600-persona"
+        name="600-avatar"
+        options={{
+          animation: 'none',
+          transitionSpec: {
+            open: { animation: 'timing', config: { duration: 0 } },
+            close: { animation: 'timing', config: { duration: 0 } },
+          },
+        }}
+      />
+      <Stack.Screen 
+        name="650-terminology"
         options={{
           animation: 'none',
           transitionSpec: {

@@ -37,7 +37,8 @@ export const useOnboardingIntelligence = (screenName) => {
       '400-cycle': "Parle-moi de ton rythme naturel. C'est la clé pour te comprendre",
       '500-preferences': "Comment préfères-tu que je t'accompagne ? Dis-moi ce qui résonne en toi",
       '550-prenom': "Comment aimerais-tu que je t'appelle ?",
-      '600-persona': "Choisis ton accompagnatrice thérapeutique",
+      '600-avatar': "Personnalise Melune selon tes préférences",
+      '650-terminology': "Choisis comment tu veux voir tes phases du cycle",
       '700-essai': "Continue ton exploration gratuitement",
       '800-demarrage': "Voici ton premier cadeau personnalisé !"
     };

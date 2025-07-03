@@ -12,11 +12,9 @@ import { View, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
 import { getPersonalizedInsight } from '../../src/services/InsightsEngine';
-import VignettesService from '../../src/services/VignettesService';
 import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
-import VignetteCard from '../../src/features/insights/VignetteCard';
 import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 
@@ -28,11 +26,9 @@ export default function CadeauScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
   const sparkleAnim = useRef(new Animated.Value(0)).current;
-  const vignetteAnim = useRef(new Animated.Value(0)).current;
   
   const [isLoading, setIsLoading] = useState(true);
   const [personalizedInsight, setPersonalizedInsight] = useState(null);
-  const [firstVignette, setFirstVignette] = useState(null);
   const [error, setError] = useState(false);
   const [intelligenceRecap, setIntelligenceRecap] = useState(null);
 
@@ -109,7 +105,7 @@ export default function CadeauScreen() {
         includeObservations: observations.length > 0
       });
       
-      const personalizedContent = `${intelligence.userProfile.prenom || 'Ma belle'}, ${insightResult.content}${
+      const personalizedContent = `${insightResult.content}${
         observations.length > 0 ? ` Tes observations révèlent déjà des patterns intéressants !` : ''
       }`;
       
@@ -118,20 +114,7 @@ export default function CadeauScreen() {
         content: personalizedContent
       });
 
-      const vignettes = await VignettesService.getVignettes(
-        userContext.phase,
-        userContext.persona
-      );
-      
-      if (vignettes && vignettes.length > 0) {
-        const enrichedVignette = {
-          ...vignettes[0],
-          isFirstTime: true,
-          welcomeMessage: `Bienvenue ${intelligence.userProfile.prenom || ''} !`,
-          confidence: intelligence.userProfile.personaConfidence || 0.8
-        };
-        setFirstVignette(enrichedVignette);
-      }
+
 
       intelligence.updateProfile({ 
         completed: true,
@@ -142,19 +125,10 @@ export default function CadeauScreen() {
         duration: Date.now() - (intelligence.userProfile.startDate || Date.now()),
         persona: intelligence.currentPersona,
         phase: userContext.phase,
-        insightGenerated: !!insightResult.content,
-        vignetteGenerated: !!vignettes.length
+        insightGenerated: !!insightResult.content
       });
 
       setIsLoading(false);
-      
-      setTimeout(() => {
-        Animated.timing(vignetteAnim, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }).start();
-      }, 300);
       
     } catch (error) {
       console.error('🚨 Erreur génération contenu:', error);
@@ -187,7 +161,6 @@ export default function CadeauScreen() {
   const handleFinishOnboarding = () => {
     intelligence.trackAction('onboarding_finish_clicked', {
       hasPersonalizedInsight: !!personalizedInsight,
-      hasVignette: !!firstVignette,
       intelligenceLevel: intelligenceRecap?.intelligenceLevel || 0
     });
     
@@ -248,33 +221,13 @@ export default function CadeauScreen() {
         </View>
 
         {personalizedInsight && (
-          <Animated.View 
-            style={[
-              styles.insightContainer,
-              { opacity: vignetteAnim }
-            ]}
-          >
+          <View style={styles.insightContainer}>
             <View style={styles.insightCard}>
               <BodyText style={styles.insightText}>
                 {personalizedInsight.content}
               </BodyText>
             </View>
-          </Animated.View>
-        )}
-
-        {firstVignette && (
-          <Animated.View 
-            style={[
-              styles.vignetteContainer,
-              { opacity: vignetteAnim }
-            ]}
-          >
-            <VignetteCard 
-              vignette={firstVignette}
-              onPress={() => {}}
-              isFirst={true}
-            />
-          </Animated.View>
+          </View>
         )}
       </View>
     );
@@ -402,9 +355,7 @@ const getStyles = (theme) => StyleSheet.create({
     color: theme.colors.text,
     textAlign: 'center',
   },
-  vignetteContainer: {
-    width: '100%',
-  },
+
   finishButton: {
     backgroundColor: theme.colors.primary,
     paddingVertical: 16,

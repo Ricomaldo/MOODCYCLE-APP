@@ -32,7 +32,12 @@ export default function TerminologyTab({ onDataChange }) {
       
       {/* Header explicatif */}
       <View style={styles.header}>
-        <Heading2 style={styles.title}>Terminologie cyclique</Heading2>
+        <View style={styles.headerTop}>
+          <Heading2 style={styles.title}>Terminologie cyclique</Heading2>
+          <BodyText style={styles.onboardingNote}>
+            💡 Configurée lors de l'onboarding
+          </BodyText>
+        </View>
         <BodyText style={styles.description}>
           Choisis comment tu veux voir tes phases du cycle s'afficher dans l'application.
         </BodyText>
@@ -174,11 +179,21 @@ const getStyles = (theme) => StyleSheet.create({
     padding: theme.spacing.l,
     paddingBottom: theme.spacing.m,
   },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.s,
+  },
   title: {
     fontSize: 24,
     fontWeight: '600',
     color: theme.colors.text,
-    marginBottom: theme.spacing.s,
+  },
+  onboardingNote: {
+    fontSize: 12,
+    color: theme.colors.primary,
+    fontStyle: 'italic',
   },
   description: {
     fontSize: 16,

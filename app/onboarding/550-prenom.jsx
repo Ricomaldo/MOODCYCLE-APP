@@ -116,7 +116,7 @@ export default function PrenomScreen() {
 
     // Délai pour feedback
     setTimeout(() => {
-      router.push('/onboarding/600-persona');
+      router.push('/onboarding/600-avatar');
     }, 1500);
   };
 

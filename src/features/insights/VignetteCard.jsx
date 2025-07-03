@@ -394,7 +394,7 @@ export default function VignetteCard({
       {/* Badge suggestion intelligente */}
       {vignette.category === 'smart_suggestion' && (
         <View style={styles.smartBadge}>
-          <Feather name="zap" size={10} color="white" />
+          <Feather name="zap" size={10} color={theme.getTextColorOn(theme.colors.primary)} />
         </View>
       )}
     </TouchableOpacity>
@@ -443,10 +443,10 @@ const getStyles = (theme) => StyleSheet.create({
   
   // Card de base
   card: {
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.l,
     padding: theme.spacing.m,
-    shadowColor: '#000',
+    shadowColor: theme.colors.text,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -556,7 +556,7 @@ const getStyles = (theme) => StyleSheet.create({
     backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: theme.colors.text,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
@@ -580,7 +580,7 @@ const getStyles = (theme) => StyleSheet.create({
     zIndex: 10,
   },
   debugText: {
-    color: 'white',
+    color: theme.getTextColorOn('red'),
     fontSize: 10,
     fontWeight: 'bold',
   },

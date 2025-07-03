@@ -117,12 +117,12 @@ export default function SwipeableEntryIOS({
       <View style={styles.swipeActionsContainer}>
         {/* Action gauche : Tag (visible lors swipe right) */}
         <TouchableOpacity style={styles.swipeActionLeft} onPress={handleSwipeTag}>
-          <Ionicons name="pricetag" size={20} color="white" />
+          <Ionicons name="pricetag" size={20} color={theme.getTextColorOn(theme.colors.primary)} />
         </TouchableOpacity>
         
         {/* Action droite : Delete (visible lors swipe left) */}
         <TouchableOpacity style={styles.swipeActionRight} onPress={handleSwipeDelete}>
-          <Ionicons name="trash" size={20} color="white" />
+          <Ionicons name="trash" size={20} color={theme.getTextColorOn(theme.colors.error)} />
         </TouchableOpacity>
       </View>
 
@@ -212,9 +212,9 @@ const getStyles = (theme) => StyleSheet.create({
     borderRadius: theme.borderRadius.m,
   },
   entryCard: {
-    backgroundColor: 'white',
+    backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.m,
-    shadowColor: '#000',
+    shadowColor: theme.colors.text,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,

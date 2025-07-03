@@ -16,7 +16,7 @@ import { BodyText, Caption } from '../../core/ui/typography';
 
 // Mapping écrans vers étapes groupées
 const SCREEN_TO_STEP = {
-  '100-promesse': 1,
+  '100-bienvenue': 1,
   '200-rencontre': 1,
   '300-etape-vie': 2,
   '375-age': 2,
@@ -24,8 +24,9 @@ const SCREEN_TO_STEP = {
   '500-preferences': 3,
   '550-prenom': 3,
   '600-avatar': 3,
-  '700-paywall': 4,
-  '800-cadeau': 4,
+  '650-terminology': 3,
+  '700-essai': 4,
+  '800-demarrage': 4,
 };
 
 const STEP_LABELS = {
