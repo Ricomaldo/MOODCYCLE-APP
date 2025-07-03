@@ -10,7 +10,7 @@ import React, { useState, useEffect } from 'react';
 import { View, ScrollView, TouchableOpacity, TextInput, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../../hooks/useTheme';
-import { Heading3, BodyText, Caption } from '../../../core/ui/Typography';
+import { Heading3, BodyText, Caption } from '../../ui/typography';
 import { useUserStore } from '../../../stores/useUserStore';
 
 const AGE_RANGES = [

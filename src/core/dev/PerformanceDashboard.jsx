@@ -2,10 +2,10 @@
 // ─────────────────────────────────────────────────────────
 // 📄 File: src/core/dev/PerformanceDashboard.jsx
 // 🧩 Type: Dev Component
-// 📚 Description: Dashboard performance monitoring v2.0 - Toolbox DEV intégré
+// 📚 Description: Dashboard performance monitoring pour développement
 // 🕒 Version: 2.0 - 2025-06-23
 // 🧭 Used in: DevNavigation (mode développement uniquement)
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ─────────────────────────────────────────────────────────
 //
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet, Alert, TouchableOpacity } from 'react-native';
@@ -17,7 +17,7 @@ export default function PerformanceDashboard() {
   const { alerts, alertCount, dismissAlert } = usePerformanceAlerts();
 
   if (!__DEV__) {
-    return null; // Composant visible uniquement en développement
+    return null;
   }
 
   const handleExportMetrics = () => {
@@ -28,7 +28,7 @@ export default function PerformanceDashboard() {
         `Données copiées dans les logs console`,
         [{ text: 'OK' }]
       );
-      console.log('📊 Performance Metrics Export:', exportData);
+      console.info('📊 Performance Metrics Export:', exportData);
     }
   };
 
@@ -87,14 +87,13 @@ export default function PerformanceDashboard() {
   };
 
   const getHealthColor = () => {
-    if (criticalAlerts > 5) return '#F44336'; // Rouge
-    if (criticalAlerts > 2) return '#FF9800'; // Orange
-    return '#4CAF50'; // Vert
+    if (criticalAlerts > 5) return '#F44336';
+    if (criticalAlerts > 2) return '#FF9800';
+    return '#4CAF50';
   };
 
   return (
     <ScrollView style={styles.container}>
-      {/* Header avec statut global */}
       <View style={[styles.header, { backgroundColor: getHealthColor() }]}>
         <Text style={styles.headerTitle}>📊 Performance Monitor</Text>
         <Text style={styles.headerSubtitle}>
@@ -102,7 +101,6 @@ export default function PerformanceDashboard() {
         </Text>
       </View>
 
-      {/* Alertes récentes */}
       {alertCount > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>🚨 Alertes Récentes ({alertCount})</Text>
@@ -122,10 +120,8 @@ export default function PerformanceDashboard() {
         </View>
       )}
 
-      {/* Métriques principales */}
       {metrics && (
         <>
-          {/* Hydratation des stores */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>🏪 Hydratation Stores</Text>
             <View style={styles.metricsGrid}>
@@ -149,7 +145,6 @@ export default function PerformanceDashboard() {
               </View>
             </View>
             
-            {/* Store le plus lent */}
             {metrics.hydration.slowestStore.name && (
               <View style={styles.slowestStore}>
                 <Text style={styles.slowestStoreText}>
@@ -160,7 +155,6 @@ export default function PerformanceDashboard() {
             )}
           </View>
 
-          {/* AsyncStorage */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>💾 AsyncStorage</Text>
@@ -190,7 +184,6 @@ export default function PerformanceDashboard() {
             ))}
           </View>
 
-          {/* Renders */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>🔄 Renders</Text>
             {Object.entries(metrics.renders).map(([component, data]) => (
@@ -198,84 +191,74 @@ export default function PerformanceDashboard() {
                 <Text style={styles.componentName}>{component}</Text>
                 <View style={styles.renderMetrics}>
                   <Text style={styles.renderText}>
-                    Total: {data.totalRenders}
+                    {data.totalRenders} renders
                   </Text>
                   <Text style={styles.renderText}>
-                    Récents: {data.recentRenders}
+                    {data.recentRenders} récents
                   </Text>
                   <Text style={styles.renderText}>
-                    /sec: {data.avgRendersPerSecond.toFixed(1)}
+                    {data.avgRendersPerSecond.toFixed(1)}/s
                   </Text>
                 </View>
               </View>
             ))}
           </View>
 
-          {/* Mémoire */}
-          {metrics.memory.usedMB && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>🧠 Mémoire</Text>
-              <View style={styles.memoryBar}>
-                <View 
-                  style={[
-                    styles.memoryUsed, 
-                    { 
-                      width: `${(metrics.memory.usedMB / metrics.memory.limitMB) * 100}%`,
-                      backgroundColor: metrics.memory.usedMB > 50 ? '#F44336' : '#4CAF50'
-                    }
-                  ]} 
-                />
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>🧠 Mémoire</Text>
+            {metrics.memory ? (
+              <View style={styles.memoryContainer}>
+                <Text style={styles.memoryText}>
+                  Utilisée: {metrics.memory.usedMB.toFixed(1)}MB
+                </Text>
+                <Text style={styles.memoryText}>
+                  Totale: {metrics.memory.totalMB.toFixed(1)}MB
+                </Text>
+                <Text style={styles.memoryText}>
+                  Limite: {metrics.memory.limitMB.toFixed(1)}MB
+                </Text>
               </View>
-              <Text style={styles.memoryText}>
-                {metrics.memory.usedMB.toFixed(1)}MB / {metrics.memory.limitMB.toFixed(1)}MB
-              </Text>
+            ) : (
+              <Text style={styles.noDataText}>Données mémoire non disponibles</Text>
+            )}
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>⚙️ Actions</Text>
+            <View style={styles.actionsContainer}>
+              <TouchableOpacity
+                style={[styles.actionButton, styles.verboseButton]}
+                onPress={handleToggleVerbose}
+              >
+                <Text style={styles.actionButtonText}>
+                  {performanceMonitor.silentMode ? '🔊 Mode Verbose' : '🔇 Mode Silencieux'}
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.actionButton, styles.exportButton]}
+                onPress={handleExportMetrics}
+              >
+                <Text style={styles.actionButtonText}>📊 Exporter</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.actionButton, styles.optimizeButton]}
+                onPress={handleOptimizeStorage}
+              >
+                <Text style={styles.actionButtonText}>🧹 Optimiser Storage</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.actionButton, styles.resetButton]}
+                onPress={handleResetMetrics}
+              >
+                <Text style={styles.actionButtonText}>🗑️ Reset</Text>
+              </TouchableOpacity>
             </View>
-          )}
+          </View>
         </>
       )}
-
-      {/* Actions */}
-      <View style={styles.actions}>
-        <TouchableOpacity 
-          style={[styles.button, refreshing && styles.buttonDisabled]}
-          onPress={refreshMetrics}
-          disabled={refreshing}
-        >
-          <Text style={styles.buttonText}>
-            {refreshing ? '🔄 Actualisation...' : '🔄 Actualiser'}
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.button, { backgroundColor: performanceMonitor.silentMode ? '#4CAF50' : '#FF9800' }]}
-          onPress={handleToggleVerbose}
-        >
-          <Text style={styles.buttonText}>
-            {performanceMonitor.silentMode ? '🔊 Verbose' : '🔇 Silencieux'}
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.button}
-          onPress={handleExportMetrics}
-        >
-          <Text style={styles.buttonText}>📤 Export</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.button, { backgroundColor: '#FF9500' }]}
-          onPress={handleOptimizeStorage}
-        >
-          <Text style={styles.buttonText}>🧹 Optimiser</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.button, { backgroundColor: '#f44336' }]}
-          onPress={handleResetMetrics}
-        >
-          <Text style={styles.buttonText}>🧹 Reset</Text>
-        </TouchableOpacity>
-      </View>
     </ScrollView>
   );
 }
@@ -286,49 +269,63 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   header: {
-    padding: 20,
+    padding: 16,
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: 'white',
+    color: '#fff',
   },
   headerSubtitle: {
     fontSize: 14,
-    color: 'white',
-    marginTop: 4,
+    color: '#fff',
+    opacity: 0.9,
   },
   section: {
-    backgroundColor: 'white',
-    margin: 10,
-    padding: 15,
+    backgroundColor: '#fff',
+    margin: 8,
+    padding: 16,
     borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#333',
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 12,
   },
   healthBadge: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: 'white',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
+    fontSize: 12,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  alertItem: {
+    backgroundColor: '#fff3cd',
+    padding: 12,
+    borderRadius: 6,
+    marginBottom: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: '#ffc107',
+  },
+  alertType: {
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  alertMessage: {
+    fontSize: 13,
+    marginVertical: 4,
+  },
+  alertTime: {
+    fontSize: 12,
+    color: '#666',
   },
   metricsGrid: {
     flexDirection: 'row',
@@ -336,16 +333,16 @@ const styles = StyleSheet.create({
   },
   metricCard: {
     flex: 1,
-    alignItems: 'center',
-    padding: 10,
     backgroundColor: '#f8f9fa',
+    padding: 12,
     borderRadius: 6,
-    marginHorizontal: 2,
+    marginHorizontal: 4,
+    alignItems: 'center',
   },
   metricValue: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#007AFF',
+    color: '#007bff',
   },
   metricLabel: {
     fontSize: 12,
@@ -353,35 +350,13 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   slowestStore: {
-    marginTop: 10,
+    backgroundColor: '#f8f9fa',
     padding: 8,
-    backgroundColor: '#fff3cd',
-    borderRadius: 4,
+    borderRadius: 6,
+    marginTop: 12,
   },
   slowestStoreText: {
-    fontSize: 12,
-    color: '#856404',
-  },
-  alertItem: {
-    padding: 10,
-    backgroundColor: '#ffebee',
-    borderRadius: 6,
-    marginBottom: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: '#f44336',
-  },
-  alertType: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#c62828',
-  },
-  alertMessage: {
-    fontSize: 14,
-    color: '#333',
-    marginVertical: 2,
-  },
-  alertTime: {
-    fontSize: 11,
+    fontSize: 13,
     color: '#666',
   },
   storageItem: {
@@ -393,81 +368,77 @@ const styles = StyleSheet.create({
     borderBottomColor: '#eee',
   },
   storageKey: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 13,
+    fontWeight: '500',
     flex: 1,
-    flexWrap: 'wrap',
   },
   storageMetrics: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
   },
   storageText: {
-    fontSize: 10,
+    fontSize: 12,
     color: '#666',
-    marginLeft: 6,
+    marginLeft: 8,
   },
   renderItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 6,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
   componentName: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 13,
+    fontWeight: '500',
     flex: 1,
-    flexWrap: 'wrap',
   },
   renderMetrics: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
   },
   renderText: {
-    fontSize: 9,
-    color: '#666',
-    marginLeft: 4,
-  },
-  memoryBar: {
-    height: 20,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 10,
-    overflow: 'hidden',
-  },
-  memoryUsed: {
-    height: '100%',
-    borderRadius: 10,
-  },
-  memoryText: {
     fontSize: 12,
     color: '#666',
-    textAlign: 'center',
-    marginTop: 8,
+    marginLeft: 8,
   },
-  actions: {
+  memoryContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  memoryText: {
+    fontSize: 13,
+    color: '#666',
+  },
+  noDataText: {
+    fontSize: 13,
+    color: '#999',
+    fontStyle: 'italic',
+  },
+  actionsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-around',
-    padding: 15,
-    gap: 8,
   },
-  button: {
-    backgroundColor: '#007AFF',
+  actionButton: {
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 8,
-    minWidth: 70,
-    alignItems: 'center',
+    paddingVertical: 8,
+    borderRadius: 6,
+    margin: 4,
   },
-  buttonDisabled: {
-    backgroundColor: '#cccccc',
+  actionButtonText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#fff',
   },
-  buttonText: {
-    color: 'white',
-    fontSize: 11,
-    fontWeight: 'bold',
-    textAlign: 'center',
+  verboseButton: {
+    backgroundColor: '#6c757d',
+  },
+  exportButton: {
+    backgroundColor: '#007bff',
+  },
+  optimizeButton: {
+    backgroundColor: '#28a745',
+  },
+  resetButton: {
+    backgroundColor: '#dc3545',
   },
 }); 

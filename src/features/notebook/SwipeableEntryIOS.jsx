@@ -18,7 +18,7 @@ import {
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
-import { BodyText, Caption } from '../../core/ui/Typography';
+import { BodyText, Caption } from '../../core/ui/typography';
 import { useTheme } from '../../hooks/useTheme';
 import { useNotebookStore } from '../../stores/useNotebookStore';
 import { useCycleStore } from '../../stores/useCycleStore';
@@ -253,7 +253,12 @@ const getStyles = (theme) => StyleSheet.create({
     gap: theme.spacing.xs,
   },
   entryTag: {
-    backgroundColor: theme.colors.primary + '15',
+    ...theme.getGlassmorphismStyle(theme.colors.primary, {
+      bgOpacity: theme.glassmorphism.opacity.bg,
+      borderOpacity: theme.glassmorphism.opacity.border,
+      borderWidth: 1,
+      shadowOpacity: 0,  // Pas de shadow sur les tags
+    }),
     borderRadius: theme.borderRadius.pill,
     paddingHorizontal: theme.spacing.s,
     paddingVertical: 2,

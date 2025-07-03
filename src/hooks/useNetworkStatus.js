@@ -1,3 +1,12 @@
+//
+// ─────────────────────────────────────────────────────────
+// 📄 File: src/hooks/useNetworkStatus.js
+// 🧩 Type: Hook
+// 📚 Description: Hook de surveillance du statut réseau avec singleton optimisé
+// 🕒 Version: 1.0 - 2025-01-21
+// 🧭 Used in: Tous les composants nécessitant le statut réseau
+// ─────────────────────────────────────────────────────────
+//
 import { useEffect, useState } from 'react';
 import NetInfo from '@react-native-community/netinfo';
 import { useAppStore } from '../stores/useAppStore';
@@ -73,7 +82,7 @@ class NetworkManager {
       
       // Log silencieux sauf en mode verbose (un seul log)
       if (__DEV__ && !performanceMonitor.silentMode) {
-        console.log('Network status changed:', {
+        console.info('Network status changed:', {
           isConnected: newState.isConnected,
           isInternetReachable: newState.isInternetReachable,
           type: newState.type,

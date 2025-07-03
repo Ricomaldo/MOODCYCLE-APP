@@ -1,22 +1,26 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 File: src/features/notebook/AnimatedComponents.jsx
-// 🧩 Type: UI Component
-// 📚 Description: Composants animés pour le carnet (FAB, search bar, filtres, skeletons)
-// 🕒 Version: 3.0 - 2025-06-21
-// 🧭 Used in: notebook screen, shared notebook UI
+// 📄 File: src/core/ui/animations/NotebookAnimations.jsx
+// 🧩 Type: Animation Components - Notebook Domain
+// 📚 Description: Animations spécifiques au carnet (recherche, filtres, chargement)
+// 🕒 Version: 5.0 - 2025-06-21
+// 🧭 Used in: NotebookView, EntryDetailModal
 // ─────────────────────────────────────────────────────────
 //
 import React, { useEffect, useRef } from 'react';
 import { View, TouchableOpacity, StyleSheet, Animated, TextInput, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { useTheme } from '../../hooks/useTheme';
-import { BodyText, Caption } from './Typography';
+import { useTheme } from '../../../hooks/useTheme';
+import { BodyText } from '../typography';
+// import { useLoopAnimation } from './hooks/useLoopAnimation'; // TODO: Utiliser après migration
 
-// ✅ FAB Animé Multi-Options
-
-
-// ✅ Barre de Recherche Animée
+/**
+ * Barre de recherche animée avec transitions fluides
+ * @param {boolean} visible - Visibilité de la barre
+ * @param {string} query - Texte de recherche
+ * @param {Function} onChangeText - Callback changement de texte
+ * @param {Function} onClear - Callback nettoyage
+ */
 export function AnimatedSearchBar({ visible, query, onChangeText, onClear }) {
   const { theme } = useTheme();
   const styles = getStyles(theme);
@@ -69,7 +73,13 @@ export function AnimatedSearchBar({ visible, query, onChangeText, onClear }) {
   );
 }
 
-// ✅ Filter Pills Animés
+/**
+ * Pills de filtre animés avec entrée décalée
+ * @param {Object} item - Objet filtre avec icon et label
+ * @param {boolean} isActive - État actif du filtre
+ * @param {Function} onPress - Callback appui
+ * @param {number} index - Index pour délai d'animation
+ */
 export function AnimatedFilterPill({ item, isActive, onPress, index }) {
   const { theme } = useTheme();
   const styles = getStyles(theme);
@@ -113,10 +123,10 @@ export function AnimatedFilterPill({ item, isActive, onPress, index }) {
           <Feather
             name={item.icon}
             size={16}
-            color={isActive ? 'white' : theme.colors.textLight}
+            color={isActive ? theme.colors.white : theme.colors.textLight}
           />
           <BodyText
-            style={[styles.filterText, { color: isActive ? 'white' : theme.colors.textLight }]}
+            style={[styles.filterText, { color: isActive ? theme.colors.white : theme.colors.textLight }]}
           >
             {item.label}
           </BodyText>
@@ -126,10 +136,14 @@ export function AnimatedFilterPill({ item, isActive, onPress, index }) {
   );
 }
 
-// ✅ Entry Loading Skeleton
+/**
+ * Skeleton de chargement pour les entrées
+ * Utilisé pendant les opérations async (sync, recherche, etc.)
+ */
 export function EntryLoadingSkeleton() {
   const { theme } = useTheme();
   const styles = getStyles(theme);
+  // TODO: Utiliser useLoopAnimation après migration complète
   const pulseAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -149,9 +163,7 @@ export function EntryLoadingSkeleton() {
     );
     animation.start();
 
-    return () => {
-      animation.stop();
-    };
+    return () => animation.stop();
   }, []);
 
   const opacity = pulseAnim.interpolate({
@@ -171,33 +183,37 @@ export function EntryLoadingSkeleton() {
   );
 }
 
-// ✅ Chat Bubble Animée
-export function AnimatedChatBubble({ children, delay = 0, isUser = false }) {
+/**
+ * Animation d'entrée pour les cartes de carnet
+ * @param {ReactNode} children - Contenu de la carte
+ * @param {number} index - Index pour délai décalé
+ */
+export function AnimatedNotebookCard({ children, index = 0 }) {
   const opacityAnim = useRef(new Animated.Value(0)).current;
-  const translateYAnim = useRef(new Animated.Value(10)).current;
+  const translateYAnim = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(opacityAnim, {
         toValue: 1,
-        duration: 200,
-        delay,
+        duration: 300,
+        delay: index * 100,
         useNativeDriver: true,
       }),
       Animated.timing(translateYAnim, {
         toValue: 0,
-        duration: 200,
-        delay,
+        duration: 300,
+        delay: index * 100,
         useNativeDriver: true,
       }),
     ]).start();
-  }, [delay]);
+  }, []);
 
   return (
     <Animated.View
       style={{
-        transform: [{ translateY: translateYAnim }],
         opacity: opacityAnim,
+        transform: [{ translateY: translateYAnim }],
       }}
     >
       {children}
@@ -205,9 +221,12 @@ export function AnimatedChatBubble({ children, delay = 0, isUser = false }) {
   );
 }
 
-const getStyles = (theme) => StyleSheet.create({
+// ═══════════════════════════════════════════════════════
+// 🎨 STYLES NOTEBOOK
+// ═══════════════════════════════════════════════════════
 
-  // Search
+const getStyles = (theme) => StyleSheet.create({
+  // 🔍 Search
   searchContainer: {
     marginBottom: theme.spacing.m,
     overflow: 'hidden',
@@ -232,7 +251,7 @@ const getStyles = (theme) => StyleSheet.create({
     }),
   },
 
-  // Filter Pills
+  // 🏷️ Filter Pills
   filterPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -246,11 +265,11 @@ const getStyles = (theme) => StyleSheet.create({
     fontSize: 14,
   },
 
-  // Loading Skeleton
+  // 💀 Loading Skeleton
   skeletonCard: {
     backgroundColor: theme.colors.surface,
     padding: theme.spacing.m,
-    borderRadius: theme.borderRadius.m,
+    borderRadius: theme.borderRadius.medium,
     marginBottom: theme.spacing.m,
   },
   skeletonHeader: {
@@ -284,4 +303,4 @@ const getStyles = (theme) => StyleSheet.create({
     backgroundColor: theme.colors.border,
     borderRadius: 7,
   },
-});
+}); 

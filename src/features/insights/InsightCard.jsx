@@ -18,7 +18,7 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { captureRef } from 'react-native-view-shot';
 import { useTheme } from '../../hooks/useTheme';
-import { BodyText, Caption } from '../../core/ui/Typography';
+import { BodyText, Caption } from '../../core/ui/typography';
 import { useUserStore } from '../../stores/useUserStore';
 import { useNotebookStore } from '../../stores/useNotebookStore';
 import { useTerminology } from '../../hooks/useTerminology';
@@ -138,6 +138,12 @@ export default function InsightCard({
             <Caption style={styles.sourceLabel}>
               {getSourceLabel()}
             </Caption>
+            
+            {insight?.revelationLevel > 0 && (
+              <View style={styles.aiIndicator}>
+                <Feather name="zap" size={12} color={phaseColor} />
+              </View>
+            )}
           </View>
           
           {showActions && (
@@ -220,21 +226,12 @@ const getStyles = (theme, phase) => {
   
   return StyleSheet.create({
     container: {
-      // ✅ GLASSMORPHISM SIGNATURE
-      backgroundColor: phaseColor + '15', // 15% opacity
-      backdropFilter: 'blur(20px)',
-      borderRadius: theme.borderRadius.large,
-      borderWidth: 1.5,
-      borderColor: phaseColor + '30',
+      // ✅ GLASSMORPHISM SIGNATURE CENTRALISÉ
+      ...theme.getPhaseGlassmorphismStyle(phase, {
+        borderRadius: theme.borderRadius.large,
+      }),
       overflow: 'hidden',
       position: 'relative',
-      
-      // ✅ SHADOW PREMIUM COLORÉE
-      shadowColor: phaseColor,
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.15,
-      shadowRadius: 24,
-      elevation: 8,
     },
     
     header: {
@@ -257,9 +254,12 @@ const getStyles = (theme, phase) => {
       borderRadius: theme.borderRadius.medium,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: phaseColor + '20',
-      borderWidth: 1,
-      borderColor: phaseColor + '40',
+      ...theme.getGlassmorphismStyle(phaseColor, {
+        bgOpacity: theme.glassmorphism.opacity.medium,
+        borderOpacity: theme.glassmorphism.opacity.accent,
+        borderWidth: 1,
+        shadowOpacity: 0,  // Pas de shadow sur les petits éléments
+      }),
     },
     sourceIcon: {
       fontSize: 12,
@@ -273,6 +273,14 @@ const getStyles = (theme, phase) => {
       color: phaseColor,
       opacity: 0.8,
     },
+    aiIndicator: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      backgroundColor: phaseColor + '20',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
     
     // ✅ ACTIONS GLASSMORPHISM
     actionsContainer: {
@@ -285,15 +293,12 @@ const getStyles = (theme, phase) => {
       borderRadius: theme.borderRadius.medium,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: 'rgba(255,255,255,0.8)',
-      backdropFilter: 'blur(10px)',
-      borderWidth: 1,
-      borderColor: phaseColor + '30',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 2,
+      ...theme.getActionGlassmorphismStyle(phaseColor, {
+        borderRadius: theme.borderRadius.medium,
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+      }),
     },
     
     content: {

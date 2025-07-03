@@ -12,10 +12,7 @@ import { useMemo } from 'react';
 import { useAppStore } from '../stores/useAppStore';
 import { getTheme, themeUtils } from '../config/theme';
 
-/**
- * Hook principal pour la gestion du thème
- * @returns {Object} - Objet avec thème actuel et fonctions utilitaires
- */
+
 export const useTheme = () => {
   // Détecter le thème système
   const systemColorScheme = useColorScheme();
@@ -83,19 +80,13 @@ export const useTheme = () => {
   }, [isDark, currentTheme, systemColorScheme, setTheme]);
 };
 
-/**
- * Hook simplifié pour obtenir juste le thème
- * @returns {Object} - Objet thème
- */
+
 export const useCurrentTheme = () => {
   const { theme } = useTheme();
   return theme;
 };
 
-/**
- * Hook pour vérifier si on est en mode sombre
- * @returns {boolean} - true si mode sombre
- */
+
 export const useIsDarkMode = () => {
   const { isDark } = useTheme();
   return isDark;

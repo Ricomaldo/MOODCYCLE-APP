@@ -2,9 +2,9 @@
 // ─────────────────────────────────────────────────────────
 // 📄 File: src/hooks/useOnboardingIntelligence.js
 // 🧩 Type: Hook Intelligence
-// 📚 Description: Bridge entre services IA et écrans onboarding
-// 🕒 Version: 1.0 - 2025-06-23
-// 🧭 Used in: Tous les écrans onboarding
+// 📚 Description: Intelligence et personnalisation onboarding
+// 🕒 Version: 2.0 - 2025-06-23
+// 🧭 Used in: Tous les écrans onboarding (standardisation)
 // ─────────────────────────────────────────────────────────
 //
 import { useEffect, useState } from 'react';
@@ -14,7 +14,7 @@ import { useUserIntelligence } from '../stores/useUserIntelligence';
 import { createPersonalizationEngine } from '../services/PersonalizationEngine';
 import { createAdaptiveGuidance } from '../services/AdaptiveGuidance';
 import { createOnboardingContinuum } from '../services/OnboardingContinuum';
-import { useCycleStore } from '../stores/useCycleStore';
+import { useCycleStore, getCycleData } from '../stores/useCycleStore';
 
 export const useOnboardingIntelligence = (screenName) => {
   const userStore = useUserStore();
@@ -25,28 +25,29 @@ export const useOnboardingIntelligence = (screenName) => {
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // Track progression écran
     trackAction('onboarding_progress', { screen: screenName });
     setIsReady(true);
   }, [screenName]);
 
-  // Messages par écran avec fallback intelligent
   const getScreenMessage = () => {
     const messages = {
-      '100-promesse': "Bienvenue dans ton voyage de transformation ✨",
-      '200-rencontre': "Je te vois... cette femme puissante en toi qui attend de se révéler",
-      '300-confiance': "Pour t'accompagner selon ton étape de vie, j'aimerais mieux te connaître",
+      '100-bienvenue': "Je suis Mélune, et je vais vous accompagner dans cette découverte.",
+      '200-motivation': "Je te vois... cette femme puissante en toi qui attend de se révéler",
+      '300-etape-vie': "Pour t'accompagner selon ton étape de vie, j'aimerais mieux te connaître",
       '400-cycle': "Parle-moi de ton rythme naturel. C'est la clé pour te comprendre",
       '500-preferences': "Comment préfères-tu que je t'accompagne ? Dis-moi ce qui résonne en toi",
       '550-prenom': "Comment aimerais-tu que je t'appelle ?",
-      '600-avatar': "Choisis ton accompagnatrice thérapeutique",
-      '700-paywall': "Investis dans ta transformation cyclique",
-      '800-cadeau': "Voici ton premier cadeau personnalisé !"
+      '600-persona': "Choisis ton accompagnatrice thérapeutique",
+      '700-essai': "Continue ton exploration gratuitement",
+      '800-demarrage': "Voici ton premier cadeau personnalisé !"
     };
 
-    // Si on a un persona, on peut personnaliser
-    if (userStore.persona.assigned && maturity.current) {
-      const cycleData = useCycleStore.getState().getCycleData();
+    if (userStore.persona.assigned && 
+        userStore.persona.lastCalculated && 
+        userStore.profile.completed && 
+        maturity.current) {
+      
+      const cycleData = getCycleData();
       const guidance = createAdaptiveGuidance(userStore, { maturity }, cycleData.currentPhase || 'follicular');
       const contextualMessage = guidance.generateContextualMessage(
         userStore.persona.assigned,
@@ -59,11 +60,10 @@ export const useOnboardingIntelligence = (screenName) => {
     return messages[screenName] || "Continue ton parcours...";
   };
 
-  // Génération prompts personnalisés si persona connu
   const getPersonalizedPrompts = () => {
     if (!userStore.persona.assigned) return [];
     
-    const cycleData = useCycleStore.getState().getCycleData();
+    const cycleData = getCycleData();
     const engine = createPersonalizationEngine(
       intelligenceStore,
       userStore.preferences,
@@ -79,15 +79,13 @@ export const useOnboardingIntelligence = (screenName) => {
     );
   };
 
-  // Calcul suggestion persona en temps réel
   const calculatePersonaSuggestion = (newData = {}) => {
-    const cycleData = useCycleStore.getState().getCycleData();
+    const cycleData = getCycleData();
     const combinedData = {
       ...userStore.profile,
       ...newData
     };
 
-    // Simple mapping pour suggestions
     const personaMap = {
       'body_disconnect': { '18-25': 'emma', '26-35': 'emma', '36-45': 'sylvie', '46-55': 'christine' },
       'hiding_nature': { '18-25': 'clara', '26-35': 'sylvie', '36-45': 'sylvie', '46-55': 'christine' },
@@ -104,7 +102,6 @@ export const useOnboardingIntelligence = (screenName) => {
     return null;
   };
 
-  // Actions tracking enrichies
   const trackEnrichedAction = (action, metadata = {}) => {
     trackAction(action, {
       ...metadata,
@@ -114,14 +111,13 @@ export const useOnboardingIntelligence = (screenName) => {
       maturityLevel: maturity.current
     });
     
-    // Track aussi dans intelligence si pertinent
     if (action.includes('choice') || action.includes('preference')) {
       intelligenceStore.trackInteraction('preference_set', metadata);
     }
   };
 
   const getContextualData = () => {
-    const cycleData = useCycleStore.getState().getCycleData();
+    const cycleData = getCycleData();
     
     return {
       cycle: cycleData,
@@ -130,23 +126,18 @@ export const useOnboardingIntelligence = (screenName) => {
   };
 
   return {
-    // État
     isReady,
     
-    // Messages
     meluneMessage: getScreenMessage(),
     personalizedPrompts: getPersonalizedPrompts(),
     
-    // Actions
     trackAction: trackEnrichedAction,
     calculatePersonaSuggestion,
     
-    // Données
     userProfile: userStore.profile,
     currentPersona: userStore.persona.assigned,
     maturityLevel: maturity.current,
     
-    // Helpers
     updateProfile: userStore.updateProfile,
     updatePreferences: userStore.updatePreferences,
     setPersona: userStore.setPersona,

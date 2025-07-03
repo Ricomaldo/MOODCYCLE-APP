@@ -1,0 +1,448 @@
+//
+// ─────────────────────────────────────────────────────────
+// 📄 File: src/config/theme.js
+// 🧩 Type: Config
+// 📚 Description: Thème global de l'application (couleurs, polices, styles)
+// 🕒 Version: 3.0 - 2025-06-21
+// 🧭 Used in: global theme config, UI components, screens
+// ─────────────────────────────────────────────────────────
+//
+import { StyleSheet } from "react-native";
+
+export const theme = {
+  colors: {
+    primary: "#D81B60", // Framboise Chaleureuse
+    secondary: "#CDDC39", // Citron Vert Velouté
+    background: "#FAFAFA", // Brume d'Aube (fond)
+    text: "#212121", // Texte principal
+    textLight: "#757575", // Texte secondaire
+    textPrimary: "#212121", // Alias pour compatibilité
+    textSecondary: "#757575", // Alias pour compatibilité
+    surface: "#FFFFFF", // Surface cards
+    border: "#E0E0E0", // Bordures
+    white: "#FFFFFF", // Blanc pur
+    success: "#4CAF50", // Vert succès
+    warning: "#FF9800", // Orange warning
+    error: "#F44336", // Rouge erreur
+    backgroundSecondary: "#F5F5F5", // Fond secondaire
+    phases: {
+      menstrual: "#E53935", // Grenat Doux - légèrement plus foncé pour meilleur contraste
+      follicular: "#F57C00", // Miel Doré - orange plus foncé au lieu du jaune pour meilleur contraste
+      ovulatory: "#0097A7", // Lagune Calme - cyan plus foncé pour meilleur contraste
+      luteal: "#673AB7", // Lavande Mystique - parfait tel quel
+    },
+  },
+  fonts: {
+    heading: "Quintessential_400Regular", // Titres
+    body: "Quicksand_400Regular", // Corps de texte
+    bodyBold: "Quicksand_700Bold", // Corps de texte gras
+  },
+  typography: {
+    heading1: {
+      fontFamily: "Quintessential_400Regular",
+      fontSize: 24,
+      fontWeight: "normal",
+    },
+    heading2: {
+      fontFamily: "Quintessential_400Regular",
+      fontSize: 20,
+      fontWeight: "normal",
+    },
+    heading3: {
+      fontFamily: "Quicksand_700Bold",
+      fontSize: 16,
+      fontWeight: "normal",
+    },
+    h3: {
+      // Alias pour compatibilité
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    body: {
+      fontFamily: "Quicksand_400Regular",
+      fontSize: 16,
+      fontWeight: "normal",
+    },
+    caption: {
+      // Ajout pour compatibilité
+      fontSize: 12,
+      fontWeight: "normal",
+    },
+    small: {
+      fontFamily: "Quicksand_400Regular",
+      fontSize: 10,
+      fontWeight: "normal",
+    },
+    conversational: {
+      // Nouveau style
+      fontSize: 18,
+      lineHeight: 24,
+    },
+    // Tailles pour compatibilité avec l'existant
+    heading1Size: 24,
+    heading2Size: 20,
+    heading3Size: 16,
+    bodySize: 14,
+    smallSize: 12,
+  },
+  spacing: {
+    xs: 4,
+    s: 8,
+    sm: 8, // Alias pour compatibilité
+    m: 16,
+    md: 16, // Alias pour compatibilité
+    l: 24,
+    lg: 24, // Alias pour compatibilité
+    xl: 32,
+    xxl: 48,
+  },
+  borderRadius: {
+    small: 8,
+    sm: 8, // Alias pour compatibilité
+    medium: 16,
+    md: 16, // Alias pour compatibilité
+    large: 24,
+    pill: 999,
+  },
+  tabBar: {
+    height: 80,
+    activeTintColor: "#E91E63",
+    inactiveTintColor: "#757575",
+    backgroundColor: "#FAFAFA",
+    borderColor: "#E0E0E0",
+    labelSize: 12,
+    labelWeight: "500",
+    paddingTop: 8,
+    marginBottom: 4,
+  },
+};
+
+// Fonctions utilitaires pour le contraste automatique
+
+// Convertir hex en RGB
+const hexToRgb = (hex) => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+      }
+    : null;
+};
+
+// Calculer la luminance selon W3C
+const getLuminance = (color) => {
+  const rgb = hexToRgb(color);
+  if (!rgb) return 0;
+
+  // Formule W3C pour la luminance relative
+  return 0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b;
+};
+
+// Déterminer si une couleur est claire
+theme.isLightColor = (color) => {
+  return getLuminance(color) > 186;
+};
+
+// Déterminer si une couleur est foncée
+theme.isDarkColor = (color) => {
+  return getLuminance(color) <= 186;
+};
+
+// Obtenir la couleur de texte optimale pour un fond donné
+theme.getTextColorOn = (backgroundColor) => {
+  return theme.isLightColor(backgroundColor) ? theme.colors.text : "#FFFFFF";
+};
+
+// ✅ NOUVELLES FONCTIONS UTILITAIRES POUR LES PHASES
+// Obtenir la couleur de texte optimale pour une phase donnée
+theme.getTextColorOnPhase = (phase) => {
+  const phaseColor = theme.colors.phases[phase];
+  if (!phaseColor) return theme.colors.text;
+  
+  // Règles spécifiques basées sur les couleurs des phases
+  switch (phase) {
+    case 'menstrual':   // #F44336 (rouge) - couleur claire
+    case 'follicular':  // #FFC107 (jaune) - couleur claire
+    case 'ovulatory':   // #00BCD4 (cyan) - couleur claire
+      return theme.colors.text; // Texte noir
+    case 'luteal':      // #673AB7 (violet) - couleur foncée
+      return "#FFFFFF"; // Texte blanc
+    default:
+      return theme.getTextColorOn(phaseColor);
+  }
+};
+
+// Vérifier si une phase nécessite du texte blanc
+theme.phaseNeedsWhiteText = (phase) => {
+  return phase === 'luteal';
+};
+
+// Vérifier si une phase nécessite du texte noir
+theme.phaseNeedsBlackText = (phase) => {
+  return ['menstrual', 'follicular', 'ovulatory'].includes(phase);
+};
+
+// Obtenir le style de texte complet pour une phase
+theme.getPhaseTextStyle = (phase) => {
+  return {
+    color: theme.getTextColorOnPhase(phase)
+  };
+};
+
+// ═══════════════════════════════════════════════════════
+// ✨ GLASSMORPHISM SIGNATURE MOODCYCLE
+// ═══════════════════════════════════════════════════════
+
+theme.getGlassmorphismStyle = (color, options = {}) => {
+  const {
+    bgOpacity = '15',          // Opacité background (15% par défaut)
+    borderOpacity = '30',      // Opacité border (30% par défaut)
+    blur = 20,                 // Intensité blur (20px par défaut)
+    shadowOpacity = 0.15,      // Opacité shadow (0.15 par défaut)
+    shadowRadius = 24,         // Radius shadow (24 par défaut)
+    shadowOffset = { width: 0, height: 8 }, // Offset shadow
+    elevation = 8,             // Elevation Android
+    borderWidth = 1.5,         // Épaisseur border
+    borderRadius,              // Border radius (optionnel)
+  } = options;
+
+  return {
+    backgroundColor: color + bgOpacity,
+    borderColor: color + borderOpacity,
+    borderWidth,
+    shadowColor: color,
+    shadowOffset: shadowOffset,
+    shadowOpacity: shadowOpacity,
+    shadowRadius: shadowRadius,
+    elevation: elevation,
+    ...(borderRadius && { borderRadius }),
+    // Note: backdropFilter n'est pas supporté nativement sur React Native
+    // Utilisé pour la documentation web uniquement
+    // backdropFilter: `blur(${blur}px)`,
+  };
+};
+
+theme.getPhaseGlassmorphismStyle = (phase, options = {}) => {
+  const phaseColor = theme.colors.phases[phase];
+  if (!phaseColor) {
+    console.warn(`Phase ${phase} non trouvée, utilisation de la couleur primary`);
+    return theme.getGlassmorphismStyle(theme.colors.primary, options);
+  }
+  return theme.getGlassmorphismStyle(phaseColor, options);
+};
+
+theme.getActionGlassmorphismStyle = (color, options = {}) => {
+  const {
+    bgColor = 'rgba(255,255,255,0.8)',  // Background blanc semi-transparent
+    borderOpacity = '30',                // Opacité border colorée
+    shadowColor = '#000',                // Shadow noire par défaut
+    shadowOpacity = 0.08,                // Shadow plus subtile
+    shadowRadius = 8,                    // Shadow plus petite
+    shadowOffset = { width: 0, height: 2 },
+    elevation = 3,
+    borderWidth = 1,
+    borderRadius,
+  } = options;
+
+  return {
+    backgroundColor: bgColor,
+    borderColor: color + borderOpacity,
+    borderWidth,
+    shadowColor: shadowColor,
+    shadowOffset: shadowOffset,
+    shadowOpacity: shadowOpacity,
+    shadowRadius: shadowRadius,
+    elevation: elevation,
+    ...(borderRadius && { borderRadius }),
+  };
+};
+
+/**
+ * Constantes glassmorphism pour cohérence
+ */
+theme.glassmorphism = {
+  // Opacités standards
+  opacity: {
+    bg: '15',        // Background
+    border: '30',    // Border
+    accent: '40',    // Accents
+    light: '08',     // Très léger
+    medium: '20',    // Moyen
+  },
+  
+  // Blur standards (pour documentation web)
+  blur: {
+    light: 10,
+    medium: 20,
+    strong: 40,
+  },
+  
+  // Shadow standards
+  shadow: {
+    subtle: { opacity: 0.08, radius: 8, offset: { width: 0, height: 2 } },
+    normal: { opacity: 0.15, radius: 24, offset: { width: 0, height: 8 } },
+    strong: { opacity: 0.25, radius: 32, offset: { width: 0, height: 12 } },
+  },
+};
+
+/**
+ * ✨ ANIMATIONS STANDARDISÉES ONBOARDING
+ */
+theme.animations = {
+  // Timings fluides
+  durations: {
+    fast: 300,
+    normal: 600,
+    slow: 900,
+    signature: 1200,
+  },
+  
+  // Tensions Spring optimisées
+  spring: {
+    gentle: { tension: 80, friction: 8 },
+    normal: { tension: 100, friction: 8 },
+    bouncy: { tension: 150, friction: 6 },
+  },
+  
+  // Patterns d'animation réutilisables
+  patterns: {
+    // Révélation de texte fluide
+    textReveal: {
+      opacity: { from: 0, to: 1, duration: 600 },
+      translateY: { from: 20, to: 0, spring: { tension: 80, friction: 8 } },
+      scale: { from: 0.98, to: 1, spring: { tension: 100, friction: 8 } },
+    },
+    
+    // Signature manuscrite
+    signature: {
+      opacity: { from: 0, to: 1, duration: 1200 },
+      scale: { from: 0.8, to: 1, spring: { tension: 150, friction: 8 } },
+    },
+    
+    // Sparkles flottants
+    sparkles: {
+      cascade: { delayIncrement: 200 },
+      floating: { duration: 2000, delayBase: 1000 },
+      rotation: { duration: 4000 },
+    },
+  },
+};
+
+// Créer des styles avec accès au thème
+export const createStyles = (styleFunction) => {
+  const styles = StyleSheet.create(styleFunction(theme));
+  return styles;
+};
+
+// ═══════════════════════════════════════════════════════
+// 🌙 THÈME SOMBRE
+// ═══════════════════════════════════════════════════════
+
+export const darkTheme = {
+  colors: {
+    primary: "#E91E63", // Plus vif en mode sombre
+    secondary: "#CDDC39", 
+    background: "#121212", // Fond sombre Material Design
+    text: "#FFFFFF", // Texte blanc
+    textLight: "#B3B3B3", // Texte secondaire plus clair
+    textPrimary: "#FFFFFF", // Alias pour compatibilité
+    textSecondary: "#B3B3B3", // Alias pour compatibilité
+    surface: "#1E1E1E", // Surfaces légèrement plus claires
+    border: "#2C2C2C", // Bordures subtiles
+    white: "#FFFFFF", // Blanc pur (reste blanc)
+    success: "#4CAF50", // Vert succès
+    warning: "#FF9800", // Orange warning
+    error: "#F44336", // Rouge erreur
+    backgroundSecondary: "#1A1A1A", // Fond secondaire
+    phases: {
+      // Couleurs phases adaptées pour le sombre - plus vives
+      menstrual: "#EF5350", // Rouge plus vif
+      follicular: "#FFA726", // Orange plus saturé
+      ovulatory: "#26C6DA", // Cyan plus lumineux
+      luteal: "#7986CB", // Violet plus doux
+    },
+  },
+  // Hériter les autres propriétés du thème clair
+  fonts: theme.fonts,
+  typography: theme.typography,
+  spacing: theme.spacing,
+  borderRadius: theme.borderRadius,
+  tabBar: {
+    height: 80,
+    activeTintColor: "#E91E63",
+    inactiveTintColor: "#B3B3B3",
+    backgroundColor: "#1E1E1E",
+    borderColor: "#2C2C2C",
+    labelSize: 12,
+    labelWeight: "500",
+    paddingTop: 8,
+    marginBottom: 4,
+  },
+};
+
+// Cache pour les thèmes (clair et sombre)
+const themeCache = {
+  light: null,  // Thème clair mémorisé
+  dark: null    // Thème sombre mémorisé
+};
+
+export const getTheme = (isDark = false) => {
+  const cacheKey = isDark ? 'dark' : 'light';
+  
+  // Si le thème n'est pas encore en cache, on le crée
+  if (!themeCache[cacheKey]) {
+    if (isDark) {
+      themeCache[cacheKey] = {
+        ...theme,
+        colors: darkTheme.colors,
+        tabBar: darkTheme.tabBar,
+      };
+    } else {
+      themeCache[cacheKey] = theme;
+    }
+  }
+  
+  // Retourne toujours le même objet pour le même mode
+  return themeCache[cacheKey];
+};
+
+export const themeUtils = {
+  // Déterminer si une couleur est claire (compatible sombre)
+  isLightColor: (color) => {
+    return theme.isLightColor(color);
+  },
+  
+  // Déterminer si une couleur est foncée (compatible sombre)
+  isDarkColor: (color) => {
+    return theme.isDarkColor(color);
+  },
+  
+  // Obtenir la couleur de texte optimale selon le thème
+  getTextColorOn: (backgroundColor, isDarkTheme = false) => {
+    const textColor = isDarkTheme ? darkTheme.colors.text : theme.colors.text;
+    const whiteColor = "#FFFFFF";
+    
+    return theme.isLightColor(backgroundColor) ? textColor : whiteColor;
+  },
+  
+  // Obtenir la couleur de texte pour une phase selon le thème
+  getTextColorOnPhase: (phase, isDarkTheme = false) => {
+    const currentTheme = isDarkTheme ? darkTheme : theme;
+    const phaseColor = currentTheme.colors.phases[phase];
+    
+    if (!phaseColor) return currentTheme.colors.text;
+    
+    // Utiliser la logique existante mais adaptée au thème
+    return theme.getTextColorOnPhase(phase);
+  },
+};
+
+// Créer des styles avec thème dynamique
+export const createDynamicStyles = (styleFunction) => {
+  return (isDark = false) => {
+    const currentTheme = getTheme(isDark);
+    return StyleSheet.create(styleFunction(currentTheme));
+  };
+};

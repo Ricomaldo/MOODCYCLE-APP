@@ -1,9 +1,10 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 File: app/(tabs)/cycle/CycleView.jsx - AVEC OBSERVATIONS
-// 🧩 Type: Écran Principal Cycle
+// 📄 File: app/(tabs)/cycle/CycleView.jsx
+// 🧩 Type: Écran Principal
 // 📚 Description: Cycle avec observations Miranda Gray
-// 🕒 Version: 7.2 - 2025-06-29 - BLOC 2 Badge Compteur
+// 🕒 Version: 7.2 - 2025-06-29
+// 🧭 Used in: Navigation principale, vue cycle
 // ─────────────────────────────────────────────────────────
 //
 import React, { useState } from 'react';
@@ -11,7 +12,7 @@ import { View, ScrollView, StyleSheet, RefreshControl, TouchableOpacity, Alert }
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useTheme } from '../../../src/hooks/useTheme';
-import { BodyText, Caption } from '../../../src/core/ui/Typography';
+import { BodyText, Caption } from '../../../src/core/ui/typography';
 import ScreenContainer from '../../../src/core/layout/ScreenContainer';
 import { CycleHeader } from '../../../src/core/layout/SimpleHeader';
 import CycleWheel from '../../../src/features/cycle/CycleWheel';
@@ -24,13 +25,11 @@ import ParametresModal from '../../../src/core/settings/ParametresModal';
 import { useTerminology } from '../../../src/hooks/useTerminology';
 
 export default function CycleView() {
-  // ✅ UTILISATION DIRECTE DU STORE ZUSTAND - ULTRA SIMPLE
   const cycleData = useCycleStore((state) => state);
   const startNewCycle = useCycleStore((state) => state.startNewCycle);
   const endPeriod = useCycleStore((state) => state.endPeriod);
   const observations = useCycleStore((state) => state.observations || []);
   
-  // Calculs directs (pas de hooks complexes)
   const currentDay = getCurrentCycleDay(cycleData.lastPeriodDate, cycleData.length);
   const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
   const phaseInfo = getCurrentPhaseInfo(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
@@ -40,7 +39,7 @@ export default function CycleView() {
 
   const { profile } = useUserStore();
   const { theme } = useTheme();
-  const { getPhaseLabel, getArchetypeLabel } = useTerminology();
+  const { getPhaseLabel, getArchetypeLabel } = useTerminology('spiritual');
 
   const safeProfile = profile || { prenom: null };
   const [showQuickTracking, setShowQuickTracking] = useState(false);
@@ -48,28 +47,23 @@ export default function CycleView() {
   const [refreshing, setRefreshing] = useState(false);
   const [showLastObservation, setShowLastObservation] = useState(false);
 
-  // 🆕 Récupérer dernière observation
   const lastObservation = observations[observations.length - 1];
 
-  // 🆕 Calcul tendances observations
   const getObservationInsights = () => {
     if (observations.length < 3) return null;
     
-    // Grouper par phase
     const phaseObservations = observations.reduce((acc, obs) => {
       if (!acc[obs.phase]) acc[obs.phase] = [];
       acc[obs.phase].push(obs);
       return acc;
     }, {});
     
-    // Analyser tendances
     const insights = [];
     Object.entries(phaseObservations).forEach(([phase, phaseObs]) => {
       if (phaseObs.length >= 2) {
         const avgEnergy = phaseObs.reduce((sum, obs) => sum + obs.energy, 0) / phaseObs.length;
         const energyTrend = avgEnergy > 3.5 ? 'haute' : avgEnergy < 2.5 ? 'douce' : 'modérée';
         
-        // Détecter patterns dans les notes
         const symptoms = phaseObs
           .map(obs => obs.notes)
           .filter(note => note && note.includes('Symptômes:'))
@@ -145,18 +139,16 @@ export default function CycleView() {
     router.push(`/(tabs)/cycle/phases/${phase}`);
   }, []);
 
-  // 🩸 Handlers pour le bouton règles - SIMPLIFIÉ
   const handlePeriodStart = React.useCallback(() => {
-    console.log('🩸 Démarrage nouveau cycle');
+    console.info('🩸 Démarrage nouveau cycle');
     startNewCycle();
   }, [startNewCycle]);
 
   const handlePeriodEnd = React.useCallback(() => {
-    console.log('✅ Fin des règles');
+    console.info('✅ Fin des règles');
     endPeriod();
   }, [endPeriod]);
 
-  // 🆕 BLOC 2 - Handler badge tap
   const handleBadgeTap = React.useCallback(() => {
     if (lastObservation) {
       setShowLastObservation(!showLastObservation);
@@ -180,7 +172,7 @@ export default function CycleView() {
     return `Tu te sentais ${energyText} ${timeText}`;
   };
 
-  const styles = getStyles(theme);
+  const styles = getStyles(theme, currentPhase);
 
   if (!cycleData) {
     return <ScreenContainer><BodyText>Cycle non initialisé</BodyText></ScreenContainer>;
@@ -216,228 +208,151 @@ export default function CycleView() {
           />
         }
       >
-        
-        {/* Subtitle avec prédictions */}
-        <View style={styles.header}>
-          <BodyText style={styles.subtitle}>
-            Jour {currentDay} • {getPhaseLabel(currentPhase)}
-          </BodyText>
-          {daysUntilNextPeriod !== null && (
-            <BodyText style={styles.prediction}>
-              Prochaines règles dans {daysUntilNextPeriod} jours
-            </BodyText>
-          )}
-        </View>
-
-        {/* Roue du cycle */}
-        <View style={styles.wheelContainer}>
-          <CycleWheel
-            size={240}
-            userName={safeProfile.prenom || 'Emma'}
+        <View style={styles.cycleContainer}>
+          <CycleWheel 
             onPhasePress={handlePhasePress}
+            phase={currentPhase}
+            cycleDay={currentDay}
+            cycleLength={cycleData.length}
+            periodDuration={cycleData.periodDuration}
+            nextPeriodDate={nextPeriodDate}
+            interactive={true}
           />
-        </View>
-
-        {/* 🩸 BOUTON RÈGLES - ESSENTIEL */}
-        <View style={styles.periodButtonContainer}>
-          {currentPhase === 'menstrual' ? (
-            <TouchableOpacity 
-              style={[styles.periodButton, styles.periodEndButton]}
-              onPress={handlePeriodEnd}
-            >
-              <BodyText style={styles.periodButtonText}>
-                Mes règles sont terminées
+          
+          <View style={styles.phaseInfoContainer}>
+            <View style={styles.phaseHeader}>
+              <PhaseIcon 
+                phaseKey={currentPhase}
+                size={20}
+                color={theme.colors.phases[currentPhase]}
+              />
+              <BodyText style={styles.phaseTitle}>
+                {getPhaseLabel(currentPhase)}
               </BodyText>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity 
-              style={[styles.periodButton, styles.periodStartButton]}
-              onPress={handlePeriodStart}
-            >
-              <BodyText style={styles.periodButtonText}>
-                Mes règles ont commencé
+            </View>
+            
+            <Caption style={styles.dayCounter}>
+              Jour {currentDay} de {cycleData.length}
+            </Caption>
+            
+            {phaseInfo && phaseInfo.description && (
+              <BodyText style={styles.phaseDescription}>
+                {phaseInfo.description}
               </BodyText>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* 🆕 Bouton Comment te sens-tu AVEC BADGE - MODIFIÉ BLOC 2 */}
-        <TouchableOpacity 
-          style={styles.observationButton}
-          onPress={handleSymptomTracking}
-        >
-          <View style={styles.observationButtonContent}>
-            <Feather name="heart" size={20} color={theme.colors.primary} />
-            <BodyText style={styles.observationButtonText}>
-              Comment te sens-tu aujourd'hui ?
-            </BodyText>
-            {observations.length > 0 && (
-              <TouchableOpacity 
-                style={[styles.observationBadge, {
-                  backgroundColor: theme.colors.phases[currentPhase] + '30'
-                }]}
-                onPress={handleBadgeTap}
-              >
-                <Caption style={styles.badgeText}>{observations.length}</Caption>
-              </TouchableOpacity>
             )}
           </View>
-          
-          {/* 🆕 Affichage dernière observation au tap */}
+        </View>
+
+        {/* 🌙 Rituel du jour */}
+        {phaseInfo.rituals && phaseInfo.rituals.length > 0 && (
+          <View style={styles.ritualContainer}>
+            <View style={styles.ritualHeader}>
+              <Feather name="sun" size={20} color={theme.colors.phases[currentPhase]} />
+              <BodyText style={styles.ritualTitle}>Rituel du jour</BodyText>
+            </View>
+            <BodyText style={styles.ritualText}>
+              {phaseInfo.rituals[0]}
+            </BodyText>
+          </View>
+        )}
+
+        <View style={styles.obsSection}>
+          <View style={styles.obsHeader}>
+            <BodyText style={styles.obsTitle}>Mes observations</BodyText>
+            <TouchableOpacity 
+              style={[styles.obsBadge, lastObservation && styles.obsBadgeActive]}
+              onPress={handleBadgeTap}
+            >
+              <Caption style={[styles.obsBadgeText, lastObservation && styles.obsBadgeTextActive]}>
+                {observations.length} {observations.length === 1 ? 'observation' : 'observations'}
+              </Caption>
+            </TouchableOpacity>
+          </View>
+
           {showLastObservation && lastObservation && (
-            <View style={styles.lastObservationContainer}>
-              <Caption style={styles.lastObservationText}>
+            <View style={styles.lastObsCard}>
+              <Caption style={styles.lastObsText}>
                 {formatLastObservation()}
               </Caption>
             </View>
           )}
-        </TouchableOpacity>
 
-        {/* Phase info */}
-        <View style={styles.phaseInfoContainer}>
-          <View style={styles.phaseHeader}>
-            <PhaseIcon 
-              phaseKey={currentPhase}
-              size={32}
-              color={theme.colors.phases[currentPhase]}
-            />
-            <View style={styles.phaseHeaderText}>
-              <BodyText style={styles.phaseName}>{getPhaseLabel(currentPhase)}</BodyText>
-              <BodyText style={styles.phaseDay}>Jour {currentDay}</BodyText>
-            </View>
-          </View>
-          
-          <BodyText style={styles.phaseDescription}>
-            {phaseInfo.description}
-          </BodyText>
-          
-          <View style={styles.phaseDetails}>
-            <View style={styles.phaseDetailItem}>
-              <BodyText style={styles.phaseDetailLabel}>Énergie</BodyText>
-              <BodyText style={styles.phaseDetailValue}>
-                {getPhaseEnergyLevel(currentPhase)}
-              </BodyText>
-            </View>
-            
-            <View style={styles.phaseDetailItem}>
-              <BodyText style={styles.phaseDetailLabel}>Focus</BodyText>
-              <BodyText style={styles.phaseDetailValue}>
-                {getPhaseFocus(currentPhase)}
-              </BodyText>
-            </View>
-            
-            <View style={styles.phaseDetailItem}>
-              <BodyText style={styles.phaseDetailLabel}>Durée estimée</BodyText>
-              <BodyText style={styles.phaseDetailValue}>
-                {getPhaseDuration(currentPhase)} jours
-              </BodyText>
-            </View>
-          </View>
-        </View>
-
-        {/* 🆕 Section Observations */}
-        {observationInsights && (
-          <View style={styles.observationsContainer}>
-            <View style={styles.observationsHeader}>
-              <Feather name="eye" size={20} color={theme.colors.secondary} />
-              <BodyText style={styles.observationsTitle}>
-                Tes observations révèlent...
-              </BodyText>
-            </View>
-            
-            {observationInsights.map((insight, index) => (
-              <View key={index} style={styles.observationItem}>
-                <PhaseIcon 
-                  phaseKey={insight.phase}
-                  size={16}
-                  color={theme.colors.phases[insight.phase]}
-                />
-                <View style={styles.observationContent}>
-                  <BodyText style={styles.observationText}>
-                    En {getPhaseLabel(insight.phase)}, tu sembles ressentir une énergie {insight.energy}
-                  </BodyText>
-                  <Caption style={styles.observationMeta}>
-                    Basé sur {insight.count} observations
+          {observationInsights && (
+            <View style={styles.insightsContainer}>
+              <Caption style={styles.insightsTitle}>Tes patterns</Caption>
+              {observationInsights.map((insight, index) => (
+                <View key={index} style={styles.insightCard}>
+                  <Caption style={styles.insightText}>
+                    {getPhaseLabel(insight.phase)}: énergie {insight.energy} ({insight.count} observations)
                   </Caption>
                 </View>
-              </View>
-            ))}
-            
-            <TouchableOpacity style={styles.observationDisclaimer}>
-              <Caption style={styles.observationDisclaimerText}>
-                Ces tendances émergent de tes propres observations 🌸
-              </Caption>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Navigation phases */}
-        <View style={styles.phasesNavigation}>
-          <BodyText style={styles.sectionTitle}>Explorer les phases</BodyText>
-          
-          <View style={styles.phasesGrid}>
-            {['menstrual', 'follicular', 'ovulatory', 'luteal'].map((phase) => (
-              <TouchableOpacity 
-                key={phase}
-                style={[
-                  styles.phaseNavItem,
-                  currentPhase === phase && styles.phaseNavItemActive
-                ]}
-                onPress={() => handlePhaseNavigation(phase)}
-              >
-                <PhaseIcon 
-                  phaseKey={phase}
-                  size={24}
-                  color={currentPhase === phase ? 'white' : theme.colors.phases[phase]}
-                />
-                <BodyText style={[
-                  styles.phaseNavText,
-                  currentPhase === phase && styles.phaseNavTextActive
-                ]}>
-                  {getArchetypeLabel(phase)}
-                </BodyText>
-              </TouchableOpacity>
-            ))}
-          </View>
+              ))}
+            </View>
+          )}
         </View>
 
-        {/* Actions rapides */}
-        <View style={styles.actionsSection}>
-          <BodyText style={styles.sectionTitle}>Actions rapides</BodyText>
-          
-          <View style={styles.actionsGrid}>
-            <TouchableOpacity 
-              style={styles.actionItem}
-              onPress={handlePredictions}
-            >
-              <View style={[styles.actionIcon, { backgroundColor: theme.colors.secondary + '20' }]}>
-                <Feather name="calendar" size={20} color={theme.colors.secondary} />
-              </View>
-              <BodyText style={styles.actionText}>Prédictions</BodyText>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.actionItem}
-              onPress={handleHistory}
-            >
-              <View style={[styles.actionIcon, { backgroundColor: theme.colors.phases[currentPhase] + '20' }]}>
-                <Feather name="trending-up" size={20} color={theme.colors.phases[currentPhase]} />
-              </View>
-              <BodyText style={styles.actionText}>Historique</BodyText>
-            </TouchableOpacity>
-          </View>
+        <View style={styles.actionsGrid}>
+          <TouchableOpacity 
+            style={[
+              styles.actionCard, 
+              theme.getPhaseGlassmorphismStyle(currentPhase, {
+                bgOpacity: theme.glassmorphism.opacity.medium,
+                borderRadius: 12,
+                shadowOpacity: 0,  // Pas de shadow sur les action cards
+              })
+            ]}
+            onPress={handleSymptomTracking}
+          >
+            <Feather name="plus-circle" size={24} color={theme.colors.phases[currentPhase]} />
+            <BodyText style={styles.actionText}>Observer</BodyText>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.actionCard}
+            onPress={handlePredictions}
+          >
+            <Feather name="calendar" size={24} color={theme.colors.secondary} />
+            <BodyText style={styles.actionText}>Prédictions</BodyText>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.actionCard}
+            onPress={handleHistory}
+          >
+            <Feather name="clock" size={24} color={theme.colors.textSecondary} />
+            <BodyText style={styles.actionText}>Historique</BodyText>
+          </TouchableOpacity>
         </View>
 
-        <View style={{ height: 20 }} />
+        <View style={styles.periodControlsContainer}>
+          {currentPhase === 'menstrual' ? (
+            <TouchableOpacity 
+              style={[styles.periodButton, styles.endPeriodButton]}
+              onPress={handlePeriodEnd}
+            >
+              <Feather name="check-circle" size={20} color="#fff" />
+              <BodyText style={styles.periodButtonText}>Fin des règles</BodyText>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity 
+              style={[styles.periodButton, styles.startPeriodButton]}
+              onPress={handlePeriodStart}
+            >
+              <Feather name="circle" size={20} color="#fff" />
+              <BodyText style={styles.periodButtonText}>Nouveau cycle</BodyText>
+            </TouchableOpacity>
+          )}
+        </View>
       </ScrollView>
 
-      <QuickTrackingModal
+      <QuickTrackingModal 
         visible={showQuickTracking}
         onClose={() => setShowQuickTracking(false)}
-        defaultTags={[`#${currentPhase}`]}
+        phase={currentPhase}
+        cycleDay={currentDay}
       />
-
-      <ParametresModal
+      
+      <ParametresModal 
         visible={showParams}
         onClose={() => setShowParams(false)}
       />
@@ -445,38 +360,37 @@ export default function CycleView() {
   );
 }
 
-// Fonctions utilitaires
 const getPhaseEnergyLevel = (phase) => {
   const energyLevels = {
-    menstrual: 'Basse',
+    menstrual: 'Douce',
     follicular: 'Montante',
     ovulatory: 'Haute',
-    luteal: 'Descendante'
+    luteal: 'Variable'
   };
   return energyLevels[phase] || 'Variable';
 };
 
 const getPhaseFocus = (phase) => {
-  const phaseFocus = {
-    menstrual: 'Repos & introspection',
+  const focuses = {
+    menstrual: 'Repos et régénération',
     follicular: 'Nouveaux projets',
     ovulatory: 'Communication',
     luteal: 'Finalisation'
   };
-  return phaseFocus[phase] || 'Équilibre';
+  return focuses[phase] || 'Écoute intérieure';
 };
 
 const getPhaseDuration = (phase) => {
-  const phaseDurations = {
-    menstrual: '3-7',
-    follicular: '7-10',
-    ovulatory: '3-5',
-    luteal: '10-14'
+  const durations = {
+    menstrual: '3-7 jours',
+    follicular: '7-10 jours',
+    ovulatory: '3-5 jours',
+    luteal: '10-14 jours'
   };
-  return phaseDurations[phase] || '?';
+  return durations[phase] || 'Variable';
 };
 
-const getStyles = (theme) => StyleSheet.create({
+const getStyles = (theme, currentPhase) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
@@ -485,295 +399,184 @@ const getStyles = (theme) => StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: theme.spacing.l,
+    padding: 16,
   },
   centerContent: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: theme.spacing.xl,
+    padding: 32,
   },
   setupText: {
     textAlign: 'center',
-    color: theme.colors.textLight,
+    color: theme.colors.textSecondary,
     fontSize: 16,
+    lineHeight: 24,
   },
-  
-  header: {
+  cycleContainer: {
     alignItems: 'center',
-    marginBottom: theme.spacing.xl,
+    marginBottom: 24,
   },
-  subtitle: {
-    fontSize: 16,
-    color: theme.colors.textLight,
-    textAlign: 'center',
-  },
-  prediction: {
-    fontSize: 14,
-    color: theme.colors.textLight,
-    fontStyle: 'italic',
-  },
-  
-  wheelContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 320,
-    marginBottom: theme.spacing.xl,
-  },
-  
   phaseInfoContainer: {
+    alignItems: 'center',
+    marginTop: 16,
+    padding: 16,
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.l,
-    padding: theme.spacing.l,
-    marginBottom: theme.spacing.xl,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    borderRadius: 12,
+    width: '100%',
   },
   phaseHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: theme.spacing.l,
+    marginBottom: 8,
   },
-  phaseHeaderText: {
-    marginLeft: theme.spacing.m,
-    flex: 1,
-  },
-  phaseName: {
-    fontSize: 20,
+  phaseTitle: {
+    fontSize: 18,
     fontWeight: '600',
+    marginLeft: 8,
+    color: theme.colors.text,
   },
-  phaseDay: {
-    fontSize: 14,
-    color: theme.colors.textLight,
-    marginTop: 2,
+  dayCounter: {
+    color: theme.colors.textSecondary,
+    marginBottom: 8,
   },
   phaseDescription: {
-    fontSize: 15,
-    color: theme.colors.textLight,
-    lineHeight: 22,
-    marginBottom: theme.spacing.l,
+    textAlign: 'center',
+    color: theme.colors.textSecondary,
+    lineHeight: 20,
   },
-  phaseDetails: {
+  // Rituels
+  ritualContainer: {
+    backgroundColor: theme.colors.phases[currentPhase] + '10',
+    borderRadius: theme.borderRadius.l,
+    padding: theme.spacing.l,
+    marginBottom: theme.spacing.xl,
+    borderWidth: 1,
+    borderColor: theme.colors.phases[currentPhase] + '30',
+  },
+  ritualHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.s,
+    marginBottom: theme.spacing.m,
+  },
+  ritualTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: theme.colors.phases[currentPhase],
+  },
+  ritualText: {
+    fontSize: 15,
+    lineHeight: 24,
+    color: theme.colors.text,
+    fontStyle: 'italic',
+  },
+  obsSection: {
+    marginBottom: 24,
+  },
+  obsHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-  },
-  phaseDetailItem: {
     alignItems: 'center',
-    flex: 1,
+    marginBottom: 12,
   },
-  phaseDetailLabel: {
+  obsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+  },
+  obsBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 12,
+  },
+  obsBadgeActive: {
+    ...theme.getGlassmorphismStyle(theme.colors.primary, {
+      bgOpacity: theme.glassmorphism.opacity.medium,
+      borderWidth: 0,
+      shadowOpacity: 0,
+    }),
+  },
+  obsBadgeText: {
     fontSize: 12,
-    color: theme.colors.textLight,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    color: theme.colors.textSecondary,
+  },
+  obsBadgeTextActive: {
+    color: theme.colors.primary,
+    fontWeight: '500',
+  },
+  lastObsCard: {
+    backgroundColor: theme.colors.surface,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  lastObsText: {
+    color: theme.colors.textSecondary,
+    fontStyle: 'italic',
+  },
+  insightsContainer: {
+    backgroundColor: theme.colors.surface,
+    padding: 16,
+    borderRadius: 12,
+  },
+  insightsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: 8,
+  },
+  insightCard: {
+    backgroundColor: theme.colors.background,
+    padding: 8,
+    borderRadius: 6,
     marginBottom: 4,
   },
-  phaseDetailValue: {
+  insightText: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+  },
+  actionsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+  },
+  actionCard: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 12,
+    marginHorizontal: 4,
+  },
+  actionText: {
+    marginTop: 8,
     fontSize: 14,
     fontWeight: '500',
     color: theme.colors.text,
     textAlign: 'center',
   },
-  
-  phasesNavigation: {
-    marginBottom: theme.spacing.xl,
-  },
-  actionsSection: {
-    marginBottom: theme.spacing.xl,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: theme.spacing.l,
-    color: theme.colors.text,
-  },
-  
-  phasesGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: theme.spacing.s,
-  },
-  phaseNavItem: {
-    flex: 1,
-    alignItems: 'center',
-    padding: theme.spacing.m,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.medium,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  phaseNavItemActive: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
-  phaseNavText: {
-    fontSize: 12,
-    color: theme.colors.text,
-    marginTop: theme.spacing.xs,
-    textAlign: 'center',
-  },
-  phaseNavTextActive: {
-    color: 'white',
-  },
-  
-  actionsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  actionItem: {
-    alignItems: 'center',
-    gap: theme.spacing.s,
-  },
-  actionIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  actionText: {
-    fontSize: 12,
-    color: theme.colors.textLight,
-    textAlign: 'center',
-  },
-  periodButtonContainer: {
-    marginBottom: theme.spacing.xl,
+  periodControlsContainer: {
     alignItems: 'center',
   },
   periodButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: theme.spacing.m,
-    paddingHorizontal: theme.spacing.xl,
-    borderRadius: 16,
-    borderWidth: 2,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
   },
-  periodStartButton: {
-    backgroundColor: theme.colors.primary + '15',
-    borderColor: theme.colors.primary,
-    shadowColor: theme.colors.primary,
+  startPeriodButton: {
+    backgroundColor: theme.colors.phases.menstrual,
   },
-  periodEndButton: {
-    backgroundColor: theme.colors.primary + '15',
-    borderColor: theme.colors.primary,
-    shadowColor: theme.colors.primary,
+  endPeriodButton: {
+    backgroundColor: theme.colors.secondary,
   },
   periodButtonText: {
-    color: theme.colors.primary,
-    fontWeight: '600',
+    color: '#fff',
     fontSize: 16,
-    marginLeft: theme.spacing.s,
-  },
-  
-  // 🆕 Styles Observations MODIFIÉS BLOC 2
-  observationButton: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.l,
-    marginBottom: theme.spacing.xl,
-    borderWidth: 2,
-    borderColor: theme.colors.primary + '30',
-    borderStyle: 'dashed',
-    position: 'relative', // Pour le badge absolute
-  },
-  observationButtonContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: theme.spacing.l,
-    gap: theme.spacing.m,
-  },
-  observationButtonText: {
-    color: theme.colors.primary,
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  // 🆕 BADGE COMPTEUR BLOC 2
-  observationBadge: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-    borderWidth: 2,
-    borderColor: theme.colors.background,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: theme.colors.text,
-  },
-  // 🆕 DERNIÈRE OBSERVATION BLOC 2
-  lastObservationContainer: {
-    paddingHorizontal: theme.spacing.l,
-    paddingBottom: theme.spacing.m,
-    paddingTop: theme.spacing.xs,
-  },
-  lastObservationText: {
-    fontSize: 13,
-    color: theme.colors.textLight,
-    fontStyle: 'italic',
-    textAlign: 'center',
-  },
-  
-  observationsContainer: {
-    backgroundColor: theme.colors.secondary + '10',
-    borderRadius: theme.borderRadius.l,
-    padding: theme.spacing.l,
-    marginBottom: theme.spacing.xl,
-  },
-  observationsHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.s,
-    marginBottom: theme.spacing.l,
-  },
-  observationsTitle: {
-    fontSize: 18,
     fontWeight: '600',
-    color: theme.colors.text,
-  },
-  observationItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: theme.spacing.m,
-    marginBottom: theme.spacing.m,
-  },
-  observationContent: {
-    flex: 1,
-  },
-  observationText: {
-    fontSize: 15,
-    color: theme.colors.text,
-    lineHeight: 22,
-  },
-  observationMeta: {
-    fontSize: 12,
-    color: theme.colors.textLight,
-    marginTop: 4,
-  },
-  observationDisclaimer: {
-    marginTop: theme.spacing.m,
-    paddingTop: theme.spacing.m,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-  },
-  observationDisclaimerText: {
-    fontSize: 13,
-    color: theme.colors.textLight,
-    fontStyle: 'italic',
-    textAlign: 'center',
+    marginLeft: 8,
   },
 });

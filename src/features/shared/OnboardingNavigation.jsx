@@ -12,13 +12,13 @@ import { View, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../hooks/useTheme';
-import { BodyText, Caption } from '../../core/ui/Typography';
+import { BodyText, Caption } from '../../core/ui/typography';
 
 // Mapping écrans vers étapes groupées
 const SCREEN_TO_STEP = {
   '100-promesse': 1,
   '200-rencontre': 1,
-  '300-confiance': 2,
+  '300-etape-vie': 2,
   '375-age': 2,
   '400-cycle': 2,
   '500-preferences': 3,

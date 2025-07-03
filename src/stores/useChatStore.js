@@ -11,7 +11,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import performanceMonitor from '../core/monitoring/PerformanceMonitor';
-import { useCycleStore } from './useCycleStore';
+import { useCycleStore, getCycleData } from './useCycleStore';
 
 // 🚀 Démarrer le monitoring de l'hydratation
 performanceMonitor.startStoreHydration('chatStore');
@@ -108,7 +108,7 @@ export const useChatStore = create(
         // Import useUserStore pour suggestions contextuelles
         const { getCurrentPhase } = require("../utils/cycleCalculations");
         const { useUserStore } = require("./useUserStore");
-        const cycleData = useCycleStore.getState().getCycleData();
+        const cycleData = getCycleData();
         const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
 
         const phaseSuggestions = {
@@ -174,7 +174,7 @@ export const useChatStore = create(
           const { getCurrentPhase } = require("../utils/cycleCalculations");
           const { useUserStore } = require("./useUserStore");
           
-          const cycleData = useCycleStore.getState().getCycleData();
+          const cycleData = getCycleData();
           const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
           
           useNotebookStore.getState().addEntry(

@@ -32,7 +32,7 @@ class NotificationService {
       // Demander permissions
       const permission = await this.requestPermissions();
       if (!permission) {
-        console.log('❌ Permissions notifications refusées');
+        console.info('❌ Permissions notifications refusées');
         return false;
       }
 
@@ -42,7 +42,7 @@ class NotificationService {
       // Nettoyer anciennes notifications
       await this.clearAllNotifications();
 
-      console.log('✅ NotificationService initialisé');
+      console.info('✅ NotificationService initialisé');
       return true;
     } catch (error) {
       console.error('❌ Erreur init notifications:', error);
@@ -111,7 +111,7 @@ class NotificationService {
         });
       }
 
-      console.log('📅 Notifications phases planifiées:', notifications.length);
+      console.info('📅 Notifications phases planifiées:', notifications.length);
     } catch (error) {
       console.error('❌ Erreur planification:', error);
     }
@@ -209,73 +209,61 @@ class NotificationService {
   // ═══════════════════════════════════════════════════════
   
   getPersonaMessages(persona = 'emma') {
-    const messages = {
-      emma: {
-        periodReminder: {
-          title: "Hey ! Tes règles approchent 🌙",
-          body3Days: "Dans 3 jours ! C'est le moment de prévoir tes protections et de ralentir un peu ✨",
-          body1Day: "Demain ! Prépare ton kit cocooning et écoute ton corps 💕"
-        },
-        phaseChange: {
-          follicular: {
-            title: "Phase folliculaire ! 🌱",
-            body: "Nouvelle énergie qui monte ! C'est parti pour de nouveaux projets ✨"
-          },
-          ovulatory: {
-            title: "Phase ovulatoire ! ☀️",
-            body: "Tu rayonnes ! Profite de cette énergie au max 🚀"
-          },
-          luteal: {
-            title: "Phase lutéale 🍂",
-            body: "Temps de ralentir et de t'écouter. Tu as le droit de dire non 💛"
-          }
-        }
+    const baseMessages = {
+      periodReminder: {
+        title: 'Règles bientôt',
+        body3Days: 'Dans 3 jours environ ✨',
+        body1Day: 'Demain probablement 🌙'
       },
-      laure: {
-        periodReminder: {
-          title: "Rappel : Règles prévues",
-          body3Days: "Dans 3 jours. Planifiez vos activités en conséquence.",
-          body1Day: "Demain. Adaptez votre planning et préparez le nécessaire."
+      phaseChange: {
+        follicular: {
+          title: 'Phase folliculaire',
+          body: 'Nouvelle énergie en route ! 🌱'
         },
-        phaseChange: {
-          follicular: {
-            title: "Phase folliculaire",
-            body: "Énergie croissante. Moment optimal pour initier des projets."
-          },
-          ovulatory: {
-            title: "Phase ovulatoire",
-            body: "Pic d'énergie. Maximisez vos interactions et négociations."
-          },
-          luteal: {
-            title: "Phase lutéale",
-            body: "Énergie décroissante. Priorisez et déléguez si possible."
-          }
-        }
-      },
-      clara: {
-        periodReminder: {
-          title: "Tes règles arrivent ! 🌟",
-          body3Days: "Dans 3 jours ! Quelle belle opportunité de ralentir 💫",
-          body1Day: "Demain ! Prépare-toi à accueillir cette phase de renouveau ✨"
+        ovulatory: {
+          title: 'Phase ovulatoire', 
+          body: 'Tu rayonnes aujourd\'hui ! ☀️'
         },
-        phaseChange: {
-          follicular: {
-            title: "Waouh, phase folliculaire ! 🌈",
-            body: "Sens-tu cette énergie qui pétille ? Go go go ! 🚀"
-          },
-          ovulatory: {
-            title: "Phase ovulatoire power ! ⚡",
-            body: "Tu es une déesse ! Brille de mille feux 🌟"
-          },
-          luteal: {
-            title: "Phase lutéale magique 🌙",
-            body: "Temps de sagesse intérieure. Honore tes besoins 💜"
-          }
+        luteal: {
+          title: 'Phase lutéale',
+          body: 'Écoute ton intuition 🌙'
         }
       }
     };
 
-    return messages[persona] || messages.emma;
+    const personaVariations = {
+      emma: {
+        periodReminder: {
+          body3Days: 'Hey ! Tes règles arrivent dans 3 jours environ 💕',
+          body1Day: 'Coucou ! Tes règles sont prévues demain 🌸'
+        }
+      },
+      laure: {
+        periodReminder: {
+          body3Days: 'Cycle en approche - 3 jours estimés 📊',
+          body1Day: 'Règles prévues demain selon vos données 📈'
+        }
+      },
+      clara: {
+        periodReminder: {
+          body3Days: 'Ton corps se prépare ! 3 jours environ ✨',
+          body1Day: 'Demain, accueille cette nouvelle lune 🌙'
+        }
+      }
+    };
+
+    const variation = personaVariations[persona];
+    if (variation) {
+      return {
+        ...baseMessages,
+        periodReminder: {
+          ...baseMessages.periodReminder,
+          ...variation.periodReminder
+        }
+      };
+    }
+
+    return baseMessages;
   }
 
   // ═══════════════════════════════════════════════════════
@@ -288,8 +276,7 @@ class NotificationService {
         content: {
           title,
           body,
-          data,
-          sound: true
+          data
         },
         trigger: null // Immédiat
       });
@@ -300,17 +287,13 @@ class NotificationService {
 
   async sendSyncNotification(status) {
     const messages = {
-      start: {
-        title: "Synchronisation...",
-        body: "Tes données sont en cours de synchronisation"
+      completed: {
+        title: 'Synchronisation terminée',
+        body: 'Vos données sont à jour ✅'
       },
-      complete: {
-        title: "Synchronisation terminée ✅",
-        body: "Toutes tes données sont à jour"
-      },
-      error: {
-        title: "Erreur de synchronisation",
-        body: "Certaines données n'ont pas pu être synchronisées"
+      failed: {
+        title: 'Sync en attente',
+        body: 'Reconnexion automatique en cours...'
       }
     };
 
@@ -327,12 +310,12 @@ class NotificationService {
   setupListeners() {
     // Notification reçue
     this.notificationSubscription = Notifications.addNotificationReceivedListener(notification => {
-      console.log('📨 Notification reçue:', notification);
+      console.info('📨 Notification reçue:', notification);
     });
 
     // Interaction avec notification
     this.responseSubscription = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log('👆 Notification cliquée:', response);
+      console.info('👆 Notification cliquée:', response);
       this.handleNotificationResponse(response);
     });
   }
@@ -354,18 +337,21 @@ class NotificationService {
   // ═══════════════════════════════════════════════════════
   
   async clearPhaseNotifications() {
-    const phaseNotifs = this.scheduledNotifications.filter(n => n.type === 'phase');
-    
-    for (const notif of phaseNotifs) {
-      await Notifications.cancelScheduledNotificationAsync(notif.id);
+    try {
+      await Notifications.cancelAllScheduledNotificationsAsync();
+      this.scheduledNotifications = this.scheduledNotifications.filter(n => n.type !== 'phase');
+    } catch (error) {
+      console.error('❌ Erreur nettoyage notifications:', error);
     }
-    
-    this.scheduledNotifications = this.scheduledNotifications.filter(n => n.type !== 'phase');
   }
 
   async clearAllNotifications() {
-    await Notifications.cancelAllScheduledNotificationsAsync();
-    this.scheduledNotifications = [];
+    try {
+      await Notifications.cancelAllScheduledNotificationsAsync();
+      this.scheduledNotifications = [];
+    } catch (error) {
+      console.error('❌ Erreur nettoyage complet:', error);
+    }
   }
 
   cleanup() {

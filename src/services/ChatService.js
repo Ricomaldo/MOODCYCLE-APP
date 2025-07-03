@@ -3,7 +3,8 @@
 // 📄 File: src/services/ChatService.js
 // 🧩 Type: Service
 // 📚 Description: Service chat avec stores intégrés + intelligence contextuelle
-// 🕒 Version: 5.0 - 2025-06-21 - STORES INTÉGRÉS
+// 🕒 Version: 5.0 - 2025-06-21
+// 🧭 Used in: Chat modal, conversational features
 // ─────────────────────────────────────────────────────────
 //
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -66,11 +67,9 @@ class ChatService {
       this.deviceId = await this.getOrGenerateDeviceId();
       this.isInitialized = true;
       
-      // ✅ INITIALISER CONTEXTE INTELLIGENCE
       this.loadConversationContext();
       
-      // ✅ LOG INITIALISATION DÉTAILLÉE
-      console.log('🚀 ChatService Initialized:', {
+      console.info('🚀 ChatService Initialized:', {
         deviceId: this.deviceId,
         timestamp: new Date().toISOString(),
         conversationContext: this.conversationContext,
@@ -85,7 +84,7 @@ class ChatService {
       this.deviceId = 'fallback-device-id';
       this.isInitialized = true;
       
-      console.log('🔄 ChatService Fallback Initialized:', {
+      console.info('🔄 ChatService Fallback Initialized:', {
         deviceId: this.deviceId,
         fallback: true
       });
@@ -103,7 +102,7 @@ class ChatService {
       
       return deviceId;
     } catch (error) {
-      console.warn('🚨 Erreur Device ID, fallback:', error);
+      console.error('🚨 Erreur Device ID, fallback:', error);
       return this.generateDeviceId();
     }
   }
@@ -127,7 +126,7 @@ class ChatService {
         userPatterns: engagementStore.getPatterns?.() || {}
       };
     } catch (error) {
-      console.warn('🚨 Erreur load context:', error);
+      console.error('🚨 Erreur load context:', error);
     }
   }
 
@@ -200,35 +199,39 @@ class ChatService {
     if (messages.length < 2) return { isNew: true, gap: 0 };
     
     const lastMessage = messages[messages.length - 1];
-    const timeSinceLastMessage = Date.now() - (lastMessage.timestamp || Date.now());
-    const gapMinutes = Math.floor(timeSinceLastMessage / 60000);
+    const now = Date.now();
+    const timeSinceLastMessage = now - (lastMessage.timestamp || now);
     
     return {
-      isNew: gapMinutes > 30, // Nouvelle conversation après 30min
-      gap: gapMinutes,
-      shouldRecap: gapMinutes > 10 && gapMinutes < 30
+      isNew: timeSinceLastMessage > 30 * 60 * 1000,
+      gap: timeSinceLastMessage,
+      contextual: timeSinceLastMessage < 5 * 60 * 1000
     };
   }
   
   // ✅ Instructions contextuelles pour l'API
   getContextualInstructions(context) {
-    const instructions = [];
+    const { phase, persona } = context;
     
-    if (context.continuity.isNew) {
-      instructions.push("C'est une nouvelle conversation, accueille chaleureusement.");
-    } else if (context.continuity.shouldRecap) {
-      instructions.push("La conversation a eu une pause, fais un léger rappel si pertinent.");
+    const baseInstructions = [
+      `Tu es Mélune, guide bienveillante de MoodCycle`,
+      `Persona active: ${persona?.assigned || 'emma'}`,
+      `Phase cyclique: ${phase || 'non détectée'}`,
+      `Réponds en français, avec empathie et personnalisation`
+    ];
+
+    const phaseInstructions = {
+      menstrual: "Focus sur le réconfort et l'acceptation de cette phase",
+      follicular: "Encourage l'énergie montante et les nouveaux projets",
+      ovulatory: "Valorise la communication et l'expression de soi",
+      luteal: "Guide vers l'introspection et l'écoute intérieure"
+    };
+
+    if (phase && phaseInstructions[phase]) {
+      baseInstructions.push(phaseInstructions[phase]);
     }
-    
-    if (context.summary.topics.includes('pain')) {
-      instructions.push("Sois particulièrement empathique concernant la douleur mentionnée.");
-    }
-    
-    if (context.messages.length > 4) {
-      instructions.push("Continue naturellement la conversation en cours.");
-    }
-    
-    return instructions;
+
+    return baseInstructions.join('\n');
   }
 
   async sendMessage(message, conversationContext = []) {
@@ -236,415 +239,257 @@ class ChatService {
       await this.initialize();
     }
 
-    // ✅ LOG DÉBUT - SendMessage
-    console.log('📝 SendMessage Start:', {
-      messagePreview: message.substring(0, 50) + (message.length > 50 ? '...' : ''),
+    console.info('📝 SendMessage Start:', {
       messageLength: message.length,
-      conversationContextLength: conversationContext.length,
+      contextLength: conversationContext.length,
+      deviceId: this.deviceId,
       timestamp: new Date().toISOString()
     });
 
-    // ✅ Déclarer enrichedContext au début pour éviter l'erreur dans le catch
-    let enrichedContext;
-
     try {
-      // ✅ Préparer contexte optimisé
-      const optimizedContext = this.prepareConversationContext(message, conversationContext);
+      const enrichedContext = await this.buildEnrichedContext(message);
+
+      this.trackEngagement(message, enrichedContext);
+
+      const conversationPrepared = this.prepareConversationContext(message, conversationContext);
       
-      // ✅ NOUVEAU : Contexte enrichi depuis stores
-      enrichedContext = await this.buildEnrichedContext(message);
-      
-      // ✅ Fusionner contextes
-      const finalContext = {
-        ...enrichedContext,
-        conversation: optimizedContext,
-        // Instructions spéciales pour l'API
-        instructions: this.getContextualInstructions(optimizedContext)
-      };
-      
-      // ✅ LOG CONTEXTE ENRICHI
-      console.log('🧠 Enriched Context Built:', {
-        phase: finalContext.phase,
-        persona: finalContext.persona,
-        conversationLength: finalContext.intelligence?.conversationLength || 0,
-        optimizedMessagesCount: optimizedContext.messages.length,
-        continuityGap: optimizedContext.continuity.gap,
-        isFirstMessage: finalContext.messageMetadata?.isFirstMessage || false
+      console.info('🧠 Enriched Context Built:', {
+        phase: enrichedContext.phase,
+        persona: enrichedContext.persona?.assigned,
+        hasProfile: !!enrichedContext.profile,
+        contextSize: conversationPrepared.messages.length,
+        topics: enrichedContext.conversationSummary?.topics || []
       });
+
+      let response;
       
-      // ✅ TRACKING ENGAGEMENT
-      this.trackEngagement(message, finalContext);
-      
-      const response = await this.callChatAPI(message, finalContext);
-      
-      // ✅ Vérification que response n'est pas null
-      if (!response) {
-        console.log('🔄 API returned null, using fallback response');
-        const fallbackResponse = this.getSmartFallbackResponse(message);
-        
-        console.log('💾 Fallback response used:', {
-          fallbackUsed: true,
-          persona: fallbackResponse.persona,
-          source: fallbackResponse.source
+      try {
+        response = await this.callChatAPI(message, {
+          ...enrichedContext,
+          conversation: conversationPrepared
         });
-        
-        return fallbackResponse;
+      } catch (apiError) {
+        console.error('🔄 API Error, using fallback:', apiError.message);
+        response = null;
       }
-      
-      // ✅ APPRENTISSAGE PATTERNS
-      this.learnFromResponse(message, response, finalContext);
-      
-      // ✅ LOG SUCCÈS COMPLET
-      console.log('🎉 SendMessage Success:', {
-        phase: finalContext.phase,
-        persona: finalContext.persona,
-        responsePreview: response.substring(0, 50) + (response.length > 50 ? '...' : ''),
-        source: 'api'
+
+      if (!response) {
+        console.info('🔄 API returned null, using fallback response');
+        response = this.getSmartFallbackResponse(message);
+        console.info('💾 Fallback response used:', {
+          length: response.length,
+          source: 'smart_fallback'
+        });
+      }
+
+      this.learnFromResponse(message, response, enrichedContext);
+
+      console.info('🎉 SendMessage Success:', {
+        responseLength: response.length,
+        processingTime: Date.now() - new Date().getTime(),
+        usedFallback: !response.includes('claude') && !response.includes('api')
       });
-      
-      return {
-        success: true,
-        message: response,
-        source: 'api',
-        context: finalContext.persona
-      };
+
+      return response;
+
     } catch (error) {
-      console.error('🚨 SendMessage Error:', {
+      console.error('🚨 SendMessage Critical Error:', {
         error: error.message,
         stack: error.stack,
-        timestamp: new Date().toISOString()
+        message: message.substring(0, 100)
       });
-      
-      // Si offline, enqueue
-      if (error.message.includes('Network')) {
-        console.log('📡 Network Error Detected - Enqueueing message');
-        await NetworkQueue.enqueueChatMessage(message, enrichedContext, this.deviceId);
+
+      const netInfo = await require('@react-native-community/netinfo').default.fetch();
+      if (!netInfo.isConnected) {
+        console.info('📡 Network Error Detected - Enqueueing message');
+        
+        const queueManager = new NetworkQueue();
+        await queueManager.enqueueChatMessage(message, conversationContext, this.deviceId);
         
         const fallbackResponse = this.getSmartFallbackResponse(message);
-        
-        console.log('💾 Message Queued - Fallback response:', {
-          fallbackUsed: true,
-          queued: true,
-          persona: fallbackResponse.persona
-        });
-        
-        return {
-          ...fallbackResponse,
+        console.info('💾 Message Queued - Fallback response:', {
+          response: fallbackResponse.substring(0, 50) + '...',
           queued: true
-        };
+        });
+        return fallbackResponse;
       }
-      
-      // ✅ LOG FALLBACK STANDARD
-      const fallbackResponse = this.getSmartFallbackResponse(message);
-      console.log('🔄 Fallback Response:', {
-        fallbackUsed: true,
-        persona: fallbackResponse.persona,
-        source: fallbackResponse.source
-      });
-      
-      return fallbackResponse;
+
+      return this.getSmartFallbackResponse(message);
     }
   }
 
   // ✅ NOUVEAU : Contexte enrichi
   async buildEnrichedContext(message) {
-    try {
-      const userStore = useUserStore.getState();
-      const chatStore = useChatStore.getState();
-      const engagementStore = useEngagementStore.getState();
-      
-      // Contexte de base avec protection
-      let baseContext;
-      try {
-        baseContext = userStore.getContextForAPI();
-      } catch (contextError) {
-        console.error('🚨 Error getting baseContext:', contextError);
-        // Fallback context
-        baseContext = {
-          persona: userStore.persona?.assigned || 'emma',
-          phase: 'menstrual',
-          preferences: userStore.preferences || {},
-          profile: userStore.profile || {}
-        };
-      }
-      
-      // ✅ Protection contre cycle undefined
-      const cycleData = getCycleData();
-      const safeCycle = cycleData || {
-        lastPeriodDate: null,
-        length: 28,
-        periodDuration: 5
-      };
-      
-      // Phase actuelle calculée
-      const currentPhase = getCurrentPhase(
-        safeCycle.lastPeriodDate,
-        safeCycle.length,
-        safeCycle.periodDuration
-      );
+    const userStore = useUserStore.getState();
+    const cycleStore = useCycleStore.getState();
+    const chatStore = useChatStore.getState();
+    const intelligenceStore = useUserIntelligence.getState();
 
-      // Intelligence contextuelle
-      const intelligence = {
-        conversationLength: chatStore.messages.length,
-        recentTopics: this.conversationContext.topics,
-        userEngagement: engagementStore.getEngagementLevel?.() || 'medium',
-        patterns: engagementStore.getPatterns?.() || {},
-        timeOfDay: new Date().getHours(),
-        daysSinceFirstUse: engagementStore.metrics?.daysUsed || 1
-      };
-      
-      // Suggestions contextuelles
-      const suggestions = chatStore.getContextualSuggestions();
-      
-      return {
-        ...baseContext,
-        phase: currentPhase,
-        intelligence,
-        suggestions,
-        conversationContext: this.conversationContext,
-        messageMetadata: {
-          isFirstMessage: chatStore.messages.length === 0,
-          isReturningUser: intelligence.daysSinceFirstUse > 1,
-          hasUsedVignettes: engagementStore.metrics?.vignetteEngagements > 0
-        }
-      };
-    } catch (error) {
-      console.error('🚨 buildEnrichedContext error:', error);
-      // Return minimal context as fallback
-      return {
-        persona: 'emma',
-        phase: 'menstrual',
-        preferences: {},
-        profile: {},
-        intelligence: {
-          conversationLength: 0,
-          recentTopics: [],
-          userEngagement: 'medium',
-          patterns: {},
-          timeOfDay: new Date().getHours(),
-          daysSinceFirstUse: 1
-        },
-        suggestions: [],
-        conversationContext: this.conversationContext,
-        messageMetadata: {
-          isFirstMessage: true,
-          isReturningUser: false,
-          hasUsedVignettes: false
-        }
-      };
-    }
+    const context = {
+      message,
+      profile: userStore.profile,
+      persona: userStore.persona,
+      cycle: userStore.cycle,
+      phase: getCurrentPhase(userStore.cycle),
+      preferences: userStore.preferences,
+      conversationSummary: this.generateContextSummary(chatStore.messages.slice(-10)),
+      userIntelligence: intelligenceStore.getIntelligenceSnapshot?.() || {},
+      timestamp: new Date().toISOString(),
+      deviceId: this.deviceId
+    };
+
+    return context;
   }
 
   // ✅ NOUVEAU : Tracking engagement
   trackEngagement(message, context) {
     try {
       const engagementStore = useEngagementStore.getState();
-      
-      engagementStore.trackAction?.('message_sent', {
-        messageLength: message.length,
+      engagementStore.trackEngagement?.({
+        type: 'chat_message',
+        content: message.substring(0, 100),
         phase: context.phase,
-        persona: context.persona,
-        topics: this.extractTopicsFromMessages([{ content: message, type: 'user' }]),
-        timeOfDay: new Date().getHours(),
-        conversationLength: context.intelligence.conversationLength
+        persona: context.persona?.assigned,
+        timestamp: Date.now()
       });
-      
-      // Update conversation context
-      this.conversationContext.messageCount++;
-      this.conversationContext.lastPhase = context.phase;
     } catch (error) {
-      console.warn('🚨 Erreur tracking engagement:', error);
+      console.error('🚨 Engagement tracking error:', error);
     }
   }
 
   // ✅ NOUVEAU : Apprentissage patterns
   learnFromResponse(message, response, context) {
+    if (!response) {
+      return;
+    }
+
     try {
-      // ✅ Vérification que response n'est pas null
-      if (!response) {
-        console.log('🔄 Skipping learning from null response');
-        return;
-      }
-      
-      const userIntelligence = useUserIntelligence.getState();
-      
-      userIntelligence.recordInteraction?.({
-        input: message,
+      const intelligenceStore = useUserIntelligence.getState();
+      intelligenceStore.learnFromInteraction?.({
+        userMessage: message,
         response: response,
-        phase: context.phase,
-        persona: context.persona,
-        timestamp: Date.now(),
         context: {
-          topics: this.extractTopicsFromMessages([{ content: message, type: 'user' }]),
-          engagement: context.intelligence.userEngagement
+          phase: context.phase,
+          persona: context.persona?.assigned,
+          timestamp: context.timestamp
         }
       });
     } catch (error) {
-      console.warn('🚨 Erreur learning patterns:', error);
+      console.error('🚨 Learning error:', error);
     }
   }
 
   async callChatAPI(message, context) {
-    // ✅ Vérification du deviceId
-    if (!this.deviceId) {
-      console.error('❌ Device ID manquant - Réinitialisation...');
-      await this.initialize();
-      if (!this.deviceId) {
-        throw new Error('Impossible de générer un Device ID');
-      }
-    }
+    try {
+      const endpoint = getEndpointUrl('chat');
+      const config = getApiRequestConfig(this.deviceId);
+      
+      const payload = {
+        message,
+        context: {
+          phase: context.phase,
+          persona: context.persona?.assigned || 'emma',
+          profile: {
+            prenom: context.profile?.prenom,
+            age: context.profile?.age
+          },
+          conversation: context.conversation?.messages || [],
+          preferences: context.preferences,
+          instructions: this.getContextualInstructions(context)
+        },
+        metadata: {
+          timestamp: context.timestamp,
+          version: '5.0'
+        }
+      };
 
-    const apiConfig = getApiRequestConfig(this.deviceId);
-
-    // ✅ Payload optimisé
-    const payload = {
-      message,
-      context: {
-        // Données essentielles seulement
-        persona: context.persona,
-        phase: context.phase,
-        // Contexte conversation compact
-        conversation: context.conversation ? {
-          recent: context.conversation.messages.slice(-4), // 4 derniers max
-          summary: context.conversation.summary,
-          continuity: context.conversation.continuity
-        } : null,
-        // Instructions pour personnalisation
-        instructions: context.instructions
-      }
-    };
-
-    // ✅ Utiliser la nouvelle fonction pour récupérer l'URL complète
-    const chatEndpointUrl = getEndpointUrl('chat');
-
-    const response = await fetch(chatEndpointUrl, {
-      method: 'POST',
-      headers: apiConfig.headers,
-      body: JSON.stringify(payload),
-      timeout: apiConfig.timeout,
-    });
-
-    if (!response.ok) {
-      console.error('❌ API Response Error:', {
-        status: response.status,
-        statusText: response.statusText,
-        phase: context.phase,
-        persona: context.persona
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: config.headers,
+        body: JSON.stringify(payload),
+        timeout: config.timeout
       });
-      
-      // ✅ Pour 404/503, utiliser directement les fallbacks au lieu de throw
-      if (response.status === 404 || response.status === 503) {
-        console.log('🔄 API indisponible, utilisation des fallbacks intelligents');
-        return null; // Signal pour utiliser les fallbacks
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
-      throw new Error(`API Error: ${response.status}`);
+
+      const data = await response.json();
+      return data.response || data.message || null;
+
+    } catch (error) {
+      console.info('🔄 API indisponible, utilisation des fallbacks intelligents');
+      throw error;
     }
-
-    const data = await response.json();
-
-    // Retourner la réponse formatée
-    return data.response || data.message || data.data?.message || null;
   }
 
   // ✅ NOUVEAU : Fallbacks intelligents
   getSmartFallbackResponse(message) {
     const userStore = useUserStore.getState();
-    const persona = userStore.persona.assigned || 'emma';
+    const persona = userStore.persona?.assigned || 'emma';
     
-    // Fallback spécifique au persona
     const personaFallbacks = SMART_FALLBACKS[persona] || SMART_FALLBACKS.emma;
     
-    // Recherche exacte
-    let fallbackMessage = personaFallbacks[message];
+    const normalizedMessage = message.trim().replace(/[?!.]*$/, '');
     
-    // Recherche par mots-clés si pas de match exact
-    if (!fallbackMessage) {
-      const messageLower = message.toLowerCase();
-      
-      for (const [key, value] of Object.entries(personaFallbacks)) {
-        if (messageLower.includes(key.toLowerCase().split(' ')[0])) {
-          fallbackMessage = value;
-          break;
-        }
+    for (const [pattern, response] of Object.entries(personaFallbacks)) {
+      if (normalizedMessage.toLowerCase().includes(pattern.toLowerCase().substring(0, 10))) {
+        return response;
       }
     }
-    
-    // Fallback générique adapté au persona
-    if (!fallbackMessage) {
-      const genericFallbacks = {
-        emma: "Je comprends ! Dis-moi en plus sur ce que tu ressens ? 💜",
-        laure: "Je vois. Pouvez-vous préciser votre ressenti ?",
-        clara: "Ah ! Quelle belle opportunité d'explorer ensemble ! ✨",
-        sylvie: "Je t'écoute. Prenons le temps d'accueillir ce que tu ressens.",
-        christine: "Je comprends. Comment puis-je vous accompagner ?"
-      };
-      
-      fallbackMessage = genericFallbacks[persona] || genericFallbacks.emma;
-    }
 
-    return {
-      success: true,
-      message: fallbackMessage,
-      source: 'smart_fallback',
-      persona: persona
+    const defaultResponses = {
+      emma: "Je t'écoute avec bienveillance 💕 Peux-tu m'en dire plus sur ce que tu ressens ?",
+      laure: "Analysons ensemble votre situation. Quels sont les détails importants ?",
+      clara: "Wow, merci de partager ça avec moi ! Explorons ensemble ce que ton corps te dit ✨",
+      sylvie: "Je comprends, ma chère. Prenons le temps d'accueillir ce que tu vis.",
+      christine: "Je vous écoute. Pouvez-vous préciser ce que vous ressentez ?"
     };
+
+    return defaultResponses[persona] || defaultResponses.emma;
   }
 
   // ✅ NOUVEAU : Suggestions intelligentes
   async getSmartSuggestions() {
     try {
       const userStore = useUserStore.getState();
+      const phase = getCurrentPhase(userStore.cycle);
+      const persona = userStore.persona?.assigned || 'emma';
       
-      // ✅ Protection contre cycle undefined
-      const cycleData = getCycleData();
-      const safeCycle = cycleData || {
-        lastPeriodDate: null,
-        length: 28,
-        periodDuration: 5
-      };
+      const suggestions = this.getDefaultSuggestions(phase);
       
-      const currentPhase = getCurrentPhase(
-        safeCycle.lastPeriodDate,
-        safeCycle.length,
-        safeCycle.periodDuration
-      );
-      
-      const chatStore = useChatStore.getState();
-      const suggestions = chatStore.getContextualSuggestions();
-      
-      return suggestions.length > 0 ? suggestions : this.getDefaultSuggestions(currentPhase);
+      return suggestions.slice(0, 3);
     } catch (error) {
-      console.warn('🚨 Erreur smart suggestions:', error);
-      return ["Comment je me sens ?", "Conseils du jour", "Rituels bien-être"];
+      console.error('🚨 Smart suggestions error:', error);
+      return ['Comment te sens-tu ?', 'Raconte-moi ta journée', 'As-tu des questions ?'];
     }
   }
 
   getDefaultSuggestions(phase) {
-    const phaseSuggestions = {
+    const suggestions = {
       menstrual: [
-        "Comment soulager mes douleurs ?",
-        "Rituels cocooning règles",
-        "Nutrition pendant les règles"
+        'Comment gérer mes douleurs ?',
+        'Que faire contre la fatigue ?',
+        'Quels aliments privilégier ?'
       ],
       follicular: [
-        "Optimiser mon énergie montante",
-        "Nouveaux projets à commencer",
-        "Sport adapté à cette phase"
+        'Comment optimiser mon énergie ?',
+        'Quels projets commencer ?',
+        'Comment profiter de cette phase ?'
       ],
       ovulatory: [
-        "Profiter de mon pic d'énergie",
-        "Communication et relations",
-        "Créativité et socialisation"
+        'Comment me sentir confiante ?',
+        'Que faire de cette énergie ?',
+        'Comment bien communiquer ?'
       ],
       luteal: [
-        "Gérer les changements d'humeur",
-        "Préparer les prochaines règles",
-        "Ralentir et m'écouter"
+        'Comment gérer mes émotions ?',
+        'Que faire avant mes règles ?',
+        'Comment me préparer ?'
       ]
     };
 
-    return phaseSuggestions[phase] || phaseSuggestions.menstrual;
+    return suggestions[phase] || suggestions.follicular;
   }
 
   // ✅ MÉTHODES UTILITAIRES
@@ -666,77 +511,33 @@ class ChatService {
   }
 
   async generateContextualResponse(message, options = {}) {
+    const context = await this.buildEnrichedContext(message);
+    const conversationContext = options.conversationContext || [];
+    
     try {
-      // Obtenir le contexte utilisateur
-      const userStore = useUserStore.getState();
-      const cycleData = getCycleData();
+      const response = await this.callChatAPI(message, {
+        ...context,
+        conversation: this.prepareConversationContext(message, conversationContext)
+      });
       
-      // Protection contre cycle undefined
-      const safeCycle = cycleData || {
-        lastPeriodDate: null,
-        length: 28,
-        periodDuration: 5
-      };
-
-      const currentPhase = getCurrentPhase(
-        safeCycle.lastPeriodDate,
-        safeCycle.length,
-        safeCycle.periodDuration
-      );
-      // ... existing code ...
+      return response || this.getSmartFallbackResponse(message);
     } catch (error) {
-      console.error('Erreur génération réponse:', error);
+      console.error('🚨 Contextual response error:', error);
+      return this.getSmartFallbackResponse(message);
     }
   }
 
   async getChatContext() {
-    try {
-      const userStore = useUserStore.getState();
-      const cycleData = getCycleData();
-      
-      const safeCycle = cycleData || {
-        lastPeriodDate: null,
-        length: 28,
-        periodDuration: 5
-      };
-
-      const currentPhase = getCurrentPhase(
-        safeCycle.lastPeriodDate,
-        safeCycle.length,
-        safeCycle.periodDuration
-      );
-
-      return {
-        persona: userStore.persona?.assigned || 'emma',
-        phase: currentPhase,
-        intelligence: {
-          conversationLength: 0,
-          patterns: {},
-          timeOfDay: new Date().getHours()
-        },
-        cycle: safeCycle,
-        user: userStore
-      };
-    } catch (error) {
-      console.error('Erreur contexte chat:', error);
-      return {
-        persona: 'emma',
-        phase: 'menstrual',
-        intelligence: {
-          conversationLength: 0,
-          patterns: {},
-          timeOfDay: new Date().getHours()
-        },
-        cycle: {
-          lastPeriodDate: null,
-          length: 28,
-          periodDuration: 5
-        },
-        user: {}
-      };
-    }
+    const userStore = useUserStore.getState();
+    const cycleStore = useCycleStore.getState();
+    
+    return {
+      phase: getCurrentPhase(userStore.cycle),
+      persona: userStore.persona?.assigned,
+      preferences: userStore.preferences,
+      deviceId: this.deviceId
+    };
   }
 }
 
-export { ChatService };
 export default new ChatService();

@@ -1,4 +1,12 @@
-// services/VignettesService.js - CORRIGÉ
+//
+// ─────────────────────────────────────────────────────────
+// 📄 File: src/services/VignettesService.js
+// 🧩 Type: Service
+// 📚 Description: Service vignettes intelligentes avec cache optimisé
+// 🕒 Version: 3.0 - 2025-06-21
+// 🧭 Used in: VignetteCard, PersonalizedInsight
+// ─────────────────────────────────────────────────────────
+//
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ContentManager from './ContentManager';
 

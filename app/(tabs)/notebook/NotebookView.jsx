@@ -14,9 +14,15 @@ import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../../src/hooks/useTheme';
 import { useAdaptiveInterface } from '../../../src/hooks/useAdaptiveInterface';
 import { useTerminology } from '../../../src/hooks/useTerminology';
-import { Heading, BodyText, Caption } from '../../../src/core/ui/Typography';
-import ScreenContainer from '../../../src/core/layout/ScreenContainer';
-import { NotebookHeader } from '../../../src/core/layout/SimpleHeader';
+import { 
+  Heading, 
+  BodyText, 
+  Caption
+} from '../../../src/core';
+import {
+  ScreenContainer,
+  NotebookHeader
+} from '../../../src/core';
 import { useNotebookStore } from '../../../src/stores/useNotebookStore';
 import { useNavigationStore } from '../../../src/stores/useNavigationStore';
 import { useCycleStore } from '../../../src/stores/useCycleStore';
@@ -25,9 +31,7 @@ import { getCurrentPhase } from '../../../src/utils/cycleCalculations';
 import FreeWritingModal from '../../../src/features/notebook/FreeWritingModal';
 import EntryDetailModal from '../../../src/features/notebook/EntryDetailModal';
 import SwipeableEntryIOS from '../../../src/features/notebook/SwipeableEntryIOS';
-import {
-  AnimatedSearchBar,
-} from '../../../src/core/ui/AnimatedComponents';
+import { AnimatedSearchBar } from '../../../src/core';
 import { formatTrendSummary } from '../../../src/utils/trackingFormatters';
 import CalendarView from '../../../src/features/cycle/CalendarView';
 
@@ -292,8 +296,10 @@ const getStyles = (theme, insets) => StyleSheet.create({
   },
 
   compactFilterPillActive: {
-    backgroundColor: theme.colors.primary + '15',
-    borderColor: theme.colors.primary,
+    ...theme.getGlassmorphismStyle(theme.colors.primary, {
+      borderWidth: 1,
+      shadowOpacity: 0,  // Pas de shadow sur les filtres
+    }),
   },
 
   compactFilterText: {

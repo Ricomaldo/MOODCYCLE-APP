@@ -25,7 +25,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../../hooks/useTheme';
-import { Heading2, BodyText, Caption } from '../../core/ui/Typography';
+import { Heading2, BodyText, Caption } from '../../core/ui/typography';
 import { useNotebookStore } from '../../stores/useNotebookStore';
 import { useUserStore } from '../../stores/useUserStore';
 import { useCycleStore } from '../../stores/useCycleStore';
@@ -419,7 +419,10 @@ export default function FreeWritingModal({
                           key={index}
                           style={[
                             styles.promptPill,
-                            { backgroundColor: theme.colors.phases[currentPhase] + '15' }
+                            theme.getPhaseGlassmorphismStyle(currentPhase, {
+                              borderRadius: 16,
+                              shadowOpacity: 0,  // Pas de shadow sur les pills
+                            })
                           ]}
                           onPress={() => handlePromptSelect(prompt)}
                         >
@@ -528,7 +531,11 @@ export default function FreeWritingModal({
                           key={index} 
                           style={[
                             styles.selectedTag,
-                            { backgroundColor: theme.colors.phases[currentPhase] }
+                            theme.getPhaseGlassmorphismStyle(currentPhase, {
+                              bgOpacity: '',  // Couleur pleine pour les tags sélectionnés
+                              borderWidth: 0,
+                              shadowOpacity: 0,
+                            })
                           ]}
                         >
                           <BodyText style={styles.selectedTagText}>{tag}</BodyText>

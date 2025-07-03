@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../hooks/useTheme';
 import { useUserStore } from '../../stores/useUserStore';
-import { Heading } from '../ui/Typography';
+import { Heading } from '../ui/typography';
 import MeluneAvatar from '../../features/shared/MeluneAvatar';
 import ChatModal from '../../features/chat/ChatModal';
 
@@ -249,16 +249,15 @@ const getStyles = (theme, insets, position) => StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: theme.colors.primary + '15',
-    borderWidth: 2,
-    borderColor: theme.colors.primary + '30',
+    ...theme.getGlassmorphismStyle(theme.colors.primary, {
+      borderWidth: 2,
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 4 },
+      elevation: 8,
+    }),
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
     zIndex: 1000,
   },
   touchableArea: {

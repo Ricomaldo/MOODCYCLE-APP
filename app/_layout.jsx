@@ -3,7 +3,7 @@
 // 📄 Fichier : app/_layout.jsx
 // 🧩 Type : Layout principal (Root Layout)
 // 📚 Description : Définit la structure racine de l'application, SafeAreaProvider, Stack navigation, polices, etc.
-// 🕒 Version : 3.2 - 2025-06-27 - BOUTON PARAMETRES RETIRÉ DU LAYOUT GLOBAL
+// 🕒 Version : 3.3 - 2025-06-27 - NO SLIDE ANIMATIONS
 // 🧭 Utilisé dans : racine de l'app (root)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
@@ -33,9 +33,32 @@ function LayoutContent() {
     <>
       <StatusBar style={isDark ? "light" : "auto"} />
       
-      <Stack>
-        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          // AUCUNE ANIMATION AU NIVEAU ROOT
+          animation: 'none',
+          presentation: 'card',
+          transitionSpec: {
+            open: { animation: 'timing', config: { duration: 0 } },
+            close: { animation: 'timing', config: { duration: 0 } },
+          },
+        }}
+      >
+        <Stack.Screen 
+          name="onboarding" 
+          options={{ 
+            headerShown: false,
+            animation: 'none',
+          }} 
+        />
+        <Stack.Screen 
+          name="(tabs)" 
+          options={{ 
+            headerShown: false,
+            animation: 'none',
+          }} 
+        />
       </Stack>
       
       {/* 🛠️ TOOLBOX DEV - Disponible partout */}

@@ -1,10 +1,10 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 File: app/onboarding/700-paywall.jsx
-// 🧩 Type: Onboarding Screen
-// 📚 Description: Paywall intelligent avec personnalisation
-// 🕒 Version: 1.0 - Intelligence Conversion
-// 🧭 Used in: Onboarding flow - Étape 4/4 "Prête !"
+// 📄 File: app/onboarding/700-essai.jsx
+// 🧩 Type: Écran Onboarding
+// 📚 Description: Essai gratuit avec personnalisation persona
+// 🕒 Version: 1.0 - 2025-01-21
+// 🧭 Used in: Parcours onboarding, étape essai
 // ─────────────────────────────────────────────────────────
 //
 import React, { useEffect, useRef, useState } from 'react';
@@ -14,7 +14,7 @@ import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntellig
 import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
-import { BodyText } from '../../src/core/ui/Typography';
+import { BodyText } from '../../src/core';
 import { useTheme } from '../../src/hooks/useTheme';
 import { Feather } from '@expo/vector-icons';
 
@@ -129,7 +129,6 @@ export default function PaywallScreen() {
       }),
     ]).start();
 
-    // Track vue paywall
     intelligence.trackAction('paywall_viewed', {
       persona,
       suggestedPlan: 'yearly'
@@ -147,8 +146,7 @@ export default function PaywallScreen() {
       onboardingDuration: Date.now() - (intelligence.userProfile.startDate || Date.now())
     });
 
-    // TODO: Activer essai 14 jours
-    console.log('🎯 Trial started for:', persona);
+    console.info('🎯 Trial started for:', persona);
     
     router.push('/onboarding/800-cadeau');
   };
@@ -156,8 +154,7 @@ export default function PaywallScreen() {
   const handleSolidaire = () => {
     intelligence.trackAction('solidaire_selected', { persona });
     
-    // TODO: Activer version solidaire
-    console.log('🤝 Solidaire selected for:', persona);
+    console.info('🤝 Solidaire selected for:', persona);
     
     router.push('/onboarding/800-cadeau');
   };

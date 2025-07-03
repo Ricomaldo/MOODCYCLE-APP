@@ -76,13 +76,6 @@ export const TERMINOLOGY_MAPPINGS = {
 // 🎯 FONCTION HELPER PRINCIPALE
 // ═══════════════════════════════════════════════════════
 
-/**
- * Récupère le label d'affichage d'une phase selon la terminologie
- * @param {string} phaseKey - Clé technique phase (menstrual, follicular, ovulatory, luteal)
- * @param {string} terminology - Terminologie choisie (medical, spiritual, energetic, modern)
- * @param {string} type - Type de label (phases, archetype)
- * @returns {string} Label d'affichage ou fallback
- */
 export const getPhaseLabel = (phaseKey, terminology = 'medical', type = 'phases') => {
   // ✅ Triple fallback pour robustesse maximale
   return TERMINOLOGY_MAPPINGS[terminology]?.[type]?.[phaseKey] || 
@@ -94,28 +87,14 @@ export const getPhaseLabel = (phaseKey, terminology = 'medical', type = 'phases'
 // 🔧 HELPERS UTILITAIRES
 // ═══════════════════════════════════════════════════════
 
-/**
- * Récupère toutes les terminologies disponibles
- * @returns {string[]} Liste des clés terminologies
- */
 export const getAvailableTerminologies = () => {
   return Object.keys(TERMINOLOGY_MAPPINGS);
 };
 
-/**
- * Vérifie si une terminologie existe
- * @param {string} terminology - Terminologie à vérifier
- * @returns {boolean} True si existe
- */
 export const isValidTerminology = (terminology) => {
   return terminology && TERMINOLOGY_MAPPINGS.hasOwnProperty(terminology);
 };
 
-/**
- * Récupère les labels d'une terminologie complète
- * @param {string} terminology - Terminologie demandée
- * @returns {object} Objet avec phases et archétypes ou null
- */
 export const getTerminologyLabels = (terminology) => {
   if (!isValidTerminology(terminology)) {
     return null;
@@ -154,11 +133,6 @@ export const TERMINOLOGY_METADATA = {
   }
 };
 
-/**
- * Récupère les métadonnées d'une terminologie
- * @param {string} terminology - Terminologie demandée  
- * @returns {object} Métadonnées ou fallback medical
- */
 export const getTerminologyMetadata = (terminology) => {
   return TERMINOLOGY_METADATA[terminology] || TERMINOLOGY_METADATA.medical;
 };

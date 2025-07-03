@@ -20,7 +20,7 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { Heading2, BodyText, Caption } from '../ui/Typography';
+import { Heading2, BodyText, Caption } from '../ui/typography';
 import { useUserStore } from '../../stores/useUserStore';
 import { useCycleStore } from '../../stores/useCycleStore';
 import { getCurrentPhase } from '../../utils/cycleCalculations';
@@ -201,7 +201,15 @@ export default function ParametresModal({ visible, onClose }) {
                   key={tab.id}
                   style={[
                     styles.tab,
-                    activeTab === tab.id && [styles.tabActive, { backgroundColor: phaseColor + '15' }]
+                    activeTab === tab.id && [
+                  styles.tabActive, 
+                  theme.getGlassmorphismStyle(phaseColor, {
+                    bgOpacity: theme.glassmorphism.opacity.bg,
+                    borderOpacity: theme.glassmorphism.opacity.border,
+                    borderWidth: 1,
+                    shadowOpacity: 0,
+                  })
+                ]
                   ]}
                   onPress={() => handleTabChange(tab.id)}
                 >

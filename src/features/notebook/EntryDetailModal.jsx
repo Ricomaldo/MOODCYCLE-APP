@@ -27,7 +27,7 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { captureRef } from 'react-native-view-shot';
 import { useTheme } from '../../hooks/useTheme';
-import { Heading2, BodyText, Caption } from '../../core/ui/Typography';
+import { Heading2, BodyText, Caption } from '../../core/ui/typography';
 import { useNotebookStore } from '../../stores/useNotebookStore';
 import { useCycleStore } from '../../stores/useCycleStore';
 import { getCurrentPhase } from '../../utils/cycleCalculations';
@@ -729,7 +729,12 @@ const getStyles = (theme) => StyleSheet.create({
     gap: 8,
   },
   tag: {
-    backgroundColor: theme.colors.primary + '15',
+    ...theme.getGlassmorphismStyle(theme.colors.primary, {
+      bgOpacity: theme.glassmorphism.opacity.bg,
+      borderOpacity: theme.glassmorphism.opacity.border,
+      borderWidth: 1,
+      shadowOpacity: 0,  // Pas de shadow sur les tags
+    }),
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 4,

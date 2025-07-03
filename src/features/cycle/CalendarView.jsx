@@ -1,17 +1,17 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 Fichier : src/features/cycle/CalendarView.jsx
-// 🧩 Type : Composant Vue Cycle - OPTIMISÉ
-// 📚 Description : Vue calendrier du cycle menstruel et des entrées carnet
-// 🕒 Version : 4.0 - 2025-06-21 - OPTIMISATIONS PERFORMANCE
-// 🧭 Utilisé dans : CycleView, NotebookView
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 📄 File: src/features/cycle/CalendarView.jsx
+// 🧩 Type: Composant Vue
+// 📚 Description: Vue calendrier du cycle menstruel et des entrées carnet
+// 🕒 Version: 4.0 - 2025-06-21
+// 🧭 Used in: CycleView, NotebookView
+// ─────────────────────────────────────────────────────────
 //
 import { useState, useMemo, memo, useRef, useEffect, Profiler } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../hooks/useTheme';
-import { Caption } from '../../core/ui/Typography';
+import { Caption } from '../../core/ui/typography';
 import { useNotebookStore } from '../../stores/useNotebookStore';
 import { useCycleStore } from '../../stores/useCycleStore';
 import { getCurrentPhase, getCurrentCycleDay } from '../../utils/cycleCalculations';
@@ -56,7 +56,7 @@ const CalendarView = memo(function CalendarView({
   useEffect(() => {
     renderCount.current++;
     if (__DEV__) {
-      console.log('🔄 Calendar render #', renderCount.current);
+      console.info('🔄 Calendar render #', renderCount.current);
     }
   });
 
@@ -201,48 +201,50 @@ const CalendarView = memo(function CalendarView({
   return (
     <View style={styles.container}>
       {/* Header du mois avec navigation */}
-      <View style={styles.monthNavigationHeader}>
-        <TouchableOpacity onPress={goToPreviousMonth} style={styles.navButton} testID="nav-prev">
-          <Feather name="chevron-left" size={24} color={theme.colors.primary} />
+      <View style={styles.header}>
+        <TouchableOpacity onPress={goToPreviousMonth} style={styles.navButton}>
+          <Feather name="chevron-left" size={24} color={theme.colors.text} />
         </TouchableOpacity>
 
-        <Text style={styles.monthHeader}>
-          {CALENDAR_CONSTANTS.MONTHS[currentMonth]} {currentYear}
+        <Text style={styles.monthYear}>
+          {new Date(currentYear, currentMonth).toLocaleDateString('fr-FR', {
+            month: 'long',
+            year: 'numeric'
+          })}
         </Text>
 
-        <TouchableOpacity onPress={goToNextMonth} style={styles.navButton} testID="nav-next">
-          <Feather name="chevron-right" size={24} color={theme.colors.primary} />
+        <TouchableOpacity onPress={goToNextMonth} style={styles.navButton}>
+          <Feather name="chevron-right" size={24} color={theme.colors.text} />
         </TouchableOpacity>
       </View>
 
       {/* Week days */}
-      <View style={styles.weekHeader}>
+      <View style={styles.weekDays}>
         {CALENDAR_CONSTANTS.DAYS_OF_WEEK.map((day) => (
-          <View key={day} style={styles.weekDayCell}>
-            <Caption style={styles.weekDayText}>{day}</Caption>
-          </View>
+          <Text key={day} style={styles.weekDayText}>{day}</Text>
         ))}
       </View>
 
       {/* Memoized calendar grid */}
-      <View style={styles.daysGrid}>{calendarDays}</View>
+      <View style={styles.calendarGrid}>{calendarDays}</View>
 
       {/* Legend */}
       <View style={styles.legend}>
-        <Caption style={styles.legendText}>Intensité des couleurs = position dans la phase</Caption>
-        <View style={styles.legendRow}>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: theme.colors.primary }]} />
-            <Caption style={styles.legendItemText}>Sauvegardé</Caption>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: theme.colors.secondary }]} />
-            <Caption style={styles.legendItemText}>Personnel</Caption>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: theme.colors.phases.ovulatory }]} />
-            <Caption style={styles.legendItemText}>Tracking</Caption>
-          </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendDot, { backgroundColor: theme.colors.phases.menstrual }]} />
+          <Caption style={styles.legendText}>Règles</Caption>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendDot, { backgroundColor: theme.colors.phases.follicular }]} />
+          <Caption style={styles.legendText}>Folliculaire</Caption>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendDot, { backgroundColor: theme.colors.phases.ovulatory }]} />
+          <Caption style={styles.legendText}>Ovulation</Caption>
+        </View>
+        <View style={styles.legendItem}>
+          <View style={[styles.legendDot, { backgroundColor: theme.colors.phases.luteal }]} />
+          <Caption style={styles.legendText}>Lutéale</Caption>
         </View>
       </View>
     </View>
@@ -252,10 +254,12 @@ const CalendarView = memo(function CalendarView({
 // ✅ Profiler wrapper for development monitoring
 function ProfiledCalendarView(props) {
   const onRenderCallback = (id, phase, actualDuration) => {
-    if (__DEV__) {
-      console.log(`📊 Calendar ${phase}:`, {
-        duration: actualDuration.toFixed(2) + 'ms',
-        timestamp: new Date().toISOString()
+    if (__DEV__ && actualDuration > 100) {
+      console.info(`📊 Calendar ${phase}:`, {
+        id,
+        phase,
+        duration: actualDuration.toFixed(1) + 'ms',
+        performance: actualDuration > 16 ? '🐌 slow' : '⚡ fast'
       });
     }
   };
@@ -271,86 +275,80 @@ export default ProfiledCalendarView;
 
 const getStyles = (theme) => StyleSheet.create({
   container: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.medium,
-    padding: theme.spacing.m,
+    backgroundColor: theme.colors.background,
+    borderRadius: 12,
+    padding: 16,
   },
-  monthNavigationHeader: {
+  header: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: theme.spacing.m,
+    alignItems: 'center',
+    marginBottom: 16,
   },
   navButton: {
-    padding: theme.spacing.xs,
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: theme.colors.surface + '50',
   },
-  monthHeader: {
+  monthYear: {
     fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: '600',
     color: theme.colors.text,
-    flex: 1,
+    textTransform: 'capitalize',
   },
-  weekHeader: {
+  weekDays: {
     flexDirection: 'row',
-    marginBottom: theme.spacing.s,
-  },
-  weekDayCell: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: theme.spacing.xs,
+    justifyContent: 'space-around',
+    marginBottom: 8,
   },
   weekDayText: {
-    fontWeight: '600',
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 12,
+    fontWeight: '500',
     color: theme.colors.textSecondary,
   },
-  daysGrid: {
+  calendarGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
   dayCell: {
-    width: '14.28%', // 100% / 7 jours
+    width: '14.28%',
     aspectRatio: 1,
-    alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: theme.borderRadius.small,
-    marginBottom: 2,
+    alignItems: 'center',
     position: 'relative',
+    borderRadius: 8,
+    margin: 1,
   },
   dayText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
     color: theme.colors.text,
   },
   emptyDay: {
-    color: 'transparent',
+    opacity: 0,
   },
   legend: {
-    marginTop: theme.spacing.m,
-    alignItems: 'center',
-  },
-  legendText: {
-    color: theme.colors.textSecondary,
-    fontStyle: 'italic',
-    marginBottom: theme.spacing.xs,
-  },
-  legendRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    width: '100%',
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
   },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   legendDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginRight: theme.spacing.xs,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 4,
   },
-  legendItemText: {
-    fontSize: 10,
+  legendText: {
+    fontSize: 11,
     color: theme.colors.textSecondary,
   },
 
@@ -371,7 +369,6 @@ const getStyles = (theme) => StyleSheet.create({
   moreIndicator: {
     fontSize: 8,
     fontWeight: 'bold',
-    color: theme.colors.primary,
     marginLeft: 1,
   },
 });

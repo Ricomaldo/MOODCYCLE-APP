@@ -176,7 +176,7 @@ export default function DevPanel() {
       autonomySignals: engagement.metrics.autonomySignals
     };
 
-    console.log('🧠 Intelligence Debug:', JSON.stringify(debugInfo, null, 2));
+    console.info('🧠 Intelligence Debug:', JSON.stringify(debugInfo, null, 2));
     
     Alert.alert(
       '🧠 État Intelligence',
@@ -185,7 +185,7 @@ export default function DevPanel() {
       `Phases documentées: ${debugInfo.phasePatterns}\n` +
       `Conversations: ${debugInfo.conversations}\n` +
       `Signaux autonomie: ${debugInfo.autonomySignals}`,
-      [{ text: 'Voir Console', onPress: () => console.log('🧠 Full Intelligence:', intelligence.learning) }]
+      [{ text: 'Voir Console', onPress: () => console.info('🧠 Full Intelligence:', intelligence.learning) }]
     );
   };
 
@@ -537,8 +537,8 @@ export default function DevPanel() {
                 <View style={styles.buttonGrid}>
                   {[
                     { route: '/onboarding', label: 'Onboarding' },
-                    { route: '/(tabs)/chat', label: 'Chat' },
                     { route: '/(tabs)/cycle', label: 'Cycle' },
+                    { route: '/(tabs)/conseil', label: 'Conseil' },
                     { route: '/(tabs)/notebook', label: 'Carnet' }
                   ].map(nav => (
                     <TouchableOpacity

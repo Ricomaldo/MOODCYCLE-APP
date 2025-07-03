@@ -1,3 +1,12 @@
+//
+// ─────────────────────────────────────────────────────────
+// 📄 File: app/(tabs)/cycle/phases/[id].jsx
+// 🧩 Type: Écran Détail
+// 📚 Description: Détail d'une phase du cycle avec conseils Jeza
+// 🕒 Version: 1.0 - 2025-01-21
+// 🧭 Used in: Navigation cycle, détails phases
+// ─────────────────────────────────────────────────────────
+//
 import { View, StyleSheet, ScrollView, TouchableOpacity } from "react-native";
 import { useState, useEffect } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -6,7 +15,7 @@ import { Feather } from "@expo/vector-icons";
 import * as Haptics from 'expo-haptics';
 import { useTheme } from "../../../../src/hooks/useTheme";
 import ContentManager from "../../../../src/services/ContentManager";
-import { Heading, BodyText, Caption } from "../../../../src/core/ui/Typography";
+import { Heading, BodyText, Caption } from '../../../../src/core';
 import { useTerminology } from "../../../../src/hooks/useTerminology";
 
 export default function PhaseDetailScreen() {
@@ -25,7 +34,7 @@ export default function PhaseDetailScreen() {
         const phases = await ContentManager.getPhases();
         setPhaseData(phases[id]);
       } catch (error) {
-        console.log("📱 Fallback vers phases.json local");
+        console.info("📱 Fallback vers phases.json local");
         const phases = require("../../../../src/data/phases.json");
         setPhaseData(phases[id]);
       } finally {
@@ -51,13 +60,11 @@ export default function PhaseDetailScreen() {
     );
   }
 
-  // Extraction editableContent
   const { editableContent, characteristics } = phaseData;
   const headerTextColor = theme.getTextColorOn(phaseData.color);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Header unifié avec contraste automatique */}
       <View
         style={[styles.unifiedHeader, { backgroundColor: phaseData.color }]}
       >
@@ -78,8 +85,14 @@ export default function PhaseDetailScreen() {
         <Heading style={[styles.title, { color: headerTextColor }]}>
           {getPhaseLabel(id)}
         </Heading>
-        {/* Badge contenu Jeza */}
-        <View style={[styles.badge, { backgroundColor: headerTextColor + '20' }]}>
+        <View style={[
+          styles.badge, 
+          theme.getGlassmorphismStyle(headerTextColor, {
+            bgOpacity: theme.glassmorphism.opacity.medium,
+            borderWidth: 0,
+            shadowOpacity: 0,
+          })
+        ]}>
           <Caption style={[styles.badgeText, { color: headerTextColor }]}>
             ✨ Contenu personnalisé par Jeza
           </Caption>
@@ -88,7 +101,6 @@ export default function PhaseDetailScreen() {
 
       <ScrollView style={styles.scrollView}>
         <View style={styles.content}>
-          {/* Ligne avec icône et durée */}
           <View style={styles.durationRow}>
             <BodyText style={styles.symbolSmall}>{phaseData.symbol}</BodyText>
             <Caption style={styles.duration}>{phaseData.duration}</Caption>
@@ -98,7 +110,6 @@ export default function PhaseDetailScreen() {
             {editableContent.description}
           </BodyText>
 
-          {/* Caractéristiques physiques */}
           <Heading style={styles.sectionTitle}>Caractéristiques physiques</Heading>
           <View style={styles.section}>
             {characteristics.physical.map((item, index) => (
@@ -108,7 +119,6 @@ export default function PhaseDetailScreen() {
             ))}
           </View>
 
-          {/* Caractéristiques émotionnelles */}
           <Heading style={styles.sectionTitle}>Ressenti émotionnel</Heading>
           <View style={styles.section}>
             {characteristics.emotional.map((item, index) => (
@@ -118,7 +128,6 @@ export default function PhaseDetailScreen() {
             ))}
           </View>
 
-          {/* Conseils Nutrition */}
           <Heading style={styles.sectionTitle}>Nutrition</Heading>
           <View style={styles.section}>
             {editableContent.advice.nutrition.map((item, index) => (
@@ -128,7 +137,6 @@ export default function PhaseDetailScreen() {
             ))}
           </View>
 
-          {/* Conseils Activités */}
           <Heading style={styles.sectionTitle}>Activités conseillées</Heading>
           <View style={styles.section}>
             {editableContent.advice.activities.map((item, index) => (
@@ -138,7 +146,6 @@ export default function PhaseDetailScreen() {
             ))}
           </View>
 
-          {/* Conseils Self-care */}
           <Heading style={styles.sectionTitle}>Prendre soin de soi</Heading>
           <View style={styles.section}>
             {editableContent.advice.selfcare.map((item, index) => (
@@ -148,7 +155,6 @@ export default function PhaseDetailScreen() {
             ))}
           </View>
 
-          {/* À éviter */}
           <Heading style={styles.sectionTitle}>À éviter</Heading>
           <View style={styles.section}>
             {editableContent.advice.avoid.map((item, index) => (
@@ -158,7 +164,6 @@ export default function PhaseDetailScreen() {
             ))}
           </View>
 
-          {/* Rituels & Pratiques */}
           <Heading style={styles.sectionTitle}>Rituels & Pratiques</Heading>
           <View style={styles.section}>
             {editableContent.rituals.map((ritual, index) => (
@@ -168,7 +173,6 @@ export default function PhaseDetailScreen() {
             ))}
           </View>
 
-          {/* Affirmation */}
           <View style={styles.affirmationSection}>
             <BodyText style={styles.affirmation}>
               "{editableContent.affirmation}"
@@ -198,30 +202,29 @@ const getStyles = (theme) => StyleSheet.create({
     marginRight: theme.spacing.m,
   },
   breadcrumb: {
-    fontSize: 16,
-    opacity: 0.9,
+    fontSize: 14,
+    opacity: 0.8,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: "bold",
-    textAlign: "center",
+    marginBottom: theme.spacing.xs,
   },
   badge: {
-    marginTop: theme.spacing.s,
-    paddingHorizontal: theme.spacing.m,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.m,
-    alignSelf: "center",
+    alignSelf: "flex-start",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   badgeText: {
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: "500",
   },
   scrollView: {
     flex: 1,
   },
   content: {
-    padding: theme.spacing.m,
+    padding: theme.spacing.l,
   },
   durationRow: {
     flexDirection: "row",
@@ -229,53 +232,54 @@ const getStyles = (theme) => StyleSheet.create({
     marginBottom: theme.spacing.m,
   },
   symbolSmall: {
-    fontSize: 20,
+    fontSize: 16,
     marginRight: theme.spacing.xs,
   },
   duration: {
-    fontSize: 16,
     color: theme.colors.textSecondary,
   },
   description: {
     fontSize: 16,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.l,
     lineHeight: 24,
+    marginBottom: theme.spacing.l,
+    color: theme.colors.text,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: theme.colors.text,
+    fontSize: 18,
+    fontWeight: "600",
+    marginBottom: theme.spacing.s,
     marginTop: theme.spacing.l,
-    marginBottom: theme.spacing.m,
+    color: theme.colors.text,
   },
   section: {
     marginBottom: theme.spacing.m,
   },
   listItem: {
-    fontSize: 16,
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: theme.spacing.xs,
     color: theme.colors.text,
-    marginBottom: theme.spacing.s,
-    lineHeight: 22,
   },
   ritualItem: {
-    marginBottom: theme.spacing.m,
+    marginBottom: theme.spacing.xs,
   },
   ritual: {
-    fontSize: 16,
+    fontSize: 14,
+    lineHeight: 20,
     color: theme.colors.text,
-    lineHeight: 22,
   },
   affirmationSection: {
-    marginTop: theme.spacing.xl,
-    marginBottom: theme.spacing.xl,
-    paddingHorizontal: theme.spacing.l,
+    backgroundColor: theme.colors.surface,
+    padding: theme.spacing.l,
+    borderRadius: 12,
+    marginTop: theme.spacing.l,
+    alignItems: "center",
   },
   affirmation: {
-    fontSize: 18,
+    fontSize: 16,
     fontStyle: "italic",
-    color: theme.colors.text,
     textAlign: "center",
-    lineHeight: 26,
+    lineHeight: 24,
+    color: theme.colors.primary,
   },
 });

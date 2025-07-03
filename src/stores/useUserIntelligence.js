@@ -565,8 +565,78 @@ export const useUserIntelligence = create(
       name: "user-intelligence-storage",
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({ 
-        learning: state.learning,
-        observationPatterns: state.observationPatterns 
+        learning: {
+          confidence: state.learning.confidence,
+          timePatterns: {
+            favoriteHours: state.learning.timePatterns.favoriteHours?.slice(-5) || [], // Limiter à 5
+            activeDays: state.learning.timePatterns.activeDays?.slice(-7) || [], // Limiter à 7
+            sessionDuration: state.learning.timePatterns.sessionDuration
+          },
+          conversationPrefs: {
+            responseLength: state.learning.conversationPrefs.responseLength,
+            questionTypes: state.learning.conversationPrefs.questionTypes?.slice(-10) || [], // Limiter à 10
+            successfulPrompts: state.learning.conversationPrefs.successfulPrompts?.slice(-15) || [], // Limiter à 15
+            avoidedTopics: state.learning.conversationPrefs.avoidedTopics?.slice(-5) || [] // Limiter à 5
+          },
+          phasePatterns: {
+            menstrual: {
+              mood: state.learning.phasePatterns.menstrual?.mood,
+              energy: state.learning.phasePatterns.menstrual?.energy,
+              topics: state.learning.phasePatterns.menstrual?.topics?.slice(-10) || [] // Limiter à 10
+            },
+            follicular: {
+              mood: state.learning.phasePatterns.follicular?.mood,
+              energy: state.learning.phasePatterns.follicular?.energy,
+              topics: state.learning.phasePatterns.follicular?.topics?.slice(-10) || []
+            },
+            ovulatory: {
+              mood: state.learning.phasePatterns.ovulatory?.mood,
+              energy: state.learning.phasePatterns.ovulatory?.energy,
+              topics: state.learning.phasePatterns.ovulatory?.topics?.slice(-10) || []
+            },
+            luteal: {
+              mood: state.learning.phasePatterns.luteal?.mood,
+              energy: state.learning.phasePatterns.luteal?.energy,
+              topics: state.learning.phasePatterns.luteal?.topics?.slice(-10) || []
+            }
+          },
+          suggestionEffectiveness: state.learning.suggestionEffectiveness
+        },
+        observationPatterns: {
+          consistency: state.observationPatterns.consistency,
+          confidence: state.observationPatterns.confidence,
+          preferredMode: state.observationPatterns.preferredMode,
+          lastObservations: state.observationPatterns.lastObservations?.slice(-20) || [], // Limiter à 20
+          phasePatterns: {
+            menstrual: {
+              typicalSymptoms: state.observationPatterns.phasePatterns.menstrual?.typicalSymptoms?.slice(-15) || [],
+              typicalMoods: state.observationPatterns.phasePatterns.menstrual?.typicalMoods?.slice(-15) || [],
+              typicalEnergy: state.observationPatterns.phasePatterns.menstrual?.typicalEnergy,
+              occurrences: state.observationPatterns.phasePatterns.menstrual?.occurrences || 0
+            },
+            follicular: {
+              typicalSymptoms: state.observationPatterns.phasePatterns.follicular?.typicalSymptoms?.slice(-15) || [],
+              typicalMoods: state.observationPatterns.phasePatterns.follicular?.typicalMoods?.slice(-15) || [],
+              typicalEnergy: state.observationPatterns.phasePatterns.follicular?.typicalEnergy,
+              occurrences: state.observationPatterns.phasePatterns.follicular?.occurrences || 0
+            },
+            ovulatory: {
+              typicalSymptoms: state.observationPatterns.phasePatterns.ovulatory?.typicalSymptoms?.slice(-15) || [],
+              typicalMoods: state.observationPatterns.phasePatterns.ovulatory?.typicalMoods?.slice(-15) || [],
+              typicalEnergy: state.observationPatterns.phasePatterns.ovulatory?.typicalEnergy,
+              occurrences: state.observationPatterns.phasePatterns.ovulatory?.occurrences || 0
+            },
+            luteal: {
+              typicalSymptoms: state.observationPatterns.phasePatterns.luteal?.typicalSymptoms?.slice(-15) || [],
+              typicalMoods: state.observationPatterns.phasePatterns.luteal?.typicalMoods?.slice(-15) || [],
+              typicalEnergy: state.observationPatterns.phasePatterns.luteal?.typicalEnergy,
+              occurrences: state.observationPatterns.phasePatterns.luteal?.occurrences || 0
+            }
+          },
+          autonomySignals: state.observationPatterns.autonomySignals,
+          lastAnalyzed: state.observationPatterns.lastAnalyzed,
+          totalObservations: state.observationPatterns.totalObservations
+        }
       })
     }
   )

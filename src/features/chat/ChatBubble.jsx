@@ -11,7 +11,7 @@ import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { BodyText } from '../../core/ui/Typography';
+import { BodyText } from '../../core/ui/typography';
 import { useTheme } from '../../hooks/useTheme';
 import { useNotebookStore } from '../../stores/useNotebookStore';
 import { useCycleStore } from '../../stores/useCycleStore';
@@ -170,21 +170,19 @@ const getStyles = (theme, phase) => {
       marginVertical: 4,
     },
     userBubble: {
-      // ✅ GLASSMORPHISM POUR USER AUSSI
-      backgroundColor: theme.colors.primary + '20',
-      backdropFilter: 'blur(20px)',
-      borderWidth: 1.5,
-      borderColor: theme.colors.primary + '40',
-      borderRadius: theme.borderRadius.large,
+      // ✅ GLASSMORPHISM POUR USER CENTRALISÉ
+      ...theme.getGlassmorphismStyle(theme.colors.primary, {
+        bgOpacity: theme.glassmorphism.opacity.medium,
+        borderOpacity: theme.glassmorphism.opacity.accent,
+        borderRadius: theme.borderRadius.large,
+        shadowOffset: { width: 0, height: 4 },
+        shadowRadius: 12,
+        elevation: 4,
+      }),
       borderBottomRightRadius: theme.borderRadius.small,
       paddingHorizontal: 16,
       paddingVertical: 10,
       maxWidth: '75%',
-      shadowColor: theme.colors.primary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.15,
-      shadowRadius: 12,
-      elevation: 4,
     },
     userText: {
       color: theme.colors.primary,
@@ -204,23 +202,17 @@ const getStyles = (theme, phase) => {
       marginLeft: 8,
     },
     meluneBubble: {
-      // ✅ GLASSMORPHISM SIGNATURE UNIFIÉ
-      backgroundColor: phaseColor + '15',
-      backdropFilter: 'blur(20px)',
-      borderWidth: 1.5,
-      borderColor: phaseColor + '30',
-      borderRadius: theme.borderRadius.large,
+      // ✅ GLASSMORPHISM SIGNATURE CENTRALISÉ
+      ...theme.getPhaseGlassmorphismStyle(phase, {
+        borderRadius: theme.borderRadius.large,
+        shadowOffset: { width: 0, height: 4 },
+        shadowRadius: 12,
+        elevation: 4,
+      }),
       borderBottomLeftRadius: theme.borderRadius.small,
       paddingHorizontal: 16,
       paddingVertical: 12,
       maxWidth: '85%',
-      
-      // ✅ SHADOW COLORÉE PHASE
-      shadowColor: phaseColor,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.15,
-      shadowRadius: 12,
-      elevation: 4,
     },
     meluneText: {
       fontSize: 16,
@@ -238,19 +230,12 @@ const getStyles = (theme, phase) => {
     actionButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: 'rgba(255,255,255,0.8)',
-      backdropFilter: 'blur(10px)',
-      borderWidth: 1,
-      borderColor: phaseColor + '30',
-      borderRadius: theme.borderRadius.large,
+      ...theme.getActionGlassmorphismStyle(phaseColor, {
+        borderRadius: theme.borderRadius.large,
+      }),
       paddingHorizontal: 16,
       paddingVertical: 8,
       gap: 6,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 8,
-      elevation: 3,
     },
     actionText: {
       fontSize: 14,

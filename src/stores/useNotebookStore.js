@@ -11,7 +11,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import performanceMonitor from '../core/monitoring/PerformanceMonitor';
-import { useCycleStore } from './useCycleStore';
+import { useCycleStore, getCycleData } from './useCycleStore';
 
 // 🚀 Démarrer le monitoring de l'hydratation
 performanceMonitor.startStoreHydration('notebookStore');
@@ -49,7 +49,7 @@ export const useNotebookStore = create(
         // Import dynamique pour phase actuelle - utilise les nouvelles utils
         const { getCurrentPhase } = require("../utils/cycleCalculations");
         const { useUserStore } = require("./useUserStore");
-        const cycleData = useCycleStore.getState().getCycleData();
+        const cycleData = getCycleData();
         const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
 
         const entry = {
@@ -390,7 +390,7 @@ export const useNotebookStore = create(
       getPhaseBasedSuggestions: () => {
         const { getCurrentPhase } = require("../utils/cycleCalculations");
         const { useUserStore } = require("./useUserStore");
-        const cycleData = useCycleStore.getState().getCycleData();
+        const cycleData = getCycleData();
         const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
 
         const suggestions = {
@@ -520,7 +520,7 @@ export const useNotebookStore = create(
       name: "notebook-storage",
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
-        entries: state.entries,
+        entries: state.entries.slice(-50), // Limiter à 50 entrées les plus récentes pour optimiser AsyncStorage
         availableTags: state.availableTags,
       }),
     }

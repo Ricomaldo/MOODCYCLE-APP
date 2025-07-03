@@ -13,7 +13,7 @@ import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../hooks/useTheme';
-import { BodyText, Caption } from '../../core/ui/Typography';
+import { BodyText, Caption } from '../../core/ui/typography';
 import { useUserStore } from '../../stores/useUserStore';
 import { useEngagementStore } from '../../stores/useEngagementStore';
 import { useCycleStore } from '../../stores/useCycleStore';
@@ -53,7 +53,7 @@ export default function VignetteCard({
   // ✅ ACTIONS NAVIGATION AVEC GESTION CALLBACK PRIORITAIRE
   const handlePress = async () => {
     try {
-      console.log('🎯 VignetteCard handlePress START:', vignette.id);
+
 
       // Haptic feedback iOS
       if (Platform.OS === 'ios') {
@@ -62,7 +62,7 @@ export default function VignetteCard({
 
       // Tracking engagement
       if (trackEngagement && typeof trackAction === 'function') {
-        console.log('📊 Tracking vignette engagement');
+
         trackAction('vignette_pressed', {
           vignetteId: vignette.id,
           action: vignette.action,
@@ -74,7 +74,7 @@ export default function VignetteCard({
 
       // ✅ NOUVEAU: Callback prioritaire avec données complètes
       if (onPress && typeof onPress === 'function') {
-        console.log('🎯 Callback personnalisé avec navigation déléguée');
+
         const callbackData = {
           vignette,
           currentPhase,
@@ -89,15 +89,15 @@ export default function VignetteCard({
         // Si callback retourne true, on continue avec navigation automatique
         // Si callback retourne false/undefined, on délègue complètement
         if (callbackResult !== true) {
-          console.log('🎯 Navigation déléguée au parent');
+
           return;
         }
       }
 
       // ✅ FALLBACK: Navigation automatique si pas de callback ou callback accepte
-      console.log('🚀 Navigation automatique START');
+
       await handleNavigation();
-      console.log('✅ Navigation automatique COMPLETE');
+      
 
     } catch (error) {
       console.error('🚨 Erreur handlePress:', error);
@@ -185,11 +185,11 @@ export default function VignetteCard({
 
   const handleNavigation = async () => {
     try {
-      console.log('🧭 Navigation pour action:', vignette.action);
+
 
       switch (vignette.action) {
         case 'chat':
-          console.log('💬 Navigation vers chat (notebook avec prompt)');
+
           router.push({
             pathname: '/(tabs)/notebook',
             params: {
@@ -205,7 +205,7 @@ export default function VignetteCard({
           break;
 
         case 'notebook':
-          console.log('📝 Navigation vers notebook');
+
           router.push({
             pathname: '/(tabs)/notebook',
             params: {
@@ -220,7 +220,7 @@ export default function VignetteCard({
           break;
 
         case 'quick_track':
-          console.log('📊 Navigation vers quick track');
+
           router.push({
             pathname: '/(tabs)/notebook',
             params: {
@@ -234,7 +234,7 @@ export default function VignetteCard({
           break;
 
         case 'phase_detail':
-          console.log('🌙 Navigation vers phase detail');
+
           router.push({
             pathname: `/(tabs)/cycle/phases/${currentPhase}`,
             params: {
@@ -245,7 +245,7 @@ export default function VignetteCard({
           break;
 
         case 'insights':
-          console.log('💡 Navigation vers insights (conseils)');
+
           router.push({
             pathname: '/(tabs)/conseils',
             params: {
@@ -258,7 +258,7 @@ export default function VignetteCard({
           break;
 
         case 'explore':
-          console.log('🔍 Navigation vers explore');
+
           router.push({
             pathname: '/(tabs)/cycle',
             params: {
@@ -487,7 +487,12 @@ const getStyles = (theme) => StyleSheet.create({
   },
   
   smartIcon: {
-    backgroundColor: theme.colors.primary + '15',
+    ...theme.getGlassmorphismStyle(theme.colors.primary, {
+      bgOpacity: theme.glassmorphism.opacity.bg,
+      borderOpacity: theme.glassmorphism.opacity.border,
+      borderWidth: 1,
+      shadowOpacity: 0,  // Pas de shadow sur les icônes
+    }),
   },
   
   iconEmoji: {

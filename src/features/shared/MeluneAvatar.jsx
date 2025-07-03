@@ -1,36 +1,34 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 Fichier : src/features/shared/MeluneAvatar.jsx
-// 🧩 Type : Composant UI
-// 📚 Description : Avatar Melune avec dessins Jeza selon style choisi
-// 🕒 Version : 5.0 - 2025-06-23
-// 🧭 Utilisé dans : NotebookView, CycleView, partages, onboarding
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 📄 File: src/features/shared/MeluneAvatar.jsx
+// 🧩 Type: Composant UI
+// 📚 Description: Avatar Melune avec dessins Jeza selon style choisi
+// 🕒 Version: 5.0 - 2025-06-23
+// 🧭 Used in: NotebookView, CycleView, partages, onboarding
+// ─────────────────────────────────────────────────────────
 //
 import React, { useEffect, useRef, useMemo, memo } from 'react';
 import { View, Image, StyleSheet, Animated, Text } from 'react-native';
 import { useTheme } from '../../hooks/useTheme';
-import { BodyText } from '../../core/ui/Typography';
+import { BodyText } from '../../core/ui/typography';
 import { useUserStore } from '../../stores/useUserStore';
 
 function MeluneAvatar({ 
   phase = 'menstrual', 
   size = 'large', 
-  avatarStyle,  // ✅ Renommé de 'style' en 'avatarStyle'
-  style,        // ✅ Nouveau : style du conteneur
+  avatarStyle,
+  style,
   animated = true 
 }) {
-  // Récupération du style depuis le store avec fallback sur la prop
   const { melune } = useUserStore();
   const { theme } = useTheme();
   const styles = getStyles(theme);
   const finalAvatarStyle = avatarStyle || melune?.avatarStyle || 'classic';
 
-  // ✅ DEBUG : Log conditionnel (seulement si __DEV__ et changements)
   const prevStyleRef = useRef(finalAvatarStyle);
   
   if (__DEV__ && prevStyleRef.current !== finalAvatarStyle) {
-    console.log('👤 MeluneAvatar style changed:', {
+    console.info('👤 MeluneAvatar style changed:', {
       from: prevStyleRef.current,
       to: finalAvatarStyle,
       source: avatarStyle ? 'prop' : 'store'
@@ -38,12 +36,10 @@ function MeluneAvatar({
     prevStyleRef.current = finalAvatarStyle;
   }
 
-  // Animations iOS-like
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
-  // Sélection de l'image selon le style choisi - Version reactive avec useMemo
   const imageSource = useMemo(() => {
     const imagePaths = {
       classic: require('../../assets/images/melune/melune-classic.png'),
@@ -54,7 +50,7 @@ function MeluneAvatar({
     try {
       return imagePaths[finalAvatarStyle] || imagePaths.classic;
     } catch (error) {
-      console.warn('MeluneAvatar: Erreur chargement image', {
+      console.error('MeluneAvatar: Erreur chargement image', {
         style: finalAvatarStyle,
         availableStyles: Object.keys(imagePaths),
         error: error.message
@@ -68,11 +64,9 @@ function MeluneAvatar({
 
   useEffect(() => {
     if (animated) {
-      // Reset des animations pour les changements de style
       scaleAnim.setValue(0.8);
       opacityAnim.setValue(0);
 
-      // Animation d'entrée iOS-like (scale + fade)
       Animated.parallel([
         Animated.spring(scaleAnim, {
           toValue: 1,
@@ -87,7 +81,6 @@ function MeluneAvatar({
         }),
       ]).start();
 
-      // Animation de pulse subtile continue
       const pulseAnimation = Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, {
@@ -116,7 +109,6 @@ function MeluneAvatar({
   } : {};
 
   if (!imageSource) {
-    // Fallback si aucune image disponible
     return (
       <View
         style={[
@@ -127,7 +119,7 @@ function MeluneAvatar({
             width: sizeValue + 12,
             height: sizeValue + 12,
           },
-          style  // ✅ Applique le style du conteneur
+          style
         ]}
       >
         <BodyText style={[styles.fallbackText, { fontSize: sizeValue * 0.4 }]}>🧚‍♀️</BodyText>
@@ -145,7 +137,7 @@ function MeluneAvatar({
           height: sizeValue + 12,
         },
         animatedStyle,
-        style  // ✅ Applique le style du conteneur
+        style
       ]}
     >
       <Image
@@ -179,5 +171,4 @@ const getStyles = (theme) => StyleSheet.create({
   },
 });
 
-// ✅ Export avec memo pour éviter les re-renders
 export default memo(MeluneAvatar);

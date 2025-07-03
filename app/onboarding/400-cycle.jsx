@@ -1,34 +1,37 @@
 //
 // ─────────────────────────────────────────────────────────
 // 📄 File: app/onboarding/400-cycle.jsx
-// 🧩 Type: Onboarding Screen
-// 📚 Description: Données cycle + détection phase avec architecture existante
-// 🕒 Version: 3.0 - Factorisation useCycle + phases.json
-// 🧭 Used in: Onboarding flow - Étape 2/4 "Ton rythme"
+// 🧩 Type: Écran Onboarding
+// 📚 Description: Configuration cycle + observation simplifiée
+// 🕒 Version: 4.0 - 2025-01-21
+// 🧭 Used in: Parcours onboarding, étape cycle
 // ─────────────────────────────────────────────────────────
 //
 import React, { useEffect, useRef, useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, Animated, ScrollView, Platform } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Animated, ScrollView, Platform, Text } from 'react-native';
 import { router } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
 import { useCycleStore } from '../../src/stores/useCycleStore';
+import { useUserStore } from '../../src/stores/useUserStore';
 import { getCurrentPhase, getCurrentCycleDay } from '../../src/utils/cycleCalculations';
 import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
-import { BodyText } from '../../src/core/ui/Typography';
+import { BodyText } from '../../src/core';
 import { useTheme } from '../../src/hooks/useTheme';
 import phasesData from '../../src/data/phases.json';
 
-// 🎯 Étapes du processus
+// 🎯 TRANSFORMATION : 2 étapes au lieu de 5
 const STEPS = {
-  INTRO: 'intro',
-  DATE: 'date', 
-  DURATION: 'duration',
-  OBSERVATION: 'observation',
-  VALIDATION: 'validation'
+  DATA: 'data',       // Date + Durée combinées
+  FEELING: 'feeling'  // Observation simplifiée (2 sliders)
 };
+
+// 🎨 Configuration sliders
+const ENERGY_LABELS = ['Épuisée', 'Fatiguée', 'Normale', 'Énergique', 'Débordante'];
+const MOOD_LABELS = ['Brouillard', 'Fluctuant', 'Stable', 'Clair', 'Cristallin'];
+const ENERGY_COLORS = ['#ff6b6b', '#ffa726', '#ffeb3b', '#66bb6a', '#26c6da'];
+const MOOD_COLORS = ['#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4'];
 
 // Helper formatage date française
 const formatDateFrench = (date) => {
@@ -39,15 +42,16 @@ const formatDateFrench = (date) => {
   }).format(date);
 };
 
-// Messages Melune depuis phases.json selon persona + phase
-const getPhaseMessage = (phase, persona = 'emma') => {
-  if (!phase || !phasesData[phase]) return '';
+// Messages adaptatifs depuis phases.json + persona
+const getAdaptiveMessage = (phase, persona = 'emma') => {
+  if (!phase || !phasesData[phase]) {
+    return "Parlons de ton cycle unique 🌙";
+  }
   
   const phaseData = phasesData[phase];
-  const meluneConfig = phaseData.melune;
-  
-  // Messages depuis phases.json avec contextualEnrichments
   const enrichments = phaseData.contextualEnrichments || [];
+  
+  // Message personnalisé par persona si disponible
   const personalizedEnrichment = enrichments.find(e => 
     e.targetPersona === persona
   );
@@ -56,70 +60,73 @@ const getPhaseMessage = (phase, persona = 'emma') => {
     return personalizedEnrichment.contextualText;
   }
   
-  // Fallback depuis description phase
-  return phaseData.description;
+  // Fallback description générale
+  return phaseData.editableContent?.description || phaseData.description || "Découvrons ensemble ta phase actuelle 🌸";
 };
-
-// Ajout des labels et couleurs pour les sliders
-const ENERGY_LABELS = ['Épuisée', 'Fatiguée', 'Équilibrée', 'Énergique', 'Débordante'];
-const MOOD_LABELS = ['Brouillard', 'Fluctuant', 'Stable', 'Positif', 'Cristalline'];
-const ENERGY_COLORS = ['#0e3a5e', '#1976d2', '#26c6da', '#4dd0e1', '#00e5ff'];
-const MOOD_COLORS = ['#6d4c9c', '#9575cd', '#ba68c8', '#f06292', '#ffd1dc'];
 
 export default function CycleScreen() {
   const { theme } = useTheme();
   const styles = getStyles(theme);
-  // 🧠 INTELLIGENCE + CYCLE HOOKS
-  const intelligence = useOnboardingIntelligence('400-cycle');
-  // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
-  const cycleData = useCycleStore((state) => state);
-  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
-  const currentDay = getCurrentCycleDay(cycleData.lastPeriodDate, cycleData.length);
-  const startNewCycle = useCycleStore((state) => state.startNewCycle);
-  const updateCycle = useCycleStore((state) => state.updateCycle);
-  const updateCycleLength = useCycleStore((state) => state.updateCycleLength);
-  const updatePeriodDuration = useCycleStore((state) => state.updatePeriodDuration);
   
-  // Données de phase
-  const phaseInfo = require('../../src/data/phases.json');
-  const hasData = () => !!(cycleData.lastPeriodDate && cycleData.length);
+  // 🏪 Stores
+  const { updateCycle, addObservation } = useCycleStore();
+  const { persona } = useUserStore();
   
-  // 🎨 Animations Standard
+  // 🎨 Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
   
-  // État des données
-  const [currentStep, setCurrentStep] = useState(STEPS.INTRO);
+  // 📊 États locaux
+  const [currentStep, setCurrentStep] = useState(STEPS.DATA);
   const [lastPeriodDate, setLastPeriodDate] = useState(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
   const [cycleLength, setCycleLength] = useState(28);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [detectedPhase, setDetectedPhase] = useState(null);
-  const [dynamicMessage, setDynamicMessage] = useState(intelligence.meluneMessage);
+  const [adaptiveMessage, setAdaptiveMessage] = useState("Parlons de ton rythme naturel 🌙");
   const [observation, setObservation] = useState({ energy: 3, mood: 3 });
+
+  const getStepContent = () => {
+    return (
+      <View style={{ backgroundColor: 'red', padding: 50, margin: 20 }}>
+        <Text style={{ color: 'white', fontSize: 30 }}>TEST ROUGE</Text>
+        <Text style={{ color: 'white' }}>Step: {currentStep}</Text>
+      </View>
+    );
+  };
 
   useEffect(() => {
     // 🎨 Animation d'entrée
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 500,
+        duration: 600,
         useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 600,
+        duration: 800,
         useNativeDriver: true,
       }),
     ]).start();
   }, []);
 
-  // Animation lors du changement d'étape
+  // Animation changement d'étape
   useEffect(() => {
     Animated.sequence([
       Animated.timing(slideAnim, { toValue: 20, duration: 200, useNativeDriver: true }),
       Animated.timing(slideAnim, { toValue: 0, duration: 400, useNativeDriver: true }),
     ]).start();
   }, [currentStep]);
+
+  // Calcul phase à chaque changement
+  useEffect(() => {
+    const phase = getCurrentPhase(lastPeriodDate.toISOString(), cycleLength, 5);
+    setDetectedPhase(phase);
+    
+    // Message adaptatif selon persona + phase
+    const currentPersona = persona?.assigned || 'emma';
+    setAdaptiveMessage(getAdaptiveMessage(phase, currentPersona));
+  }, [lastPeriodDate, cycleLength, persona]);
 
   const handleDateChange = (event, selectedDate) => {
     if (Platform.OS === 'android') {
@@ -128,303 +135,42 @@ export default function CycleScreen() {
     
     if (selectedDate) {
       setLastPeriodDate(selectedDate);
-      
-      // 🧠 UTILISATION ARCHITECTURE : Mise à jour temporaire pour calcul
-      updateCycle({
-        lastPeriodDate: selectedDate.toISOString(),
-        length: cycleLength
-      });
-      
-      // Le hook useCycle recalcule automatiquement currentPhase
-      setTimeout(() => {
-        setDetectedPhase(currentPhase);
-        
-        // 🧠 Message adaptatif depuis phases.json
-        if (currentPhase) {
-          const persona = intelligence.currentPersona || 'emma';
-          setDynamicMessage(getPhaseMessage(currentPhase, persona));
-        }
-      }, 100);
-      
-      // Track changement date
-      intelligence.trackAction('period_date_selected', { 
-        date: selectedDate.toISOString(),
-        detectedPhase: currentPhase 
-      });
     }
   };
 
   const handleCycleLengthChange = (newLength) => {
     setCycleLength(newLength);
-    
-    // 🧠 Mise à jour via hook useCycle
-    updateCycle({
-      lastPeriodDate: lastPeriodDate.toISOString(),
-      length: newLength
-    });
-    
-    // Le currentPhase sera recalculé automatiquement
-    setTimeout(() => {
-      setDetectedPhase(currentPhase);
-      
-      if (currentPhase) {
-        const persona = intelligence.currentPersona || 'emma';
-        setDynamicMessage(getPhaseMessage(currentPhase, persona));
-      }
-    }, 100);
   };
 
   const handleObservationChange = (key, value) => {
-    setObservation((prev) => ({ ...prev, [key]: value }));
+    setObservation(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleStepNext = () => {
-    switch (currentStep) {
-      case STEPS.INTRO:
-        setCurrentStep(STEPS.DATE);
-        break;
-      case STEPS.DATE:
-        setCurrentStep(STEPS.DURATION);
-        break;
-      case STEPS.DURATION:
-        setCurrentStep(STEPS.OBSERVATION);
-        break;
-      case STEPS.OBSERVATION:
-        setCurrentStep(STEPS.VALIDATION);
-        break;
-      case STEPS.VALIDATION:
-        handleComplete();
-        break;
+  const handleNextStep = () => {
+    if (currentStep === STEPS.DATA) {
+      setCurrentStep(STEPS.FEELING);
+    } else {
+      handleComplete();
     }
   };
 
   const handleComplete = () => {
-    // 🔧 Sauvegarde données cycle complètes via useCycle
+    // 💾 Sauvegarde cycle
     updateCycle({
       lastPeriodDate: lastPeriodDate.toISOString(),
       length: cycleLength,
       periodDuration: 5, // Valeur par défaut
-      isRegular: null,
-      trackingExperience: null
     });
     
-    // 🧠 Enrichissement avec intelligence
-    intelligence.updateProfile({
-      currentPhase: currentPhase,
-      dayInCycle: currentDay,
-      cycleDataCompleted: true
-    });
+    // 💾 Sauvegarde observation
+    addObservation(observation.mood, observation.energy, 'Observation onboarding');
     
-    // 🧠 Track finalisation cycle avec métadonnées riches
-    intelligence.trackAction('cycle_data_completed', { 
-      phase: currentPhase,
-      phaseMetadata: phaseInfo[currentPhase],
-      cycleLength,
-      dayInCycle: currentDay,
-      hasMinimumData: hasData()
-    });
-
-    // Ajout de l'observation dans le store
-    if (observation.energy && observation.mood) {
-      useCycleStore.getState().addObservation(observation.mood, observation.energy, 'Observation onboarding');
-    }
-
-    // Navigation vers preferences
+    // 🚀 Navigation
     router.push('/onboarding/500-preferences');
   };
 
-  const getStepContent = () => {
-    switch (currentStep) {
-      case STEPS.INTRO:
-        return (
-          <View style={styles.stepContent}>
-            <BodyText style={styles.stepTitle}>
-              Parle-moi de ton rythme naturel
-            </BodyText>
-            <BodyText style={styles.stepSubtext}>
-              Ton cycle est unique et précieux. Je vais t'aider à le comprendre.
-            </BodyText>
-          </View>
-        );
-        
-      case STEPS.DATE:
-        return (
-          <View style={styles.stepContent}>
-            <BodyText style={styles.stepTitle}>
-              Quand ont commencé tes dernières règles ?
-            </BodyText>
-            <BodyText style={styles.stepSubtext}>
-              Même une date approximative m'aide à te situer
-            </BodyText>
-            
-            <TouchableOpacity
-              style={styles.dateButton}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <BodyText style={styles.dateButtonText}>
-                📅 {formatDateFrench(lastPeriodDate)}
-              </BodyText>
-            </TouchableOpacity>
-            
-            {(detectedPhase || currentPhase) && (
-              <View style={[
-                styles.phaseDetected,
-                { backgroundColor: phaseInfo[detectedPhase || currentPhase]?.color + '20' }
-              ]}>
-                <BodyText style={[
-                  styles.phaseText,
-                  { color: phaseInfo[detectedPhase || currentPhase]?.color }
-                ]}>
-                  {phaseInfo[detectedPhase || currentPhase]?.symbol} Phase {detectedPhase || currentPhase}
-                </BodyText>
-                <BodyText style={styles.phaseSubText}>
-                  {phaseInfo[detectedPhase || currentPhase]?.energy} • Jour {currentDay}
-                </BodyText>
-              </View>
-            )}
-          </View>
-        );
-        
-      case STEPS.DURATION:
-        return (
-          <View style={styles.stepContent}>
-            <BodyText style={styles.stepTitle}>
-              Quelle est la durée habituelle de ton cycle ?
-            </BodyText>
-            <BodyText style={styles.stepSubtext}>
-              De J1 (premier jour de règles) au J1 suivant
-            </BodyText>
-            
-            <View style={styles.sliderContainer}>
-              <View style={styles.sliderValues}>
-                {[21, 24, 26, 28, 30, 32, 35].map(length => (
-                  <TouchableOpacity
-                    key={length}
-                    style={[
-                      styles.lengthOption,
-                      cycleLength === length && styles.lengthOptionSelected
-                    ]}
-                    onPress={() => handleCycleLengthChange(length)}
-                  >
-                    <BodyText style={[
-                      styles.lengthText,
-                      cycleLength === length && styles.lengthTextSelected
-                    ]}>
-                      {length}j
-                    </BodyText>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          </View>
-        );
-        
-      case STEPS.OBSERVATION:
-        return (
-          <View style={styles.stepContent}>
-            <BodyText style={styles.stepTitle}>
-              Comment te sens-tu dans ton corps aujourd'hui ?
-            </BodyText>
-            <BodyText style={styles.stepSubtext}>
-              Tes ressentis m'aident à personnaliser ton expérience.
-            </BodyText>
-            {/* Slider Énergie */}
-            <View style={styles.sliderBlock}>
-              <BodyText style={styles.sliderLabel}>Énergie physique</BodyText>
-              <View style={styles.sliderRow}>
-                {ENERGY_LABELS.map((label, idx) => (
-                  <TouchableOpacity
-                    key={label}
-                    style={[
-                      styles.sliderDot,
-                      { backgroundColor: idx + 1 <= observation.energy ? ENERGY_COLORS[idx] : '#e0e0e0' }
-                    ]}
-                    onPress={() => handleObservationChange('energy', idx + 1)}
-                  />
-                ))}
-              </View>
-              <BodyText style={styles.sliderValue}>{ENERGY_LABELS[observation.energy - 1]}</BodyText>
-            </View>
-            {/* Slider Ressenti global */}
-            <View style={styles.sliderBlock}>
-              <BodyText style={styles.sliderLabel}>Clarté mentale</BodyText>
-              <View style={styles.sliderRow}>
-                {MOOD_LABELS.map((label, idx) => (
-                  <TouchableOpacity
-                    key={label}
-                    style={[
-                      styles.sliderDot,
-                      { backgroundColor: idx + 1 <= observation.mood ? MOOD_COLORS[idx] : '#e0e0e0' }
-                    ]}
-                    onPress={() => handleObservationChange('mood', idx + 1)}
-                  />
-                ))}
-              </View>
-              <BodyText style={styles.sliderValue}>{MOOD_LABELS[observation.mood - 1]}</BodyText>
-            </View>
-          </View>
-        );
-        
-      case STEPS.VALIDATION:
-        return (
-          <View style={styles.stepContent}>
-            <BodyText style={styles.stepTitle}>
-              Récapitulatif de ton cycle
-            </BodyText>
-            
-            <View style={styles.summary}>
-              <View style={styles.summaryItem}>
-                <BodyText style={styles.summaryLabel}>Dernières règles:</BodyText>
-                <BodyText style={styles.summaryValue}>
-                  {formatDateFrench(lastPeriodDate)}
-                </BodyText>
-              </View>
-              
-              <View style={styles.summaryItem}>
-                <BodyText style={styles.summaryLabel}>Durée cycle:</BodyText>
-                <BodyText style={styles.summaryValue}>{cycleLength} jours</BodyText>
-              </View>
-              
-              {currentPhase && phaseInfo && (
-                <>
-                  <View style={styles.summaryItem}>
-                    <BodyText style={styles.summaryLabel}>Phase actuelle:</BodyText>
-                    <BodyText style={[styles.summaryValue, { color: phaseInfo[currentPhase]?.color }]}>
-                      {phaseInfo[currentPhase]?.symbol} {phaseInfo[currentPhase]?.name}
-                    </BodyText>
-                  </View>
-                  
-                  <View style={styles.summaryItem}>
-                    <BodyText style={styles.summaryLabel}>Jour du cycle:</BodyText>
-                    <BodyText style={styles.summaryValue}>J{currentDay}</BodyText>
-                  </View>
-                  
-                  <View style={styles.summaryItem}>
-                    <BodyText style={styles.summaryLabel}>Énergie:</BodyText>
-                    <BodyText style={[styles.summaryValue, { color: phaseInfo[currentPhase]?.color }]}>
-                      {phaseInfo[currentPhase]?.energy}
-                    </BodyText>
-                  </View>
-                </>
-              )}
-            </View>
-          </View>
-        );
-        
-      default:
-        return null;
-    }
-  };
-
   const getButtonText = () => {
-    switch (currentStep) {
-      case STEPS.INTRO: return 'Commençons';
-      case STEPS.DATE: return 'Suivant';
-      case STEPS.DURATION: return 'Suivant';
-      case STEPS.OBSERVATION: return 'Suivant';
-      case STEPS.VALIDATION: return 'Parfait !';
-      default: return 'Suivant';
-    }
+    return currentStep === STEPS.DATA ? 'Suivant' : 'Parfait !';
   };
 
   return (
@@ -440,14 +186,12 @@ export default function CycleScreen() {
           
           {/* TopSection - Avatar + Message adaptatif */}
           <View style={styles.topSection}>
-            <Animated.View style={{ opacity: fadeAnim }}>
-              <MeluneAvatar 
-                phase={detectedPhase || currentPhase || "menstrual"} 
-                size="medium" 
-                style="classic"
-                animated={true}
-              />
-            </Animated.View>
+            <MeluneAvatar 
+              phase={detectedPhase || "menstrual"} 
+              size="medium" 
+              style="classic"
+              animated={true}
+            />
             
             <Animated.View
               style={[
@@ -457,13 +201,12 @@ export default function CycleScreen() {
                   opacity: slideAnim.interpolate({
                     inputRange: [-20, 0],
                     outputRange: [0, 1],
-                    extrapolate: 'clamp',
                   }),
                 },
               ]}
             >
-              <BodyText style={styles.meluneMessage}>
-                {dynamicMessage}
+              <BodyText style={styles.adaptiveMessage}>
+                {adaptiveMessage}
               </BodyText>
             </Animated.View>
           </View>
@@ -475,11 +218,6 @@ export default function CycleScreen() {
                 styles.contentContainer,
                 {
                   transform: [{ translateY: slideAnim }],
-                  opacity: slideAnim.interpolate({
-                    inputRange: [-20, 0],
-                    outputRange: [0, 1],
-                    extrapolate: 'clamp',
-                  }),
                 },
               ]}
             >
@@ -491,7 +229,7 @@ export default function CycleScreen() {
           <View style={styles.bottomSection}>
             <TouchableOpacity
               style={styles.nextButton}
-              onPress={handleStepNext}
+              onPress={handleNextStep}
               activeOpacity={0.8}
             >
               <BodyText style={styles.nextButtonText}>
@@ -508,22 +246,18 @@ export default function CycleScreen() {
         <DateTimePicker
           value={lastPeriodDate}
           mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          display="default"
           onChange={handleDateChange}
           maximumDate={new Date()}
-          minimumDate={new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)} // 3 mois max
         />
       )}
 
-      {/* Ajout du badge intelligence visible */}
-      <View style={{ position: 'absolute', top: 16, right: 16, zIndex: 10 }}>
-        <View style={{
-          width: 40, height: 40, borderRadius: 20, backgroundColor: theme.colors.primary + '20',
-          alignItems: 'center', justifyContent: 'center', shadowColor: theme.colors.primary, shadowOpacity: 0.2, shadowRadius: 4
-        }}>
-          <BodyText style={{ fontSize: 22 }}>🧠</BodyText>
+      {/* Badge Intelligence Visible */}
+      <View style={styles.intelligenceBadge}>
+        <View style={styles.badgeIcon}>
+          <BodyText style={styles.badgeEmoji}>🧠</BodyText>
         </View>
-        <BodyText style={{ fontSize: 10, color: theme.colors.primary, textAlign: 'center' }}>Melune apprend de toi</BodyText>
+        <BodyText style={styles.badgeText}>Melune apprend</BodyText>
       </View>
     </ScreenContainer>
   );
@@ -540,27 +274,26 @@ const getStyles = (theme) => StyleSheet.create({
   
   content: {
     flex: 1,
-    paddingHorizontal: theme.spacing.l,
+    padding: 24,
+    justifyContent: 'center',
   },
   
   topSection: {
     alignItems: 'center',
-    paddingTop: theme.spacing.l,
-    marginBottom: theme.spacing.l,
-    minHeight: '25%',
+    marginBottom: 32,
   },
   
   messageContainer: {
-    marginTop: theme.spacing.l,
-    paddingHorizontal: theme.spacing.m,
+    alignItems: 'center',
+    marginTop: 16,
+    paddingHorizontal: 16,
   },
   
-  meluneMessage: {
-    fontSize: 16,
-    color: theme.colors.textLight,
+  adaptiveMessage: {
+    fontSize: 18,
     textAlign: 'center',
-    lineHeight: 24,
-    fontStyle: 'italic',
+    color: theme.colors.text,
+    lineHeight: 26,
   },
   
   mainSection: {
@@ -583,7 +316,6 @@ const getStyles = (theme) => StyleSheet.create({
     marginBottom: theme.spacing.m,
     color: theme.colors.text,
     lineHeight: 28,
-    fontFamily: theme.fonts.body,
     fontWeight: '600',
   },
   
@@ -595,12 +327,33 @@ const getStyles = (theme) => StyleSheet.create({
     lineHeight: 22,
   },
   
+  inputSection: {
+    width: '100%',
+    marginBottom: theme.spacing.xl,
+  },
+  
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: theme.spacing.s,
+    textAlign: 'center',
+  },
+  
+  inputSubtext: {
+    fontSize: 13,
+    color: theme.colors.textLight,
+    textAlign: 'center',
+    marginBottom: theme.spacing.l,
+  },
+  
   dateButton: {
     backgroundColor: theme.colors.primary,
     paddingVertical: theme.spacing.l,
     paddingHorizontal: theme.spacing.xl,
     borderRadius: theme.borderRadius.large,
-    marginVertical: theme.spacing.l,
+    alignSelf: 'center',
+    minWidth: '80%',
   },
   
   dateButtonText: {
@@ -610,6 +363,40 @@ const getStyles = (theme) => StyleSheet.create({
     textAlign: 'center',
   },
   
+  lengthOptions: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+    gap: theme.spacing.s,
+  },
+  
+  lengthOption: {
+    paddingVertical: theme.spacing.m,
+    paddingHorizontal: theme.spacing.l,
+    borderRadius: theme.borderRadius.medium,
+    borderWidth: 2,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
+    minWidth: 50,
+  },
+  
+  lengthOptionSelected: {
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primary + '10',
+  },
+  
+  lengthText: {
+    fontSize: 14,
+    color: theme.colors.text,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  
+  lengthTextSelected: {
+    color: theme.colors.primary,
+    fontWeight: '600',
+  },
+  
   phaseDetected: {
     marginTop: theme.spacing.l,
     padding: theme.spacing.l,
@@ -617,6 +404,7 @@ const getStyles = (theme) => StyleSheet.create({
     borderWidth: 1,
     borderColor: 'transparent',
     alignItems: 'center',
+    width: '100%',
   },
   
   phaseText: {
@@ -632,110 +420,25 @@ const getStyles = (theme) => StyleSheet.create({
     textAlign: 'center',
   },
   
-  sliderContainer: {
-    width: '100%',
-    marginVertical: theme.spacing.l,
-  },
-  
-  sliderValues: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    flexWrap: 'wrap',
-    gap: theme.spacing.s,
-  },
-  
-  lengthOption: {
-    paddingVertical: theme.spacing.m,
-    paddingHorizontal: theme.spacing.l,
-    borderRadius: theme.borderRadius.medium,
-    borderWidth: 2,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-  },
-  
-  lengthOptionSelected: {
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary + '10',
-  },
-  
-  lengthText: {
-    fontSize: 16,
-    color: theme.colors.text,
-    fontWeight: '500',
-  },
-  
-  lengthTextSelected: {
-    color: theme.colors.primary,
-    fontWeight: '600',
-  },
-  
-  summary: {
-    width: '100%',
-    backgroundColor: theme.colors.surface,
-    padding: theme.spacing.l,
-    borderRadius: theme.borderRadius.large,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  
-  summaryItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: theme.spacing.m,
-  },
-  
-  summaryLabel: {
-    fontSize: 14,
-    color: theme.colors.textLight,
-  },
-  
-  summaryValue: {
-    fontSize: 16,
-    color: theme.colors.text,
-    fontWeight: '600',
-  },
-  
-  bottomSection: {
-    paddingBottom: theme.spacing.xl,
-    minHeight: '20%',
-    justifyContent: 'flex-end',
-  },
-  
-  nextButton: {
-    backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.l,
-    paddingHorizontal: theme.spacing.xl,
-    borderRadius: theme.borderRadius.large,
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  
-  nextButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
-    fontFamily: theme.fonts.body,
-  },
-  
   sliderBlock: {
-    marginBottom: theme.spacing.l,
+    width: '100%',
+    marginBottom: theme.spacing.xl,
+    alignItems: 'center',
   },
   
   sliderLabel: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: theme.spacing.m,
+    marginBottom: theme.spacing.l,
+    color: theme.colors.text,
   },
   
   sliderRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
+    width: '100%',
+    marginBottom: theme.spacing.m,
   },
   
   sliderDot: {
@@ -743,11 +446,67 @@ const getStyles = (theme) => StyleSheet.create({
     height: 40,
     borderRadius: 20,
     backgroundColor: '#e0e0e0',
-    marginHorizontal: theme.spacing.s,
   },
   
   sliderValue: {
     fontSize: 16,
     fontWeight: '600',
+    color: theme.colors.text,
+    textAlign: 'center',
+  },
+  
+  bottomSection: {
+    paddingBottom: theme.spacing.xl,
+    minHeight: '15%',
+    justifyContent: 'flex-end',
+  },
+  
+  nextButton: {
+    backgroundColor: theme.colors.primary,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 24,
+    marginTop: 32,
+  },
+  
+  nextButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  
+  // Badge Intelligence Visible
+  intelligenceBadge: {
+    position: 'absolute',
+    top: 60,
+    right: 16,
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  
+  badgeIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.colors.primary + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: theme.colors.primary,
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+    marginBottom: 4,
+  },
+  
+  badgeEmoji: {
+    fontSize: 20,
+  },
+  
+  badgeText: {
+    fontSize: 10,
+    color: theme.colors.primary,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });

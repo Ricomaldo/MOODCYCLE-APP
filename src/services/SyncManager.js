@@ -11,10 +11,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import { getApiRequestConfig } from '../config/api';
 import NetworkQueue from './NetworkQueue';
-import { useCycleStore } from '../stores/useCycleStore';
+import { useCycleStore, getCycleData } from '../stores/useCycleStore';
 
 const SYNC_STORAGE_KEY = 'sync_metadata_v1';
-const SYNC_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const SYNC_INTERVAL = 5 * 60 * 1000;
 
 class SyncManager {
   constructor() {
@@ -30,31 +30,22 @@ class SyncManager {
 
   async initialize() {
     try {
-      // Charger metadata
       await this.loadMetadata();
-      
-      // Initialiser NetworkQueue
       await NetworkQueue.initialize();
-      
-      // Démarrer sync périodique
       this.startPeriodicSync();
       
-      console.log('✅ SyncManager initialisé');
+      console.info('✅ SyncManager initialisé');
     } catch (error) {
       console.error('❌ Erreur init SyncManager:', error);
     }
   }
-
-  // ═══════════════════════════════════════════════════════
-  // 🔄 SYNC PRINCIPAL
-  // ═══════════════════════════════════════════════════════
   
   async syncAll() {
     if (this.syncing) return;
     
     const netInfo = await NetInfo.fetch();
     if (!netInfo.isConnected || !netInfo.isInternetReachable) {
-      console.log('📡 Sync annulé: pas de connexion');
+      console.info('📡 Sync annulé: pas de connexion');
       return;
     }
 
@@ -62,18 +53,16 @@ class SyncManager {
     this.notifyListeners('sync:start');
 
     try {
-      // Sync par priorité
       await this.syncCycle();
       await this.syncNotebook();
       await this.syncChat();
       await this.syncPreferences();
       
-      // Mettre à jour metadata
       this.syncMetadata.lastSync.all = Date.now();
       await this.saveMetadata();
       
       this.notifyListeners('sync:complete');
-      console.log('✅ Sync complet réussi');
+      console.info('✅ Sync complet réussi');
       
     } catch (error) {
       console.error('❌ Erreur sync:', error);
@@ -82,14 +71,10 @@ class SyncManager {
       this.syncing = false;
     }
   }
-
-  // ═══════════════════════════════════════════════════════
-  // 🎯 SYNC SPÉCIFIQUES
-  // ═══════════════════════════════════════════════════════
   
   async syncCycle() {
     try {
-      const cycleData = useCycleStore.getState().getCycleData();
+      const cycleData = getCycleData();
       
       if (!cycleData.lastPeriodDate) return;
       
@@ -110,7 +95,7 @@ class SyncManager {
       });
       
       this.syncMetadata.lastSync.cycle = Date.now();
-      console.log('📊 Cycle synchronisé');
+      console.info('📊 Cycle synchronisé');
       
     } catch (error) {
       console.error('❌ Erreur sync cycle:', error);
@@ -127,7 +112,6 @@ class SyncManager {
       
       if (newEntries.length === 0) return;
       
-      // Batch par 50 entrées
       const batches = this.createBatches(newEntries, 50);
       
       for (const batch of batches) {
@@ -144,7 +128,7 @@ class SyncManager {
       }
       
       this.syncMetadata.lastSync.notebook = Date.now();
-      console.log('📝 Notebook synchronisé:', newEntries.length, 'entrées');
+      console.info('📝 Notebook synchronisé:', newEntries.length, 'entrées');
       
     } catch (error) {
       console.error('❌ Erreur sync notebook:', error);
@@ -161,7 +145,6 @@ class SyncManager {
       
       if (newMessages.length === 0) return;
       
-      // Ne sync que les messages user (pas les réponses Melune)
       const userMessages = newMessages.filter(m => m.type === 'user');
       
       if (userMessages.length > 0) {
@@ -178,7 +161,7 @@ class SyncManager {
       }
       
       this.syncMetadata.lastSync.chat = Date.now();
-      console.log('💬 Chat synchronisé:', userMessages.length, 'messages');
+      console.info('💬 Chat synchronisé:', userMessages.length, 'messages');
       
     } catch (error) {
       console.error('❌ Erreur sync chat:', error);
@@ -207,19 +190,14 @@ class SyncManager {
       });
       
       this.syncMetadata.lastSync.preferences = Date.now();
-      console.log('⚙️ Préférences synchronisées');
+      console.info('⚙️ Préférences synchronisées');
       
     } catch (error) {
       console.error('❌ Erreur sync preferences:', error);
     }
   }
-
-  // ═══════════════════════════════════════════════════════
-  // 🔍 DÉTECTION CHANGEMENTS
-  // ═══════════════════════════════════════════════════════
   
   detectChanges(type, data, lastSync) {
-    // Stratégie simple: timestamp-based
     const metadata = this.syncMetadata.pendingChanges[type];
     
     if (!metadata) {
@@ -241,16 +219,11 @@ class SyncManager {
   }
 
   hashData(data) {
-    // Hash simple pour détection changements
     return JSON.stringify(data).split('').reduce((a, b) => {
       a = ((a << 5) - a) + b.charCodeAt(0);
       return a & a;
     }, 0).toString();
   }
-
-  // ═══════════════════════════════════════════════════════
-  // ⏱️ SYNC PÉRIODIQUE
-  // ═══════════════════════════════════════════════════════
   
   startPeriodicSync() {
     this.stopPeriodicSync();
@@ -259,7 +232,6 @@ class SyncManager {
       this.syncAll();
     }, SYNC_INTERVAL);
     
-    // Sync initial après 10s
     setTimeout(() => this.syncAll(), 10000);
   }
 
@@ -269,10 +241,6 @@ class SyncManager {
       this.syncTimer = null;
     }
   }
-
-  // ═══════════════════════════════════════════════════════
-  // 💾 PERSISTENCE
-  // ═══════════════════════════════════════════════════════
   
   async saveMetadata() {
     try {
@@ -292,10 +260,6 @@ class SyncManager {
       console.error('❌ Erreur chargement metadata:', error);
     }
   }
-
-  // ═══════════════════════════════════════════════════════
-  // 📢 LISTENERS
-  // ═══════════════════════════════════════════════════════
   
   addListener(event, callback) {
     if (!this.listeners.has(event)) {
@@ -318,15 +282,11 @@ class SyncManager {
         try {
           listener(data);
         } catch (error) {
-          console.warn('⚠️ Erreur listener:', error);
+          console.error('⚠️ Erreur listener:', error);
         }
       });
     }
   }
-
-  // ═══════════════════════════════════════════════════════
-  // 🛠️ UTILITAIRES
-  // ═══════════════════════════════════════════════════════
   
   createBatches(items, batchSize) {
     const batches = [];
@@ -355,5 +315,4 @@ class SyncManager {
   }
 }
 
-// Singleton
 export default new SyncManager();

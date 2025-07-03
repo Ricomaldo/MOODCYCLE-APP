@@ -12,7 +12,7 @@ import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
 import { getCurrentPhaseInfo } from '../utils/cycleCalculations';
 import { formatDateFull } from '../utils/dateUtils';
-import { useCycleStore } from '../stores/useCycleStore';
+import { useCycleStore, getCycleData } from '../stores/useCycleStore';
 
 class ExportService {
   constructor() {
@@ -45,7 +45,7 @@ class ExportService {
         persona: userState.persona,
         melune: userState.melune
       };
-      data.cycle = useCycleStore.getState().getCycleData();
+      data.cycle = getCycleData();
       data.preferences = userState.preferences;
 
       // Carnet
@@ -114,7 +114,7 @@ class ExportService {
         });
       }
 
-      console.log('✅ Export JSON réussi');
+      console.info('✅ Export JSON réussi');
       return { success: true, filePath };
 
     } catch (error) {
@@ -159,7 +159,7 @@ class ExportService {
         });
       }
 
-      console.log('✅ Export PDF réussi');
+      console.info('✅ Export PDF réussi');
       return { success: true, filePath: newPath };
 
     } catch (error) {
@@ -342,7 +342,7 @@ class ExportService {
           storeInstance.getState().reset();
         }
       } catch (error) {
-        console.warn(`⚠️ Impossible de reset ${storeName}:`, error);
+        console.error(`⚠️ Impossible de reset ${storeName}:`, error);
       }
     }
 
@@ -360,7 +360,7 @@ class ExportService {
     
     await AsyncStorage.multiRemove(moodcycleKeys);
     
-    console.log('✅ Toutes les données supprimées');
+    console.info('✅ Toutes les données supprimées');
   }
 
   async exportData(format = 'json') {
@@ -370,7 +370,7 @@ class ExportService {
       
       const userData = useUserStore.getState();
       const notebookData = useNotebookStore.getState();
-      const cycleData = useCycleStore.getState().getCycleData();
+      const cycleData = getCycleData();
       
       const exportData = {
         user: {
@@ -391,13 +391,11 @@ class ExportService {
         }
       };
 
-      // ... existing code pour getCurrentPhase ...
       const currentPhase = getCurrentPhaseInfo(
         cycleData.lastPeriodDate,
         cycleData.length,
         cycleData.periodDuration
       );
-      // ... existing code ...
     } catch (error) {
       console.error('Erreur export:', error);
     }

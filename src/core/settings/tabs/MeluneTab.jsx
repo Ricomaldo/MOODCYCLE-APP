@@ -1,17 +1,17 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 File: src/features/shared/tabs/MeluneTab.jsx
+// 📄 File: src/core/settings/tabs/MeluneTab.jsx
 // 🧩 Type: Onglet Paramètres
-// 📚 Description: Personnalisation avatar et ton de Melune (SANS personas)
-// 🕒 Version: 1.0 - 2025-06-24
-// 🧭 Used in: ParametresModal
+// 📚 Description: Personnalisation avatar et ton de Melune
+// 🕒 Version: 1.0 - 2025-01-21
+// 🧭 Used in: ParametresModal, personnalisation Melune
 // ─────────────────────────────────────────────────────────
 //
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../../hooks/useTheme';
-import { Heading, BodyText } from '../../../core/ui/Typography';
+import { Heading, BodyText } from '../../ui/typography';
 import { useUserStore } from '../../../stores/useUserStore';
 import MeluneAvatar from '../../../features/shared/MeluneAvatar';
 
@@ -97,15 +97,6 @@ export default function MeluneTab({ onDataChange }) {
   const [isAnimated, setIsAnimated] = useState(melune?.animated !== false);
   const [hasChanges, setHasChanges] = useState(false);
 
-  // ✅ DEBUG : Ajout de logs pour tracer le problème
-  console.log('🎭 MeluneTab render:', {
-    meluneFromStore: melune,
-    selectedAvatar,
-    selectedTone,
-    hasChanges
-  });
-
-  // ✅ SYNC avec le store quand les valeurs du store changent
   useEffect(() => {
     setSelectedAvatar(melune?.avatarStyle || 'classic');
     setSelectedTone(melune?.tone || 'friendly');
@@ -113,7 +104,6 @@ export default function MeluneTab({ onDataChange }) {
     setIsAnimated(melune?.animated !== false);
   }, [melune?.avatarStyle, melune?.tone, melune?.position, melune?.animated]);
 
-  // Détecter les changements
   useEffect(() => {
     const hasAvatarChange = selectedAvatar !== (melune?.avatarStyle || 'classic');
     const hasToneChange = selectedTone !== (melune?.tone || 'friendly');
@@ -121,29 +111,11 @@ export default function MeluneTab({ onDataChange }) {
     const hasAnimationChange = isAnimated !== (melune?.animated !== false);
     const hasAnyChange = hasAvatarChange || hasToneChange || hasPositionChange || hasAnimationChange;
     
-    console.log('🔄 Change detection:', {
-      hasAvatarChange,
-      hasToneChange,
-      hasPositionChange,
-      hasAnimationChange,
-      hasAnyChange,
-      currentStore: melune?.avatarStyle,
-      selectedAvatar
-    });
-    
     setHasChanges(hasAnyChange);
     onDataChange?.(hasAnyChange);
   }, [selectedAvatar, selectedTone, selectedPosition, isAnimated, melune?.avatarStyle, melune?.tone, melune?.position, melune?.animated, onDataChange]);
 
-  // ✅ Auto-save CORRIGÉ avec useCallback pour stabiliser la fonction
   const handleSave = useCallback(() => {
-    console.log('💾 Saving to store:', {
-      avatarStyle: selectedAvatar,
-      tone: selectedTone,
-      position: selectedPosition,
-      animated: isAnimated
-    });
-    
     updateMelune({
       avatarStyle: selectedAvatar,
       tone: selectedTone,
@@ -155,17 +127,13 @@ export default function MeluneTab({ onDataChange }) {
     onDataChange?.(false);
   }, [selectedAvatar, selectedTone, selectedPosition, isAnimated, updateMelune, onDataChange]);
 
-  // Auto-save en temps réel - CORRECTION FINALE
   useEffect(() => {
     if (hasChanges) {
-      console.log('⏰ Setting save timer...');
       const timer = setTimeout(() => {
-        console.log('⏰ Timer fired, saving...');
         handleSave();
       }, 1000);
       
       return () => {
-        console.log('⏰ Clearing timer');
         clearTimeout(timer);
       };
     }
@@ -199,14 +167,17 @@ export default function MeluneTab({ onDataChange }) {
           ]}>
             {style.icon} {style.name}
           </BodyText>
-          <BodyText style={styles.optionDescription}>
+          <BodyText style={[
+            styles.optionDescription,
+            isSelected && styles.optionDescriptionSelected
+          ]}>
             {style.description}
           </BodyText>
         </View>
         
         {isSelected && (
-          <View style={styles.checkmark}>
-            <Feather name="check" size={20} color={theme.colors.primary} />
+          <View style={styles.selectedIndicator}>
+            <Feather name="check" size={16} color="white" />
           </View>
         )}
       </TouchableOpacity>
@@ -234,106 +205,109 @@ export default function MeluneTab({ onDataChange }) {
             {tone.name}
           </BodyText>
           {isSelected && (
-            <View style={styles.checkmark}>
-              <Feather name="check" size={16} color={theme.colors.primary} />
+            <View style={styles.selectedIndicator}>
+              <Feather name="check" size={16} color="white" />
             </View>
           )}
         </View>
         
-        <BodyText style={styles.toneDescription}>
+        <BodyText style={[
+          styles.toneDescription,
+          isSelected && styles.toneDescriptionSelected
+        ]}>
           {tone.description}
         </BodyText>
         
         <View style={styles.exampleContainer}>
-          <BodyText style={styles.exampleLabel}>Exemple :</BodyText>
-          <View style={styles.exampleBubble}>
-            <BodyText style={styles.exampleText}>
-              {tone.example}
-            </BodyText>
-          </View>
+          <BodyText style={[
+            styles.exampleText,
+            isSelected && styles.exampleTextSelected
+          ]}>
+            "{tone.example}"
+          </BodyText>
         </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderPositionOption = (position) => {
+    const isSelected = selectedPosition === position.id;
+    
+    return (
+      <TouchableOpacity
+        key={position.id}
+        style={[
+          styles.positionCard,
+          isSelected && styles.positionCardSelected
+        ]}
+        onPress={() => setSelectedPosition(position.id)}
+        activeOpacity={0.7}
+      >
+        <BodyText style={styles.positionIcon}>{position.icon}</BodyText>
+        <View style={styles.positionInfo}>
+          <BodyText style={[
+            styles.positionName,
+            isSelected && styles.positionNameSelected
+          ]}>
+            {position.name}
+          </BodyText>
+          <BodyText style={[
+            styles.positionDescription,
+            isSelected && styles.positionDescriptionSelected
+          ]}>
+            {position.description}
+          </BodyText>
+        </View>
+        
+        {isSelected && (
+          <View style={styles.selectedIndicator}>
+            <Feather name="check" size={16} color="white" />
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Heading style={styles.title}>Personnalise Melune</Heading>
-        <BodyText style={styles.subtitle}>
-          Choisis l'apparence et le style de communication qui te correspond
-        </BodyText>
-      </View>
-
-      {/* Avatar Style */}
       <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Feather name="image" size={20} color={theme.colors.primary} />
-          <BodyText style={styles.sectionTitle}>Style d'avatar</BodyText>
-        </View>
+        <Heading style={styles.sectionTitle}>Style d'avatar</Heading>
+        <BodyText style={styles.sectionDescription}>
+          Choisis le style visuel de Melune qui te correspond
+        </BodyText>
         
-        <View style={styles.avatarOptions}>
+        <View style={styles.avatarGrid}>
           {AVATAR_STYLES.map(renderAvatarOption)}
         </View>
       </View>
 
-      {/* Ton de voix */}
       <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Feather name="message-circle" size={20} color={theme.colors.primary} />
-          <BodyText style={styles.sectionTitle}>Ton de voix</BodyText>
-        </View>
+        <Heading style={styles.sectionTitle}>Ton de voix</Heading>
+        <BodyText style={styles.sectionDescription}>
+          Définis la personnalité de Melune dans ses interactions
+        </BodyText>
         
-        <View style={styles.toneOptions}>
+        <View style={styles.toneGrid}>
           {VOICE_TONES.map(renderToneOption)}
         </View>
       </View>
 
-      {/* Position de Melune */}
       <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Feather name="map-pin" size={20} color={theme.colors.primary} />
-          <BodyText style={styles.sectionTitle}>Position de Melune</BodyText>
-        </View>
+        <Heading style={styles.sectionTitle}>Position de Melune</Heading>
+        <BodyText style={styles.sectionDescription}>
+          Choisis où Melune apparaît sur ton écran
+        </BodyText>
         
         <View style={styles.positionGrid}>
-          {MELUNE_POSITIONS.map((position) => (
-            <TouchableOpacity
-              key={position.id}
-              style={[
-                styles.positionCard,
-                selectedPosition === position.id && styles.positionCardSelected
-              ]}
-              onPress={() => setSelectedPosition(position.id)}
-              activeOpacity={0.7}
-            >
-              <BodyText style={styles.positionIcon}>{position.icon}</BodyText>
-              <BodyText style={[
-                styles.positionName,
-                selectedPosition === position.id && styles.positionNameSelected
-              ]}>
-                {position.name}
-              </BodyText>
-              <BodyText style={styles.positionDescription}>
-                {position.description}
-              </BodyText>
-              {selectedPosition === position.id && (
-                <View style={styles.checkmarkSmall}>
-                  <Feather name="check" size={16} color={theme.colors.primary} />
-                </View>
-              )}
-            </TouchableOpacity>
-          ))}
+          {MELUNE_POSITIONS.map(renderPositionOption)}
         </View>
       </View>
 
-      {/* Animation de Melune */}
       <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Feather name="zap" size={20} color={theme.colors.primary} />
-          <BodyText style={styles.sectionTitle}>Animation</BodyText>
-        </View>
+        <Heading style={styles.sectionTitle}>Animations</Heading>
+        <BodyText style={styles.sectionDescription}>
+          Active ou désactive les animations de Melune
+        </BodyText>
         
         <TouchableOpacity
           style={[
@@ -343,19 +317,19 @@ export default function MeluneTab({ onDataChange }) {
           onPress={() => setIsAnimated(!isAnimated)}
           activeOpacity={0.7}
         >
-          <View style={styles.animationToggleContent}>
-            <View style={styles.animationInfo}>
+          <View style={styles.toggleContent}>
+            <View style={styles.toggleLeft}>
               <BodyText style={[
-                styles.animationTitle,
-                isAnimated && styles.animationTitleActive
+                styles.toggleText,
+                isAnimated && styles.toggleTextActive
               ]}>
-                🧚‍♀️ Melune animée
+                Animations {isAnimated ? 'activées' : 'désactivées'}
               </BodyText>
-              <BodyText style={styles.animationDescription}>
-                {isAnimated 
-                  ? 'Melune bouge et flotte comme une vraie fée capricieuse'
-                  : 'Melune reste statique à sa position'
-                }
+              <BodyText style={[
+                styles.toggleDescription,
+                isAnimated && styles.toggleDescriptionActive
+              ]}>
+                {isAnimated ? 'Melune bougera et réagira' : 'Melune sera statique'}
               </BodyText>
             </View>
             
@@ -364,59 +338,21 @@ export default function MeluneTab({ onDataChange }) {
               isAnimated && styles.toggleSwitchActive
             ]}>
               <View style={[
-                styles.toggleThumb,
-                isAnimated && styles.toggleThumbActive
+                styles.toggleBall,
+                isAnimated && styles.toggleBallActive
               ]} />
             </View>
           </View>
         </TouchableOpacity>
       </View>
 
-      {/* Aperçu personnalisé */}
-      <View style={styles.previewSection}>
-        <View style={styles.sectionHeader}>
-          <Feather name="eye" size={20} color={theme.colors.primary} />
-          <BodyText style={styles.sectionTitle}>Aperçu</BodyText>
-        </View>
-        
-        <View style={styles.previewCard}>
-          <View style={styles.previewAvatar}>
-            <MeluneAvatar 
-              size="large" 
-              avatarStyle={selectedAvatar}
-              animated={isAnimated}
-            />
-          </View>
-          
-          <View style={styles.previewMessage}>
-            <BodyText style={styles.previewText}>
-              {VOICE_TONES.find(t => t.id === selectedTone)?.example}
-            </BodyText>
-          </View>
-          
-          <BodyText style={styles.previewInfo}>
-            Position : {MELUNE_POSITIONS.find(p => p.id === selectedPosition)?.name} • 
-            Animation : {isAnimated ? 'Activée' : 'Désactivée'}
+      {hasChanges && (
+        <View style={styles.saveIndicator}>
+          <BodyText style={styles.saveText}>
+            Sauvegarde automatique en cours...
           </BodyText>
         </View>
-      </View>
-
-      {/* ✅ DEBUG : Bouton sauvegarde manuelle */}
-      {__DEV__ && hasChanges && (
-        <View style={styles.debugSection}>
-          <TouchableOpacity 
-            style={styles.debugSaveButton}
-            onPress={handleSave}
-          >
-            <BodyText style={styles.debugSaveText}>
-              💾 Sauvegarder maintenant (DEBUG)
-            </BodyText>
-          </TouchableOpacity>
-        </View>
       )}
-
-      {/* Espacement bottom */}
-      <View style={{ height: 40 }} />
     </ScrollView>
   );
 }
@@ -425,293 +361,219 @@ const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
   },
-  
-  // Header
-  header: {
-    padding: theme.spacing.l,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: theme.spacing.s,
-  },
-  subtitle: {
-    textAlign: 'center',
-    color: theme.colors.textLight,
-    lineHeight: 20,
-  },
-  
-  // Sections
   section: {
-    marginBottom: theme.spacing.xl,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.l,
-    marginBottom: theme.spacing.l,
+    marginBottom: 32,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    marginLeft: theme.spacing.s,
+    color: theme.colors.text,
+    marginBottom: 8,
   },
-  
-  // Avatar Options
-  avatarOptions: {
-    paddingHorizontal: theme.spacing.l,
+  sectionDescription: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  avatarGrid: {
+    gap: 12,
   },
   optionCard: {
     flexDirection: 'row',
     alignItems: 'center',
+    padding: 16,
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.medium,
-    padding: theme.spacing.l,
-    marginBottom: theme.spacing.m,
+    borderRadius: 12,
     borderWidth: 2,
     borderColor: 'transparent',
   },
   optionCardSelected: {
     borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary + '05',
+    backgroundColor: theme.colors.primary + '10',
   },
   avatarPreview: {
-    marginRight: theme.spacing.l,
+    marginRight: 16,
   },
   optionInfo: {
     flex: 1,
   },
   optionName: {
     fontSize: 16,
-    fontWeight: '600',
-    marginBottom: theme.spacing.xs,
+    fontWeight: '500',
+    color: theme.colors.text,
+    marginBottom: 4,
   },
   optionNameSelected: {
     color: theme.colors.primary,
   },
   optionDescription: {
     fontSize: 14,
-    color: theme.colors.textLight,
+    color: theme.colors.textSecondary,
   },
-  
-  // Tone Options
-  toneOptions: {
-    paddingHorizontal: theme.spacing.l,
+  optionDescriptionSelected: {
+    color: theme.colors.primary,
+  },
+  selectedIndicator: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: theme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  toneGrid: {
+    gap: 12,
   },
   toneCard: {
+    padding: 16,
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.medium,
-    padding: theme.spacing.l,
-    marginBottom: theme.spacing.m,
+    borderRadius: 12,
     borderWidth: 2,
     borderColor: 'transparent',
   },
   toneCardSelected: {
     borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary + '05',
+    backgroundColor: theme.colors.primary + '10',
   },
   toneHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: theme.spacing.s,
+    marginBottom: 8,
   },
   toneName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '500',
+    color: theme.colors.text,
   },
   toneNameSelected: {
     color: theme.colors.primary,
   },
   toneDescription: {
     fontSize: 14,
-    color: theme.colors.textLight,
-    marginBottom: theme.spacing.m,
+    color: theme.colors.textSecondary,
+    marginBottom: 12,
+  },
+  toneDescriptionSelected: {
+    color: theme.colors.primary,
   },
   exampleContainer: {
-    marginTop: theme.spacing.s,
-  },
-  exampleLabel: {
-    fontSize: 12,
-    color: theme.colors.textLight,
-    marginBottom: theme.spacing.xs,
-  },
-  exampleBubble: {
     backgroundColor: theme.colors.background,
-    borderRadius: theme.borderRadius.medium,
-    padding: theme.spacing.m,
-    borderLeftWidth: 3,
-    borderLeftColor: theme.colors.primary,
+    padding: 12,
+    borderRadius: 8,
   },
   exampleText: {
     fontSize: 14,
+    color: theme.colors.textSecondary,
     fontStyle: 'italic',
   },
-  
-  // Preview
-  previewSection: {
-    marginBottom: theme.spacing.xl,
+  exampleTextSelected: {
+    color: theme.colors.primary,
   },
-  previewCard: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.large,
-    padding: theme.spacing.xl,
-    marginHorizontal: theme.spacing.l,
-    alignItems: 'center',
-  },
-  previewAvatar: {
-    marginBottom: theme.spacing.l,
-  },
-  previewMessage: {
-    backgroundColor: theme.colors.primary + '10',
-    borderRadius: theme.borderRadius.medium,
-    padding: theme.spacing.l,
-    maxWidth: '90%',
-  },
-  previewText: {
-    textAlign: 'center',
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  previewInfo: {
-    textAlign: 'center',
-    fontSize: 12,
-    color: theme.colors.textLight,
-    marginTop: theme.spacing.m,
-  },
-  
-  // Position Grid
   positionGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: theme.spacing.l,
-    gap: theme.spacing.m,
+    gap: 12,
   },
   positionCard: {
-    width: '47%',
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.medium,
-    padding: theme.spacing.l,
+    flexDirection: 'row',
     alignItems: 'center',
+    padding: 16,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 12,
     borderWidth: 2,
     borderColor: 'transparent',
-    position: 'relative',
   },
   positionCardSelected: {
     borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary + '05',
+    backgroundColor: theme.colors.primary + '10',
   },
   positionIcon: {
     fontSize: 24,
-    marginBottom: theme.spacing.s,
+    marginRight: 16,
+  },
+  positionInfo: {
+    flex: 1,
   },
   positionName: {
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: theme.spacing.xs,
+    fontSize: 16,
+    fontWeight: '500',
+    color: theme.colors.text,
+    marginBottom: 4,
   },
   positionNameSelected: {
     color: theme.colors.primary,
   },
   positionDescription: {
-    fontSize: 12,
-    color: theme.colors.textLight,
-    textAlign: 'center',
-    lineHeight: 16,
+    fontSize: 14,
+    color: theme.colors.textSecondary,
   },
-  checkmarkSmall: {
-    position: 'absolute',
-    top: theme.spacing.s,
-    right: theme.spacing.s,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: theme.colors.primary + '10',
-    justifyContent: 'center',
-    alignItems: 'center',
+  positionDescriptionSelected: {
+    color: theme.colors.primary,
   },
-  
-  // Animation Toggle
   animationToggle: {
+    padding: 16,
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.medium,
-    marginHorizontal: theme.spacing.l,
+    borderRadius: 12,
     borderWidth: 2,
     borderColor: 'transparent',
   },
   animationToggleActive: {
     borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary + '05',
+    backgroundColor: theme.colors.primary + '10',
   },
-  animationToggleContent: {
+  toggleContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: theme.spacing.l,
+    justifyContent: 'space-between',
   },
-  animationInfo: {
+  toggleLeft: {
     flex: 1,
   },
-  animationTitle: {
+  toggleText: {
     fontSize: 16,
-    fontWeight: '600',
-    marginBottom: theme.spacing.xs,
+    fontWeight: '500',
+    color: theme.colors.text,
+    marginBottom: 4,
   },
-  animationTitleActive: {
+  toggleTextActive: {
     color: theme.colors.primary,
   },
-  animationDescription: {
+  toggleDescription: {
     fontSize: 14,
-    color: theme.colors.textLight,
-    lineHeight: 20,
+    color: theme.colors.textSecondary,
+  },
+  toggleDescriptionActive: {
+    color: theme.colors.primary,
   },
   toggleSwitch: {
-    width: 50,
-    height: 30,
-    borderRadius: 15,
+    width: 48,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: theme.colors.border,
-    padding: 2,
     justifyContent: 'center',
+    paddingHorizontal: 2,
   },
   toggleSwitchActive: {
     backgroundColor: theme.colors.primary,
   },
-  toggleThumb: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: theme.colors.white,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  toggleThumbActive: {
-    transform: [{ translateX: 20 }],
-  },
-  
-  // Checkmark
-  checkmark: {
-    marginLeft: theme.spacing.s,
-  },
-  
-  // ✅ DEBUG styles
-  debugSection: {
-    padding: theme.spacing.l,
-    backgroundColor: '#ff0000',
-    margin: theme.spacing.l,
-    borderRadius: theme.borderRadius.medium,
-  },
-  debugSaveButton: {
+  toggleBall: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: 'white',
-    padding: theme.spacing.m,
-    borderRadius: theme.borderRadius.small,
-    alignItems: 'center',
+    alignSelf: 'flex-start',
   },
-  debugSaveText: {
-    color: '#ff0000',
-    fontWeight: 'bold',
+  toggleBallActive: {
+    alignSelf: 'flex-end',
+  },
+  saveIndicator: {
+    alignItems: 'center',
+    padding: 16,
+    marginTop: 16,
+  },
+  saveText: {
+    fontSize: 14,
+    color: theme.colors.primary,
+    fontStyle: 'italic',
   },
 }); 

@@ -20,10 +20,6 @@ import {
   TERMINOLOGY_MAPPINGS 
 } from '../config/terminologyMappings';
 
-/**
- * 🎯 Hook principal pour gestion terminologies
- * @returns {object} Interface terminologie complète
- */
 export const useTerminology = () => {
   // ✅ Récupération préférence avec fallback sécurisé
   const terminology = useUserStore(state => state.preferences?.terminology || 'medical');
@@ -95,12 +91,6 @@ export const useTerminology = () => {
   };
 };
 
-/**
- * 🔧 Hook léger pour récupération rapide de labels
- * @param {string} phaseKey - Clé phase technique
- * @param {string} type - Type label (phases/archetype)
- * @returns {string} Label formaté
- */
 export const usePhaseLabel = (phaseKey, type = 'phases') => {
   const { getPhaseLabel } = useTerminology();
   return useMemo(() => {
@@ -108,10 +98,6 @@ export const usePhaseLabel = (phaseKey, type = 'phases') => {
   }, [getPhaseLabel, phaseKey, type]);
 };
 
-/**
- * 🎨 Hook pour sélecteur terminologies (pour UI settings)
- * @returns {object} Props pour composant sélecteur
- */
 export const useTerminologySelector = () => {
   const { 
     terminology, 
@@ -138,12 +124,6 @@ export const useTerminologySelector = () => {
 // 🔄 MIGRATION HELPERS LEGACY
 // ═══════════════════════════════════════════════════════
 
-/**
- * Helper de migration pour remplacer getPhaseDisplayName existant
- * @param {string} phase - Clé phase
- * @returns {string} Label archetype
- * @deprecated Utiliser useTerminology().getArchetypeLabel() à la place
- */
 export const migrateGetPhaseDisplayName = (phase) => {
   console.warn('migrateGetPhaseDisplayName est deprecated. Utiliser useTerminology().getArchetypeLabel()');
   return getPhaseLabel(phase, 'medical', 'archetype');

@@ -11,7 +11,7 @@ import { View, Modal, TouchableOpacity, StyleSheet, ScrollView, Animated } from 
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '../../hooks/useTheme';
-import { Heading2, BodyText, Caption } from '../../core/ui/Typography';
+import { Heading2, BodyText, Caption } from '../../core/ui/typography';
 import { useNotebookStore } from '../../stores/useNotebookStore';
 import { useCycleStore } from '../../stores/useCycleStore';
 import { getCurrentPhase } from '../../utils/cycleCalculations';
@@ -180,7 +180,12 @@ export default function QuickTrackingModal({ visible, onClose, defaultTags = [] 
                     style={[
                       styles.moodOption,
                       mood === option.value && styles.moodOptionActive,
-                      mood === option.value && { backgroundColor: getPhaseColor() + '15' }
+                      mood === option.value && theme.getGlassmorphismStyle(getPhaseColor(), {
+                bgOpacity: theme.glassmorphism.opacity.bg,
+                borderOpacity: theme.glassmorphism.opacity.border,
+                borderWidth: 1,
+                shadowOpacity: 0,
+              })
                     ]}
                     onPress={() => {
                       setMood(option.value);
@@ -320,10 +325,12 @@ export default function QuickTrackingModal({ visible, onClose, defaultTags = [] 
                     key={symptom.id}
                     style={[
                       styles.symptomCard,
-                      symptoms.includes(symptom.id) && {
-                        backgroundColor: symptom.color + '15',
-                        borderColor: symptom.color,
-                      },
+                      symptoms.includes(symptom.id) && theme.getGlassmorphismStyle(symptom.color, {
+                        bgOpacity: theme.glassmorphism.opacity.bg,
+                        borderOpacity: theme.glassmorphism.opacity.accent,
+                        borderWidth: 1,
+                        shadowOpacity: 0,
+                      }),
                     ]}
                     onPress={() => handleSymptomToggle(symptom.id)}
                   >

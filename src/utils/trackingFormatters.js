@@ -89,9 +89,6 @@ const SYMPTOM_EMOJIS = {
 // 🎯 FORMATAGE PRINCIPAL TRACKING
 // ═══════════════════════════════════════════════════════════
 
-/**
- * ✅ NOUVEAU : Format résumé identique à QuickTrackingModal
- */
 export const formatTrackingModalStyle = (entry) => {
   if (entry.type !== "tracking") return entry.content;
   

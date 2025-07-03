@@ -75,8 +75,8 @@ export const useCycleStore = create(
       addObservation: (feeling = 3, energy = 3, notes = '') => {
         const state = get();
         if (!state.lastPeriodDate) {
-          console.warn('Cannot add observation: no cycle initialized');
-          return; // Pas de cycle actif
+          console.error('Cannot add observation: no cycle initialized');
+          return;
         }
         
         // Normaliser les valeurs (0 ou valeurs négatives deviennent 1, valeurs > 5 deviennent 5)
@@ -131,42 +131,69 @@ export const useCycleStore = create(
 
 export const getCycleData = () => {
   const state = useCycleStore.getState();
+  
+  // ✅ FIX: Validation robuste des données de cycle
+  const validLastPeriodDate = state.lastPeriodDate && !isNaN(new Date(state.lastPeriodDate).getTime()) 
+    ? state.lastPeriodDate 
+    : null;
+  
+  const validLength = state.length && state.length >= CYCLE_DEFAULTS.MIN_LENGTH && state.length <= CYCLE_DEFAULTS.MAX_LENGTH
+    ? state.length 
+    : CYCLE_DEFAULTS.LENGTH;
+    
+  const validPeriodDuration = state.periodDuration && state.periodDuration >= CYCLE_DEFAULTS.MIN_PERIOD_DURATION && state.periodDuration <= CYCLE_DEFAULTS.MAX_PERIOD_DURATION
+    ? state.periodDuration 
+    : CYCLE_DEFAULTS.PERIOD_DURATION;
+  
   return {
-    lastPeriodDate: state.lastPeriodDate,
-    length: state.length,
-    periodDuration: state.periodDuration,
+    lastPeriodDate: validLastPeriodDate,
+    length: validLength,
+    periodDuration: validPeriodDuration,
     isRegular: state.isRegular,
     trackingExperience: state.trackingExperience,
-    observations: state.observations,
+    observations: state.observations || [],
     detectedPatterns: state.detectedPatterns,
-    // Méthodes calculées
-    currentPhase: getCurrentPhase(state.lastPeriodDate, state.length, state.periodDuration),
-    currentDay: getCurrentCycleDay(state.lastPeriodDate, state.length),
-    phaseInfo: getCurrentPhaseInfo(state.lastPeriodDate, state.length, state.periodDuration),
-    nextPeriodDate: getNextPeriodDate(state.lastPeriodDate, state.length),
-    daysUntilNextPeriod: getDaysUntilNextPeriod(state.lastPeriodDate, state.length),
-    hasData: !!(state.lastPeriodDate && state.length),
+    // Méthodes calculées avec données validées
+    currentPhase: getCurrentPhase(validLastPeriodDate, validLength, validPeriodDuration),
+    currentDay: getCurrentCycleDay(validLastPeriodDate, validLength),
+    phaseInfo: getCurrentPhaseInfo(validLastPeriodDate, validLength, validPeriodDuration),
+    nextPeriodDate: getNextPeriodDate(validLastPeriodDate, validLength),
+    daysUntilNextPeriod: getDaysUntilNextPeriod(validLastPeriodDate, validLength),
+    hasData: !!(validLastPeriodDate && validLength),
     hasObservations: state.observations && state.observations.length > 0
   };
 };
 
 export const getCurrentPhaseFromStore = () => {
   const state = useCycleStore.getState();
-  return getCurrentPhase(state.lastPeriodDate, state.length, state.periodDuration);
+  const validLastPeriodDate = state.lastPeriodDate && !isNaN(new Date(state.lastPeriodDate).getTime()) 
+    ? state.lastPeriodDate 
+    : null;
+  const validLength = state.length && state.length >= CYCLE_DEFAULTS.MIN_LENGTH && state.length <= CYCLE_DEFAULTS.MAX_LENGTH
+    ? state.length 
+    : CYCLE_DEFAULTS.LENGTH;
+  const validPeriodDuration = state.periodDuration && state.periodDuration >= CYCLE_DEFAULTS.MIN_PERIOD_DURATION && state.periodDuration <= CYCLE_DEFAULTS.MAX_PERIOD_DURATION
+    ? state.periodDuration 
+    : CYCLE_DEFAULTS.PERIOD_DURATION;
+  return getCurrentPhase(validLastPeriodDate, validLength, validPeriodDuration);
 };
+
 export const getCurrentDayFromStore = () => {
   const state = useCycleStore.getState();
-  return getCurrentCycleDay(state.lastPeriodDate, state.length);
+  const validLastPeriodDate = state.lastPeriodDate && !isNaN(new Date(state.lastPeriodDate).getTime()) 
+    ? state.lastPeriodDate 
+    : null;
+  const validLength = state.length && state.length >= CYCLE_DEFAULTS.MIN_LENGTH && state.length <= CYCLE_DEFAULTS.MAX_LENGTH
+    ? state.length 
+    : CYCLE_DEFAULTS.LENGTH;
+  return getCurrentCycleDay(validLastPeriodDate, validLength);
 };
 
 // ═══════════════════════════════════════════════════════
 // 🔄 HELPERS ADAPTATIFS (NOUVEAUX)
 // ═══════════════════════════════════════════════════════
 
-/**
- * Helper étendu avec support modes d'observation
- * Nécessite useUserIntelligence et useEngagementStore disponibles
- */
+
 export const getCycleDataAdaptive = () => {
   const state = useCycleStore.getState();
   

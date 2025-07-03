@@ -93,8 +93,12 @@ export default function ActionsToolbar({
           key={action.id || index}
           style={[
             styles.actionButton,
-            { backgroundColor: (action.color || theme.colors.primary) + '15' },
-            { borderColor: (action.color || theme.colors.primary) + '30' }
+            theme.getGlassmorphismStyle(action.color || theme.colors.primary, {
+              bgOpacity: theme.glassmorphism.opacity.bg,
+              borderOpacity: theme.glassmorphism.opacity.border,
+              borderWidth: 1,
+              shadowOpacity: 0,  // Pas de shadow sur les actions toolbar
+            })
           ]}
           onPress={() => handleActionPress(action)}
           disabled={action.disabled}

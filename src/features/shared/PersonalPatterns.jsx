@@ -8,7 +8,7 @@ import React from 'react';
 import { View, StyleSheet, Animated, Easing } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../hooks/useTheme';
-import { BodyText, Caption } from '../../core/ui/Typography';
+import { BodyText, Caption } from '../../core/ui/typography';
 import { useUserIntelligence } from '../../stores/useUserIntelligence';
 import { useEngagementStore } from '../../stores/useEngagementStore';
 import { useCycleStore } from '../../stores/useCycleStore';
@@ -214,7 +214,15 @@ export default function PersonalPatterns({ style, minimal = false }) {
           }
         ]}
       >
-        <View style={[styles.patternIcon, { backgroundColor: getConfidenceColor(pattern.confidence) + '15' }]}>
+        <View style={[
+          styles.patternIcon, 
+          theme.getGlassmorphismStyle(getConfidenceColor(pattern.confidence), {
+            bgOpacity: theme.glassmorphism.opacity.bg,
+            borderOpacity: theme.glassmorphism.opacity.border,
+            borderWidth: 1,
+            shadowOpacity: 0,  // Pas de shadow sur les icônes patterns
+          })
+        ]}>
           <Feather 
             name={pattern.icon} 
             size={16} 
@@ -311,7 +319,12 @@ const getStyles = (theme, confidence = 0) => StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: theme.colors.primary + '15',
+    ...theme.getGlassmorphismStyle(theme.colors.primary, {
+      bgOpacity: theme.glassmorphism.opacity.bg,
+      borderOpacity: theme.glassmorphism.opacity.border,
+      borderWidth: 1,
+      shadowOpacity: 0,  // Pas de shadow sur l'icône header
+    }),
     justifyContent: 'center',
     alignItems: 'center',
   },

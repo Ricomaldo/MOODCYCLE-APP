@@ -7,18 +7,20 @@
 // 🧭 Used in: global API config, services, data fetching
 // ─────────────────────────────────────────────────────────
 //
-/**
- * 🎯 CONFIGURATION API MVP
- * Simple et pragmatique - évite over-engineering
- */
 const API_CONFIG = {
   development: {
-    baseURL: "http://localhost:4000", // Local avec /api dans endpoints
+    baseURL: "http://localhost:4000",
     endpoints: {
-      chat: '/api/chat',  // Nginx proxy /api/* vers Express
+      chat: '/api/chat',
       health: '/api/health',
+      admin: {
+        insights: '/api/admin/insights',
+        phases: '/api/admin/phases', 
+        closings: '/api/admin/closings',
+        vignettes: '/api/admin/vignettes',
+      }
     },
-      timeout: 10000,
+    timeout: 10000,
     retries: 2,
   },
   production: {
@@ -26,53 +28,57 @@ const API_CONFIG = {
     endpoints: {
       chat: '/api/chat',
       health: '/api/health',
+      admin: {
+        insights: '/api/admin/insights',
+        phases: '/api/admin/phases',
+        closings: '/api/admin/closings', 
+        vignettes: '/api/admin/vignettes',
+      }
     },
     timeout: 15000,
     retries: 3,
   },
 };
 
-/**
- * 🔧 RÉCUPÉRATION CONFIG ACTIVE
- * Auto-sélection développement/production
- */
 export const getApiConfig = () => {
-  const config = API_CONFIG.production; // Force prod
+  const config = API_CONFIG.production;
   if (__DEV__) {
-    console.log("🔧 API Config (DEV):", config.baseURL);
+    console.info("🔧 API Config (DEV):", config.baseURL);
   }
 
   return config;
 };
 
-/**
- * 🌐 URL API RAPIDE (backward compatibility)
- * Pour migration facile du code existant
- */
 export const getApiUrl = () => {
   return getApiConfig().baseURL;
 };
 
-/**
- * 🎯 RÉCUPÉRATION URL ENDPOINT SPÉCIFIQUE
- * Combine baseURL + endpoint spécifique
- */
 export const getEndpointUrl = (endpointName) => {
   const config = getApiConfig();
+  
+  if (endpointName.includes('.')) {
+    const [category, endpoint] = endpointName.split('.');
+    const categoryEndpoints = config.endpoints?.[category];
+    const endpointPath = categoryEndpoints?.[endpoint];
+    
+    if (!endpointPath) {
+      console.error(`⚠️ Endpoint '${endpointName}' non trouvé dans la config`);
+      return `${config.baseURL}/api/${category}/${endpoint}`;
+    }
+    
+    return `${config.baseURL}${endpointPath}`;
+  }
+  
   const endpoint = config.endpoints?.[endpointName];
   
   if (!endpoint) {
-    console.warn(`⚠️ Endpoint '${endpointName}' non trouvé dans la config`);
+    console.error(`⚠️ Endpoint '${endpointName}' non trouvé dans la config`);
     return `${config.baseURL}/api/${endpointName}`;
   }
   
   return `${config.baseURL}${endpoint}`;
 };
 
-/**
- * ⚙️ CONFIGURATION COMPLÈTE
- * Headers, timeout, etc. pour les appels
- */
 export const getApiRequestConfig = (deviceId) => {
   const config = getApiConfig();
 
@@ -94,7 +100,6 @@ export const getApiRequestConfig = (deviceId) => {
   };
 };
 
-// Export par défaut pour compatibilité
 export default {
   getApiConfig,
   getApiUrl,

@@ -201,9 +201,7 @@ export function useQuickObservation() {
 // 🎯 HOOKS SPÉCIALISÉS
 // ──────────────────────────────────────────────────────
 
-/**
- * Hook pour observer une phase spécifique
- */
+
 export function usePhaseObservation(targetPhase) {
   const quickObs = useQuickObservation();
   
@@ -222,9 +220,7 @@ export function usePhaseObservation(targetPhase) {
   };
 }
 
-/**
- * Hook pour suggestions d'observation uniquement
- */
+
 export function useObservationSuggestions() {
   const quickObs = useQuickObservation();
   

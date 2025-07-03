@@ -10,7 +10,7 @@ import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../hooks/useTheme';
-import { Heading } from '../ui/Typography';
+import { Heading } from '../ui/typography';
 
 // Header Mon Cycle avec rouage
 export function CycleHeader({ onSettingsPress }) {

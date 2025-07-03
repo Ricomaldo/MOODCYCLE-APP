@@ -14,7 +14,7 @@ import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntellig
 import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
-import { BodyText } from '../../src/core/ui/Typography';
+import { BodyText } from '../../src/core';
 import { useTheme } from '../../src/hooks/useTheme';
 import { getPhaseSymbol } from '../../src/utils/formatters';
 

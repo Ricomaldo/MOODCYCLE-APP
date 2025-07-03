@@ -80,9 +80,7 @@ export const CALENDAR_STYLES = {
 // 🧮 HELPERS
 // ═══════════════════════════════════════════════════════
 
-/**
- * Obtient la phase à partir du jour de cycle
- */
+
 export const getPhaseFromCycleDay = (cycleDay, periodDuration = CYCLE_DEFAULTS.PERIOD_DURATION) => {
   if (cycleDay <= periodDuration) return PHASE_NAMES.MENSTRUAL;
   if (cycleDay <= 13) return PHASE_NAMES.FOLLICULAR;
@@ -90,9 +88,7 @@ export const getPhaseFromCycleDay = (cycleDay, periodDuration = CYCLE_DEFAULTS.P
   return PHASE_NAMES.LUTEAL;
 };
 
-/**
- * Calcule la position dans la phase (0 = début, 1 = pic, 0 = fin)
- */
+
 export const getPhasePosition = (cycleDay) => {
   const phaseRanges = Object.values(PHASE_RANGES);
   const currentPhase = phaseRanges.find((p) => cycleDay >= p.start && cycleDay <= p.end);

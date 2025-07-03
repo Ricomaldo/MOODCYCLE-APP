@@ -12,7 +12,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { Heading2, BodyText, Caption } from '../../ui/Typography';
+import { Heading2, BodyText, Caption } from '../../ui/typography';
 import { useTheme } from '../../../hooks/useTheme';
 import { useTerminologySelector } from '../../../hooks/useTerminology';
 

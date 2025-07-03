@@ -1,10 +1,11 @@
 //
 // ─────────────────────────────────────────────────────────
 // 📄 File: src/core/monitoring/PerformanceMonitor.js
-// 🧩 Type: Performance Monitoring v2.1 - iOS Optimized
-// 📚 Description: Monitoring silencieux par défaut - Toolbox DEV controllable
-// 🕒 Version: 2.1 - 2025-06-23 - Démarrage cristallin iOS
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🧩 Type: Service
+// 📚 Description: Monitoring silencieux par défaut contrôlable via Toolbox DEV
+// 🕒 Version: 2.1 - 2025-06-23
+// 🧭 Used in: Performance monitoring, development tools
+// ─────────────────────────────────────────────────────────
 //
 
 class PerformanceMonitor {
@@ -17,41 +18,31 @@ class PerformanceMonitor {
         alerts: []
       };
       
-      // Seuils adaptés iOS + Intelligence Stack (mode développement plus tolérant)
       this.thresholds = {
-        hydrationTime: 500, // ms - Stores complexes OK
-        asyncStorageRead: 300, // ms - Plus tolérant pour développement
-        asyncStorageWrite: 400, // ms - Plus tolérant pour développement  
-        renderCount: 12, // renders/sec - iOS 60fps natif
-        memoryUsage: 60 // MB - iOS mieux optimisé mémoire
+        hydrationTime: 500,
+        asyncStorageRead: 300,
+        asyncStorageWrite: 400,
+        renderCount: 12,
+        memoryUsage: 60
       };
       
-      // Mode silencieux STRICT - zéro logs au démarrage
       this.silentMode = true;
       this.initialized = false;
     }
-  
-    // ═══════════════════════════════════════════════════════
-    // 🛠️ TOOLBOX DEV INTEGRATION
-    // ═══════════════════════════════════════════════════════
     
     enableVerboseMode() {
       this.silentMode = false;
       if (__DEV__) {
-        console.log('🛠️ PerformanceMonitor: Mode verbose activé via Toolbox DEV');
+        console.info('🛠️ PerformanceMonitor: Mode verbose activé via Toolbox DEV');
       }
     }
     
     disableVerboseMode() {
       this.silentMode = true;
       if (__DEV__) {
-        console.log('🛠️ PerformanceMonitor: Retour mode silencieux');
+        console.info('🛠️ PerformanceMonitor: Retour mode silencieux');
       }
     }
-    
-    // ═══════════════════════════════════════════════════════
-    // 📊 STORE HYDRATION MONITORING (iOS Optimized)
-    // ═══════════════════════════════════════════════════════
     
     startStoreHydration(storeName) {
       this.metrics.storeHydration[storeName] = {
@@ -69,27 +60,19 @@ class PerformanceMonitor {
       metric.duration = duration;
       metric.status = success ? 'success' : 'error';
   
-      // Alert seulement si vraiment problématique (iOS seuils)
       if (duration > this.thresholds.hydrationTime) {
         this.addAlert('slow_hydration', `Store ${storeName}: ${duration.toFixed(1)}ms`);
       }
   
-      // ZÉRO logs en mode silencieux (démarrage propre)
       if (__DEV__ && !this.silentMode) {
-        console.log(`🏪 Store ${storeName} hydrated in ${duration.toFixed(1)}ms`);
+        console.info(`🏪 Store ${storeName} hydrated in ${duration.toFixed(1)}ms`);
       }
     }
-  
-    // ═══════════════════════════════════════════════════════
-    // 💾 ASYNCSTORAGE MONITORING (iOS Optimized)
-    // ═══════════════════════════════════════════════════════
     
     wrapAsyncStorage() {
-      // Wrap silencieux - AUCUN log automatique
       const originalGetItem = require('@react-native-async-storage/async-storage').default.getItem;
       const originalSetItem = require('@react-native-async-storage/async-storage').default.setItem;
       
-      // Wrap getItem
       require('@react-native-async-storage/async-storage').default.getItem = async (key) => {
         const startTime = performance.now();
         try {
@@ -104,7 +87,6 @@ class PerformanceMonitor {
         }
       };
   
-      // Wrap setItem
       require('@react-native-async-storage/async-storage').default.setItem = async (key, value) => {
         const startTime = performance.now();
         try {
@@ -132,13 +114,11 @@ class PerformanceMonitor {
         success
       });
   
-      // Garder seulement les 30 dernières opérations (iOS optimisé)
       if (this.metrics.asyncStorage[key][operationType].length > 30) {
         this.metrics.asyncStorage[key][operationType] = 
           this.metrics.asyncStorage[key][operationType].slice(-30);
       }
   
-      // Alertes seulement pour les cas iOS problématiques
       const threshold = operation === 'read' ? 
         this.thresholds.asyncStorageRead : 
         this.thresholds.asyncStorageWrite;
@@ -147,15 +127,10 @@ class PerformanceMonitor {
         this.addAlert('slow_storage', `AsyncStorage ${operation} ${key}: ${duration.toFixed(1)}ms`);
       }
   
-      // ZÉRO logs automatiques - contrôle via Toolbox uniquement
       if (__DEV__ && !this.silentMode) {
-        console.log(`💾 AsyncStorage ${operation} ${key}: ${duration.toFixed(1)}ms`);
+        console.info(`💾 AsyncStorage ${operation} ${key}: ${duration.toFixed(1)}ms`);
       }
     }
-  
-    // ═══════════════════════════════════════════════════════
-    // 🔄 RENDER MONITORING (iOS 60fps Optimized)
-    // ═══════════════════════════════════════════════════════
     
     trackRender(componentName) {
       const now = performance.now();
@@ -172,10 +147,8 @@ class PerformanceMonitor {
       metric.count++;
       metric.renderTimes.push(now);
       
-      // Garder seulement la dernière seconde
       metric.renderTimes = metric.renderTimes.filter(time => now - time < 1000);
       
-      // Alert seulement si problématique pour iOS 60fps
       if (metric.renderTimes.length > this.thresholds.renderCount) {
         this.addAlert('excessive_renders', 
           `${componentName}: ${metric.renderTimes.length} renders/sec`);
@@ -183,10 +156,6 @@ class PerformanceMonitor {
   
       metric.lastRender = now;
     }
-  
-    // ═══════════════════════════════════════════════════════
-    // 🧠 MEMORY MONITORING (iOS Optimized)
-    // ═══════════════════════════════════════════════════════
     
     trackMemory() {
       if (typeof performance.memory !== 'undefined') {
@@ -198,118 +167,97 @@ class PerformanceMonitor {
           totalMB: performance.memory.totalJSHeapSize / (1024 * 1024),
           limitMB: performance.memory.jsHeapSizeLimit / (1024 * 1024)
         };
-  
+        
         if (memoryMB > this.thresholds.memoryUsage) {
           this.addAlert('high_memory', `Memory usage: ${memoryMB.toFixed(1)}MB`);
         }
       }
     }
-  
-    // ═══════════════════════════════════════════════════════
-    // 🚨 ALERTS SYSTEM (Silent by Default)
-    // ═══════════════════════════════════════════════════════
     
     addAlert(type, message) {
       const alert = {
+        id: Date.now(),
         type,
         message,
-        timestamp: Date.now(),
-        id: Math.random().toString(36).substr(2, 9)
+        timestamp: Date.now()
       };
-  
-      this.metrics.alerts.push(alert);
       
-      // Garder seulement les 50 dernières alertes (iOS optimisé)
+      this.metrics.alerts.unshift(alert);
+      
       if (this.metrics.alerts.length > 50) {
-        this.metrics.alerts = this.metrics.alerts.slice(-50);
+        this.metrics.alerts = this.metrics.alerts.slice(0, 50);
       }
-  
-      // SILENCE TOTAL en mode silencieux - contrôle via Toolbox
+      
       if (__DEV__ && !this.silentMode) {
-        console.warn(`🚨 Performance Alert [${type}]: ${message}`);
+        console.error(`⚠️ Performance Alert [${type}]: ${message}`);
       }
     }
-  
-    // ═══════════════════════════════════════════════════════
-    // 📈 ANALYTICS & REPORTS
-    // ═══════════════════════════════════════════════════════
     
     getHydrationReport() {
       const stores = Object.entries(this.metrics.storeHydration);
-      const totalTime = stores.reduce((sum, [, data]) => sum + (data.duration || 0), 0);
-      
+      const successful = stores.filter(([_, metric]) => metric.status === 'success');
+      const avgTime = successful.length > 0 
+        ? successful.reduce((sum, [_, metric]) => sum + metric.duration, 0) / successful.length 
+        : 0;
+        
       return {
-        totalHydrationTime: totalTime,
-        storeCount: stores.length,
-        averageTime: stores.length > 0 ? totalTime / stores.length : 0,
-        slowestStore: stores.reduce((slowest, [name, data]) => 
-          (data.duration || 0) > (slowest.duration || 0) ? { name, ...data } : slowest, {}),
-        details: this.metrics.storeHydration
+        totalStores: stores.length,
+        successfulStores: successful.length,
+        averageTime: avgTime,
+        slowestStore: stores.reduce((slowest, [name, metric]) => 
+          metric.duration > (slowest?.duration || 0) ? { name, ...metric } : slowest, null)
       };
     }
-  
+    
     getAsyncStorageReport() {
-      const report = {};
+      const keys = Object.keys(this.metrics.asyncStorage);
+      let totalReads = 0;
+      let totalWrites = 0;
+      let totalReadTime = 0;
+      let totalWriteTime = 0;
       
-      Object.entries(this.metrics.asyncStorage).forEach(([key, data]) => {
-        const reads = data.reads || [];
-        const writes = data.writes || [];
-        
-        report[key] = {
-          totalOperations: reads.length + writes.length,
-          avgReadTime: reads.length > 0 ? 
-            reads.reduce((sum, op) => sum + op.duration, 0) / reads.length : 0,
-          avgWriteTime: writes.length > 0 ? 
-            writes.reduce((sum, op) => sum + op.duration, 0) / writes.length : 0,
-          errorRate: {
-            reads: reads.length > 0 ? reads.filter(op => !op.success).length / reads.length : 0,
-            writes: writes.length > 0 ? writes.filter(op => !op.success).length / writes.length : 0
-          }
-        };
+      keys.forEach(key => {
+        const keyMetrics = this.metrics.asyncStorage[key];
+        totalReads += keyMetrics.reads.length;
+        totalWrites += keyMetrics.writes.length;
+        totalReadTime += keyMetrics.reads.reduce((sum, op) => sum + op.duration, 0);
+        totalWriteTime += keyMetrics.writes.reduce((sum, op) => sum + op.duration, 0);
       });
-  
-      return report;
+      
+      return {
+        totalKeys: keys.length,
+        totalReads,
+        totalWrites,
+        avgReadTime: totalReads > 0 ? totalReadTime / totalReads : 0,
+        avgWriteTime: totalWrites > 0 ? totalWriteTime / totalWrites : 0
+      };
     }
-  
+    
     getRenderReport() {
-      const report = {};
-      
-      Object.entries(this.metrics.renders).forEach(([component, data]) => {
-        const recentRenders = data.renderTimes.filter(
-          time => performance.now() - time < 5000 // 5 dernières secondes
-        );
+      const components = Object.entries(this.metrics.renders);
+      const totalRenders = components.reduce((sum, [_, metric]) => sum + metric.count, 0);
+      const activeComponents = components.filter(([_, metric]) => 
+        Date.now() - metric.lastRender < 5000).length;
         
-        report[component] = {
-          totalRenders: data.count,
-          recentRenders: recentRenders.length,
-          avgRendersPerSecond: recentRenders.length / 5,
-          lastRender: new Date(data.lastRender).toLocaleTimeString()
-        };
-      });
-  
-      return report;
+      return {
+        totalComponents: components.length,
+        activeComponents,
+        totalRenders,
+        avgRendersPerComponent: components.length > 0 ? totalRenders / components.length : 0
+      };
     }
-  
+    
     getFullReport() {
       return {
-        timestamp: new Date().toISOString(),
         hydration: this.getHydrationReport(),
         asyncStorage: this.getAsyncStorageReport(),
         renders: this.getRenderReport(),
         memory: this.metrics.memory,
-        alerts: this.metrics.alerts.slice(-20),
-        summary: {
-          totalAlerts: this.metrics.alerts.length,
-          criticalAlerts: this.metrics.alerts.filter(a => 
-            a.type === 'slow_hydration' || a.type === 'high_memory'
-          ).length
-        }
+        alerts: this.metrics.alerts.slice(0, 10),
+        thresholds: this.thresholds,
+        mode: this.silentMode ? 'silent' : 'verbose'
       };
     }
-  
-    // ═══════════════════════════════════════════════════════
-    // 🛠️ UTILITIES
-    // ═══════════════════════════════════════════════════════
     
     reset() {
       this.metrics = {
@@ -321,106 +269,76 @@ class PerformanceMonitor {
       };
       
       if (__DEV__ && !this.silentMode) {
-        console.log('🧹 PerformanceMonitor: Métriques reset');
+        console.info('🧹 PerformanceMonitor: Métriques reset');
       }
     }
-  
+    
     setThresholds(newThresholds) {
       this.thresholds = { ...this.thresholds, ...newThresholds };
-      
       if (__DEV__ && !this.silentMode) {
-        console.log('⚙️ PerformanceMonitor: Seuils mis à jour', newThresholds);
+        console.info('⚙️ PerformanceMonitor: Seuils mis à jour', newThresholds);
       }
     }
-  
+    
     exportMetrics() {
       return JSON.stringify(this.getFullReport(), null, 2);
     }
-  
+    
     getCompactStatus() {
       const hydration = this.getHydrationReport();
-      const alerts = this.metrics.alerts.length;
-      const critical = this.metrics.alerts.filter(a => 
-        a.type === 'slow_hydration' || a.type === 'high_memory'
-      ).length;
+      const storage = this.getAsyncStorageReport();
+      const renders = this.getRenderReport();
       
       return {
-        stores: hydration.storeCount,
-        avgHydration: hydration.averageTime.toFixed(0),
-        alerts,
-        critical,
-        healthy: critical === 0
+        hydration: `${hydration.successfulStores}/${hydration.totalStores} stores (${hydration.averageTime.toFixed(0)}ms avg)`,
+        storage: `${storage.totalKeys} keys (R:${storage.avgReadTime.toFixed(0)}ms W:${storage.avgWriteTime.toFixed(0)}ms)`,
+        renders: `${renders.totalComponents} components (${renders.totalRenders} renders)`,
+        memory: this.metrics.memory ? `${this.metrics.memory.usedMB.toFixed(1)}MB` : 'N/A',
+        alerts: this.metrics.alerts.length,
+        status: this.getHealthStatus()
       };
     }
-
-    // ═══════════════════════════════════════════════════════
-    // 🧹 ASYNCSTORAGE OPTIMIZATION
-    // ═══════════════════════════════════════════════════════
+    
+    getHealthStatus() {
+      const recentAlerts = this.metrics.alerts.filter(alert => 
+        Date.now() - alert.timestamp < 60000);
+      
+      if (recentAlerts.length > 5) return 'critical';
+      if (recentAlerts.length > 2) return 'warning';
+      return 'healthy';
+    }
     
     async optimizeAsyncStorage() {
-      try {
-        const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-        
-        // Nettoyer les vieilles entrées si performance dégradée
-        const avgStorageTime = Object.values(this.metrics.asyncStorage)
-          .reduce((acc, data) => {
-            const reads = data.reads || [];
-            const avgRead = reads.length > 0 ? 
-              reads.reduce((sum, op) => sum + op.duration, 0) / reads.length : 0;
-            return acc + avgRead;
-          }, 0) / Object.keys(this.metrics.asyncStorage).length;
-
-        if (avgStorageTime > 200) {
-          console.log('🧹 AsyncStorage optimization needed - avg time:', avgStorageTime.toFixed(1) + 'ms');
-          
-          // Nettoyer les anciens stores de dev si existants
-          const devKeys = ['dev-storage', 'temp-storage', 'test-storage'];
-          for (const key of devKeys) {
-            try {
-              await AsyncStorage.removeItem(key);
-            } catch (e) {
-              // Ignore si n'existe pas
-            }
-          }
-          
-          return true;
+      const storage = this.getAsyncStorageReport();
+      const avgStorageTime = (storage.avgReadTime + storage.avgWriteTime) / 2;
+      
+      if (avgStorageTime > 200) {
+        if (__DEV__ && !this.silentMode) {
+          console.info('🧹 AsyncStorage optimization needed - avg time:', avgStorageTime.toFixed(1) + 'ms');
         }
-        
-        return false;
-      } catch (error) {
-        console.error('❌ Erreur optimisation AsyncStorage:', error);
-        return false;
+        return true;
+      }
+      
+      return false;
+    }
+    
+    init() {
+      if (this.initialized) return;
+      
+      this.wrapAsyncStorage();
+      
+      setInterval(() => {
+        this.trackMemory();
+      }, 30000);
+      
+      this.initialized = true;
+      
+      if (this.optimizeAsyncStorage()) {
+        if (__DEV__ && !this.silentMode) {
+          console.info('🧹 AsyncStorage auto-optimized on startup');
+        }
       }
     }
   }
   
-  // Singleton instance
-  const performanceMonitor = new PerformanceMonitor();
-  
-  // Initialisation SILENCIEUSE pour démarrage cristallin iOS
-  if (__DEV__) {
-    // AsyncStorage wrapping automatique mais silencieux
-    performanceMonitor.wrapAsyncStorage();
-    
-    // Memory monitoring très espacé pour iOS (moins gourmand)
-    setInterval(() => {
-      performanceMonitor.trackMemory();
-    }, 60000); // Toutes les minutes - ultra-discret
-    
-    // Optimisation AsyncStorage automatique si nécessaire (1x par session)
-    setTimeout(async () => {
-      try {
-        const optimized = await performanceMonitor.optimizeAsyncStorage();
-        if (optimized && !performanceMonitor.silentMode) {
-          console.log('🧹 AsyncStorage auto-optimized on startup');
-        }
-      } catch (error) {
-        // Ignore les erreurs d'auto-optimisation
-      }
-    }, 10000); // Après 10 secondes de démarrage
-    
-    // AUCUN log automatique - Démarrage 100% propre
-    // Le seul log viendra du DevNavigation lors de la première ouverture
-  }
-  
-  export default performanceMonitor;
+  export default new PerformanceMonitor();

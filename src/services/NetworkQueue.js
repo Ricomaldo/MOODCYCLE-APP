@@ -13,7 +13,7 @@ import { getApiRequestConfig } from '../config/api';
 
 const QUEUE_STORAGE_KEY = 'network_queue_v1';
 const MAX_RETRIES = 3;
-const RETRY_DELAYS = [1000, 3000, 5000]; // Progressive delay
+const RETRY_DELAYS = [1000, 3000, 5000];
 
 class NetworkQueue {
   constructor() {
@@ -28,10 +28,8 @@ class NetworkQueue {
     if (this.initialized) return;
 
     try {
-      // Charger la queue depuis storage
       await this.loadQueue();
       
-      // Écouter les changements réseau
       this.unsubscribe = NetInfo.addEventListener(state => {
         if (state.isConnected && state.isInternetReachable) {
           this.processQueue();
@@ -39,16 +37,12 @@ class NetworkQueue {
       });
 
       this.initialized = true;
-      console.log('✅ NetworkQueue initialisé avec', this.queue.length, 'requêtes en attente');
+      console.info('✅ NetworkQueue initialisé avec', this.queue.length, 'requêtes en attente');
     } catch (error) {
       console.error('❌ Erreur init NetworkQueue:', error);
     }
   }
 
-  // ═══════════════════════════════════════════════════════
-  // 📥 AJOUT À LA QUEUE
-  // ═══════════════════════════════════════════════════════
-  
   async enqueue(request) {
     const queueItem = {
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -68,26 +62,17 @@ class NetworkQueue {
     this.queue.push(queueItem);
     await this.saveQueue();
     
-    // Notifier les listeners
     this.notifyListeners('enqueued', queueItem);
-
-    // Tenter de traiter immédiatement
     this.processQueue();
 
     return queueItem.id;
   }
 
-  // ═══════════════════════════════════════════════════════
-  // 🔄 TRAITEMENT DE LA QUEUE
-  // ═══════════════════════════════════════════════════════
-  
   async processQueue() {
     if (this.processing || this.queue.length === 0) return;
 
-    // Vérifier connexion
     const netInfo = await NetInfo.fetch();
     if (!netInfo.isConnected || !netInfo.isInternetReachable) {
-      console.log('📡 Pas de connexion, queue en attente');
       return;
     }
 
@@ -102,7 +87,6 @@ class NetworkQueue {
         item.status = 'processing';
         await this.processItem(item);
         
-        // Succès : retirer de la queue
         this.queue.shift();
         this.notifyListeners('completed', item);
         
@@ -112,15 +96,11 @@ class NetworkQueue {
         item.lastError = error.message;
         
         if (item.retries >= MAX_RETRIES) {
-          // Échec définitif
           this.queue.shift();
           this.notifyListeners('failed', item);
           console.error('❌ Échec définitif:', item.id, error);
         } else {
-          // Retry avec delay
           const delay = RETRY_DELAYS[item.retries - 1] || 5000;
-          console.log(`⏳ Retry ${item.retries}/${MAX_RETRIES} dans ${delay}ms`);
-          
           await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
@@ -133,7 +113,6 @@ class NetworkQueue {
   async processItem(item) {
     const { request } = item;
     
-    // Construire la requête complète
     const deviceId = request.metadata.deviceId || 'offline-device';
     const apiConfig = getApiRequestConfig(deviceId);
     
@@ -153,25 +132,19 @@ class NetworkQueue {
 
     const data = await response.json();
     
-    // Exécuter callback si fourni
     if (item.callback && typeof item.callback === 'function') {
       try {
         await item.callback(data, null);
       } catch (error) {
-        console.warn('⚠️ Erreur callback:', error);
+        console.error('⚠️ Erreur callback:', error);
       }
     }
 
     return data;
   }
 
-  // ═══════════════════════════════════════════════════════
-  // 💾 PERSISTENCE
-  // ═══════════════════════════════════════════════════════
-  
   async saveQueue() {
     try {
-      // Nettoyer les callbacks avant sauvegarde (non sérialisables)
       const cleanQueue = this.queue.map(item => ({
         ...item,
         callback: null
@@ -188,7 +161,7 @@ class NetworkQueue {
       const data = await AsyncStorage.getItem(QUEUE_STORAGE_KEY);
       if (data) {
         this.queue = JSON.parse(data);
-        console.log('📥 Queue chargée:', this.queue.length, 'items');
+        console.info('📥 Queue chargée:', this.queue.length, 'items');
       }
     } catch (error) {
       console.error('❌ Erreur chargement queue:', error);
@@ -196,42 +169,33 @@ class NetworkQueue {
     }
   }
 
-  // ═══════════════════════════════════════════════════════
-  // 📢 LISTENERS
-  // ═══════════════════════════════════════════════════════
-  
   addListener(callback) {
     this.listeners.add(callback);
     return () => this.listeners.delete(callback);
   }
 
   notifyListeners(event, data) {
-    this.listeners.forEach(listener => {
+    this.listeners.forEach(callback => {
       try {
-        listener(event, data);
+        callback(event, data);
       } catch (error) {
-        console.warn('⚠️ Erreur listener:', error);
+        console.error('❌ Erreur listener queue:', error);
       }
     });
   }
 
-  // ═══════════════════════════════════════════════════════
-  // 🔍 UTILITAIRES
-  // ═══════════════════════════════════════════════════════
-  
   getQueueStatus() {
     return {
       total: this.queue.length,
-      pending: this.queue.filter(i => i.status === 'pending').length,
-      processing: this.queue.filter(i => i.status === 'processing').length,
-      failed: this.queue.filter(i => i.retries >= MAX_RETRIES).length
+      pending: this.queue.filter(item => item.status === 'pending').length,
+      processing: this.queue.filter(item => item.status === 'processing').length,
+      isProcessing: this.processing
     };
   }
 
   async clearQueue() {
     this.queue = [];
-    await this.saveQueue();
-    this.notifyListeners('cleared', {});
+    await AsyncStorage.removeItem(QUEUE_STORAGE_KEY);
   }
 
   async removeItem(id) {
@@ -242,36 +206,25 @@ class NetworkQueue {
   cleanup() {
     if (this.unsubscribe) {
       this.unsubscribe();
-      this.unsubscribe = null;
     }
-    this.initialized = false;
+    this.listeners.clear();
   }
 
-  // ═══════════════════════════════════════════════════════
-  // 🔄 CHAT OFFLINE HELPERS
-  // ═══════════════════════════════════════════════════════
-  
   async enqueueChatMessage(message, context, deviceId) {
     return this.enqueue({
-      url: `${getApiRequestConfig().baseURL}/api/chat`,
+      url: '/api/chat',
       method: 'POST',
       body: { message, context },
-      metadata: { 
-        type: 'chat',
-        deviceId,
-        originalMessage: message
-      },
-      callback: async (response) => {
-        // Ajouter la réponse au store quand elle arrive
-        const { useChatStore } = require('../stores/useChatStore');
-        useChatStore.getState().addMeluneMessage(response.message || response.response, {
-          isOffline: false,
-          delayed: true
-        });
+      metadata: { deviceId, type: 'chat' },
+      callback: (response, error) => {
+        if (error) {
+          console.error('❌ Chat message failed:', error);
+        } else {
+          console.info('✅ Chat message sent offline');
+        }
       }
     });
   }
 }
 
-// Singleton
-export default new NetworkQueue();
+export default NetworkQueue;

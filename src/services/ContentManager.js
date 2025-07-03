@@ -7,7 +7,7 @@
 // 🧭 Used in: insights engine, onboarding, notebook, API fallback
 // ─────────────────────────────────────────────────────────
 //
-import { getApiConfig } from '../config/api.js';
+import { getApiConfig, getEndpointUrl } from '../config/api.js';
 import localInsights from '../data/insights.json';
 import localPhases from '../data/phases.json';
 import localClosings from '../data/closings.json';
@@ -29,26 +29,26 @@ class ContentManager {
    * 
    * Cette méthode fait appel à getContent() avec :
    * - type='insights' : pour gérer le cache des insights
-   * - endpoint='/api/admin/insights' : endpoint API 
+   * - endpoint=getEndpointUrl('admin.insights') : endpoint API centralisé
    * - localInsights : données de fallback si l'API échoue
    * 
    * Le cache des insights expire après 2h car ce sont des données
    * qui changent régulièrement (voir constructor)
    */
   async getInsights() {
-    return this.getContent('insights', '/api/admin/insights', localInsights);
+    return this.getContent('insights', getEndpointUrl('admin.insights'), localInsights);
   }
 
   async getPhases() {
-    return this.getContent('phases', '/api/admin/phases', localPhases);
+    return this.getContent('phases', getEndpointUrl('admin.phases'), localPhases);
   }
 
   async getClosings() {
-    return this.getContent('closings', '/api/admin/closings', localClosings);
+    return this.getContent('closings', getEndpointUrl('admin.closings'), localClosings);
   }
 
   async getVignettes() {
-    return this.getContent('vignettes', '/api/admin/vignettes', localVignettes);
+    return this.getContent('vignettes', getEndpointUrl('admin.vignettes'), localVignettes);
   }
 
   async getContent(type, endpoint, fallbackData) {
@@ -56,15 +56,14 @@ class ContentManager {
 
     // Cache valide ?
     if (this.isCacheValid(cacheEntry)) {
-      console.log(`📦 ${type} depuis cache`);
+      console.info(`📦 ${type} depuis cache`);
       return cacheEntry.data;
     }
 
     try {
-      console.log(`🌐 Fetching ${type} depuis API...`);
-      const { baseURL } = getApiConfig();
-
-      const response = await fetch(`${baseURL}${endpoint}`, {
+      console.info(`🌐 Fetching ${type} depuis API...`);
+      // ✅ FIX: endpoint contient déjà l'URL complète depuis getEndpointUrl()
+      const response = await fetch(endpoint, {
         timeout: 8000,
         headers: {
           'Content-Type': 'application/json',
@@ -79,10 +78,10 @@ class ContentManager {
       // Cache avec timestamp
       this.updateCache(type, content);
 
-      console.log(`✅ ${type} API chargés`);
+      console.info(`✅ ${type} API chargés`);
       return content;
     } catch (error) {
-      console.log(`🔄 ${type} fallback local:`, error.message);
+      console.info(`🔄 ${type} fallback local:`, error.message);
 
       // Cache même le fallback pour éviter de spammer l'API
       this.updateCache(type, fallbackData);

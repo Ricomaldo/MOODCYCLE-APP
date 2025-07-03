@@ -20,12 +20,6 @@ export const CYCLE_MODES = {
   OBSERVATION: 'observation' // Patterns utilisatrice pure
 };
 
-/**
- * Détermine le mode cycle optimal selon maturité utilisatrice
- * @param {Object} userIntelligence - Store intelligence utilisateur
- * @param {string} engagementLevel - Niveau engagement (discovery/learning/autonomous)
- * @returns {string} Mode cycle optimal
- */
 export const getCycleMode = (userIntelligence, engagementLevel) => {
   // Fallback défaut = mode actuel pour backward compatibility
   if (!userIntelligence || !engagementLevel) {
@@ -67,15 +61,6 @@ export const getCycleMode = (userIntelligence, engagementLevel) => {
   }
 };
 
-/**
- * Version adaptative de getCurrentPhase avec support modes
- * BACKWARD COMPATIBLE - Signature identique
- * @param {Date|string} lastPeriodDate 
- * @param {number} cycleLength 
- * @param {number} periodDuration 
- * @param {Object} options - Options étendues (optionnel)
- * @returns {string} Phase actuelle
- */
 export const getCurrentPhaseAdaptive = (
   lastPeriodDate, 
   cycleLength = CYCLE_DEFAULTS.LENGTH, 
@@ -111,7 +96,7 @@ export const getCurrentPhaseAdaptive = (
       return observedPhase.phase;
     }
     // Fallback sécurité si aucune observation
-    console.warn('Mode observation sans données, fallback predictive');
+    console.error('Mode observation sans données, fallback predictive');
     return getCurrentPhase(lastPeriodDate, cycleLength, periodDuration);
   }
 
@@ -119,10 +104,6 @@ export const getCurrentPhaseAdaptive = (
   return getCurrentPhase(lastPeriodDate, cycleLength, periodDuration);
 };
 
-/**
- * Helper privé - Récupère phase observée depuis intelligence
- * @private
- */
 const getObservedPhase = (userIntelligence) => {
   // GARDE NULL SAFETY
   if (!userIntelligence?.observationPatterns?.lastObservations) {
@@ -147,10 +128,6 @@ const getObservedPhase = (userIntelligence) => {
   };
 };
 
-/**
- * Helper privé - Analyse patterns observations
- * @private
- */
 const analyzeObservationPatterns = (observations) => {
   if (!observations || observations.length === 0) {
     return { mostLikelyPhase: null, confidence: 0 };
@@ -200,9 +177,6 @@ const analyzeObservationPatterns = (observations) => {
 // 🔧 HELPERS OBSERVATION
 // ═══════════════════════════════════════════════════════
 
-/**
- * Détermine si utilisatrice ready pour observation
- */
 export const isReadyForObservationMode = (userIntelligence, engagementMetrics) => {
   const hasEnoughData = userIntelligence?.observationPatterns?.lastObservations?.length >= 10;
   const hasGoodConsistency = userIntelligence?.observationPatterns?.consistency > 0.6;
@@ -211,9 +185,6 @@ export const isReadyForObservationMode = (userIntelligence, engagementMetrics) =
   return hasEnoughData && hasGoodConsistency && isEngaged;
 };
 
-/**
- * Génère guidance contextuelle selon mode
- */
 export const getCycleModeGuidance = (currentMode, phase) => {
   const guidance = {
     [CYCLE_MODES.PREDICTIVE]: {
@@ -240,10 +211,6 @@ export const getCycleModeGuidance = (currentMode, phase) => {
 // 🧮 CALCULS DE BASE
 // ═══════════════════════════════════════════════════════
 
-/**
- * Calcule les jours écoulés depuis la dernière période
- * ✅ FIX: Gestion dates invalides
- */
 export const getDaysSinceLastPeriod = (lastPeriodDate) => {
   if (!lastPeriodDate) {
     return 0;
@@ -255,17 +222,18 @@ export const getDaysSinceLastPeriod = (lastPeriodDate) => {
     return 0; // ✅ Date invalide
   }
   
+  // ✅ FIX: Utiliser new Date() au lieu de Date.now() pour éviter les problèmes de timezone
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const lastDateStart = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate());
+  
   const result = Math.floor(
-    (Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24)
+    (todayStart.getTime() - lastDateStart.getTime()) / (1000 * 60 * 60 * 24)
   );
   
   return result;
 };
 
-/**
- * Calcule le jour actuel dans le cycle (1-28+)
- * ✅ FIX: Gestion dates futures + validation params
- */
 export const getCurrentCycleDay = (lastPeriodDate, cycleLength = CYCLE_DEFAULTS.LENGTH) => {
   if (!lastPeriodDate) return 1;
   
@@ -281,10 +249,6 @@ export const getCurrentCycleDay = (lastPeriodDate, cycleLength = CYCLE_DEFAULTS.
   return (daysSince % sanitizedCycleLength) + 1;
 };
 
-/**
- * Détermine la phase actuelle du cycle
- * ✅ FIX: Logique phases adaptée cycles longs + validation
- */
 export const getCurrentPhase = (lastPeriodDate, cycleLength = CYCLE_DEFAULTS.LENGTH, periodDuration = CYCLE_DEFAULTS.PERIOD_DURATION) => {
   if (!lastPeriodDate) {
     return 'menstrual';
@@ -332,9 +296,6 @@ export const getCurrentPhase = (lastPeriodDate, cycleLength = CYCLE_DEFAULTS.LEN
 // 📊 INFOS ENRICHIES
 // ═══════════════════════════════════════════════════════
 
-/**
- * Métadonnées des phases - COULEURS SYNCHRONISÉES AVEC THEME.JS
- */
 export const PHASE_METADATA = {
   menstrual: {
     name: 'Menstruelle',
@@ -366,9 +327,6 @@ export const PHASE_METADATA = {
   }
 };
 
-/**
- * Retourne les infos complètes de la phase actuelle
- */
 export const getCurrentPhaseInfo = (lastPeriodDate, cycleLength = CYCLE_DEFAULTS.LENGTH, periodDuration = CYCLE_DEFAULTS.PERIOD_DURATION) => {
   const phase = getCurrentPhase(lastPeriodDate, cycleLength, periodDuration);
   const day = getCurrentCycleDay(lastPeriodDate, cycleLength);
@@ -384,10 +342,6 @@ export const getCurrentPhaseInfo = (lastPeriodDate, cycleLength = CYCLE_DEFAULTS
 // 🔮 PRÉDICTIONS
 // ═══════════════════════════════════════════════════════
 
-/**
- * Calcule la date prévue des prochaines règles
- * ✅ FIX: Validation dates + params
- */
 export const getNextPeriodDate = (lastPeriodDate, cycleLength = CYCLE_DEFAULTS.LENGTH) => {
   if (!lastPeriodDate) return null;
   
@@ -404,16 +358,13 @@ export const getNextPeriodDate = (lastPeriodDate, cycleLength = CYCLE_DEFAULTS.L
   return nextDate.toISOString();
 };
 
-/**
- * Calcule les jours restants jusqu'aux prochaines règles
- * ✅ FIX: Gestion cycles dépassés + validation
- */
 export const getDaysUntilNextPeriod = (lastPeriodDate, cycleLength = CYCLE_DEFAULTS.LENGTH) => {
   const nextPeriodDate = getNextPeriodDate(lastPeriodDate, cycleLength);
   if (!nextPeriodDate) return null;
   
   const nextDate = new Date(nextPeriodDate);
-  const today = new Date(Date.now()); // Utilise le mock dans les tests
+  // ✅ FIX: Utiliser new Date() au lieu de Date.now() pour éviter les problèmes de timezone
+  const today = new Date();
   
   return Math.ceil((nextDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 };
@@ -422,10 +373,6 @@ export const getDaysUntilNextPeriod = (lastPeriodDate, cycleLength = CYCLE_DEFAU
 // ✅ VALIDATION
 // ═══════════════════════════════════════════════════════
 
-/**
- * Valide les données de cycle
- * ✅ FIX: Protection undefined + validation stricte
- */
 export const validateCycleData = (cycleData) => {
   if (!cycleData) {
     return {
@@ -479,10 +426,6 @@ export const validateCycleData = (cycleData) => {
 // 🛠️ UTILITAIRES TESTING
 // ═══════════════════════════════════════════════════════
 
-/**
- * Crée des données de cycle factices pour testing
- * ✅ FIX: Params optionnels + dates cohérentes
- */
 export const createMockCycleData = (daysAgo = 0, cycleLength = CYCLE_DEFAULTS.LENGTH) => {
   const lastPeriodDate = new Date(Date.now()); // Utilise Date.now() pour respecter les mocks
   lastPeriodDate.setDate(lastPeriodDate.getDate() - daysAgo);
@@ -496,9 +439,6 @@ export const createMockCycleData = (daysAgo = 0, cycleLength = CYCLE_DEFAULTS.LE
   };
 };
 
-/**
- * Crée un cycle positionné sur une phase spécifique
- */
 export const createCycleAtPhase = (targetPhase, cycleLength = CYCLE_DEFAULTS.LENGTH) => {
   // Calcule les jours de début de chaque phase selon la logique de getCurrentPhase
   const follicularEnd = Math.max(13, Math.floor(cycleLength * 0.4));

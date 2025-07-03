@@ -24,7 +24,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import ChatBubble from "./ChatBubble";
 import { useTheme } from "../../hooks/useTheme";
-import { BodyText, Caption } from "../../core/ui/Typography";
+import { BodyText, Caption } from '../../core/ui/typography';
 import ChatService from "../../services/ChatService";
 import { useUserStore } from "../../stores/useUserStore";
 import { useChatStore } from "../../stores/useChatStore";
@@ -540,7 +540,12 @@ const getStyles = (theme) => StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: theme.colors.primary + '15',
+    ...theme.getGlassmorphismStyle(theme.colors.primary, {
+      bgOpacity: theme.glassmorphism.opacity.bg,
+      borderOpacity: theme.glassmorphism.opacity.border,
+      borderWidth: 1,
+      shadowOpacity: 0,  // Pas de shadow sur le bouton send
+    }),
   },
   sendButtonDisabled: {
     backgroundColor: 'transparent',
