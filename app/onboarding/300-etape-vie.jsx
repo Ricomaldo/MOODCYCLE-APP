@@ -8,18 +8,17 @@
 // ─────────────────────────────────────────────────────────
 //
 import React, { useEffect, useRef, useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, Animated, ScrollView } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { router } from 'expo-router';
-import ScreenContainer from '../../src/core/layout/ScreenContainer';
-import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
+import OnboardingScreen from '../../src/core/layout/OnboardingScreen';
 import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { useUserStore } from '../../src/stores/useUserStore';
 
-export default function ConfianceScreen() {
+export default function EtapeVieScreen() {
   const { theme } = useTheme();
   const styles = getStyles(theme);
-  const { updateProfile } = useUserStore();
+  const { profile, updateProfile } = useUserStore();
   
   // 🎯 Tranches d'âge avec descriptions psychologiques
   const AGE_RANGES = [
@@ -64,7 +63,7 @@ export default function ConfianceScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
   
-  const [selectedAge, setSelectedAge] = useState(null);
+  const [selectedAge, setSelectedAge] = useState(profile.ageRange || null);
 
   useEffect(() => {
     // Animation simple et fluide
@@ -84,8 +83,6 @@ export default function ConfianceScreen() {
 
   const handleAgeSelect = (ageRange) => {
     setSelectedAge(ageRange.id);
-    
-    // ✅ Simple enregistrement du choix
     updateProfile({ ageRange: ageRange.id });
     
     // Navigation simple après feedback visuel
@@ -95,84 +92,64 @@ export default function ConfianceScreen() {
   };
 
   return (
-    <ScreenContainer edges={['top', 'bottom']}>
-      <OnboardingNavigation currentScreen="300-etape-vie" />
-      
-      <ScrollView 
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-          
-          {/* Section principale - Choix âge */}
-          <View style={styles.mainSection}>
-            <Animated.View
-              style={[
-                styles.questionContainer,
-                {
-                  transform: [{ translateY: slideAnim }],
-                },
-              ]}
-            >
-              <BodyText style={styles.question}>
-                Pour t'accompagner selon ton étape de vie
-              </BodyText>
-              
-              <BodyText style={styles.subtext}>
-                Choisis la période qui résonne avec toi
-              </BodyText>
-            </Animated.View>
+    <OnboardingScreen currentScreen="300-etape-vie">
+      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+        {/* Section principale - Choix âge */}
+        <View style={styles.mainSection}>
+          <Animated.View
+            style={[
+              styles.questionContainer,
+              {
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <BodyText style={styles.question}>
+              Pour t'accompagner selon ton étape de vie
+            </BodyText>
+            
+            <BodyText style={styles.subtext}>
+              Choisis la période qui résonne avec toi
+            </BodyText>
+          </Animated.View>
 
-            {/* Choix d'âge */}
-            <View style={styles.choicesContainer}>
-              {AGE_RANGES.map((ageRange) => (
-                <TouchableOpacity
-                  key={ageRange.id}
-                  style={[
-                    styles.ageCard,
-                    selectedAge === ageRange.id && styles.ageCardSelected,
-                    { borderLeftColor: ageRange.color }
-                  ]}
-                  onPress={() => handleAgeSelect(ageRange)}
-                  activeOpacity={0.8}
-                  disabled={selectedAge !== null}
-                >
-                  <View style={styles.ageHeader}>
-                    <View style={[styles.ageIcon, { backgroundColor: ageRange.color + '20' }]}>
-                      <BodyText style={styles.iconText}>{ageRange.icon}</BodyText>
-                    </View>
-                    <BodyText style={styles.ageTitle}>
-                      {ageRange.title}
-                    </BodyText>
+          {/* Choix d'âge */}
+          <View style={styles.choicesContainer}>
+            {AGE_RANGES.map((ageRange) => (
+              <TouchableOpacity
+                key={ageRange.id}
+                style={[
+                  styles.ageCard,
+                  selectedAge === ageRange.id && styles.ageCardSelected,
+                  { borderLeftColor: ageRange.color }
+                ]}
+                onPress={() => handleAgeSelect(ageRange)}
+                activeOpacity={0.8}
+              >
+                <View style={styles.ageHeader}>
+                  <View style={[styles.ageIcon, { backgroundColor: ageRange.color + '20' }]}>
+                    <BodyText style={styles.iconText}>{ageRange.icon}</BodyText>
                   </View>
-                  
-                  <BodyText style={styles.ageDescription}>
-                    {ageRange.description}
+                  <BodyText style={styles.ageTitle}>
+                    {ageRange.title}
                   </BodyText>
-                </TouchableOpacity>
-              ))}
-            </View>
+                </View>
+                
+                <BodyText style={styles.ageDescription}>
+                  {ageRange.description}
+                </BodyText>
+              </TouchableOpacity>
+            ))}
           </View>
-          
-        </Animated.View>
-      </ScrollView>
-    </ScreenContainer>
+        </View>
+      </Animated.View>
+    </OnboardingScreen>
   );
 }
 
 const getStyles = (theme) => StyleSheet.create({
-  scrollView: {
-    flex: 1,
-  },
-  
-  scrollContent: {
-    flexGrow: 1,
-  },
-  
   content: {
     flex: 1,
-    paddingHorizontal: theme.spacing.l,
   },
   
   mainSection: {

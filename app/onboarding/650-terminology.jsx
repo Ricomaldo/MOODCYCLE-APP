@@ -14,7 +14,6 @@ import { router } from 'expo-router';
 import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
 import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
-import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
 import { BodyText, Caption } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { useTerminologySelector } from '../../src/hooks/useTerminology';
@@ -26,28 +25,28 @@ const TERMINOLOGY_OPTIONS = [
     name: 'Médicale',
     description: 'Termes scientifiques et précis',
     icon: '🏥',
-    examples: ['Phase menstruelle', 'Phase ovulatoire']
+    phases: ["Phase menstruelle", "Phase folliculaire", "Phase ovulatoire", "Phase lutéale"]
   },
   {
     key: 'spiritual',
     name: 'Spirituelle',
     description: 'Approche mystique et symbolique',
     icon: '🌙',
-    examples: ['La Sorcière', 'La Mère']
+    phases: ["La Sorcière", "La Jeune Fille", "La Mère", "L'Enchanteresse"]
   },
   {
     key: 'energetic',
     name: 'Énergétique',
     description: 'Focus sur l\'énergie et le potentiel',
     icon: '✨',
-    examples: ['Introspection', 'Rayonnement']
+    phases: ["Phase d'Introspection", "Phase de Renaissance", "Phase de Rayonnement", "Phase de Transformation"]
   },
   {
     key: 'modern',
     name: 'Moderne',
     description: 'Termes simples et accessibles',
     icon: '💫',
-    examples: ['Pause', 'Expression']
+    phases: ["Phase de Pause", "Phase de Création", "Phase d'Expression", "Phase de Réflexion"]
   }
 ];
 
@@ -157,18 +156,18 @@ export default function TerminologyScreen() {
           )}
         </View>
         
-        {/* Exemples */}
+        {/* Phases */}
         <View style={styles.optionExamples}>
-          <Caption style={[
-            styles.exampleLabel,
-            isSelected && styles.exampleLabelSelected
-          ]}>
-            Exemples :
-          </Caption>
           <View style={styles.examplePhases}>
-            {option.examples.map((example, index) => (
-              <Caption key={index} style={styles.examplePhase}>
-                {example}
+            {option.phases.map((phase, index) => (
+              <Caption 
+                key={index} 
+                style={[
+                  styles.examplePhase,
+                  isSelected && { color: theme.colors.primary }
+                ]}
+              >
+                {phase}
               </Caption>
             ))}
           </View>
@@ -190,15 +189,6 @@ export default function TerminologyScreen() {
           
           {/* Header */}
           <View style={styles.header}>
-            <Animated.View style={{ opacity: fadeAnim }}>
-              <MeluneAvatar 
-                phase="ovulatory" 
-                size="large" 
-                style="classic"
-                animated={true}
-              />
-            </Animated.View>
-            
             <Animated.View
               style={[
                 styles.messageContainer,
@@ -219,18 +209,6 @@ export default function TerminologyScreen() {
               </BodyText>
             </Animated.View>
           </View>
-
-          {/* Aperçu actuel */}
-          <Animated.View style={[styles.previewContainer, { opacity: optionsAnim }]}>
-            <BodyText style={styles.previewLabel}>Aperçu actuel :</BodyText>
-            <View style={styles.previewPhases}>
-              {previewPhases.map((phase, index) => (
-                <Caption key={phase} style={styles.previewPhase}>
-                  {index > 0 && ' • '}{phase}
-                </Caption>
-              ))}
-            </View>
-          </Animated.View>
 
           {/* Options terminologies */}
           <Animated.View style={[styles.optionsContainer, { opacity: optionsAnim }]}>
@@ -298,45 +276,22 @@ const getStyles = (theme) => StyleSheet.create({
     paddingHorizontal: theme.spacing.m,
   },
   
-  previewContainer: {
-    margin: theme.spacing.l,
-    marginTop: 0,
-    padding: theme.spacing.l,
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.l,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  
-  previewLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.s,
-  },
-  
-  previewPhases: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  
-  previewPhase: {
-    fontSize: 13,
-    color: theme.colors.primary,
-  },
-  
   optionsContainer: {
-    padding: theme.spacing.l,
-    paddingTop: 0,
+    padding: 0,
     gap: theme.spacing.m,
   },
   
   optionCard: {
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.l,
     padding: theme.spacing.l,
+    borderRadius: theme.borderRadius.large,
     borderWidth: 2,
     borderColor: theme.colors.border,
+    shadowColor: theme.colors.text,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   
   optionCardSelected: {
@@ -404,31 +359,23 @@ const getStyles = (theme) => StyleSheet.create({
   },
   
   optionExamples: {
-    paddingTop: theme.spacing.s,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
-  },
-  
-  exampleLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: theme.colors.textLight,
-    marginBottom: theme.spacing.xs,
-  },
-  
-  exampleLabelSelected: {
-    color: theme.colors.primary,
+    marginTop: theme.spacing.m,
   },
   
   examplePhases: {
     flexDirection: 'row',
-    gap: theme.spacing.m,
+    flexWrap: 'wrap',
+    gap: theme.spacing.xs,
   },
   
   examplePhase: {
-    fontSize: 12,
+    fontSize: 13,
     color: theme.colors.textLight,
-    fontStyle: 'italic',
+    backgroundColor: theme.colors.surface,
+    paddingVertical: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.s,
+    borderRadius: theme.borderRadius.small,
+    overflow: 'hidden',
   },
   
   continueContainer: {

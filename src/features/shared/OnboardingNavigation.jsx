@@ -7,41 +7,52 @@
 // 🧭 Used in: Onboarding screens (100-800)
 // ─────────────────────────────────────────────────────────
 //
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { View, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../hooks/useTheme';
 import { BodyText, Caption } from '../../core/ui/typography';
+import { useUserStore } from '../../stores/useUserStore';
 
 // Mapping écrans vers étapes groupées
-const SCREEN_TO_STEP = {
-  '100-bienvenue': 1,
-  '200-rencontre': 1,
-  '300-etape-vie': 2,
-  '375-age': 2,
-  '400-cycle': 2,
-  '500-preferences': 3,
-  '550-prenom': 3,
-  '600-avatar': 3,
-  '650-terminology': 3,
-  '700-essai': 4,
-  '800-demarrage': 4,
+const SCREEN_MAPPING = {
+  '100-bienvenue': { step: 1, title: 'Bienvenue' },
+  '200-rencontre': { step: 1, title: 'Rencontre' },
+  '300-etape-vie': { step: 2, title: 'Ton rythme' },
+  '400-cycle': { step: 2, title: 'Cycle' },
+  '500-preferences': { step: 3, title: 'Préférences' },
+  '550-prenom': { step: 3, title: 'Personnalisation' },
+  '600-avatar': { step: 3, title: 'Avatar' },
+  '650-terminology': { step: 4, title: 'Terminologie' },
+  '700-essai': { step: 4, title: 'Essai' },
+  '800-demarrage': { step: 4, title: 'Démarrage' }
 };
 
 const STEP_LABELS = {
   1: 'Connexion',
   2: 'Ton rythme',
   3: 'Ton style',
-  4: 'Prête !',
+  4: 'Ton langage',
 };
 
 export default function OnboardingNavigation({ currentScreen, canGoBack = true }) {
   const { theme } = useTheme();
   const styles = getStyles(theme);
-  const currentStep = SCREEN_TO_STEP[currentScreen] || 1;
+  const currentStep = SCREEN_MAPPING[currentScreen]?.step || 1;
   const progressAnim = useRef(new Animated.Value(0)).current;
   const backButtonAnim = useRef(new Animated.Value(0)).current;
+  const forwardButtonAnim = useRef(new Animated.Value(0)).current;
+  const { profile } = useUserStore();
+
+  // Calculer la dernière étape validée
+  const lastValidatedStep = useMemo(() => {
+    if (profile.completed) return 4;
+    if (profile.prenom) return 3;
+    if (profile.ageRange) return 2;
+    if (profile.journeyChoice) return 1;
+    return 1;
+  }, [profile]);
 
   useEffect(() => {
     // Animation progression
@@ -57,11 +68,30 @@ export default function OnboardingNavigation({ currentScreen, canGoBack = true }
       duration: 300,
       useNativeDriver: true,
     }).start();
-  }, [currentStep, canGoBack, currentScreen]);
+
+    // Animation bouton avant
+    Animated.timing(forwardButtonAnim, {
+      toValue: lastValidatedStep > currentStep ? 1 : 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+  }, [currentStep, canGoBack, currentScreen, lastValidatedStep]);
 
   const handleBack = () => {
     if (canGoBack && currentScreen !== '100-promesse') {
       router.back();
+    }
+  };
+
+  const handleForward = () => {
+    if (lastValidatedStep > currentStep) {
+      // Trouver le prochain écran dans la séquence
+      const screenSequence = Object.entries(SCREEN_MAPPING);
+      const currentIndex = screenSequence.findIndex(([screen]) => screen === currentScreen);
+      if (currentIndex >= 0 && currentIndex < screenSequence.length - 1) {
+        const nextScreen = screenSequence[currentIndex + 1][0];
+        router.push(`/onboarding/${nextScreen}`);
+      }
     }
   };
 
@@ -97,36 +127,23 @@ export default function OnboardingNavigation({ currentScreen, canGoBack = true }
       {/* Progression centrale */}
       <View style={styles.progressContainer}>
         {/* Bullets progression */}
-        <View style={styles.bulletsContainer}>
-          {[1, 2, 3, 4].map((step) => {
-            const isActive = step <= currentStep;
-            const isCurrent = step === currentStep;
-
-            return (
-              <View key={step} style={styles.bulletWrapper}>
-                <Animated.View
-                  style={[
-                    styles.bullet,
-                    {
-                      backgroundColor: isActive
-                        ? theme.colors.primary
-                        : theme.colors.border,
-                      transform: [
-                        {
-                          scale: progressAnim.interpolate({
-                            inputRange: [step - 0.5, step, step + 0.5],
-                            outputRange: [1, isCurrent ? 1.2 : 1, 1],
-                            extrapolate: 'clamp',
-                          }),
-                        },
-                      ],
-                    },
-                  ]}
-                />
-                {step < 4 && <View style={styles.connector} />}
-              </View>
-            );
-          })}
+        <View style={styles.bullets}>
+          {[1, 2, 3, 4].map(step => (
+            <Animated.View
+              key={step}
+              style={[
+                styles.bullet,
+                {
+                  backgroundColor: step <= currentStep ? 
+                    theme.colors.primary : 
+                    theme.colors.border,
+                  transform: [{
+                    scale: step === currentStep ? 1.2 : 1
+                  }]
+                }
+              ]}
+            />
+          ))}
         </View>
 
         {/* Label étape actuelle */}
@@ -140,8 +157,32 @@ export default function OnboardingNavigation({ currentScreen, canGoBack = true }
         </View>
       </View>
 
-      {/* Espace équilibré à droite */}
-      <View style={styles.rightSpace} />
+      {/* Bouton avant animé */}
+      <Animated.View
+        style={[
+          styles.forwardButtonContainer,
+          {
+            opacity: forwardButtonAnim,
+            transform: [
+              {
+                scale: forwardButtonAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.5, 1],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        <TouchableOpacity
+          style={styles.forwardButton}
+          onPress={handleForward}
+          activeOpacity={0.7}
+          disabled={lastValidatedStep <= currentStep}
+        >
+          <Feather name="chevron-right" size={24} color={theme.colors.text} />
+        </TouchableOpacity>
+      </Animated.View>
     </View>
   );
 }
@@ -182,15 +223,10 @@ const getStyles = (theme) => StyleSheet.create({
     alignItems: 'center',
   },
   
-  bulletsContainer: {
+  bullets: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: theme.spacing.s,
-  },
-  
-  bulletWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   
   bullet: {
@@ -198,13 +234,6 @@ const getStyles = (theme) => StyleSheet.create({
     height: 12,
     borderRadius: 6,
     marginHorizontal: 2,
-  },
-  
-  connector: {
-    width: 20,
-    height: 2,
-    backgroundColor: theme.colors.border,
-    marginHorizontal: 4,
   },
   
   labelContainer: {
@@ -225,5 +254,24 @@ const getStyles = (theme) => StyleSheet.create({
   
   rightSpace: {
     width: 40,
+  },
+  
+  forwardButtonContainer: {
+    width: 40,
+    alignItems: 'flex-end',
+  },
+  
+  forwardButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.surface,
+    shadowColor: theme.colors.text,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
 });

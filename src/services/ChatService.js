@@ -325,6 +325,11 @@ class ChatService {
     const chatStore = useChatStore.getState();
     const intelligenceStore = useUserIntelligence.getState();
 
+    // Déterminer le mode de maturité
+    const observationCount = intelligenceStore.observationPatterns.totalObservations;
+    const maturityMode = observationCount < 5 ? 'discovery' : 
+                        observationCount > 20 ? 'autonomous' : 'learning';
+
     const context = {
       message,
       profile: userStore.profile,
@@ -333,7 +338,7 @@ class ChatService {
       phase: getCurrentPhase(userStore.cycle),
       preferences: userStore.preferences,
       conversationSummary: this.generateContextSummary(chatStore.messages.slice(-10)),
-      userIntelligence: intelligenceStore.getIntelligenceSnapshot?.() || {},
+      maturityMode, // Nouveau : mode de maturité
       timestamp: new Date().toISOString(),
       deviceId: this.deviceId
     };
@@ -395,6 +400,7 @@ class ChatService {
           },
           conversation: context.conversation?.messages || [],
           preferences: context.preferences,
+          userIntelligence: context.userIntelligence,
           instructions: this.getContextualInstructions(context)
         },
         metadata: {

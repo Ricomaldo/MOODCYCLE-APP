@@ -2,9 +2,9 @@
 // ─────────────────────────────────────────────────────────
 // 📄 File: app/onboarding/700-essai.jsx
 // 🧩 Type: Écran Onboarding
-// 📚 Description: Essai gratuit avec personnalisation persona
-// 🕒 Version: 1.0 - 2025-01-21
-// 🧭 Used in: Parcours onboarding, étape essai
+// 📚 Description: Choix du type d'accompagnement
+// 🕒 Version: 2.0 - 2025-01-21
+// 🧭 Used in: Parcours onboarding, choix version
 // ─────────────────────────────────────────────────────────
 //
 import React, { useEffect, useRef, useState } from 'react';
@@ -13,89 +13,103 @@ import { router } from 'expo-router';
 import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
 import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
-import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
 import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { Feather } from '@expo/vector-icons';
 
-// 🎯 Arguments personnalisés par persona - VERSION ESSAI GRATUIT
+// 🎯 Options d'accompagnement personnalisées par persona
 const PERSONA_ARGUMENTS = {
   emma: {
-    title: "Continue ton exploration gratuitement",
-    subtitle: "14 jours pour révéler ton langage cyclique unique",
-    benefits: [
-      "✨ Accès complet à l'intelligence Melune",
-      "💫 Chat illimité pour explorer tes ressentis",
-      "🌙 Insights personnalisés selon ta phase"
-    ],
-    cta: "Commencer mes 14 jours gratuits",
-    reassurance: "Aucun engagement, que de la découverte"
+    title: "Choisis ton accompagnement",
+    subtitle: "Deux façons de révéler ton langage cyclique unique",
+    complete: {
+      title: "Accompagnement Complet",
+      description: "14 jours d'exploration guidée",
+      benefits: [
+        "✨ Intelligence Melune complète",
+        "💫 Chat enrichi et personnalisé",
+        "🌙 Insights selon ta phase",
+        "📱 Accès à toutes les fonctionnalités"
+      ],
+      cta: "Explorer pendant 14 jours"
+    }
   },
   laure: {
-    title: "Testez l'efficacité 14 jours gratuitement",
-    subtitle: "Évaluez les résultats avant de vous engager",
-    benefits: [
-      "📊 Analyse complète de vos patterns",
-      "⚡ Optimisation performance cyclique",
-      "📈 Métriques de progression détaillées"
-    ],
-    cta: "Démarrer l'évaluation gratuite",
-    reassurance: "Évaluez avant de vous engager"
+    title: "Choisis ton accompagnement",
+    subtitle: "Deux approches pour optimiser ton cycle",
+    complete: {
+      title: "Accompagnement Complet",
+      description: "14 jours d'optimisation guidée",
+      benefits: [
+        "📊 Analyse approfondie patterns",
+        "⚡ Optimisation performance",
+        "📈 Métriques détaillées",
+        "🎯 Objectifs personnalisés"
+      ],
+      cta: "Optimiser pendant 14 jours"
+    }
   },
   clara: {
-    title: "14 jours de transformation gratuite !",
-    subtitle: "Zéro risque, 100% potentiel de découverte",
-    benefits: [
-      "🚀 Débloquer ta puissance cyclique",
-      "💥 Coaching énergique personnalisé", 
-      "⚡ Défis de transformation uniques"
-    ],
-    cta: "Libérer mon potentiel GRATUIT !",
-    reassurance: "Zéro risque, 100% potentiel"
+    title: "Choisis ton accompagnement",
+    subtitle: "Deux chemins vers ta transformation",
+    complete: {
+      title: "Accompagnement Complet",
+      description: "14 jours de transformation guidée",
+      benefits: [
+        "🚀 Puissance cyclique totale",
+        "💥 Coaching énergétique",
+        "⚡ Défis quotidiens",
+        "🎯 Programme personnalisé"
+      ],
+      cta: "Transformer pendant 14 jours"
+    }
   },
   sylvie: {
-    title: "Découvrir en douceur 14 jours",
-    subtitle: "Prenez le temps qu'il vous faut, sans pression",
-    benefits: [
-      "🌸 Guidance maternelle bienveillante",
-      "🕯️ Rituels adaptés à votre rythme",
-      "💝 Espace de partage sécurisé"
-    ],
-    cta: "Commencer en douceur",
-    reassurance: "Prenez le temps qu'il vous faut"
+    title: "Choisis ton accompagnement",
+    subtitle: "Deux rythmes pour ta découverte",
+    complete: {
+      title: "Accompagnement Complet",
+      description: "14 jours de découverte guidée",
+      benefits: [
+        "🌸 Guidance maternelle",
+        "🕯️ Rituels personnalisés",
+        "💝 Espace d'expression",
+        "🌿 Programme adaptatif"
+      ],
+      cta: "Découvrir pendant 14 jours"
+    }
   },
   christine: {
-    title: "Explorer sereinement 14 jours",
-    subtitle: "Sans pression, à votre rythme de découverte",
-    benefits: [
-      "🌟 Sagesse adaptée à votre étape de vie",
-      "🍃 Transition hormonale accompagnée",
-      "💎 Communauté de femmes bienveillantes"
-    ],
-    cta: "Accéder à la sagesse gratuitement",
-    reassurance: "Sans pression, à votre rythme"
+    title: "Choisis ton accompagnement",
+    subtitle: "Deux voies vers la sagesse cyclique",
+    complete: {
+      title: "Accompagnement Complet",
+      description: "14 jours de sagesse guidée",
+      benefits: [
+        "🌟 Sagesse personnalisée",
+        "🍃 Transition accompagnée",
+        "💎 Communauté bienveillante",
+        "🌸 Programme adapté"
+      ],
+      cta: "Explorer pendant 14 jours"
+    }
   }
 };
 
-// 🤝 VERSION SOLIDAIRE
-const SOLIDAIRE_OPTION = {
-  title: "Version Solidaire",
-  subtitle: "Essentiel gratuit pour toujours",
+// 🤝 Version Essentielle (anciennement Solidaire)
+const VERSION_ESSENTIELLE = {
+  title: "Version Essentielle",
+  description: "L'essentiel pour ton cycle, gratuit pour toujours",
   benefits: [
-    "💬 Chat basique avec Melune",
-    "📅 Cycle et prédictions simples", 
-    "📝 Journal personnel sécurisé"
+    "💬 Conversations avec Melune",
+    "📅 Suivi cycle simplifié",
+    "📝 Journal personnel",
+    "🌱 Fonctionnalités de base"
   ],
-  cta: "Choisir la Version Solidaire"
+  cta: "Commencer gratuitement"
 };
 
-const PRICING = {
-  monthly: { price: "9,99€", period: "/mois", savings: null },
-  yearly: { price: "79,99€", period: "/an", savings: "Économisez 40€" },
-  lifetime: { price: "149€", period: "à vie", savings: "Meilleure offre" }
-};
-
-export default function PaywallScreen() {
+export default function ChoixVersionScreen() {
   const { theme } = useTheme();
   const styles = getStyles(theme);
   const intelligence = useOnboardingIntelligence('700-essai');
@@ -104,7 +118,6 @@ export default function PaywallScreen() {
   const slideAnim = useRef(new Animated.Value(20)).current;
   const cardsAnim = useRef(new Animated.Value(0)).current;
   
-  const [selectedPlan, setSelectedPlan] = useState('yearly');
   const persona = intelligence.currentPersona || 'emma';
   const personaContent = PERSONA_ARGUMENTS[persona];
 
@@ -129,39 +142,25 @@ export default function PaywallScreen() {
       }),
     ]).start();
 
-    intelligence.trackAction('paywall_viewed', {
-      persona,
-      suggestedPlan: 'yearly'
-    });
+    intelligence.trackAction('version_choice_viewed', { persona });
   }, []);
 
-  const handleSelectPlan = (plan) => {
-    setSelectedPlan(plan);
-    intelligence.trackAction('plan_selected', { plan, persona });
-  };
-
-  const handleTrialStart = () => {
-    intelligence.trackAction('trial_started', {
+  const handleCompleteChoice = () => {
+    intelligence.trackAction('complete_version_selected', {
       persona,
       onboardingDuration: Date.now() - (intelligence.userProfile.startDate || Date.now())
     });
-
-    console.info('🎯 Trial started for:', persona);
-    
     router.push('/onboarding/800-demarrage');
   };
 
-  const handleSolidaire = () => {
-    intelligence.trackAction('solidaire_selected', { persona });
-    
-    console.info('🤝 Solidaire selected for:', persona);
-    
+  const handleEssentielleChoice = () => {
+    intelligence.trackAction('essential_version_selected', { persona });
     router.push('/onboarding/800-demarrage');
   };
 
   return (
     <ScreenContainer edges={['top', 'bottom']}>
-      <OnboardingNavigation currentScreen="700-paywall" />
+      <OnboardingNavigation currentScreen="700-essai" />
       
       <ScrollView 
         style={styles.scrollView}
@@ -170,17 +169,8 @@ export default function PaywallScreen() {
       >
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
           
-          {/* Header personnalisé */}
+          {/* Header */}
           <View style={styles.header}>
-            <Animated.View style={{ opacity: fadeAnim }}>
-              <MeluneAvatar 
-                phase="ovulatory" 
-                size="medium" 
-                style="classic"
-                animated={true}
-              />
-            </Animated.View>
-            
             <Animated.View
               style={[
                 styles.titleContainer,
@@ -195,20 +185,14 @@ export default function PaywallScreen() {
             >
               <BodyText style={styles.title}>{personaContent.title}</BodyText>
               <BodyText style={styles.subtitle}>{personaContent.subtitle}</BodyText>
-              
-              {/* Badge 14 jours gratuits */}
-              <View style={styles.freeBadge}>
-                <BodyText style={styles.freeBadgeText}>
-                  🎁 14 JOURS GRATUITS
-                </BodyText>
-              </View>
             </Animated.View>
           </View>
 
-          {/* Benefits personnalisés */}
+          {/* Version Complète */}
           <Animated.View 
             style={[
-              styles.benefitsContainer,
+              styles.versionCard,
+              styles.completeCard,
               {
                 opacity: cardsAnim,
                 transform: [{
@@ -220,29 +204,38 @@ export default function PaywallScreen() {
               }
             ]}
           >
-            {personaContent.benefits.map((benefit, index) => (
-              <View key={index} style={styles.benefitRow}>
-                <BodyText style={styles.benefitText}>{benefit}</BodyText>
-              </View>
-            ))}
-            
-            <View style={styles.reassuranceContainer}>
-              <BodyText style={styles.reassuranceText}>
-                {personaContent.reassurance}
+            <View style={styles.cardHeader}>
+              <BodyText style={styles.cardTitle}>
+                {personaContent.complete.title}
               </BodyText>
+              <BodyText style={styles.cardDescription}>
+                {personaContent.complete.description}
+              </BodyText>
+              <View style={styles.badge}>
+                <BodyText style={styles.badgeText}>
+                  14 JOURS GRATUITS
+                </BodyText>
+              </View>
             </View>
+            
+            <View style={styles.benefitsContainer}>
+              {personaContent.complete.benefits.map((benefit, index) => (
+                <View key={index} style={styles.benefitRow}>
+                  <BodyText style={styles.benefitText}>{benefit}</BodyText>
+                </View>
+              ))}
+            </View>
+            
+            <TouchableOpacity
+              style={styles.completeButton}
+              onPress={handleCompleteChoice}
+              activeOpacity={0.7}
+            >
+              <BodyText style={styles.completeButtonText}>
+                {personaContent.complete.cta}
+              </BodyText>
+            </TouchableOpacity>
           </Animated.View>
-
-          {/* CTA Principal - Essai gratuit */}
-          <TouchableOpacity
-            style={styles.trialButton}
-            onPress={handleTrialStart}
-            activeOpacity={0.7}
-          >
-            <BodyText style={styles.trialText}>
-              {personaContent.cta}
-            </BodyText>
-          </TouchableOpacity>
 
           {/* Séparateur */}
           <View style={styles.separator}>
@@ -251,10 +244,11 @@ export default function PaywallScreen() {
             <View style={styles.separatorLine} />
           </View>
 
-          {/* Option Solidaire */}
+          {/* Version Essentielle */}
           <Animated.View 
             style={[
-              styles.solidaireContainer,
+              styles.versionCard,
+              styles.essentialCard,
               {
                 opacity: cardsAnim,
                 transform: [{
@@ -266,35 +260,41 @@ export default function PaywallScreen() {
               }
             ]}
           >
-            <BodyText style={styles.solidaireTitle}>{SOLIDAIRE_OPTION.title}</BodyText>
-            <BodyText style={styles.solidaireSubtitle}>{SOLIDAIRE_OPTION.subtitle}</BodyText>
-                
-            <View style={styles.solidaireBenefits}>
-              {SOLIDAIRE_OPTION.benefits.map((benefit, index) => (
-                <BodyText key={index} style={styles.solidaireBenefit}>
-                  {benefit}
-                </BodyText>
-              ))}
+            <View style={styles.cardHeader}>
+              <BodyText style={styles.cardTitle}>
+                {VERSION_ESSENTIELLE.title}
+              </BodyText>
+              <BodyText style={styles.cardDescription}>
+                {VERSION_ESSENTIELLE.description}
+              </BodyText>
+            </View>
+            
+            <View style={styles.benefitsContainer}>
+              {VERSION_ESSENTIELLE.benefits.map((benefit, index) => (
+                <View key={index} style={styles.benefitRow}>
+                  <BodyText style={styles.benefitText}>{benefit}</BodyText>
                 </View>
-                
-          <TouchableOpacity
-              style={styles.solidaireButton}
-              onPress={handleSolidaire}
-            activeOpacity={0.7}
-          >
-              <BodyText style={styles.solidaireButtonText}>
-                {SOLIDAIRE_OPTION.cta}
-            </BodyText>
-          </TouchableOpacity>
+              ))}
+            </View>
+            
+            <TouchableOpacity
+              style={styles.essentialButton}
+              onPress={handleEssentielleChoice}
+              activeOpacity={0.7}
+            >
+              <BodyText style={styles.essentialButtonText}>
+                {VERSION_ESSENTIELLE.cta}
+              </BodyText>
+            </TouchableOpacity>
           </Animated.View>
-
-          {/* Footer transparent */}
+          
+          {/* Note de transparence */}
           <View style={styles.footerContainer}>
             <BodyText style={styles.footerText}>
-              Après 14 jours : 9,99€/mois ou Version Solidaire gratuite
+              Version Complète après 14 jours : 9,99€/mois
             </BodyText>
             <BodyText style={styles.footerSubtext}>
-              🔔 Rappel 3 jours avant la fin • 🔒 Annulation simple
+              🔔 Rappel 3 jours avant • 🔒 Annulation simple
             </BodyText>
           </View>
           
@@ -330,167 +330,108 @@ const getStyles = (theme) => StyleSheet.create({
     lineHeight: 22,
   },
   
-  benefitsContainer: {
+  versionCard: {
     backgroundColor: theme.colors.surface,
     padding: theme.spacing.l,
     borderRadius: theme.borderRadius.large,
-    marginBottom: theme.spacing.xl,
+    borderWidth: 2,
+    marginBottom: theme.spacing.l,
+    shadowColor: theme.colors.text,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  
+  completeCard: {
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primary + '04',
+  },
+  
+  essentialCard: {
+    borderColor: theme.colors.border,
+  },
+  
+  cardHeader: {
+    alignItems: 'center',
+    marginBottom: theme.spacing.l,
+  },
+  
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: theme.colors.text,
+    textAlign: 'center',
+    marginBottom: theme.spacing.s,
+  },
+  
+  cardDescription: {
+    fontSize: 14,
+    color: theme.colors.textLight,
+    textAlign: 'center',
+    marginBottom: theme.spacing.m,
+  },
+  
+  badge: {
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: theme.spacing.l,
+    paddingVertical: theme.spacing.s,
+    borderRadius: theme.borderRadius.large,
+  },
+  
+  badgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  
+  benefitsContainer: {
+    marginBottom: theme.spacing.l,
   },
   
   benefitRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: theme.spacing.m,
+    marginBottom: theme.spacing.s,
   },
+  
   benefitText: {
     fontSize: 15,
     color: theme.colors.text,
-    marginLeft: theme.spacing.m,
     flex: 1,
   },
   
-  pricingContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: theme.spacing.xl,
-    gap: theme.spacing.m,
+  completeButton: {
+    backgroundColor: theme.colors.primary,
+    paddingVertical: theme.spacing.l,
+    borderRadius: theme.borderRadius.large,
+    alignItems: 'center',
+    shadowColor: theme.colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   
-  pricingCard: {
-    flex: 1,
-    backgroundColor: theme.colors.surface,
-    padding: theme.spacing.m,
-    borderRadius: theme.borderRadius.medium,
+  completeButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  
+  essentialButton: {
+    backgroundColor: 'transparent',
     borderWidth: 2,
-    borderColor: theme.colors.border,
-    alignItems: 'center',
-    position: 'relative',
-  },
-  
-  pricingCardSelected: {
     borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary + '08',
-  },
-  
-  savingsBadge: {
-    position: 'absolute',
-    top: -10,
-    backgroundColor: theme.colors.secondary,
-    paddingHorizontal: theme.spacing.s,
-    paddingVertical: 2,
-    borderRadius: theme.borderRadius.small,
-  },
-  
-  savingsText: { fontSize: 11, fontWeight: '600' },
-  
-  priceRow: { alignItems: 'center' },
-  price: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: theme.colors.text,
-  },
-  period: {
-    fontSize: 14,
-    color: theme.colors.textLight,
-    marginTop: 2,
-  },
-  
-  selectedIndicator: {
-    position: 'absolute',
-    bottom: theme.spacing.s,
-    right: theme.spacing.s,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: theme.colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  
-  subscribeButton: {
-    backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.l,
-    borderRadius: theme.borderRadius.large,
-    alignItems: 'center',
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  
-  subscribeText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  
-  skipButton: {
     paddingVertical: theme.spacing.m,
-    alignItems: 'center',
-    marginTop: theme.spacing.m,
-  },
-  
-  skipText: {
-    color: theme.colors.textLight,
-    fontSize: 14,
-  },
-  
-  trustContainer: {
-    alignItems: 'center',
-    marginTop: theme.spacing.xl,
-    paddingBottom: theme.spacing.xl,
-  },
-  
-  trustText: {
-    fontSize: 12,
-    color: theme.colors.textLight,
-  },
-
-  freeBadge: {
-    backgroundColor: theme.colors.primary,
-    paddingHorizontal: theme.spacing.l,
-    paddingVertical: theme.spacing.s,
     borderRadius: theme.borderRadius.large,
-    marginTop: theme.spacing.l,
-  },
-  
-  freeBadgeText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  
-  reassuranceContainer: {
-    marginTop: theme.spacing.m,
     alignItems: 'center',
   },
   
-  reassuranceText: {
-    fontSize: 14,
+  essentialButtonText: {
     color: theme.colors.primary,
-    fontStyle: 'italic',
-    textAlign: 'center',
-  },
-  
-  trialButton: {
-    backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.l,
-    borderRadius: theme.borderRadius.large,
-    alignItems: 'center',
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-    marginBottom: theme.spacing.l,
-  },
-  
-  trialText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 15,
+    fontWeight: '600',
   },
   
   separator: {
@@ -509,56 +450,6 @@ const getStyles = (theme) => StyleSheet.create({
     marginHorizontal: theme.spacing.m,
     color: theme.colors.textLight,
     fontSize: 14,
-  },
-  
-  solidaireContainer: {
-    backgroundColor: theme.colors.surface,
-    padding: theme.spacing.l,
-    borderRadius: theme.borderRadius.large,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    marginBottom: theme.spacing.xl,
-  },
-  
-  solidaireTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: theme.colors.text,
-    textAlign: 'center',
-    marginBottom: theme.spacing.s,
-  },
-  
-  solidaireSubtitle: {
-    fontSize: 14,
-    color: theme.colors.textLight,
-    textAlign: 'center',
-    marginBottom: theme.spacing.m,
-  },
-  
-  solidaireBenefits: {
-    marginBottom: theme.spacing.m,
-  },
-  
-  solidaireBenefit: {
-    fontSize: 14,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
-    textAlign: 'center',
-  },
-  
-  solidaireButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: theme.colors.primary,
-    paddingVertical: theme.spacing.m,
-    borderRadius: theme.borderRadius.medium,
-    alignItems: 'center',
-  },
-  
-  solidaireButtonText: {
-    color: theme.colors.primary,
-    fontSize: 15,
-    fontWeight: '600',
   },
   
   footerContainer: {

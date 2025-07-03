@@ -33,12 +33,12 @@ export const useUserStore = create(
       // 🎯 PRÉFÉRENCES (0-5)
       // ═══════════════════════════════════════════════════════
       preferences: {
-        symptoms: 3,     // Symptômes physiques
-        moods: 3,        // Gestion émotionnelle
-        phyto: 3,        // Phytothérapie
-        phases: 3,       // Énergie cyclique
-        lithotherapy: 3, // Lithothérapie
-        rituals: 3,      // Rituels bien-être
+        symptoms: 0,     // Symptômes physiques
+        moods: 0,        // Gestion émotionnelle
+        phyto: 0,        // Phytothérapie
+        phases: 0,       // Énergie cyclique
+        lithotherapy: 0, // Lithothérapie
+        rituals: 0,      // Rituels bien-être
         terminology: 'medical', // ✨ NOUVEAU - Terminologie cyclique
       },
 
@@ -168,12 +168,12 @@ export const useUserStore = create(
             completed: false,
           },
           preferences: {
-            symptoms: 3,
-            moods: 3,
-            phyto: 3,
-            phases: 3,
-            lithotherapy: 3,
-            rituals: 3,
+            symptoms: 0,
+            moods: 0,
+            phyto: 0,
+            phases: 0,
+            lithotherapy: 0,
+            rituals: 0,
             terminology: 'medical',
           },
 

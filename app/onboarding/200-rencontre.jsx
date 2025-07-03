@@ -10,11 +10,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, TouchableOpacity, StyleSheet, Animated, ScrollView } from 'react-native';
 import { router } from 'expo-router';
-import ScreenContainer from '../../src/core/layout/ScreenContainer';
-import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
+import OnboardingScreen from '../../src/core/layout/OnboardingScreen';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
 import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
+import { useUserStore } from '../../src/stores/useUserStore';
 
 // 🎯 Choix simples et directs
 const JOURNEY_CHOICES = [
@@ -41,12 +41,13 @@ const JOURNEY_CHOICES = [
 export default function RencontreScreen() {
   const { theme } = useTheme();
   const styles = getStyles(theme);
+  const { profile, updateProfile } = useUserStore();
   
   // 🎨 Animations simples
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
   
-  const [selectedChoice, setSelectedChoice] = useState(null);
+  const [selectedChoice, setSelectedChoice] = useState(profile.journeyChoice || null);
 
   useEffect(() => {
     // Animation simple et fluide
@@ -66,6 +67,7 @@ export default function RencontreScreen() {
 
   const handleChoiceSelect = (choice) => {
     setSelectedChoice(choice.id);
+    updateProfile({ journeyChoice: choice.id });
     
     // Navigation simple après feedback visuel
     setTimeout(() => {
@@ -74,87 +76,67 @@ export default function RencontreScreen() {
   };
 
   return (
-    <ScreenContainer edges={['top', 'bottom']}>
-      <OnboardingNavigation currentScreen="200-rencontre" />
-      
-      <ScrollView 
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-          
-          {/* Avatar Melune */}
-          <View style={styles.avatarSection}>
-            <MeluneAvatar 
-              phase="menstrual" 
-              size="medium" 
-              style="classic"
-              animated={true}
-            />
-          </View>
+    <OnboardingScreen currentScreen="200-rencontre">
+      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+        {/* Avatar Melune */}
+        <View style={styles.avatarSection}>
+          <MeluneAvatar 
+            phase="menstrual" 
+            size="medium" 
+            style="classic"
+            animated={true}
+          />
+        </View>
 
-          {/* Question unique et directe */}
-          <View style={styles.mainSection}>
-            <Animated.View
-              style={[
-                styles.questionContainer,
-                {
-                  transform: [{ translateY: slideAnim }],
-                },
-              ]}
-            >
-              <BodyText style={styles.question}>
-                Qu'est-ce qui t'amène vers moi ?
-              </BodyText>
-            </Animated.View>
+        {/* Question unique et directe */}
+        <View style={styles.mainSection}>
+          <Animated.View
+            style={[
+              styles.questionContainer,
+              {
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <BodyText style={styles.question}>
+              Qu'est-ce qui t'amène vers moi ?
+            </BodyText>
+          </Animated.View>
 
-            {/* Choix simplifiés */}
-            <View style={styles.choicesContainer}>
-              {JOURNEY_CHOICES.map((choice) => (
-                <TouchableOpacity
-                  key={choice.id}
-                  style={[
-                    styles.choiceCard,
-                    selectedChoice === choice.id && styles.choiceCardSelected,
-                  ]}
-                  onPress={() => handleChoiceSelect(choice)}
-                  activeOpacity={0.8}
-                  disabled={selectedChoice !== null}
-                >
-                  <View style={styles.choiceHeader}>
-                    <BodyText style={styles.choiceIcon}>{choice.icon}</BodyText>
-                    <BodyText style={styles.choiceTitle}>
-                      {choice.title}
-                    </BodyText>
-                  </View>
-                  
-                  <BodyText style={styles.choiceDescription}>
-                    {choice.description}
+          {/* Choix simplifiés */}
+          <View style={styles.choicesContainer}>
+            {JOURNEY_CHOICES.map((choice) => (
+              <TouchableOpacity
+                key={choice.id}
+                style={[
+                  styles.choiceCard,
+                  selectedChoice === choice.id && styles.choiceCardSelected,
+                ]}
+                onPress={() => handleChoiceSelect(choice)}
+                activeOpacity={0.8}
+              >
+                <View style={styles.choiceHeader}>
+                  <BodyText style={styles.choiceIcon}>{choice.icon}</BodyText>
+                  <BodyText style={styles.choiceTitle}>
+                    {choice.title}
                   </BodyText>
-                </TouchableOpacity>
-              ))}
-            </View>
+                </View>
+                
+                <BodyText style={styles.choiceDescription}>
+                  {choice.description}
+                </BodyText>
+              </TouchableOpacity>
+            ))}
           </View>
-          
-        </Animated.View>
-      </ScrollView>
-    </ScreenContainer>
+        </View>
+      </Animated.View>
+    </OnboardingScreen>
   );
 }
 
 const getStyles = (theme) => StyleSheet.create({
-  scrollView: {
-    flex: 1,
-  },
-  
-  scrollContent: {
-    flexGrow: 1,
-  },
-  
   content: {
     flex: 1,
-    paddingHorizontal: theme.spacing.l,
   },
   
   avatarSection: {

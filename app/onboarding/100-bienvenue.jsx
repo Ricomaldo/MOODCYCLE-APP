@@ -12,8 +12,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, TouchableOpacity, StyleSheet, Animated, Text, Image } from 'react-native';
 import { router } from 'expo-router';
 import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
-import ScreenContainer from '../../src/core/layout/ScreenContainer';
-import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
+import OnboardingScreen from '../../src/core/layout/OnboardingScreen';
 import { BodyText, Heading1, Heading2 } from '../../src/core';
 import { useTheme } from '../../src/hooks/useTheme';
 import {
@@ -40,40 +39,32 @@ const WELCOME_SEQUENCE = [
 ];
 
 export default function BienvenuePage() {
-  // 🎨 Hooks standards
   const { theme } = useTheme();
   const styles = getStyles(theme);
   const intelligence = useOnboardingIntelligence('100-bienvenue');
   
-  // 🎯 État local simplifié
   const [showFinalMessage, setShowFinalMessage] = useState(false);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   
-  // 🎨 Chorégraphie Simplifiée et Élégante
   useEffect(() => {
-    // 1. Messages narrateur avec délai court et naturel
     WELCOME_SEQUENCE.forEach((message, index) => {
       setTimeout(() => {
         setCurrentMessageIndex(index);
-      }, index * 800); // Délai fixe de 800ms entre messages
+      }, index * 800);
     });
 
-    // 2. Message final Mélune après une pause appropriée
     setTimeout(() => {
       setShowFinalMessage(true);
-    }, WELCOME_SEQUENCE.length * 800 + 1000); // +1s pause
+    }, WELCOME_SEQUENCE.length * 800 + 1000);
   }, []);
 
-  // 🎯 Navigation
   const handleContinue = () => {
     intelligence.trackAction('welcome_completed');
     router.push('/onboarding/200-rencontre');
   };
 
   return (
-    <ScreenContainer edges={['top', 'bottom']}>
-      <OnboardingNavigation currentScreen="100-bienvenue" />
-      
+    <OnboardingScreen currentScreen="100-bienvenue">
       <View style={styles.container}>
         {/* ✨ Overlay glassmorphism pour profondeur visuelle */}
         <View style={styles.glassmorphismOverlay} />
@@ -87,7 +78,6 @@ export default function BienvenuePage() {
               resizeMode="contain"
             />
             
-            {/* Sparkles animés avec composants réutilisables */}
             <View style={styles.sparklesContainer}>
               {Array.from({ length: 8 }, (_, index) => (
                 <AnimatedSparkle
@@ -109,7 +99,7 @@ export default function BienvenuePage() {
             index <= currentMessageIndex && (
               <AnimatedRevealMessage
                 key={message.id}
-                delay={0} // Délai géré dans useEffect
+                delay={0}
               >
                 <View style={styles.messageWrapper}>
                   <Heading2 style={styles.narratorMessage}>
@@ -120,7 +110,6 @@ export default function BienvenuePage() {
             )
           ))}
           
-          {/* Message final de Mélune avec typography appropriée */}
           {showFinalMessage && (
             <AnimatedRevealMessage delay={0}>
               <View style={styles.finalMessageWrapper}>
@@ -151,7 +140,7 @@ export default function BienvenuePage() {
           </AnimatedRevealMessage>
         )}
       </View>
-    </ScreenContainer>
+    </OnboardingScreen>
   );
 }
 
@@ -159,8 +148,6 @@ export default function BienvenuePage() {
 const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
-    paddingHorizontal: theme.spacing.l,
     position: 'relative',
     justifyContent: 'space-between',
   },

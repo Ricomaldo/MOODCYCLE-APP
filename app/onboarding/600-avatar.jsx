@@ -38,9 +38,9 @@ const INITIAL_OPTIONS = [
     title: 'Ton de voix',
     description: 'Définis la personnalité de Melune',
     options: [
-      { id: 'friendly', name: 'Amicale', icon: '😊', description: 'Chaleureuse et proche' },
-      { id: 'professional', name: 'Professionnelle', icon: '📊', description: 'Structurée et efficace' },
-      { id: 'inspiring', name: 'Inspirante', icon: '🚀', description: 'Motivante et énergique' }
+      { id: 'friendly', name: 'Amicale', icon: '🤗', description: 'Chaleureuse et proche' },
+      { id: 'professional', name: 'Professionnelle', icon: '🌟', description: 'Structurée et efficace' },
+      { id: 'inspiring', name: 'Inspirante', icon: '🦋', description: 'Motivante et énergique' }
     ]
   },
   {
@@ -375,10 +375,15 @@ const getStyles = (theme) => StyleSheet.create({
   
   optionCard: {
     backgroundColor: theme.colors.surface,
-    padding: theme.spacing.m,
-    borderRadius: theme.borderRadius.medium,
+    padding: theme.spacing.l,
+    borderRadius: theme.borderRadius.large,
     borderWidth: 2,
     borderColor: theme.colors.border,
+    shadowColor: theme.colors.text,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   
   optionCardSelected: {

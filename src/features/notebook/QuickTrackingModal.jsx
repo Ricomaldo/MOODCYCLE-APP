@@ -14,6 +14,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { Heading2, BodyText, Caption } from '../../core/ui/typography';
 import { useNotebookStore } from '../../stores/useNotebookStore';
 import { useCycleStore } from '../../stores/useCycleStore';
+import { useUserIntelligence } from '../../stores/useUserIntelligence';
 import { getCurrentPhase } from '../../utils/cycleCalculations';
 
 const MOOD_OPTIONS = [
@@ -38,6 +39,7 @@ export default function QuickTrackingModal({ visible, onClose, defaultTags = [] 
   const { addQuickTracking } = useNotebookStore();
   const cycleData = useCycleStore((state) => state);
   const addObservation = useCycleStore((state) => state.addObservation);
+  const { trackObservation } = useUserIntelligence();
   const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
   
   const [energy, setEnergy] = useState(3);
@@ -126,6 +128,13 @@ export default function QuickTrackingModal({ visible, onClose, defaultTags = [] 
     
     const notes = symptoms.length > 0 ? `Symptômes: ${symptoms.join(', ')}` : '';
     addObservation(feelingValue, energy, notes);
+
+    // 🆕 CONNEXION INTELLIGENCE : Alimenter le moteur d'apprentissage
+    trackObservation({
+      phase: currentPhase,
+      mood: feelingValue,
+      energy: energy
+    });
 
     // Reset et fermer
     setEnergy(3);

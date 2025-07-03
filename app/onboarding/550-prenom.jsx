@@ -17,12 +17,13 @@ import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
 import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { getPhaseSymbol } from '../../src/utils/formatters';
+import { useUserStore } from '../../src/stores/useUserStore';
 
 export default function PrenomScreen() {
-  // 🧠 INTELLIGENCE HOOK
-  const intelligence = useOnboardingIntelligence('550-prenom');
   const { theme } = useTheme();
   const styles = getStyles(theme);
+  const { profile, updateProfile } = useUserStore();
+  const intelligence = useOnboardingIntelligence('550-prenom');
   
   // 🎨 Animations Standard
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -30,7 +31,7 @@ export default function PrenomScreen() {
   const heartAnim = useRef(new Animated.Value(1)).current;
   
   // État du formulaire
-  const [prenom, setPrenom] = useState('');
+  const [prenom, setPrenom] = useState(profile.prenom || '');
   const [isValid, setIsValid] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const inputRef = useRef(null);
@@ -94,24 +95,13 @@ export default function PrenomScreen() {
     const trimmedPrenom = prenom.trim();
     
     // 🔧 Sauvegarde prénom
-    intelligence.updateProfile({
+    updateProfile({
       prenom: trimmedPrenom,
-    });
-    
-    // 🧠 INTELLIGENCE : Finalisation persona
-    const finalPersona = intelligence.currentPersona || intelligence.userProfile.suggestedPersona || 'emma';
-    
-    intelligence.updateProfile({
-      assignedPersona: finalPersona,
-      relationshipInitialized: true,
-      personaConfidence: 0.9 // Haute confidence avec prénom
     });
     
     // 🧠 Track finalisation relation
     intelligence.trackAction('relationship_initialized', {
-      prenom: trimmedPrenom,
-      finalPersona,
-      confidence: 0.9
+      prenom: trimmedPrenom
     });
 
     // Délai pour feedback
@@ -121,47 +111,15 @@ export default function PrenomScreen() {
   };
 
   const generatePersonalizedPreview = () => {
-    if (prenom.trim().length < 2) {
-      return "Dis-moi ton prénom pour personnaliser notre relation !";
-    }
-    
-    const persona = intelligence.currentPersona || intelligence.userProfile.suggestedPersona || 'emma';
-    const phase = intelligence.userProfile.currentPhase || 'follicular';
-    
-    const previews = {
-      emma: {
-        menstrual: `Coucou ${prenom.trim()} ! Comment tu te sens dans cette phase cocooning ? ${getPhaseSymbol('menstrual')}`,
-        follicular: `Hey ${prenom.trim()} ! Je sens que ton énergie remonte ! ✨`,
-        ovulatory: `Bonjour ma belle ${prenom.trim()} ! Tu rayonnes aujourd'hui ! 💫`,
-        luteal: `Salut ${prenom.trim()}, comment tu gères cette phase d'automne ? ${getPhaseSymbol('luteal')}`
-      },
-      laure: {
-        menstrual: `Bonjour ${prenom.trim()}. Comment organisez-vous votre repos aujourd'hui ?`,
-        follicular: `${prenom.trim()}, quels sont vos objectifs pour cette phase créative ?`,
-        ovulatory: `${prenom.trim()}, comment optimisez-vous cette période de pic énergétique ?`,
-        luteal: `${prenom.trim()}, comment finalisez-vous vos projets en cours ?`
-      },
-      clara: {
-        menstrual: `Salut ${prenom.trim()} ! Ready pour du self-care de compétition ? 🛁`,
-        follicular: `Hey ${prenom.trim()} ! On recharge les batteries à fond ! ⚡`,
-        ovulatory: `YESS ${prenom.trim()} ! Tu es au TOP ! Qu'est-ce qu'on fait de génial ? 🚀`,
-        luteal: `Hello ${prenom.trim()} ! Comment on transforme cette phase en force ? 💪`
-      },
-      sylvie: {
-        menstrual: `Bonjour ma douce ${prenom.trim()}, comment honores-tu ton besoin de repos ?`,
-        follicular: `${prenom.trim()}, quelle belle énergie je ressens... Comment la cultives-tu ?`,
-        ovulatory: `Ma chère ${prenom.trim()}, tu es radieuse ! Comment savoures-tu cette plénitude ?`,
-        luteal: `${prenom.trim()}, comment accueilles-tu cette sagesse d'automne ?`
-      },
-      christine: {
-        menstrual: `Bonjour ${prenom.trim()}, comment prenez-vous soin de vous aujourd'hui ?`,
-        follicular: `${prenom.trim()}, cette belle énergie qui renaît... Comment l'accompagnez-vous ?`,
-        ovulatory: `${prenom.trim()}, vous rayonnez de sérénité. Comment cultivez-vous cela ?`,
-        luteal: `${prenom.trim()}, comment honorez-vous cette phase de transition ?`
-      }
+    const persona = intelligence.currentPersona || 'emma';
+    const messages = {
+      emma: `Hey ${prenom} ! Je suis trop contente de faire ta connaissance ! 💖`,
+      laure: `${prenom}, je sens qu'on va faire une super équipe ensemble.`,
+      clara: `${prenom} ! Prête pour cette aventure cyclique ? 🌙`,
+      sylvie: `${prenom}, je suis là pour t'accompagner dans ta sagesse cyclique.`,
+      christine: `${prenom}, c'est un plaisir de vous accompagner dans ce voyage.`
     };
-    
-    return previews[persona]?.[phase] || previews[persona]?.follicular || previews.emma.follicular;
+    return messages[persona] || messages.emma;
   };
 
   return (
@@ -275,9 +233,6 @@ export default function PrenomScreen() {
                     },
                   ]}
                 >
-                  <BodyText style={styles.previewLabel}>
-                    💬 Aperçu de notre relation :
-                  </BodyText>
                   <View style={styles.previewBubble}>
                     <BodyText style={styles.previewText}>
                       {generatePersonalizedPreview()}
