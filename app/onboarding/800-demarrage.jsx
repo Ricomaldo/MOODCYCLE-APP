@@ -17,7 +17,7 @@ import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
 import VignetteCard from '../../src/features/insights/VignetteCard';
-import { BodyText } from '../../src/core';
+import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 
 export default function CadeauScreen() {
@@ -245,19 +245,6 @@ export default function CadeauScreen() {
             Ton voyage commence maintenant ! 🌟
           </BodyText>
           
-          {intelligenceRecap && (
-            <View style={styles.intelligenceRecap}>
-              <BodyText style={styles.recapTitle}>
-                Intelligence activée :
-              </BodyText>
-              <BodyText style={styles.recapText}>
-                Persona {intelligenceRecap.persona} • Phase {intelligenceRecap.phase}
-              </BodyText>
-              <BodyText style={styles.recapText}>
-                {intelligenceRecap.observations} observations • {intelligenceRecap.intelligenceLevel}% personnalisé
-              </BodyText>
-            </View>
-          )}
         </View>
 
         {personalizedInsight && (

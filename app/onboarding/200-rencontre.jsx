@@ -13,7 +13,7 @@ import { router } from 'expo-router';
 import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
-import { BodyText } from '../../src/core';
+import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 
 // 🎯 Choix simples et directs

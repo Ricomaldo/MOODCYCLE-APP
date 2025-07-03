@@ -17,7 +17,7 @@ import { getCurrentPhase, getCurrentCycleDay } from '../../src/utils/cycleCalcul
 import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
-import { BodyText } from '../../src/core';
+import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import phasesData from '../../src/data/phases.json';
 
@@ -35,11 +35,17 @@ const MOOD_COLORS = ['#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#00bcd4'];
 
 // Helper formatage date française
 const formatDateFrench = (date) => {
-  return new Intl.DateTimeFormat('fr-FR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long'
-  }).format(date);
+  try {
+    const d = (date instanceof Date) ? date : new Date(date);
+    if (isNaN(d.getTime())) return '';
+    return new Intl.DateTimeFormat('fr-FR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long'
+    }).format(d);
+  } catch (e) {
+    return '';
+  }
 };
 
 // Messages adaptatifs depuis phases.json + persona
@@ -86,12 +92,143 @@ export default function CycleScreen() {
   const [observation, setObservation] = useState({ energy: 3, mood: 3 });
 
   const getStepContent = () => {
-    return (
-      <View style={{ backgroundColor: 'red', padding: 50, margin: 20 }}>
-        <Text style={{ color: 'white', fontSize: 30 }}>TEST ROUGE</Text>
-        <Text style={{ color: 'white' }}>Step: {currentStep}</Text>
-      </View>
-    );
+    if (currentStep === STEPS.DATA) {
+      return (
+        <View style={styles.stepContent}>
+          <BodyText style={styles.stepTitle}>
+            Quand ont commencé tes dernières règles ?
+          </BodyText>
+          <BodyText style={styles.stepSubtext}>
+            Cette info m'aide à calculer ta phase actuelle
+          </BodyText>
+          
+          <View style={styles.inputSection}>
+            <BodyText style={styles.inputLabel}>Date des dernières règles</BodyText>
+            <TouchableOpacity
+              style={styles.dateButton}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <BodyText style={styles.dateButtonText}>
+                {formatDateFrench(lastPeriodDate)}
+              </BodyText>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.inputSection}>
+            <BodyText style={styles.inputLabel}>Durée habituelle de ton cycle</BodyText>
+            <BodyText style={styles.inputSubtext}>
+              Nombre de jours entre le début de deux cycles
+            </BodyText>
+            
+            <View style={styles.lengthOptions}>
+              {[25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35].map((length) => (
+                <TouchableOpacity
+                  key={length}
+                  style={[
+                    styles.lengthOption,
+                    cycleLength === length && styles.lengthOptionSelected,
+                  ]}
+                  onPress={() => handleCycleLengthChange(length)}
+                >
+                  <BodyText
+                    style={[
+                      styles.lengthText,
+                      cycleLength === length && styles.lengthTextSelected,
+                    ]}
+                  >
+                    {length}j
+                  </BodyText>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Phase détectée */}
+          {detectedPhase && (
+            <View style={[
+              styles.phaseDetected,
+              { 
+                backgroundColor: theme.colors.phases[detectedPhase] + '10',
+                borderColor: theme.colors.phases[detectedPhase] + '30'
+              }
+            ]}>
+              <BodyText style={[
+                styles.phaseText, 
+                { color: theme.colors.phases[detectedPhase] }
+              ]}>
+                Phase détectée : {detectedPhase}
+              </BodyText>
+              <BodyText style={styles.phaseSubText}>
+                Jour {getCurrentCycleDay(lastPeriodDate.toISOString(), cycleLength)} de ton cycle
+              </BodyText>
+            </View>
+          )}
+        </View>
+      );
+    }
+
+    if (currentStep === STEPS.FEELING) {
+      return (
+        <View style={styles.stepContent}>
+          <BodyText style={styles.stepTitle}>
+            Comment te sens-tu aujourd'hui ?
+          </BodyText>
+          <BodyText style={styles.stepSubtext}>
+            Aide-moi à comprendre ton état actuel
+          </BodyText>
+
+          {/* Slider Énergie */}
+          <View style={styles.sliderBlock}>
+            <BodyText style={styles.sliderLabel}>Niveau d'énergie</BodyText>
+            <View style={styles.sliderRow}>
+              {ENERGY_LABELS.map((label, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.sliderDot,
+                    {
+                      backgroundColor: observation.energy === index + 1 
+                        ? ENERGY_COLORS[index] 
+                        : '#e0e0e0'
+                    }
+                  ]}
+                  onPress={() => handleObservationChange('energy', index + 1)}
+                />
+              ))}
+            </View>
+            <BodyText style={styles.sliderValue}>
+              {ENERGY_LABELS[observation.energy - 1]}
+            </BodyText>
+          </View>
+
+          {/* Slider Humeur */}
+          <View style={styles.sliderBlock}>
+            <BodyText style={styles.sliderLabel}>Clarté mentale</BodyText>
+            <View style={styles.sliderRow}>
+              {MOOD_LABELS.map((label, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.sliderDot,
+                    {
+                      backgroundColor: observation.mood === index + 1 
+                        ? MOOD_COLORS[index] 
+                        : '#e0e0e0'
+                    }
+                  ]}
+                  onPress={() => handleObservationChange('mood', index + 1)}
+                />
+              ))}
+            </View>
+            <BodyText style={styles.sliderValue}>
+              {MOOD_LABELS[observation.mood - 1]}
+            </BodyText>
+          </View>
+        </View>
+      );
+    }
+
+    return null;
   };
 
   useEffect(() => {
@@ -132,9 +269,10 @@ export default function CycleScreen() {
     if (Platform.OS === 'android') {
       setShowDatePicker(false);
     }
-    
     if (selectedDate) {
-      setLastPeriodDate(selectedDate);
+      // Correction systématique : toujours convertir en Date
+      const d = (selectedDate instanceof Date) ? selectedDate : new Date(selectedDate);
+      setLastPeriodDate(isNaN(d.getTime()) ? new Date() : d);
     }
   };
 
@@ -173,6 +311,14 @@ export default function CycleScreen() {
     return currentStep === STEPS.DATA ? 'Suivant' : 'Parfait !';
   };
 
+  console.log('🔍 DEBUG CycleScreen:', {
+    currentStep,
+    fadeAnimValue: fadeAnim._value,
+    slideAnimValue: slideAnim._value,
+    theme: !!theme,
+    adaptiveMessage
+  });
+
   return (
     <ScreenContainer edges={['top', 'bottom']}>
       <OnboardingNavigation currentScreen="400-cycle" />
@@ -182,7 +328,7 @@ export default function CycleScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+        <Animated.View style={[styles.content, { opacity: 1 }]}>
           
           {/* TopSection - Avatar + Message adaptatif */}
           <View style={styles.topSection}>
@@ -244,7 +390,7 @@ export default function CycleScreen() {
       {/* DatePicker Modal */}
       {showDatePicker && (
         <DateTimePicker
-          value={lastPeriodDate}
+          value={lastPeriodDate instanceof Date && !isNaN(lastPeriodDate.getTime()) ? lastPeriodDate : new Date()}
           mode="date"
           display="default"
           onChange={handleDateChange}

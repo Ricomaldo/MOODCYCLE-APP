@@ -14,7 +14,7 @@ import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntellig
 import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
-import { BodyText } from '../../src/core';
+import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { PERSONA_PROFILES } from '../../src/config/personaProfiles';
 
@@ -160,7 +160,7 @@ export default function AvatarScreen() {
     
     // Navigation
     setTimeout(() => {
-      router.push('/onboarding/700-paywall');
+      router.push('/onboarding/700-essai');
     }, 500);
   };
 

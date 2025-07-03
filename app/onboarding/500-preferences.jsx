@@ -14,7 +14,7 @@ import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntellig
 import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
-import { BodyText } from '../../src/core';
+import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 
 // 🎨 Dimensions thérapeutiques avec couleurs
@@ -646,3 +646,17 @@ const getStyles = (theme) => StyleSheet.create({
     backgroundColor: theme.colors.primary,
   },
 });
+
+const formatDateFrench = (date) => {
+  try {
+    const d = (date instanceof Date) ? date : new Date(date);
+    if (isNaN(d.getTime())) return '';
+    return new Intl.DateTimeFormat('fr-FR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long'
+    }).format(d);
+  } catch (e) {
+    return '';
+  }
+};

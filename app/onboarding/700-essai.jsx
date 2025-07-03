@@ -14,7 +14,7 @@ import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntellig
 import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
-import { BodyText } from '../../src/core';
+import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { Feather } from '@expo/vector-icons';
 
@@ -98,7 +98,7 @@ const PRICING = {
 export default function PaywallScreen() {
   const { theme } = useTheme();
   const styles = getStyles(theme);
-  const intelligence = useOnboardingIntelligence('700-paywall');
+  const intelligence = useOnboardingIntelligence('700-essai');
   
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
@@ -148,7 +148,7 @@ export default function PaywallScreen() {
 
     console.info('🎯 Trial started for:', persona);
     
-    router.push('/onboarding/800-cadeau');
+    router.push('/onboarding/800-demarrage');
   };
 
   const handleSolidaire = () => {
@@ -156,7 +156,7 @@ export default function PaywallScreen() {
     
     console.info('🤝 Solidaire selected for:', persona);
     
-    router.push('/onboarding/800-cadeau');
+    router.push('/onboarding/800-demarrage');
   };
 
   return (

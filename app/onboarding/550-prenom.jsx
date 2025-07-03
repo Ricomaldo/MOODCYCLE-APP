@@ -14,7 +14,7 @@ import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntellig
 import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
-import { BodyText } from '../../src/core';
+import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { getPhaseSymbol } from '../../src/utils/formatters';
 
@@ -116,7 +116,7 @@ export default function PrenomScreen() {
 
     // Délai pour feedback
     setTimeout(() => {
-      router.push('/onboarding/600-avatar');
+      router.push('/onboarding/600-persona');
     }, 1500);
   };
 
@@ -226,10 +226,6 @@ export default function PrenomScreen() {
                 },
               ]}
             >
-              <BodyText style={styles.question}>
-                Comment aimerais-tu que je t'appelle ?
-              </BodyText>
-              
               <BodyText style={styles.subtext}>
                 Créons notre lien personnel et unique ❤️
               </BodyText>
@@ -365,16 +361,6 @@ const getStyles = (theme) => StyleSheet.create({
   
   formContainer: {
     alignItems: 'center',
-  },
-  
-  question: {
-    fontSize: 20,
-    textAlign: 'center',
-    marginBottom: theme.spacing.m,
-    color: theme.colors.text,
-    lineHeight: 28,
-    fontFamily: theme.fonts.body,
-    fontWeight: '600',
   },
   
   subtext: {

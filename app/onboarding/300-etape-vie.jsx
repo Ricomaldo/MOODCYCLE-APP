@@ -12,7 +12,7 @@ import { View, TouchableOpacity, StyleSheet, Animated, ScrollView } from 'react-
 import { router } from 'expo-router';
 import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
-import { BodyText } from '../../src/core';
+import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { useUserStore } from '../../src/stores/useUserStore';
 
