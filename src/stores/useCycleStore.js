@@ -75,7 +75,7 @@ export const useCycleStore = create(
       addObservation: (feeling = 3, energy = 3, notes = '') => {
         const state = get();
         if (!state.lastPeriodDate) {
-          console.error('Cannot add observation: no cycle initialized');
+          console.warn('Cannot add observation: no cycle initialized');
           return;
         }
         
@@ -132,14 +132,19 @@ export const useCycleStore = create(
 export const getCycleData = () => {
   const state = useCycleStore.getState();
   
+
+  
   // ✅ FIX: Validation robuste des données de cycle
   const validLastPeriodDate = state.lastPeriodDate && !isNaN(new Date(state.lastPeriodDate).getTime()) 
     ? state.lastPeriodDate 
     : null;
   
-  const validLength = state.length && state.length >= CYCLE_DEFAULTS.MIN_LENGTH && state.length <= CYCLE_DEFAULTS.MAX_LENGTH
+  // ✅ FIX: Validation length plus stricte (permettre 0 comme valeur valide)
+  const validLength = (typeof state.length === 'number' && state.length >= CYCLE_DEFAULTS.MIN_LENGTH && state.length <= CYCLE_DEFAULTS.MAX_LENGTH)
     ? state.length 
     : CYCLE_DEFAULTS.LENGTH;
+    
+
     
   const validPeriodDuration = state.periodDuration && state.periodDuration >= CYCLE_DEFAULTS.MIN_PERIOD_DURATION && state.periodDuration <= CYCLE_DEFAULTS.MAX_PERIOD_DURATION
     ? state.periodDuration 
@@ -169,10 +174,10 @@ export const getCurrentPhaseFromStore = () => {
   const validLastPeriodDate = state.lastPeriodDate && !isNaN(new Date(state.lastPeriodDate).getTime()) 
     ? state.lastPeriodDate 
     : null;
-  const validLength = state.length && state.length >= CYCLE_DEFAULTS.MIN_LENGTH && state.length <= CYCLE_DEFAULTS.MAX_LENGTH
+  const validLength = (typeof state.length === 'number' && state.length >= CYCLE_DEFAULTS.MIN_LENGTH && state.length <= CYCLE_DEFAULTS.MAX_LENGTH)
     ? state.length 
     : CYCLE_DEFAULTS.LENGTH;
-  const validPeriodDuration = state.periodDuration && state.periodDuration >= CYCLE_DEFAULTS.MIN_PERIOD_DURATION && state.periodDuration <= CYCLE_DEFAULTS.MAX_PERIOD_DURATION
+  const validPeriodDuration = (typeof state.periodDuration === 'number' && state.periodDuration >= CYCLE_DEFAULTS.MIN_PERIOD_DURATION && state.periodDuration <= CYCLE_DEFAULTS.MAX_PERIOD_DURATION)
     ? state.periodDuration 
     : CYCLE_DEFAULTS.PERIOD_DURATION;
   return getCurrentPhase(validLastPeriodDate, validLength, validPeriodDuration);
@@ -183,7 +188,7 @@ export const getCurrentDayFromStore = () => {
   const validLastPeriodDate = state.lastPeriodDate && !isNaN(new Date(state.lastPeriodDate).getTime()) 
     ? state.lastPeriodDate 
     : null;
-  const validLength = state.length && state.length >= CYCLE_DEFAULTS.MIN_LENGTH && state.length <= CYCLE_DEFAULTS.MAX_LENGTH
+  const validLength = (typeof state.length === 'number' && state.length >= CYCLE_DEFAULTS.MIN_LENGTH && state.length <= CYCLE_DEFAULTS.MAX_LENGTH)
     ? state.length 
     : CYCLE_DEFAULTS.LENGTH;
   return getCurrentCycleDay(validLastPeriodDate, validLength);

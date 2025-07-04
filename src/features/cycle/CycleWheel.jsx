@@ -15,6 +15,7 @@ import { CYCLE_DEFAULTS, PHASE_NAMES, WHEEL_CONSTANTS, THERAPEUTIC_WHEEL } from 
 import { getPhaseSymbol, getPhaseMetadata } from '../../utils/formatters';
 import { useCycleStore } from '../../stores/useCycleStore';
 import { getCurrentPhase, getCurrentCycleDay } from '../../utils/cycleCalculations';
+import { useTerminology } from '../../hooks/useTerminology';
 
 export default function CycleWheel({
   size = 250,
@@ -287,6 +288,8 @@ export default function CycleWheel({
     );
   }
 
+  const { getPhaseLabel } = useTerminology();
+
   return (
     <View style={[styles.container, { width: size, height: size }]}>
       <Svg width={adjustedSize} height={adjustedSize}>
@@ -380,7 +383,7 @@ export default function CycleWheel({
             >
               <View style={[styles.legendDot, { backgroundColor: colors[index] }]} />
               <Text style={styles.legendText}>
-                {getPhaseSymbol(phase)} {getPhaseMetadata(phase)?.name}
+                {getPhaseSymbol(phase)} {getPhaseLabel(phase)}
               </Text>
             </Pressable>
           ))}

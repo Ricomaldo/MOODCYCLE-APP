@@ -225,13 +225,13 @@ export const getDaysSinceLastPeriod = (lastPeriodDate) => {
     }
     
     // Normaliser les dates à minuit UTC pour éviter les problèmes de timezone
-    const today = new Date();
+    const today = new Date(Date.now()); // ✅ FIX: Utiliser Date.now() pour respecter les mocks
     const todayUTC = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
     const lastDateUTC = Date.UTC(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate());
     
     const result = Math.floor((todayUTC - lastDateUTC) / (1000 * 60 * 60 * 24));
     
-    return Math.max(0, result); // Toujours retourner un nombre positif
+    return result;
   } catch (error) {
     console.error('Erreur dans getDaysSinceLastPeriod:', error);
     return 0;
@@ -281,12 +281,12 @@ export const getCurrentPhase = (lastPeriodDate, cycleLength = CYCLE_DEFAULTS.LEN
     
     const currentDay = (daysSince % sanitizedCycleLength) + 1;
     
-    // ✅ FIX: Logique phases corrigée pour cycles variables
+    // ✅ FIX: Logique phases originale qui fonctionnait
     if (currentDay <= sanitizedPeriodDuration) {
       return 'menstrual';
     }
     
-    // Folliculaire: après règles jusqu'à jour 13 (ou 40% du cycle si court)
+    // Folliculaire: après règles jusqu'à jour 13 (ou proportionnel pour cycles variables)
     const follicularEnd = Math.max(13, Math.floor(sanitizedCycleLength * 0.4));
     
     if (currentDay <= follicularEnd) {
@@ -379,8 +379,8 @@ export const getDaysUntilNextPeriod = (lastPeriodDate, cycleLength = CYCLE_DEFAU
   if (!nextPeriodDate) return null;
   
   const nextDate = new Date(nextPeriodDate);
-  // ✅ FIX: Utiliser new Date() au lieu de Date.now() pour éviter les problèmes de timezone
-  const today = new Date();
+  // ✅ FIX: Utiliser Date.now() pour respecter les mocks dans les tests
+  const today = new Date(Date.now());
   
   return Math.ceil((nextDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 };
@@ -456,15 +456,15 @@ export const createMockCycleData = (daysAgo = 0, cycleLength = CYCLE_DEFAULTS.LE
 };
 
 export const createCycleAtPhase = (targetPhase, cycleLength = CYCLE_DEFAULTS.LENGTH) => {
-  // Calcule les jours de début de chaque phase selon la logique de getCurrentPhase
+  // Calcule les jours de début de chaque phase selon la logique originale de getCurrentPhase
   const follicularEnd = Math.max(13, Math.floor(cycleLength * 0.4));
   const ovulatoryStart = follicularEnd + 1;
   const ovulatoryEnd = Math.min(ovulatoryStart + 2, Math.floor(cycleLength * 0.6));
   
   const phaseStartDays = {
     'menstrual': 0,
-    'follicular': CYCLE_DEFAULTS.PERIOD_DURATION + 1, // Jour 6
-    'ovulatory': ovulatoryStart - 1, // Pour être au bon jour du cycle
+    'follicular': CYCLE_DEFAULTS.PERIOD_DURATION + 1, // Jour après la fin des règles
+    'ovulatory': ovulatoryStart - 1, // Premier jour de la phase ovulatoire
     'luteal': ovulatoryEnd // Premier jour de la phase lutéale
   };
   
