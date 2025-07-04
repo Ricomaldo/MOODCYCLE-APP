@@ -2,18 +2,55 @@
 // ─────────────────────────────────────────────────────────
 // 📄 File: src/services/PersonaEngine.js
 // 🧩 Type: Service
-// 📚 Description: Algorithme pur calcul personas - Fonction pure optimisée
-// 🕒 Version: 5.0 - 2025-06-21
+// 📚 Description: Algorithme pur calcul personas - Version avec terminology
+// 🕒 Version: 6.0 - 2025-06-29
 // ─────────────────────────────────────────────────────────
 //
 import { PERSONA_PROFILES, SCORING_WEIGHTS } from '../config/personaProfiles.js';
+
+// NOUVEAU: Affinités terminology par persona
+// Score 0-1 : 1.0 = parfaite affinité, 0.5 = neutre, 0.0 = incompatible
+// Ces scores influencent le calcul de persona selon la terminologie choisie
+const TERMINOLOGY_AFFINITIES = {
+  emma: { 
+    spiritual: 0.8,    // Emma apprécie le spirituel mais préfère le moderne
+    modern: 1.0,       // Parfaite affinité avec termes simples et accessibles
+    energetic: 0.9,    // Très bonne affinité avec l'approche énergétique
+    medical: 0.6       // Moins à l'aise avec les termes médicaux
+  },
+  laure: { 
+    medical: 0.9,      // Apprécie la précision médicale
+    modern: 0.8,       // Bonne affinité avec le moderne
+    energetic: 1.0,    // Parfaite affinité (optimisation énergétique)
+    spiritual: 0.7     // Acceptable mais pas sa préférence
+  },
+  clara: { 
+    energetic: 1.0,    // Adore l'approche énergétique dynamique
+    modern: 0.9,       // Très proche du moderne
+    spiritual: 0.8,    // Apprécie le spirituel
+    medical: 0.7       // OK avec le médical mais pas son premier choix
+  },
+  sylvie: { 
+    spiritual: 0.9,    // Forte affinité spirituelle (transition)
+    energetic: 0.8,    // Apprécie l'énergétique
+    modern: 0.7,       // Neutre sur le moderne
+    medical: 0.8       // Apprécie aussi l'approche médicale
+  },
+  christine: { 
+    spiritual: 1.0,    // Parfaite affinité (sagesse spirituelle)
+    energetic: 0.8,    // Bonne affinité énergétique
+    medical: 0.7,      // Acceptable
+    modern: 0.6        // Moins attirée par le moderne
+  }
+};
 
 export function calculatePersona(userStoreData) {
   const userData = {
     journeyChoice: userStoreData.profile?.journeyChoice,
     ageRange: userStoreData.profile?.ageRange,
     preferences: userStoreData.preferences,
-    communicationTone: userStoreData.melune?.tone
+    communicationTone: userStoreData.melune?.tone,
+    terminology: userStoreData.profile?.terminology,
   };
 
   const scores = calculatePersonaScores(userData);
@@ -24,7 +61,7 @@ export function calculatePersona(userStoreData) {
     assigned: bestMatch[0],
     confidence: bestMatch[1] / 100,
     scores,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   };
 }
 
@@ -46,18 +83,21 @@ function calculatePersonaScore(userData, personaName) {
   const ageScore = calculateAgeScore(userData, reference);
   const prefScore = calculatePreferencesScore(userData, reference);
   const styleScore = calculateCommunicationScore(userData, reference);
+  const terminologyScore = calculateTerminologyScore(userData, personaName);
 
   const coeffs = reference.coefficients || {};
   const journeyCoeff = Math.min(coeffs.journey || 1.0, 1.15);
   const ageCoeff = Math.min(coeffs.age || 1.0, 1.2);
   const prefCoeff = Math.min(coeffs.preferences || 1.0, 1.2);
   const commCoeff = Math.min(coeffs.communication || 1.0, 1.1);
+  const termCoeff = coeffs.terminology || 1.0;
 
   let totalScore = 0;
   totalScore += journeyScore * SCORING_WEIGHTS.JOURNEY_CHOICE * journeyCoeff;
   totalScore += ageScore * SCORING_WEIGHTS.AGE_RANGE * ageCoeff;
   totalScore += prefScore * SCORING_WEIGHTS.PREFERENCES * prefCoeff;
   totalScore += styleScore * SCORING_WEIGHTS.COMMUNICATION * commCoeff;
+  totalScore += terminologyScore * SCORING_WEIGHTS.TERMINOLOGY * termCoeff;
 
   let bonus = 0;
   const matchCount = journeyScore + ageScore + (prefScore > 0.7 ? 1 : 0) + styleScore;
@@ -120,4 +160,11 @@ function calculatePreferencesScore(userData, reference) {
 function calculateCommunicationScore(userData, reference) {
   const userComm = userData.communicationTone;
   return userComm && reference.communicationStyle.includes(userComm) ? 1 : 0;
+}
+
+function calculateTerminologyScore(userData, personaName) {
+  if (!userData.terminology) return 0.7; // Score neutre si pas de préférence
+  
+  const affinity = TERMINOLOGY_AFFINITIES[personaName]?.[userData.terminology];
+  return affinity !== undefined ? affinity : 0.7;
 }

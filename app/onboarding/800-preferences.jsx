@@ -6,7 +6,7 @@
 // 🔄 Cycle: Onboarding - Étape 6/8
 // ─────────────────────────────────────────────────────────
 //
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, TouchableOpacity, StyleSheet, ScrollView, Animated } from 'react-native';
 import { router } from 'expo-router';
 import OnboardingScreen from '../../src/core/layout/OnboardingScreen';
@@ -100,6 +100,30 @@ export default function PreferencesScreen() {
     return defaultPreferences;
   });
 
+  // Pré-sélections intelligentes selon persona
+  useEffect(() => {
+    if (intelligence.currentPersona && intelligence.personaConfidence >= 0.8) {
+      const preselections = {
+        emma: { moods: 3, phases: 3 },
+        laure: { moods: 3, phases: 5, rituals: 3 },
+        clara: { symptoms: 3, moods: 3, phases: 5 },
+        sylvie: { symptoms: 3, phyto: 3 },
+        christine: { phases: 3, lithotherapy: 3, rituals: 3 }
+      };
+      
+      const suggestions = preselections[intelligence.currentPersona];
+      if (suggestions && !preferences) { // Seulement si pas de préférences déjà sauvées
+        setCurrentPreferences(prev => ({
+          ...prev,
+          ...Object.entries(suggestions).reduce((acc, [key, value]) => ({
+            ...acc,
+            [key]: prev[key] || value  // Ne pas écraser si déjà défini
+          }), {})
+        }));
+      }
+    }
+  }, [intelligence.currentPersona, intelligence.personaConfidence]);
+
   const handlePreferenceChange = (dimension, value) => {
     setCurrentPreferences(prev => ({
       ...prev,
@@ -152,6 +176,23 @@ export default function PreferencesScreen() {
     extrapolate: 'clamp'
   });
 
+  const getSelectedCount = () => {
+    return Object.values(currentPreferences).filter(v => v > 0).length;
+  };
+
+  const getPersonalizedFeedback = () => {
+    const count = getSelectedCount();
+    if (intelligence.personaConfidence >= 0.8) {
+      if (count === 0) return intelligence.getPersonalizedMessage('zero_selected');
+      if (count <= 2) return intelligence.getPersonalizedMessage('some_selected');
+      return intelligence.getPersonalizedMessage('many_selected');
+    }
+    // Fallbacks par défaut
+    if (count === 0) return "Prends ton temps pour explorer...";
+    if (count <= 2) return "Bon début !";
+    return "Belle diversité de choix !";
+  };
+
   return (
     <OnboardingScreen currentScreen="800-preferences">
       <AnimatedOnboardingScreen>
@@ -167,9 +208,19 @@ export default function PreferencesScreen() {
           <View style={styles.messageSection}>
             <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage}>
               <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
-                Chaque femme a sa propre sagesse... Dis-moi ce qui résonne en toi
+                {intelligence.personaConfidence >= 0.8 
+                  ? intelligence.getPersonalizedMessage('message')
+                  : "Chaque femme a sa propre sagesse... Dis-moi ce qui résonne en toi"}
               </BodyText>
             </AnimatedRevealMessage>
+            
+            {getSelectedCount() > 0 && (
+              <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage + 1000}>
+                <BodyText style={styles.feedbackText}>
+                  {getPersonalizedFeedback()}
+                </BodyText>
+              </AnimatedRevealMessage>
+            )}
           </View>
 
           {/* Section principale */}
@@ -358,5 +409,12 @@ const getStyles = (theme) => StyleSheet.create({
     fontSize: 14,
     color: theme.colors.textLight,
     marginBottom: theme.spacing.xs,
+  },
+  
+  feedbackText: {
+    fontSize: 16,
+    color: theme.colors.text,
+    textAlign: 'center',
+    marginTop: theme.spacing.m,
   },
 });

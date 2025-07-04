@@ -95,6 +95,8 @@ export default function TerminologyScreen() {
     setSelectedTerminology(terminologyKey);
     onSelect(terminologyKey);
     
+    intelligence.updateProfile({ terminology: terminologyKey });
+    
     intelligence.trackAction('terminology_selected', {
       terminology: terminologyKey
     });

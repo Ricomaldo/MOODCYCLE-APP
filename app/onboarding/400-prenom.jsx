@@ -108,15 +108,11 @@ export default function PrenomScreen() {
   };
 
   const generatePersonalizedPreview = () => {
-    const persona = intelligence.currentPersona || 'emma';
-    const messages = {
-      emma: `Hey ${prenom} ! Je suis trop contente de faire ta connaissance ! 💖`,
-      laure: `${prenom}, je sens qu'on va faire une super équipe ensemble.`,
-      clara: `${prenom} ! Prête pour cette aventure cyclique ? 🌙`,
-      sylvie: `${prenom}, je suis là pour t'accompagner dans ta sagesse cyclique.`,
-      christine: `${prenom}, c'est un plaisir de vous accompagner dans ce voyage.`
-    };
-    return messages[persona] || messages.emma;
+    if (intelligence.personaConfidence >= 0.4) {
+      return intelligence.getPersonalizedMessage('preview', { prenom });
+    }
+    // Fallback si pas de persona détectée
+    return `Hey ${prenom} ! Je suis trop contente de faire ta connaissance ! ��`;
   };
 
   return (
@@ -160,7 +156,9 @@ export default function PrenomScreen() {
             >
               <AnimatedRevealMessage delay={800}>
                 <BodyText style={[styles.meluneMessage, { fontFamily: 'Quintessential' }]}>
-                  Comment aimerais-tu que je t'appelle ?
+                  {intelligence.personaConfidence >= 0.4 
+                    ? intelligence.getPersonalizedMessage('question')
+                    : "Comment aimerais-tu que je t'appelle ?"}
                 </BodyText>
               </AnimatedRevealMessage>
             </Animated.View>

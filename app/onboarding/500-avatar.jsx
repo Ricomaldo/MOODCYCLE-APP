@@ -69,10 +69,23 @@ export default function AvatarScreen() {
   const { updateMelune } = useUserStore();
   const intelligence = useOnboardingIntelligence('500-avatar');
   
-  // États
+  // États avec suggestions personnalisées
+  const getPersonalizedDefaults = () => {
+    if (intelligence.personaConfidence >= 0.4) {
+      const suggestions = {
+        emma: { style: 'modern', tone: 'friendly' },
+        laure: { style: 'modern', tone: 'professional' },
+        clara: { style: 'mystique', tone: 'inspiring' },
+        sylvie: { style: 'classic', tone: 'friendly' },
+        christine: { style: 'mystique', tone: 'inspiring' }
+      };
+      return suggestions[intelligence.currentPersona] || { style: 'classic', tone: 'friendly' };
+    }
+    return { style: 'classic', tone: 'friendly' };
+  };
+
   const [selections, setSelections] = useState({
-    style: 'classic',
-    tone: 'friendly',
+    ...getPersonalizedDefaults(),
     position: 'bottom-right'
   });
   
@@ -257,9 +270,19 @@ export default function AvatarScreen() {
           >
             <AnimatedRevealMessage delay={800}>
               <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
-                Choisis comment tu souhaites me voir apparaître dans l'application
+                {intelligence.personaConfidence >= 0.4 
+                  ? intelligence.getPersonalizedMessage('message')
+                  : "Choisis comment tu souhaites me voir apparaître dans l'application"}
               </BodyText>
             </AnimatedRevealMessage>
+            
+            {intelligence.personaConfidence >= 0.4 && (
+              <AnimatedRevealMessage delay={1200}>
+                <BodyText style={styles.hintText}>
+                  {intelligence.getPersonalizedMessage('style_hint')}
+                </BodyText>
+              </AnimatedRevealMessage>
+            )}
           </Animated.View>
         </View>
 
@@ -311,6 +334,16 @@ const getStyles = (theme) => StyleSheet.create({
     color: theme.colors.text,
     lineHeight: 28,
     maxWidth: 300,
+  },
+  
+  hintText: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: theme.colors.primary,
+    lineHeight: 22,
+    maxWidth: 280,
+    marginTop: theme.spacing.m,
+    fontStyle: 'italic',
   },
   
   mainSection: {

@@ -194,4 +194,4 @@ export function getOnboardingMessage(screen, persona, key, data = {}) {
   }
 
   return message;
-}
+} 

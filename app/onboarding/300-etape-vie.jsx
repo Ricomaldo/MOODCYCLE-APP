@@ -53,7 +53,7 @@ const AGE_RANGES_DATA = [
     title: 'Liberté (55+ ans)',
     description: 'Épanouissement au-delà des cycles traditionnels',
     icon: '🦋',
-  },
+  }
 ];
 
 export default function EtapeVieScreen() {
@@ -115,7 +115,9 @@ export default function EtapeVieScreen() {
           <View style={styles.messageSection}>
             <AnimatedRevealMessage delay={ANIMATION_DURATIONS.normal}>
               <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
-                Chaque étape de la vie d'une femme porte sa propre magie... Dis-moi où tu en es de ton voyage
+                {intelligence.personaConfidence >= 0.4 
+                  ? intelligence.getPersonalizedMessage('message')
+                  : "Chaque étape de la vie d'une femme porte sa propre magie... Dis-moi où tu en es de ton voyage"}
               </BodyText>
             </AnimatedRevealMessage>
           </View>

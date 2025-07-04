@@ -24,7 +24,8 @@ export const PERSONA_PROFILES = {
       phases: 3, lithotherapy: 1, rituals: 2
     },
     coefficients: {
-      journey: 1.0, age: 1.2, preferences: 1.1, communication: 1.0
+      journey: 1.0, age: 1.2, preferences: 1.1, communication: 1.0,
+      terminology: 1.05
     },
 
     // ===============================
@@ -60,7 +61,8 @@ export const PERSONA_PROFILES = {
       phases: 5, lithotherapy: 2, rituals: 4
     },
     coefficients: {
-      journey: 1.2, age: 1.0, preferences: 1.1, communication: 1.1
+      journey: 1.2, age: 1.0, preferences: 1.1, communication: 1.1,
+      terminology: 1.0
     },
 
     editableContent: {
@@ -94,7 +96,8 @@ export const PERSONA_PROFILES = {
       phases: 2, lithotherapy: 1, rituals: 3
     },
     coefficients: {
-      journey: 1.1, age: 1.2, preferences: 1.2, communication: 1.0
+      journey: 1.1, age: 1.2, preferences: 1.2, communication: 1.0,
+      terminology: 1.1
     },
 
     editableContent: {
@@ -128,7 +131,8 @@ export const PERSONA_PROFILES = {
       phases: 5, lithotherapy: 5, rituals: 4
     },
     coefficients: {
-      journey: 1.1, age: 1.3, preferences: 1.2, communication: 1.1
+      journey: 1.1, age: 1.3, preferences: 1.2, communication: 1.1,
+      terminology: 1.2
     },
 
     editableContent: {
@@ -162,7 +166,8 @@ export const PERSONA_PROFILES = {
       phases: 5, lithotherapy: 3, rituals: 5
     },
     coefficients: {
-      journey: 1.2, age: 1.0, preferences: 1.3, communication: 1.1
+      journey: 1.2, age: 1.0, preferences: 1.3, communication: 1.1,
+      terminology: 1.0
     },
 
     editableContent: {
@@ -189,8 +194,9 @@ export const PERSONA_PROFILES = {
 export const SCORING_WEIGHTS = {
   JOURNEY_CHOICE: 0.25,   // 25% - Choix de voyage
   AGE_RANGE: 0.15,        // 15% - Tranche d'âge  
-  PREFERENCES: 0.4,       // 40% - Préférences santé
-  COMMUNICATION: 0.2      // 20% - Style communication
+  PREFERENCES: 0.35,      // 35% - Préférences santé (était 40%)
+  COMMUNICATION: 0.15,    // 15% - Style communication (était 20%)
+  TERMINOLOGY: 0.10       // 10% - NOUVEAU facteur
 };
 
 export const SCORING_MODIFIERS = {

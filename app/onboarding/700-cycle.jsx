@@ -155,8 +155,29 @@ export default function CycleScreen() {
             },
           ]}>
             <BodyText style={styles.message}>
-              Configurons ton cycle pour un accompagnement personnalisé
+              {intelligence.personaConfidence >= 0.6 
+                ? intelligence.getPersonalizedMessage('message')
+                : "Configurons ton cycle pour un accompagnement personnalisé"}
             </BodyText>
+            
+            {intelligence.personaConfidence >= 0.6 && (
+              <Animated.View style={[
+                styles.encouragementSection,
+                {
+                  opacity: messageAnim,
+                  transform: [{
+                    translateY: messageAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [30, 0],
+                    }),
+                  }],
+                },
+              ]}>
+                <BodyText style={styles.encouragementText}>
+                  {intelligence.getPersonalizedMessage('encouragement')}
+                </BodyText>
+              </Animated.View>
+            )}
           </Animated.View>
 
           {/* Section principale */}
@@ -428,5 +449,15 @@ const getStyles = (theme) => StyleSheet.create({
 
   buttonContainer: {
     alignItems: 'center',
+  },
+
+  encouragementSection: {
+    marginTop: theme.spacing.m,
+  },
+
+  encouragementText: {
+    fontSize: 16,
+    color: theme.colors.textLight,
+    textAlign: 'center',
   },
 });
