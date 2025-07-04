@@ -2,8 +2,8 @@
 // ─────────────────────────────────────────────────────────
 // 📄 File: app/(tabs)/cycle/CycleView.jsx
 // 🧩 Type: Écran Principal
-// 📚 Description: Cycle avec observations Miranda Gray
-// 🕒 Version: 7.2 - 2025-06-29
+// 📚 Description: Cycle avec intelligence adaptative
+// 🕒 Version: 8.0 - Merge Intelligence ALPHA
 // 🧭 Used in: Navigation principale, vue cycle
 // ─────────────────────────────────────────────────────────
 //
@@ -16,65 +16,90 @@ import { BodyText, Caption } from '../../../src/core/ui/typography';
 import ScreenContainer from '../../../src/core/layout/ScreenContainer';
 import { CycleHeader } from '../../../src/core/layout/SimpleHeader';
 import CycleWheel from '../../../src/features/cycle/CycleWheel';
-import { useCycleStore } from '../../../src/stores/useCycleStore';
-import { getCurrentCycleDay, getCurrentPhase, getCurrentPhaseInfo, getNextPeriodDate, getDaysUntilNextPeriod } from '../../../src/utils/cycleCalculations';
+import { getCycleDataAdaptive, useCycleStore } from '../../../src/stores/useCycleStore';
 import { useUserStore } from '../../../src/stores/useUserStore';
 import { PhaseIcon } from '../../../src/config/iconConstants';
 import QuickTrackingModal from '../../../src/features/notebook/QuickTrackingModal';
 import ParametresModal from '../../../src/core/settings/ParametresModal';
+import PhaseCorrectionModal from '../../../src/features/cycle/PhaseCorrectionModal';
 import { useTerminology } from '../../../src/hooks/useTerminology';
 import { useAdaptiveInterface } from '../../../src/hooks/useAdaptiveInterface';
-import { useUserIntelligence } from '../../../src/stores/useUserIntelligence';
+import { useSmartSuggestions } from '../../../src/hooks/useSmartSuggestions';
+import { useQuickObservation } from '../../../src/hooks/useQuickObservation';
 import { useEngagementStore } from '../../../src/stores/useEngagementStore';
-import { getCurrentPhaseAdaptive } from '../../../src/utils/cycleCalculations';
+import CycleProgressionIndicator from '../../../src/features/cycle/CycleProgressionIndicator';
+import CycleObservationEngine from '../../../src/services/CycleObservationEngine';
 
 export default function CycleView() {
-  const cycleData = useCycleStore((state) => state);
+  // 1. Intelligence adaptative
+  const cycleData = getCycleDataAdaptive();
+  const { 
+    currentPhase,
+    currentDay,
+    phaseInfo,
+    nextPeriodDate,
+    daysUntilNextPeriod,
+    hasData,
+    cycleMode,
+    isObservationBased,
+    maturityLevel
+  } = cycleData;
+
+  // 2. Stores
   const startNewCycle = useCycleStore((state) => state.startNewCycle);
   const endPeriod = useCycleStore((state) => state.endPeriod);
   const observations = useCycleStore((state) => state.observations || []);
-  
-  // AJOUT : Intelligence stores
-  const intelligence = useUserIntelligence();
   const engagement = useEngagementStore();
   
-  // MODIFICATION : Phase adaptive
-  const currentPhase = getCurrentPhaseAdaptive(
-    cycleData.lastPeriodDate,
-    cycleData.length,
-    cycleData.periodDuration,
-    {
-      mode: 'auto',
-      userIntelligence: intelligence,
-      engagementLevel: engagement?.maturity?.current
-    }
-  );
+  // 3. Intelligence hooks
+  const { layout, features, config } = useAdaptiveInterface();
+  const smartSuggestions = useSmartSuggestions();
   
-  const currentDay = getCurrentCycleDay(cycleData.lastPeriodDate, cycleData.length);
-  const phaseInfo = getCurrentPhaseInfo(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
-  const nextPeriodDate = getNextPeriodDate(cycleData.lastPeriodDate, cycleData.length);
-  const daysUntilNextPeriod = getDaysUntilNextPeriod(cycleData.lastPeriodDate, cycleData.length);
-  const hasData = !!(cycleData.lastPeriodDate && cycleData.length);
-
   const { profile } = useUserStore();
   const { theme } = useTheme();
   const { getPhaseLabel, getArchetypeLabel } = useTerminology('spiritual');
-  
-  // AJOUT : Adaptive interface
-  const { 
-    layout,
-    features,
-    maturityLevel,
-    config
-  } = useAdaptiveInterface();
 
   const safeProfile = profile || { prenom: null };
   const [showQuickTracking, setShowQuickTracking] = useState(false);
   const [showParams, setShowParams] = useState(false);
+  const [showPhaseCorrection, setShowPhaseCorrection] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showLastObservation, setShowLastObservation] = useState(false);
+  
+  // Intelligence observation
+  const { isHybridMode, isObservationMode } = useQuickObservation();
+  
+  // Guidance observation
+  const observationGuidance = React.useMemo(() => 
+    CycleObservationEngine.getObservationGuidance(
+      currentPhase, 
+      useUserIntelligence.getState(),
+      maturityLevel
+    ), [currentPhase, maturityLevel]
+  );
+
+  const observationPrompts = React.useMemo(() =>
+    CycleObservationEngine.getIntelligentObservationPrompts(
+      currentPhase,
+      observations.slice(-5)
+    ), [currentPhase, observations]
+  );
 
   const lastObservation = observations[observations.length - 1];
+
+  // 4. Message guidance intelligent
+  const guidanceMessage = React.useMemo(() => {
+    if (isObservationBased && cycleMode === 'observation') {
+      return "Phase basée sur tes observations 🌟";
+    }
+    if (cycleMode === 'hybrid') {
+      return "J'apprends de tes patterns...";
+    }
+    if (smartSuggestions.hasHighConfidence) {
+      return smartSuggestions.recommendations?.[0];
+    }
+    return null;
+  }, [isObservationBased, cycleMode, smartSuggestions]);
 
   const getObservationInsights = () => {
     if (observations.length < 3) return null;
@@ -91,16 +116,10 @@ export default function CycleView() {
         const avgEnergy = phaseObs.reduce((sum, obs) => sum + obs.energy, 0) / phaseObs.length;
         const energyTrend = avgEnergy > 3.5 ? 'haute' : avgEnergy < 2.5 ? 'douce' : 'modérée';
         
-        const symptoms = phaseObs
-          .map(obs => obs.notes)
-          .filter(note => note && note.includes('Symptômes:'))
-          .join(' ');
-        
         insights.push({
           phase,
           energy: energyTrend,
-          count: phaseObs.length,
-          symptoms
+          count: phaseObs.length
         });
       }
     });
@@ -138,9 +157,13 @@ export default function CycleView() {
         month: 'long'
       });
       
+      const message = isObservationBased 
+        ? "Basé sur tes observations personnelles"
+        : "Basé sur tes cycles précédents";
+        
       Alert.alert(
         '🔮 Tes prédictions',
-        `📅 Prochaines règles : ${nextDate}\n⏰ Dans ${daysUntilNextPeriod} jours\n\n🌟 Phase suivante : ${getNextPhase(currentPhase)}`,
+        `${message}\n\n📅 Prochaines règles : ${nextDate}\n⏰ Dans ${daysUntilNextPeriod} jours\n\n🌟 Phase suivante : ${getNextPhase(currentPhase)}`,
         [{ text: 'Parfait !', style: 'default' }]
       );
     } else {
@@ -150,7 +173,7 @@ export default function CycleView() {
         [{ text: 'Compris !', style: 'default' }]
       );
     }
-  }, [nextPeriodDate, daysUntilNextPeriod, currentPhase]);
+  }, [nextPeriodDate, daysUntilNextPeriod, currentPhase, isObservationBased]);
 
   const handleHistory = React.useCallback(() => {
     router.push({
@@ -161,10 +184,6 @@ export default function CycleView() {
       }
     });
   }, [currentPhase]);
-
-  const handlePhaseNavigation = React.useCallback((phase) => {
-    router.push(`/(tabs)/cycle/phases/${phase}`);
-  }, []);
 
   const handlePeriodStart = React.useCallback(() => {
     console.info('🩸 Démarrage nouveau cycle');
@@ -235,6 +254,16 @@ export default function CycleView() {
           />
         }
       >
+        {/* Badge mode observation */}
+        {isObservationBased && (
+          <View style={styles.observationBadge}>
+            <Feather name="eye" size={14} color={theme.colors.primary} />
+            <Caption style={styles.observationText}>
+              Mode observation actif • {cycleMode}
+            </Caption>
+          </View>
+        )}
+
         <View style={styles.cycleContainer}>
           <CycleWheel 
             onPhasePress={handlePhasePress}
@@ -246,6 +275,11 @@ export default function CycleView() {
             interactive={true}
           />
           
+          {/* Indicateur progression */}
+          {maturityLevel !== 'autonomous' && (
+            <CycleProgressionIndicator compact />
+          )}
+          
           <View style={styles.phaseInfoContainer}>
             <View style={styles.phaseHeader}>
               <PhaseIcon 
@@ -256,11 +290,25 @@ export default function CycleView() {
               <BodyText style={styles.phaseTitle}>
                 {getPhaseLabel(currentPhase)}
               </BodyText>
+              {(isHybridMode || isObservationMode || cycleMode !== 'predictive') && (
+                <TouchableOpacity 
+                  style={styles.correctionButton}
+                  onPress={() => setShowPhaseCorrection(true)}
+                >
+                  <Feather name="edit-2" size={14} color={theme.colors.textLight} />
+                </TouchableOpacity>
+              )}
             </View>
             
             <Caption style={styles.dayCounter}>
               Jour {currentDay} de {cycleData.length}
             </Caption>
+            
+            {guidanceMessage && (
+              <Caption style={styles.guidanceText}>
+                {guidanceMessage}
+              </Caption>
+            )}
             
             {phaseInfo && phaseInfo.description && (
               <BodyText style={styles.phaseDescription}>
@@ -296,6 +344,32 @@ export default function CycleView() {
             </TouchableOpacity>
           </View>
 
+          {/* Guidance observation contextuelle */}
+          {observationGuidance && observationGuidance.mode !== 'predictive' && (
+            <View style={styles.guidanceCard}>
+              <Feather name="sparkles" size={14} color={theme.colors.primary} />
+              <Caption style={styles.guidanceCardText}>
+                {observationGuidance.message}
+              </Caption>
+            </View>
+          )}
+
+          {/* Prompts intelligents */}
+          {observationPrompts.length > 0 && observations.length < 10 && (
+            <View style={styles.promptsContainer}>
+              {observationPrompts.slice(0, 1).map((prompt, idx) => (
+                <TouchableOpacity 
+                  key={idx}
+                  style={styles.promptCard}
+                  onPress={handleSymptomTracking}
+                >
+                  <Caption style={styles.promptIcon}>{prompt.icon}</Caption>
+                  <Caption style={styles.promptText}>{prompt.prompt}</Caption>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
           {showLastObservation && lastObservation && (
             <View style={styles.lastObsCard}>
               <Caption style={styles.lastObsText}>
@@ -318,30 +392,17 @@ export default function CycleView() {
           )}
         </View>
 
-        {config.showProgressBar && maturityLevel !== 'autonomous' && (
-          <View style={styles.progressSection}>
-            <Caption style={styles.progressTitle}>
-              Niveau {maturityLevel === 'discovery' ? 'Découverte' : 'Apprentissage'}
-            </Caption>
-            <View style={styles.progressBar}>
-              <View 
-                style={[
-                  styles.progressFill, 
-                  { width: `${engagement.maturity.confidence}%` }
-                ]} 
-              />
-            </View>
-          </View>
-        )}
-
+        {/* Actions adaptatives avec emphasis */}
         <View style={styles.actionsGrid}>
           {layout.getVisibleActions([
             {
               type: 'observation',
+              emphasized: smartSuggestions.actions.some(a => a.type === 'observation'),
               component: (
                 <TouchableOpacity 
                   style={[
-                    styles.actionCard, 
+                    styles.actionCard,
+                    smartSuggestions.actions.some(a => a.type === 'observation') && styles.actionCardEmphasized,
                     theme.getPhaseGlassmorphismStyle(currentPhase, {
                       bgOpacity: theme.glassmorphism.opacity.medium,
                       borderRadius: 12,
@@ -357,9 +418,13 @@ export default function CycleView() {
             },
             {
               type: 'predictions',
+              emphasized: smartSuggestions.actions.some(a => a.type === 'predictions'),
               component: (
                 <TouchableOpacity 
-                  style={styles.actionCard}
+                  style={[
+                    styles.actionCard,
+                    smartSuggestions.actions.some(a => a.type === 'predictions') && styles.actionCardEmphasized
+                  ]}
                   onPress={handlePredictions}
                 >
                   <Feather name="calendar" size={24} color={theme.colors.secondary} />
@@ -369,9 +434,13 @@ export default function CycleView() {
             },
             {
               type: 'history',
+              emphasized: smartSuggestions.actions.some(a => a.type === 'history'),
               component: (
                 <TouchableOpacity 
-                  style={styles.actionCard}
+                  style={[
+                    styles.actionCard,
+                    smartSuggestions.actions.some(a => a.type === 'history') && styles.actionCardEmphasized
+                  ]}
                   onPress={handleHistory}
                 >
                   <Feather name="clock" size={24} color={theme.colors.textSecondary} />
@@ -385,6 +454,23 @@ export default function CycleView() {
             </React.Fragment>
           ))}
         </View>
+
+        {/* Barre de progression maturité */}
+        {config.showProgressBar && maturityLevel !== 'autonomous' && (
+          <View style={styles.progressSection}>
+            <Caption style={styles.progressTitle}>
+              Progression : {maturityLevel === 'discovery' ? 'Découverte' : 'Apprentissage'}
+            </Caption>
+            <View style={styles.progressBar}>
+              <View 
+                style={[
+                  styles.progressFill, 
+                  { width: `${engagement?.maturity?.confidence || 0}%` }
+                ]} 
+              />
+            </View>
+          </View>
+        )}
 
         <View style={styles.periodControlsContainer}>
           {currentPhase === 'menstrual' ? (
@@ -414,6 +500,13 @@ export default function CycleView() {
         cycleDay={currentDay}
       />
       
+      <PhaseCorrectionModal
+        visible={showPhaseCorrection}
+        onClose={() => setShowPhaseCorrection(false)}
+        currentPhase={currentPhase}
+        predictedPhase={getCycleData().currentPhase}
+      />
+      
       <ParametresModal 
         visible={showParams}
         onClose={() => setShowParams(false)}
@@ -421,36 +514,6 @@ export default function CycleView() {
     </ScreenContainer>
   );
 }
-
-const getPhaseEnergyLevel = (phase) => {
-  const energyLevels = {
-    menstrual: 'Douce',
-    follicular: 'Montante',
-    ovulatory: 'Haute',
-    luteal: 'Variable'
-  };
-  return energyLevels[phase] || 'Variable';
-};
-
-const getPhaseFocus = (phase) => {
-  const focuses = {
-    menstrual: 'Repos et régénération',
-    follicular: 'Nouveaux projets',
-    ovulatory: 'Communication',
-    luteal: 'Finalisation'
-  };
-  return focuses[phase] || 'Écoute intérieure';
-};
-
-const getPhaseDuration = (phase) => {
-  const durations = {
-    menstrual: '3-7 jours',
-    follicular: '7-10 jours',
-    ovulatory: '3-5 jours',
-    luteal: '10-14 jours'
-  };
-  return durations[phase] || 'Variable';
-};
 
 const getStyles = (theme, currentPhase) => StyleSheet.create({
   container: {
@@ -475,6 +538,22 @@ const getStyles = (theme, currentPhase) => StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
   },
+  observationBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: theme.colors.primary + '15',
+    borderRadius: 16,
+    marginBottom: 12,
+  },
+  observationText: {
+    marginLeft: 6,
+    color: theme.colors.primary,
+    fontSize: 12,
+    fontWeight: '600',
+  },
   cycleContainer: {
     alignItems: 'center',
     marginBottom: 24,
@@ -492,6 +571,47 @@ const getStyles = (theme, currentPhase) => StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
+  correctionButton: {
+    marginLeft: 'auto',
+    padding: 4,
+    borderRadius: 12,
+    backgroundColor: theme.colors.background,
+  },
+  guidanceCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.primary + '10',
+    padding: theme.spacing.s,
+    borderRadius: theme.borderRadius.s,
+    marginBottom: theme.spacing.s,
+    gap: theme.spacing.xs,
+  },
+  guidanceCardText: {
+    flex: 1,
+    color: theme.colors.primary,
+    fontSize: 12,
+  },
+  promptsContainer: {
+    marginTop: theme.spacing.s,
+  },
+  promptCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface,
+    padding: theme.spacing.m,
+    borderRadius: theme.borderRadius.m,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    gap: theme.spacing.s,
+  },
+  promptIcon: {
+    fontSize: 16,
+  },
+  promptText: {
+    flex: 1,
+    color: theme.colors.text,
+    fontSize: 13,
+  },
   phaseTitle: {
     fontSize: 18,
     fontWeight: '600',
@@ -502,10 +622,18 @@ const getStyles = (theme, currentPhase) => StyleSheet.create({
     color: theme.colors.textSecondary,
     marginBottom: 8,
   },
+  guidanceText: {
+    color: theme.colors.textSecondary,
+    fontSize: 13,
+    fontStyle: 'italic',
+    marginTop: 4,
+    textAlign: 'center',
+  },
   phaseDescription: {
     textAlign: 'center',
     color: theme.colors.textSecondary,
     lineHeight: 20,
+    marginTop: 8,
   },
   // Rituels
   ritualContainer: {
@@ -612,12 +740,38 @@ const getStyles = (theme, currentPhase) => StyleSheet.create({
     borderRadius: 12,
     marginHorizontal: 4,
   },
+  actionCardEmphasized: {
+    borderWidth: 1,
+    borderColor: theme.colors.primary + '40',
+    backgroundColor: theme.colors.primary + '08',
+  },
   actionText: {
     marginTop: 8,
     fontSize: 14,
     fontWeight: '500',
     color: theme.colors.text,
     textAlign: 'center',
+  },
+  progressSection: {
+    marginTop: 24,
+    marginBottom: 16,
+  },
+  progressTitle: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  progressBar: {
+    height: 4,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: theme.colors.phases[currentPhase],
+    borderRadius: 2,
   },
   periodControlsContainer: {
     alignItems: 'center',
@@ -640,25 +794,5 @@ const getStyles = (theme, currentPhase) => StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
-  },
-  progressSection: {
-    marginVertical: 16,
-    paddingHorizontal: 16,
-  },
-  progressTitle: {
-    fontSize: 12,
-    color: theme.colors.textSecondary,
-    marginBottom: 8,
-  },
-  progressBar: {
-    height: 4,
-    backgroundColor: theme.colors.surface,
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: theme.colors.phases[currentPhase],
-    borderRadius: 2,
   },
 });

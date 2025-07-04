@@ -1,5 +1,41 @@
 // __tests__/integration/intelligence-connections.test.js
 
+// Configure mocks avant les imports des composants
+jest.mock('../../src/stores/useEngagementStore');
+jest.mock('../../src/stores/useCycleStore');
+jest.mock('../../src/stores/useUserIntelligence');
+jest.mock('../../src/hooks/useQuickObservation');
+jest.mock('../../src/hooks/useTheme', () => ({
+  useTheme: () => ({
+    theme: {
+      colors: {
+        primary: '#000',
+        text: '#000',
+        textLight: '#666',
+        surface: '#fff',
+        background: '#f5f5f5',
+        border: '#e0e0e0',
+        phases: {
+          menstrual: '#E53935',
+          follicular: '#F57C00',
+          ovulatory: '#0097A7',
+          luteal: '#673AB7'
+        }
+      },
+      spacing: { xs: 4, s: 8, m: 16, l: 24, xl: 32 },
+      borderRadius: { s: 4, m: 8, l: 12, xl: 16, pill: 24 },
+      glassmorphism: { opacity: { medium: 0.5 } },
+      getPhaseGlassmorphismStyle: () => ({})
+    }
+  })
+}));
+jest.mock('../../src/hooks/useTerminology', () => ({
+  useTerminology: () => ({
+    getPhaseLabel: (phase) => phase,
+    getArchetypeLabel: (phase) => phase
+  })
+}));
+
 import React from 'react';
 import { renderHook } from '@testing-library/react-native';
 import { useAdaptiveInterface } from '../../src/hooks/useAdaptiveInterface';
@@ -13,11 +49,8 @@ const {
   getCycleDataAdaptive: mockGetCycleDataAdaptive
 } = require('../__mocks__/stores');
 
-// Mocks
+// Mocks supplémentaires
 jest.mock('../../src/stores/useUserStore');
-jest.mock('../../src/stores/useUserIntelligence');
-jest.mock('../../src/stores/useEngagementStore');
-jest.mock('../../src/stores/useCycleStore');
 jest.mock('../../src/hooks/usePersona');
 
 describe('🔌 Connexions Intelligence - Tests Intégration', () => {

@@ -52,9 +52,23 @@ export default function InsightCard({
   
   const shareCardRef = useRef();
   const saveIconAnim = useRef(new Animated.Value(1)).current;
+  // 🆕 Animation pour révélations
+  const revelationFadeAnim = useRef(new Animated.Value(0)).current;
   
   const phaseColor = theme.colors.phases[phase];
   const userName = profile?.prenom || 'toi';
+  
+  // 🆕 Animation pour révélations
+  useEffect(() => {
+    if (insight?.revelationLevel > 0) {
+      Animated.timing(revelationFadeAnim, {
+        toValue: 1,
+        duration: 600,
+        delay: 300,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [insight?.revelationLevel]);
   
   const getSourceLabel = () => {
     const labels = {
