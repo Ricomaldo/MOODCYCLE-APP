@@ -26,7 +26,9 @@ import {
 import { useNotebookStore } from '../../../src/stores/useNotebookStore';
 import { useNavigationStore } from '../../../src/stores/useNavigationStore';
 import { useCycleStore } from '../../../src/stores/useCycleStore';
-import { getCurrentPhase } from '../../../src/utils/cycleCalculations';
+import { getCurrentPhase, getCurrentPhaseAdaptive } from '../../../src/utils/cycleCalculations';
+import { useUserIntelligence } from '../../../src/stores/useUserIntelligence';
+import { useEngagementStore } from '../../../src/stores/useEngagementStore';
 
 import FreeWritingModal from '../../../src/features/notebook/FreeWritingModal';
 import EntryDetailModal from '../../../src/features/notebook/EntryDetailModal';
@@ -344,7 +346,19 @@ export default function NotebookView() {
 
   // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
   const cycleData = useCycleStore((state) => state);
-  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
+  const intelligence = useUserIntelligence();
+  const engagement = useEngagementStore();
+  
+  const currentPhase = getCurrentPhaseAdaptive(
+    cycleData.lastPeriodDate,
+    cycleData.length,
+    cycleData.periodDuration,
+    {
+      mode: 'auto',
+      userIntelligence: intelligence,
+      engagementLevel: engagement?.maturity?.current
+    }
+  );
   const { notebookFilters, setNotebookFilter } = useNavigationStore();
   const { features, config, maturityLevel } = useAdaptiveInterface();
 

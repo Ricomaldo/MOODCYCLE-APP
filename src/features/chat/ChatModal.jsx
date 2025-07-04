@@ -136,25 +136,64 @@ function TypingIndicator({ theme }) {
 const MemoizedTypingIndicator = memo(TypingIndicator);
 
 // Suggestions rapides
-function QuickSuggestions({ suggestions, onSuggestionPress, theme, styles }) {
-  if (!suggestions?.length) return null;
+function QuickSuggestions({ suggestions, contextualActions, onSuggestionPress, theme, styles }) {
+  const allSuggestions = React.useMemo(() => {
+    const combined = [];
+    
+    // Ajouter d'abord les actions contextuelles prioritaires
+    if (contextualActions && contextualActions.length > 0) {
+      const highPriorityActions = contextualActions
+        .filter(action => action.priority === 'high')
+        .map(action => ({
+          text: action.prompt || action.title,
+          type: 'action',
+          metadata: action
+        }));
+      combined.push(...highPriorityActions);
+    }
+    
+    // Puis les prompts classiques
+    if (suggestions && suggestions.length > 0) {
+      const prompts = suggestions.map(s => ({
+        text: typeof s === 'string' ? s : s.prompt || s.title,
+        type: 'prompt',
+        metadata: s
+      }));
+      combined.push(...prompts);
+    }
+    
+    // Limiter à 3 et éviter doublons
+    const unique = combined.filter((item, index, self) =>
+      index === self.findIndex(i => i.text === item.text)
+    );
+    
+    return unique.slice(0, 3);
+  }, [suggestions, contextualActions]);
+
+  if (allSuggestions.length === 0) return null;
 
   return (
     <View style={styles.suggestionsContainer}>
-      <Caption style={styles.suggestionsTitle}>Suggestions rapides :</Caption>
+      <Caption style={styles.suggestionsTitle}>Suggestions :</Caption>
       <ScrollView 
         horizontal 
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.suggestionsContent}
       >
-        {suggestions.slice(0, 3).map((suggestion, index) => (
+        {allSuggestions.map((item, index) => (
           <TouchableOpacity
             key={index}
-            style={styles.suggestionChip}
-            onPress={() => onSuggestionPress(suggestion)}
+            style={[
+              styles.suggestionChip,
+              item.type === 'action' && styles.suggestionChipAction
+            ]}
+            onPress={() => onSuggestionPress(item.metadata || item.text)}
           >
-            <BodyText style={styles.suggestionText}>
-              {typeof suggestion === 'string' ? suggestion : suggestion.prompt || suggestion.title}
+            <BodyText style={[
+              styles.suggestionText,
+              item.type === 'action' && styles.suggestionTextAction
+            ]}>
+              {item.metadata?.icon ? `${item.metadata.icon} ` : ''}{item.text}
             </BodyText>
           </TouchableOpacity>
         ))}
@@ -343,6 +382,7 @@ export default function ChatModal() {
   const generateWelcomeMessage = useCallback(() => {
     const persona = profile.persona?.assigned || 'emma';
     const hasData = smartSuggestions.hasPersonalizedData;
+    const primaryAction = smartSuggestions.immediate[0];
     
     const welcomeMessages = {
       emma: hasData ? 
@@ -362,8 +402,16 @@ export default function ChatModal() {
         `Bonjour ${prenom}. Je suis Melune, votre guide spécialisée.`
     };
     
-    return welcomeMessages[persona] || welcomeMessages.emma;
-  }, [prenom, profile.persona, smartSuggestions.hasPersonalizedData]);
+    let message = welcomeMessages[persona] || welcomeMessages.emma;
+    
+    // AJOUT : Enrichissement avec action contextuelle primaire
+    if (primaryAction && hasData && smartSuggestions.confidence > 30) {
+      const contextualPrompt = primaryAction.prompt || primaryAction.title;
+      message += ` ${contextualPrompt}`;
+    }
+    
+    return message;
+  }, [prenom, profile.persona, smartSuggestions]);
 
   // Initialisation messages
   useEffect(() => {
@@ -403,11 +451,14 @@ export default function ChatModal() {
 
   // Suggestions visibles
   const showSuggestions = useMemo(() => {
+    const hasPrompts = chatSuggestions.prompts.length > 0;
+    const hasActions = smartSuggestions.actions.length > 0;
+    
     return !isLoading && 
            input.length === 0 && 
            messages.length <= 3 && 
-           chatSuggestions.prompts.length > 0;
-  }, [isLoading, input.length, messages.length, chatSuggestions.prompts]);
+           (hasPrompts || hasActions);
+  }, [isLoading, input.length, messages.length, chatSuggestions.prompts, smartSuggestions.actions]);
 
   const styles = getStyles(theme);
 
@@ -454,6 +505,7 @@ export default function ChatModal() {
         {showSuggestions && (
           <QuickSuggestions
             suggestions={chatSuggestions.prompts}
+            contextualActions={smartSuggestions.actions}
             onSuggestionPress={handleSuggestionPress}
             theme={theme}
             styles={styles}
@@ -543,6 +595,13 @@ const getStyles = (theme) => StyleSheet.create({
     fontSize: 14,
     color: theme.colors.primary,
     fontWeight: '500',
+  },
+  suggestionChipAction: {
+    borderColor: theme.colors.primary + '60',
+    backgroundColor: theme.colors.primary + '15',
+  },
+  suggestionTextAction: {
+    fontWeight: '600',
   },
   
   // Input

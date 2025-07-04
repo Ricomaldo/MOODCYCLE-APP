@@ -19,24 +19,36 @@ import { ConseilsHeader } from '../../../src/core/layout/SimpleHeader';
 import InsightCard from '../../../src/features/insights/InsightCard';
 import { VignettesContainer } from '../../../src/features/insights/VignetteCard';
 import { useCycleStore } from '../../../src/stores/useCycleStore';
-import { getCurrentPhase, getCurrentCycleDay } from '../../../src/utils/cycleCalculations';
+import { getCurrentPhase, getCurrentCycleDay, getCurrentPhaseAdaptive } from '../../../src/utils/cycleCalculations';
 import { useVignettes } from '../../../src/hooks/useVignettes';
 import { usePersonalizedInsight } from '../../../src/hooks/usePersonalizedInsight';
 import { useUserStore } from '../../../src/stores/useUserStore';
 import { PhaseIcon } from '../../../src/config/iconConstants';
 import { useTerminology } from '../../../src/hooks/useTerminology';
 import { useUserIntelligence } from '../../../src/stores/useUserIntelligence';
+import { useEngagementStore } from '../../../src/stores/useEngagementStore';
 
 export default function ConseilsView() {
   const cycleData = useCycleStore((state) => state) || {};
   const observations = useCycleStore((state) => state.observations || []);
-  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
+  const intelligence = useUserIntelligence();
+  const engagement = useEngagementStore();
+  
+  const currentPhase = getCurrentPhaseAdaptive(
+    cycleData.lastPeriodDate,
+    cycleData.length,
+    cycleData.periodDuration,
+    {
+      mode: 'auto',
+      userIntelligence: intelligence,
+      engagementLevel: engagement?.maturity?.current
+    }
+  );
   const currentDay = getCurrentCycleDay(cycleData.lastPeriodDate, cycleData.length);
   const hasData = !!(cycleData.lastPeriodDate && cycleData.length);
   const { profile } = useUserStore();
   const { theme } = useTheme();
   const { getPhaseLabel } = useTerminology();
-  const intelligence = useUserIntelligence();
 
   const safeProfile = profile || { prenom: null };
   

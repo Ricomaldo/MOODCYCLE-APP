@@ -23,6 +23,10 @@ import { PhaseIcon } from '../../../src/config/iconConstants';
 import QuickTrackingModal from '../../../src/features/notebook/QuickTrackingModal';
 import ParametresModal from '../../../src/core/settings/ParametresModal';
 import { useTerminology } from '../../../src/hooks/useTerminology';
+import { useAdaptiveInterface } from '../../../src/hooks/useAdaptiveInterface';
+import { useUserIntelligence } from '../../../src/stores/useUserIntelligence';
+import { useEngagementStore } from '../../../src/stores/useEngagementStore';
+import { getCurrentPhaseAdaptive } from '../../../src/utils/cycleCalculations';
 
 export default function CycleView() {
   const cycleData = useCycleStore((state) => state);
@@ -30,8 +34,23 @@ export default function CycleView() {
   const endPeriod = useCycleStore((state) => state.endPeriod);
   const observations = useCycleStore((state) => state.observations || []);
   
+  // AJOUT : Intelligence stores
+  const intelligence = useUserIntelligence();
+  const engagement = useEngagementStore();
+  
+  // MODIFICATION : Phase adaptive
+  const currentPhase = getCurrentPhaseAdaptive(
+    cycleData.lastPeriodDate,
+    cycleData.length,
+    cycleData.periodDuration,
+    {
+      mode: 'auto',
+      userIntelligence: intelligence,
+      engagementLevel: engagement?.maturity?.current
+    }
+  );
+  
   const currentDay = getCurrentCycleDay(cycleData.lastPeriodDate, cycleData.length);
-  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
   const phaseInfo = getCurrentPhaseInfo(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
   const nextPeriodDate = getNextPeriodDate(cycleData.lastPeriodDate, cycleData.length);
   const daysUntilNextPeriod = getDaysUntilNextPeriod(cycleData.lastPeriodDate, cycleData.length);
@@ -40,6 +59,14 @@ export default function CycleView() {
   const { profile } = useUserStore();
   const { theme } = useTheme();
   const { getPhaseLabel, getArchetypeLabel } = useTerminology('spiritual');
+  
+  // AJOUT : Adaptive interface
+  const { 
+    layout,
+    features,
+    maturityLevel,
+    config
+  } = useAdaptiveInterface();
 
   const safeProfile = profile || { prenom: null };
   const [showQuickTracking, setShowQuickTracking] = useState(false);
@@ -291,37 +318,72 @@ export default function CycleView() {
           )}
         </View>
 
+        {config.showProgressBar && maturityLevel !== 'autonomous' && (
+          <View style={styles.progressSection}>
+            <Caption style={styles.progressTitle}>
+              Niveau {maturityLevel === 'discovery' ? 'Découverte' : 'Apprentissage'}
+            </Caption>
+            <View style={styles.progressBar}>
+              <View 
+                style={[
+                  styles.progressFill, 
+                  { width: `${engagement.maturity.confidence}%` }
+                ]} 
+              />
+            </View>
+          </View>
+        )}
+
         <View style={styles.actionsGrid}>
-          <TouchableOpacity 
-            style={[
-              styles.actionCard, 
-              theme.getPhaseGlassmorphismStyle(currentPhase, {
-                bgOpacity: theme.glassmorphism.opacity.medium,
-                borderRadius: 12,
-                shadowOpacity: 0,  // Pas de shadow sur les action cards
-              })
-            ]}
-            onPress={handleSymptomTracking}
-          >
-            <Feather name="plus-circle" size={24} color={theme.colors.phases[currentPhase]} />
-            <BodyText style={styles.actionText}>Observer</BodyText>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.actionCard}
-            onPress={handlePredictions}
-          >
-            <Feather name="calendar" size={24} color={theme.colors.secondary} />
-            <BodyText style={styles.actionText}>Prédictions</BodyText>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.actionCard}
-            onPress={handleHistory}
-          >
-            <Feather name="clock" size={24} color={theme.colors.textSecondary} />
-            <BodyText style={styles.actionText}>Historique</BodyText>
-          </TouchableOpacity>
+          {layout.getVisibleActions([
+            {
+              type: 'observation',
+              component: (
+                <TouchableOpacity 
+                  style={[
+                    styles.actionCard, 
+                    theme.getPhaseGlassmorphismStyle(currentPhase, {
+                      bgOpacity: theme.glassmorphism.opacity.medium,
+                      borderRadius: 12,
+                      shadowOpacity: 0,
+                    })
+                  ]}
+                  onPress={handleSymptomTracking}
+                >
+                  <Feather name="plus-circle" size={24} color={theme.colors.phases[currentPhase]} />
+                  <BodyText style={styles.actionText}>Observer</BodyText>
+                </TouchableOpacity>
+              )
+            },
+            {
+              type: 'predictions',
+              component: (
+                <TouchableOpacity 
+                  style={styles.actionCard}
+                  onPress={handlePredictions}
+                >
+                  <Feather name="calendar" size={24} color={theme.colors.secondary} />
+                  <BodyText style={styles.actionText}>Prédictions</BodyText>
+                </TouchableOpacity>
+              )
+            },
+            {
+              type: 'history',
+              component: (
+                <TouchableOpacity 
+                  style={styles.actionCard}
+                  onPress={handleHistory}
+                >
+                  <Feather name="clock" size={24} color={theme.colors.textSecondary} />
+                  <BodyText style={styles.actionText}>Historique</BodyText>
+                </TouchableOpacity>
+              )
+            }
+          ]).map(action => (
+            <React.Fragment key={action.type}>
+              {action.component}
+            </React.Fragment>
+          ))}
         </View>
 
         <View style={styles.periodControlsContainer}>
@@ -578,5 +640,25 @@ const getStyles = (theme, currentPhase) => StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
+  },
+  progressSection: {
+    marginVertical: 16,
+    paddingHorizontal: 16,
+  },
+  progressTitle: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+    marginBottom: 8,
+  },
+  progressBar: {
+    height: 4,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: theme.colors.phases[currentPhase],
+    borderRadius: 2,
   },
 });

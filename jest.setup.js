@@ -60,6 +60,7 @@ global.performance.now = jest.fn(() => Date.now());
 // Mock du store cycle avec le mock du fichier stores.js
 jest.mock('./src/stores/useCycleStore', () => {
   const mockStore = require('./__tests__/__mocks__/stores').mockCycleStore;
+  const { getCycleDataAdaptive } = require('./__tests__/__mocks__/stores');
   return {
     useCycleStore: jest.fn((selector) => {
       // Si pas de selector, retourner le store complet
@@ -73,7 +74,10 @@ jest.mock('./src/stores/useCycleStore', () => {
       currentDay: 2,
       hasData: true,
       cycle: { length: 28 }
-    }))
+    })),
+    getCycleDataAdaptive: getCycleDataAdaptive,
+    getCurrentPhaseFromStore: jest.fn(() => 'follicular'),
+    getCurrentDayFromStore: jest.fn(() => 10)
   };
 });
 
@@ -113,6 +117,14 @@ jest.mock('./src/stores/useChatStore', () => {
   const mockStore = require('./__tests__/__mocks__/stores').mockChatStore;
   return {
     useChatStore: () => mockStore
+  };
+});
+
+// Mock useUserIntelligence avec le mock du fichier stores.js
+jest.mock('./src/stores/useUserIntelligence', () => {
+  const { useUserIntelligence } = require('./__tests__/__mocks__/stores');
+  return {
+    useUserIntelligence: useUserIntelligence
   };
 });
 

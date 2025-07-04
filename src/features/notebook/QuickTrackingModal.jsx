@@ -13,7 +13,7 @@ import * as Haptics from 'expo-haptics';
 import { useTheme } from '../../hooks/useTheme';
 import { Heading2, BodyText, Caption } from '../../core/ui/typography';
 import { useNotebookStore } from '../../stores/useNotebookStore';
-import { useCycleStore } from '../../stores/useCycleStore';
+import { useCycleStore, getCycleDataAdaptive } from '../../stores/useCycleStore';
 import { useUserIntelligence } from '../../stores/useUserIntelligence';
 import { getCurrentPhase } from '../../utils/cycleCalculations';
 
@@ -37,10 +37,10 @@ export default function QuickTrackingModal({ visible, onClose, defaultTags = [] 
   const { theme } = useTheme();
   const styles = getStyles(theme);
   const { addQuickTracking } = useNotebookStore();
-  const cycleData = useCycleStore((state) => state);
+  const cycleData = getCycleDataAdaptive();
   const addObservation = useCycleStore((state) => state.addObservation);
   const { trackObservation } = useUserIntelligence();
-  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
+  const { currentPhase, cycleMode, isObservationBased } = cycleData;
   
   const [energy, setEnergy] = useState(3);
   const [mood, setMood] = useState('neutral');
@@ -178,6 +178,13 @@ export default function QuickTrackingModal({ visible, onClose, defaultTags = [] 
                 <Feather name="x" size={24} color={theme.colors.textLight} />
               </TouchableOpacity>
             </View>
+
+            {/* Badge mode observation */}
+            {isObservationBased && (
+              <View style={styles.observationBadge}>
+                <Caption style={styles.observationBadgeText}>Mode observation actif</Caption>
+              </View>
+            )}
 
             {/* Humeur avec design premium */}
             <View style={styles.section}>
@@ -444,6 +451,22 @@ const getStyles = (theme) => StyleSheet.create({
   },
   closeButton: {
     padding: theme.spacing.s,
+  },
+  observationBadge: {
+    backgroundColor: theme.colors.primary + '10',
+    paddingHorizontal: theme.spacing.m,
+    paddingVertical: theme.spacing.s,
+    marginHorizontal: theme.spacing.l,
+    marginBottom: theme.spacing.m,
+    borderRadius: theme.borderRadius.medium,
+    borderWidth: 1,
+    borderColor: theme.colors.primary + '30',
+    alignItems: 'center',
+  },
+  observationBadgeText: {
+    fontSize: 12,
+    color: theme.colors.primary,
+    fontWeight: '600',
   },
   section: {
     marginBottom: theme.spacing.xl,

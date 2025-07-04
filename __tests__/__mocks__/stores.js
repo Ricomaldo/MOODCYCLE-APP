@@ -29,6 +29,14 @@ let mockState = {
     personalityMatch: null, position: 'bottom-right', animated: true,
   },
   syncMetadata: { lastSyncAt: null, pendingSync: false },
+  // Données du cycle
+  lastPeriodDate: new Date().toISOString(),
+  cycleLength: 28,
+  periodDuration: 5,
+  isRegular: true,
+  trackingExperience: 'basic',
+  observations: [],
+  detectedPatterns: null,
 };
 
 export const mockUserData = {
@@ -106,6 +114,7 @@ export const mockIntelligence = {
   trackSuggestionShown: jest.fn(),
   trackSuggestionClicked: jest.fn(),
   trackInteraction: jest.fn(),
+  trackObservation: jest.fn(), // ✅ AJOUT FONCTION MANQUANTE
   // ✅ AJOUT MÉTHODES MANQUANTES
   getOptimalInteractionTime: jest.fn().mockReturnValue({
     isOptimalNow: false,
@@ -115,6 +124,13 @@ export const mockIntelligence = {
     predictedMood: 'positive'
   })
 };
+
+// Mock pour useUserIntelligence avec getState()
+export const useUserIntelligence = jest.fn(() => mockIntelligence);
+useUserIntelligence.getState = jest.fn(() => mockIntelligence);
+
+// Export aussi comme export par défaut pour compatibilité
+export default useUserIntelligence;
 
 // État mutable pour le mock chat store
 let mockChatState = {
@@ -1006,3 +1022,50 @@ export const mockNetworkQueue = {
   enqueue: jest.fn().mockResolvedValue(true),
   process: jest.fn().mockResolvedValue(true)
 };
+
+// Mock getCycleDataAdaptive
+export const getCycleDataAdaptive = jest.fn(() => ({
+  lastPeriodDate: mockState.lastPeriodDate,
+  length: mockState.cycleLength,
+  periodDuration: mockState.periodDuration,
+  isRegular: mockState.isRegular,
+  trackingExperience: mockState.trackingExperience,
+  observations: mockState.observations || [],
+  detectedPatterns: mockState.detectedPatterns,
+  // Méthodes calculées
+  currentPhase: 'follicular',
+  currentDay: 10,
+  phaseInfo: {
+    phase: 'follicular',
+    day: 10,
+    name: 'Folliculaire',
+    emoji: '🌱',
+    color: '#F57C00',
+    energy: 'croissance',
+    description: 'Nouvelle énergie et créativité'
+  },
+  nextPeriodDate: new Date(Date.now() + 18 * 24 * 60 * 60 * 1000).toISOString(),
+  daysUntilNextPeriod: 18,
+  hasData: true,
+  hasObservations: false,
+  // AJOUT pour intelligence
+  cycleMode: 'predictive',
+  isObservationBased: false,
+  observationData: null,
+  maturityLevel: 'discovery'
+}));
+
+// Modifier le mock useCycleStore pour inclure getCycleDataAdaptive
+export const useCycleStore = jest.fn((selector) => {
+  const mockStore = {
+    // ... propriétés existantes ...
+    getCycleDataAdaptive, // Ajouter cette ligne
+  };
+  
+  return selector ? selector(mockStore) : mockStore;
+});
+
+
+
+// Exporter aussi séparément pour l'import named
+module.exports.getCycleDataAdaptive = getCycleDataAdaptive;

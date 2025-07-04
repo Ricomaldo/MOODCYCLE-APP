@@ -5,8 +5,9 @@
 import { useMemo, useCallback } from 'react';
 import { useUserStore } from '../stores/useUserStore';
 import { useUserIntelligence } from '../stores/useUserIntelligence';
+import { useEngagementStore } from '../stores/useEngagementStore';
 import { useCycleStore } from '../stores/useCycleStore';
-import { getCurrentPhase } from '../utils/cycleCalculations';
+import { getCurrentPhase, getCurrentPhaseAdaptive } from '../utils/cycleCalculations';
 import { usePersona } from './usePersona';
 import { createPersonalizationEngine } from '../services/PersonalizationEngine';
 import CycleObservationEngine from '../services/CycleObservationEngine';
@@ -53,8 +54,19 @@ export function useSmartSuggestions() {
   const { current: persona } = usePersona();
   // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
   const cycleData = useCycleStore((state) => state);
-  const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
   const intelligence = useUserIntelligence();
+  const engagement = useEngagementStore();
+  
+  const currentPhase = getCurrentPhaseAdaptive(
+    cycleData.lastPeriodDate,
+    cycleData.length,
+    cycleData.periodDuration,
+    {
+      mode: 'auto',
+      userIntelligence: intelligence,
+      engagementLevel: engagement?.maturity?.current
+    }
+  );
 
   // ✅ Stabilisation des dépendances
   const stablePreferences = useMemo(() => preferences, [preferences]);
