@@ -33,6 +33,8 @@ import { useCycleStore } from '../../stores/useCycleStore';
 import { getCurrentPhase } from '../../utils/cycleCalculations';
 import { useSmartSuggestions, useSmartChatSuggestions } from '../../hooks/useSmartSuggestions';
 import { useAdaptiveInterface } from '../../hooks/useAdaptiveInterface';
+import NetInfo from '@react-native-community/netinfo';
+import { getEndpointUrl, getApiConfig } from '../../config/api';
 
 // Composant TypingIndicator optimisé
 function TypingIndicator({ theme }) {
@@ -216,33 +218,73 @@ export default function ChatModal() {
     scrollToBottom();
 
     try {
-      const response = await ChatService.sendMessage(currentInput, conversationContext);
+      // 🔍 DIAGNOSTIC DÉTAILLÉ
+      const startTime = Date.now();
+      const networkInfo = await NetInfo.fetch();
       
-      if (response.success && refs.mounted.current) {
+      console.info('🚀 Sending message:', {
+        message: currentInput.substring(0, 50) + '...',
+        networkConnected: networkInfo.isConnected,
+        networkReachable: networkInfo.isInternetReachable,
+        networkType: networkInfo.type,
+        timestamp: new Date().toISOString()
+      });
+
+      const response = await ChatService.sendMessage(currentInput, conversationContext);
+      const responseTime = Date.now() - startTime;
+      
+      console.info('✅ Response received:', {
+        responseLength: response?.length || 0,
+        responseTime: responseTime + 'ms',
+        responsePreview: response?.substring(0, 100) + '...',
+        timestamp: new Date().toISOString()
+      });
+      
+      if (response && refs.mounted.current) {
         const meluneMessage = {
           id: Date.now() + 1,
-          text: response.message,
+          text: response,  // ✅ CORRECTION : response est directement le texte
           isUser: false,
-          source: response.source,
+          source: "api",
         };
         
         setMessages((prev) => [...prev, meluneMessage]);
-        addMessage('melune', response.message, {
-          source: response.source,
+        addMessage('melune', response, {
+          source: "api",
           intelligence: { maturityLevel }
         });
         scrollToBottom();
+      } else if (!response) {
+        console.warn('⚠️ Empty response received');
       }
     } catch (error) {
-      console.error("💬 Chat error:", error);
+      // 🔍 DIAGNOSTIC D'ERREUR DÉTAILLÉ
+      const networkInfo = await NetInfo.fetch();
+      console.error("💬 Chat error détaillé:", {
+        error: error.message,
+        stack: error.stack,
+        networkConnected: networkInfo.isConnected,
+        networkReachable: networkInfo.isInternetReachable,
+        networkType: networkInfo.type,
+        apiUrl: getEndpointUrl('chat'),
+        timeout: getApiConfig().timeout,
+        timestamp: new Date().toISOString()
+      });
+      
       if (refs.mounted.current) {
+        // ✅ UTILISER LE FALLBACK INTELLIGENT
+        const fallbackResponse = ChatService.getSmartFallbackResponse(currentInput);
         const errorMessage = {
           id: Date.now() + 1,
-          text: "Désolée, je rencontre un petit souci technique. Peux-tu réessayer ?",
+          text: fallbackResponse,
           isUser: false,
-          source: "error",
+          source: "smart_fallback",
         };
         setMessages((prev) => [...prev, errorMessage]);
+        addMessage('melune', fallbackResponse, {
+          source: "smart_fallback",
+          intelligence: { maturityLevel }
+        });
       }
     } finally {
       if (refs.mounted.current) setIsLoading(false);

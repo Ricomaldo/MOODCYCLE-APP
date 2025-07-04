@@ -284,7 +284,7 @@ export default function ConseilsView() {
             >
               <View style={styles.intelligenceHeader}>
                 <Feather 
-                  name={confidence > 60 ? "sparkles" : "brain"} 
+                  name={confidence > 60 ? "sparkles" : "cpu"} 
                   size={16} 
                   color={theme.colors.primary} 
                 />

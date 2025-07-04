@@ -111,7 +111,7 @@ export const useUserIntelligence = create(
       trackInteraction: (type, data = {}) => {
         const now = new Date();
         const hour = now.getHours();
-        const day = now.toLocaleDateString('en', { weekday: 'lowercase' });
+        const day = now.toLocaleDateString('en', { weekday: 'long' }).toLowerCase();
         
         set(state => {
           const newLearning = { ...state.learning };
