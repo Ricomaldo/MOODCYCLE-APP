@@ -47,6 +47,7 @@ export default function CycleScreen() {
   const [lastPeriodDate, setLastPeriodDate] = useState(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
   const [cycleLength, setCycleLength] = useState(28);
   const [showDateModal, setShowDateModal] = useState(false);
+  const [showEncouragement, setShowEncouragement] = useState(false);
   
   // Animations
   const messageAnim = useRef(new Animated.Value(0)).current;
@@ -127,9 +128,18 @@ export default function CycleScreen() {
       lastPeriodDate: lastPeriodDate.toISOString()
     });
     
-    setTimeout(() => {
-      router.push('/onboarding/800-preferences');
-    }, ANIMATION_DURATIONS.elegant);
+    // Afficher encouragement si persona disponible
+    if (intelligence.personaConfidence >= 0.4) {
+      setShowEncouragement(true);
+      // Délai légèrement augmenté pour laisser le temps de lire
+      setTimeout(() => {
+        router.push('/onboarding/800-preferences');
+      }, ANIMATION_DURATIONS.elegant + 500);
+    } else {
+      setTimeout(() => {
+        router.push('/onboarding/800-preferences');
+      }, ANIMATION_DURATIONS.elegant);
+    }
   };
 
   return (
@@ -270,6 +280,18 @@ export default function CycleScreen() {
                 <BodyText style={styles.lengthRange}>Entre 25 et 35 jours</BodyText>
               </View>
             </Animated.View>
+            
+            {/* Encouragement après configuration */}
+            {showEncouragement && intelligence.personaConfidence >= 0.4 && (
+              <Animated.View style={{
+                opacity: lengthControlsAnim,
+                marginTop: theme.spacing.xl
+              }}>
+                <BodyText style={styles.encouragementText}>
+                  {intelligence.getPersonalizedMessage('encouragement')}
+                </BodyText>
+              </Animated.View>
+            )}
           </View>
         </ScrollView>
 
@@ -456,8 +478,10 @@ const getStyles = (theme) => StyleSheet.create({
   },
 
   encouragementText: {
-    fontSize: 16,
-    color: theme.colors.textLight,
+    fontSize: 14,
+    color: theme.colors.primary,
     textAlign: 'center',
+    fontStyle: 'italic',
+    paddingHorizontal: theme.spacing.xl,
   },
 });

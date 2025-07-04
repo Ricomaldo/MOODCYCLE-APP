@@ -99,6 +99,13 @@ export const useOnboardingIntelligence = (screenName) => {
     
     // Mettre à jour la persona calculée
     const personaResult = calculateProgressivePersona;
+    
+    // Debug persona progression (à retirer en production)
+    // console.log(`🎯 ${screenName}: Persona=${personaResult.assigned || 'none'} Conf=${Math.round(personaResult.confidence*100)}%`);
+    // if (personaResult.scores) {
+    //   console.log(`📊 Scores:`, Object.entries(personaResult.scores).map(([p, s]) => `${p}=${Math.round(s*100)}%`).join(', '));
+    // }
+    
     if (personaResult.assigned && personaResult.confidence >= 0.4) {
       setCurrentPersona(personaResult.assigned);
       setPersonaConfidence(personaResult.confidence);

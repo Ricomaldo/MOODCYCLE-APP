@@ -96,6 +96,12 @@ export default function PrenomScreen() {
       prenom: trimmedPrenom,
     });
     
+    // Message de confirmation personnalisé
+    if (intelligence.personaConfidence >= 0.4) {
+      const confirmation = intelligence.getPersonalizedMessage('confirmation', { prenom: trimmedPrenom });
+      // console.log('Confirmation:', confirmation); // Debug à retirer en production
+    }
+    
     // 🧠 Track finalisation relation
     intelligence.trackAction('relationship_initialized', {
       prenom: trimmedPrenom
@@ -108,11 +114,13 @@ export default function PrenomScreen() {
   };
 
   const generatePersonalizedPreview = () => {
+    if (!prenom.trim()) return null;
+    
     if (intelligence.personaConfidence >= 0.4) {
-      return intelligence.getPersonalizedMessage('preview', { prenom });
+      return intelligence.getPersonalizedMessage('preview', { prenom: prenom.trim() });
     }
-    // Fallback si pas de persona détectée
-    return `Hey ${prenom} ! Je suis trop contente de faire ta connaissance ! ��`;
+    
+    return `${prenom.trim()} ! Je suis trop contente de faire ta connaissance ! 💖`;
   };
 
   return (

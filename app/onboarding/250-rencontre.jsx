@@ -14,6 +14,7 @@ import OnboardingScreen from '../../src/core/layout/OnboardingScreen';
 import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { useUserStore } from '../../src/stores/useUserStore';
+import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
 import { 
   AnimatedRevealMessage,
   AnimatedOnboardingScreen,
@@ -48,6 +49,7 @@ export default function RencontreScreen() {
   const { theme } = useTheme();
   const styles = getStyles(theme);
   const { profile, updateProfile } = useUserStore();
+  const intelligence = useOnboardingIntelligence('250-rencontre');
   
   // États
   const [selectedChoice, setSelectedChoice] = useState(profile.journeyChoice || null);
@@ -74,7 +76,9 @@ export default function RencontreScreen() {
           <View style={styles.messageSection}>
             <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage}>
               <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
-                Je sens que tu es en quête de quelque chose de profond... Confie-moi ce qui t'appelle
+                {selectedChoice 
+                  ? intelligence.getPersonalizedMessage('journey', { journeyChoice: selectedChoice }) 
+                  : "Je sens que tu es en quête de quelque chose de profond... Confie-moi ce qui t'appelle"}
               </BodyText>
             </AnimatedRevealMessage>
           </View>

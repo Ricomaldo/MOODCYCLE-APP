@@ -100,9 +100,11 @@ export default function PreferencesScreen() {
     return defaultPreferences;
   });
 
+  const selectedCount = Object.values(currentPreferences).filter(v => v > 0).length;
+
   // Pré-sélections intelligentes selon persona
   useEffect(() => {
-    if (intelligence.currentPersona && intelligence.personaConfidence >= 0.8) {
+    if (intelligence.currentPersona && intelligence.personaConfidence >= 0.6 && Object.values(currentPreferences).every(v => v === 0)) {
       const preselections = {
         emma: { moods: 3, phases: 3 },
         laure: { moods: 3, phases: 5, rituals: 3 },
@@ -112,13 +114,10 @@ export default function PreferencesScreen() {
       };
       
       const suggestions = preselections[intelligence.currentPersona];
-      if (suggestions && !preferences) { // Seulement si pas de préférences déjà sauvées
+      if (suggestions) {
         setCurrentPreferences(prev => ({
           ...prev,
-          ...Object.entries(suggestions).reduce((acc, [key, value]) => ({
-            ...acc,
-            [key]: prev[key] || value  // Ne pas écraser si déjà défini
-          }), {})
+          ...suggestions
         }));
       }
     }
@@ -208,7 +207,7 @@ export default function PreferencesScreen() {
           <View style={styles.messageSection}>
             <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage}>
               <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
-                {intelligence.personaConfidence >= 0.8 
+                {intelligence.personaConfidence >= 0.6
                   ? intelligence.getPersonalizedMessage('message')
                   : "Chaque femme a sa propre sagesse... Dis-moi ce qui résonne en toi"}
               </BodyText>
@@ -273,6 +272,19 @@ export default function PreferencesScreen() {
               );
             })}
           </View>
+
+          {/* Feedback selon nombre de sélections */}
+          {intelligence.personaConfidence >= 0.6 && (
+            <View style={styles.feedbackContainer}>
+              <BodyText style={styles.feedbackText}>
+                {intelligence.getPersonalizedMessage(
+                  selectedCount === 0 ? 'zero_selected' :
+                  selectedCount >= 4 ? 'many_selected' :
+                  'some_selected'
+                )}
+              </BodyText>
+            </View>
+          )}
         </ScrollView>
 
         {/* Indicateur de scroll */}
@@ -411,10 +423,16 @@ const getStyles = (theme) => StyleSheet.create({
     marginBottom: theme.spacing.xs,
   },
   
+  feedbackContainer: {
+    paddingHorizontal: theme.spacing.xl,
+    paddingTop: theme.spacing.l,
+    alignItems: 'center',
+  },
+
   feedbackText: {
-    fontSize: 16,
-    color: theme.colors.text,
+    fontSize: 14,
+    color: theme.colors.primary,
     textAlign: 'center',
-    marginTop: theme.spacing.m,
+    fontStyle: 'italic',
   },
 });

@@ -189,6 +189,18 @@ export default function AvatarScreen() {
     }
   };
 
+  const getRecommendedStyle = () => {
+    const persona = intelligence.currentPersona;
+    const recommendations = {
+      emma: 'modern',
+      laure: 'modern',
+      clara: 'mystique',
+      sylvie: 'classic',
+      christine: 'mystique'
+    };
+    return recommendations[persona] || 'modern';
+  };
+
   const renderOptionCard = (category, option) => {
     const isSelected = selections[category] === option.id;
     const isStyleCategory = category === 'style';
@@ -230,6 +242,12 @@ export default function AvatarScreen() {
             ]}>
               {option.description}
             </BodyText>
+            {/* Suggestion personnalisée pour le style */}
+            {category === 'style' && option.id === getRecommendedStyle() && intelligence.personaConfidence >= 0.4 && (
+              <BodyText style={styles.styleHint}>
+                {intelligence.getPersonalizedMessage('style_hint')}
+              </BodyText>
+            )}
           </View>
           {isSelected && (
             <View style={styles.selectedIndicator}>
@@ -413,6 +431,13 @@ const getStyles = (theme) => StyleSheet.create({
   optionDescription: {
     fontSize: 14,
     color: theme.colors.textLight,
+  },
+
+  styleHint: {
+    fontSize: 12,
+    color: theme.colors.primary,
+    fontStyle: 'italic',
+    marginTop: theme.spacing.xs,
   },
   
   selectedIndicator: {

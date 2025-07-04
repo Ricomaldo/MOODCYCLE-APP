@@ -1,231 +1,213 @@
 # Système de Personnalisation IA - MoodCycle
 
-## 🚨 **MISSION CAPITALE - UPGRADE PHASES.JSON**
+## 🧠 Architecture des Données pour l'IA
 
-### ⚠️ **ALERTE CRITIQUE - API ADMIN À METTRE À JOUR**
+Ce système permet à l'IA de générer des conseils personnalisés en combinant plusieurs sources de données JSON sans avoir besoin d'accéder aux fichiers volumineux directement.
 
-**Date** : 26 juin 2025  
-**Priorité** : CRITIQUE  
-**Impact** : Système de personnalisation IA  
+### 🎯 Principe de Génération
+```
+Conseil Personnalisé = Context(phases) + Persona(insights) + Journey(closings) + Prenom(user)
+```
 
-### 🔄 **Changements Majeurs dans phases.json**
+## 📁 Structure des Fichiers de Données
 
-#### **Nouvelle Structure `editableContent`**
+### `phases.json` (15KB - 4 phases cycliques)
+**Objectif** : Contenu de base et enrichissements contextuels par phase
+**Structure** :
 ```json
 {
-  "editableContent": {
-    "description": "Contenu enrichi et personnalisé",
-    "advice": {
-      "nutrition": [...],
-      "activities": [...], 
-      "selfcare": [...],
-      "avoid": [...]
-    },
-    "rituals": [...],
-    "affirmation": "..."
-  }
-}
-```
-
-#### **Enrichissements Contextuels Réduits**
-- **AVANT** : 5 enrichissements par phase (20 total)
-- **MAINTENANT** : 1 enrichissement par phase (4 total)
-- **MISSING** : 16 enrichissements à recréer via API admin
-
-### 🎯 **Actions Requises - API Admin**
-
-#### **1. Migration Structure**
-```javascript
-// Ancien format → Nouveau format
-const oldPhase = {
-  description: "...",
-  advice: {...},
-  rituals: [...],
-  affirmation: "..."
-};
-
-const newPhase = {
-  editableContent: {
-    description: oldPhase.description,
-    advice: oldPhase.advice,
-    rituals: oldPhase.rituals,
-    affirmation: oldPhase.affirmation
-  }
-};
-```
-
-#### **2. Recréation Enrichissements Contextuels**
-- **16 enrichissements manquants** à recréer
-- **Structure cible** : 5 personas × 4 phases = 20 enrichissements
-- **Format** : `{targetPersona, targetPreferences, targetJourney, tone, contextualText}`
-
-#### **3. Validation Contenu**
-- ✅ **4 phases** avec `editableContent` complet
-- ❌ **16 enrichissements** à recréer
-- ❌ **API admin** à adapter à la nouvelle structure
-
-### 📊 **État de Migration**
-
-| Élément | Status | Actions |
-|---------|--------|---------|
-| `editableContent` | ✅ **COMPLET** | 4 phases migrées |
-| `contextualEnrichments` | ❌ **INCOMPLET** | 16/20 manquants |
-| API Admin | ❌ **À METTRE À JOUR** | Structure + Contenu |
-| Tests | ❌ **À ADAPTER** | Nouvelle structure |
-
----
-
-## 🎯 Architecture des Données
-
-### Génération de Conseils Personnalisés
-```
-Conseil = phases.contextualEnrichments + prénom + insight.personaVariants + closings.journey
-```
-
-## 📁 Fichiers Principaux
-
-### `phases.json` (15KB - **4 phases avec editableContent**)
-- **Statut** : ✅ Structure migrée, ❌ Enrichissements incomplets
-- **Nouveauté** : Structure `editableContent` pour API admin
-- **Manquant** : 16 enrichissements contextuels (5 personas × 4 phases - 4 existants)
-
-```json
-{
-  "menstrual": {
+  "phase_name": {
     "editableContent": {
-      "description": "Temps de renouvellement profond...",
+      "description": "Description base de la phase",
       "advice": {
-        "nutrition": [...],
-        "activities": [...],
-        "selfcare": [...],
-        "avoid": [...]
+        "nutrition": ["conseil1", "conseil2"],
+        "activities": ["activité1", "activité2"], 
+        "selfcare": ["soin1", "soin2"],
+        "avoid": ["éviter1", "éviter2"]
       },
-      "rituals": [...],
-      "affirmation": "..."
+      "rituals": ["rituel1", "rituel2"],
+      "affirmation": "Affirmation inspirante"
     },
     "contextualEnrichments": [
-      // ❌ SEULEMENT 1/5 enrichissements présents
+      {
+        "targetPersona": "emma|laure|clara|sylvie|christine",
+        "targetPreferences": ["symptoms", "moods", "phyto", "phases", "lithotherapy", "rituals"],
+        "targetJourney": "body_disconnect|hiding_nature|emotional_control",
+        "tone": "friendly|professional|inspiring",
+        "contextualText": "Texte enrichi selon contexte"
+      }
     ]
   }
 }
 ```
 
-### `phases.backup.json` (15KB - **Ancienne structure complète**)
-- **Statut** : Sauvegarde de l'ancienne structure
-- **Contient** : 20 enrichissements contextuels complets
-- **Usage** : Référence pour recréer les enrichissements manquants
-
-### `insights.json` (Production - **178 insights** validés)
-- **Statut** : Contenu validé sans variantes persona
-- **Structure** : `baseContent` uniquement
-- **Usage** : Système actuel avec fallback générique
-
+### `insights.json` (Production - 178 insights validés)
+**Objectif** : Conseils personnalisés par phase/persona/préférences
+**Structure actuelle** :
 ```json
 {
   "id": "M_symptoms_friendly_01",
-  "baseContent": "Tes crampes te parlent aujourd'hui ! 💕 Ton corps fait un travail incroyable. Essaie une bouillotte bien chaude et écoute ce qu'il te demande.",
-  "targetPreferences": ["symptoms"],
-  "tone": "friendly",
-  "phase": "menstrual",
+  "baseContent": "Conseil générique applicable à tous",
+  "targetPreferences": ["symptoms", "moods"],
+  "tone": "friendly|professional|inspiring", 
+  "phase": "menstrual|follicular|ovulatory|luteal",
+  "targetPersonas": ["emma", "laure"],
+  "journeyChoice": "body_disconnect",
   "jezaApproval": 1,
   "status": "validated"
 }
 ```
 
-### `insights.future.json` (Développement - **13 insights** avec variantes)
-- **Statut** : Édition des variantes dans l'interface admin
-- **Structure** : `baseContent` + `personaVariants` par persona
-- **Usage** : Système cible avec personnalisation maximale
-
+### `insights.future.json` (Développement - 13 insights avec variantes)
+**Objectif** : Evolution vers personnalisation maximale par persona
+**Structure cible** :
 ```json
 {
   "id": "M_symptoms_friendly_01",
-  "baseContent": "Tes crampes te parlent aujourd'hui ! 💕 Ton corps fait un travail incroyable.",
+  "baseContent": "Conseil de base",
   "personaVariants": {
-    "emma": "Tes crampes te parlent aujourd'hui ! 💕 C'est normal, ton corps apprend à communiquer avec toi.",
-    "laure": "Tes crampes signalent une phase importante de ton cycle. 💕 Optimise ta journée en t'accordant cette pause.",
-    "sylvie": "Ces crampes sont un signal de ton corps en transition. 💕 Accueille-les avec bienveillance.",
-    "christine": "Tes crampes portent la sagesse de tes cycles passés. 💕 Honore cette douleur sacrée.",
-    "clara": "Tes crampes indiquent le processus physiologique actuel. 💕 Optimise ta récupération avec une thermothérapie."
+    "emma": "Version adaptée pour Emma (18-25 ans, découverte)",
+    "laure": "Version adaptée pour Laure (26-35 ans, optimisation)",
+    "clara": "Version adaptée pour Clara (26-35 ans, empowerment)",
+    "sylvie": "Version adaptée pour Sylvie (36-45 ans, naturel)",
+    "christine": "Version adaptée pour Christine (46+ ans, spirituel)"
   },
-  "targetPersonas": ["emma", "laure", "sylvie", "christine", "clara"],
-  "journeyChoice": "body_disconnect"
+  "targetPersonas": ["emma", "laure", "clara", "sylvie", "christine"],
+  "journeyChoice": "body_disconnect|hiding_nature|emotional_control"
 }
 ```
 
-### `closings.json` (1KB - **5 personas × 3 journeys = 15** clôtures)
-- **Rôle** : Conclusions personnalisées par persona et journey
-- **Structure** : `persona → journey → texte_clôture`
-- **Usage** : Suffixe des conseils générés
-
+### `closings.json` (1KB - 15 clôtures personnalisées)
+**Objectif** : Conclusions adaptées par persona et journey
+**Structure** :
 ```json
 {
-  "emma": {
-    "body": "Je t'accompagne dans cette reconnexion avec ton corps",
-    "nature": "Je t'aide à célébrer ta nature cyclique authentique", 
-    "emotions": "Je te guide vers une relation apaisée avec tes émotions"
+  "persona": {
+    "journey_type": "Conclusion personnalisée pour cette combinaison"
   }
 }
 ```
 
-### `vignettes.json` (17KB - **60 vignettes** d'actions)
-- **Rôle** : Navigation personnalisée par IA
-- **Structure** : Suggestions d'actions par phase/persona
-- **Usage** : Interface adaptative selon profil utilisateur
-
+### `vignettes.json` (17KB - 60 actions contextuelles)
+**Objectif** : Suggestions d'actions par phase/persona pour navigation IA
+**Structure** :
 ```json
 {
-  "id": "menstrual_emma_1",
-  "icon": "💭",
-  "title": "Explore tes ressentis",
-  "action": "chat",
-  "prompt": "Melune, comment mieux honorer mon besoin de repos aujourd'hui ? 🌙",
-  "category": "emotions"
+  "id": "phase_persona_number",
+  "icon": "emoji",
+  "title": "Action suggérée",
+  "action": "chat|phase|notebook",
+  "prompt": "Prompt pré-rempli pour Mélune",
+  "category": "emotions|symptoms|energy"
 }
 ```
 
 ## 🧠 Logique de Sélection IA
 
 ### Critères de Matching
-- **Phase** : menstrual, follicular, ovulatory, luteal
-- **Persona** : emma, laure, sylvie, christine, clara
+- **Phase cyclique** : menstrual, follicular, ovulatory, luteal
+- **Persona** : emma (18-25), laure (26-35), clara (26-35), sylvie (36-45), christine (46+)
 - **Préférences** : symptoms, moods, phyto, phases, lithotherapy, rituals
 - **Journey** : body_disconnect, hiding_nature, emotional_control
 - **Tone** : friendly, professional, inspiring
 
+### Algorithme de Sélection
+1. **Filtrage par phase** : Sélectionner les insights de la phase actuelle
+2. **Score persona** : Prioriser les insights ciblant la persona détectée
+3. **Score préférences** : Pondérer selon les préférences utilisateur
+4. **Score journey** : Bonus si correspond au parcours choisi
+5. **Fallback** : Si aucun match optimal, utiliser baseContent générique
+
 ### Priorité de Génération
-1. `insights.future.json` → `personaVariants[persona]` (optimal)
-2. `insights.json` → `baseContent` (fallback actuel)
-3. Sélection par score de correspondance des critères
+1. `insights.future.json` → `personaVariants[persona]` (optimal, futur)
+2. `insights.json` → `baseContent` (actuel, fallback)
+3. `phases.json` → `contextualEnrichments` pour enrichir le contexte
 
-## 🔄 État de Migration
+## 🎯 Patterns d'Utilisation IA
 
-**Aujourd'hui (26 juin)** :
-- ✅ **178 insights** validés dans `insights.json`
-- ✅ **4 phases** avec `editableContent` complet dans `phases.json`
-- ❌ **16 enrichissements contextuels** manquants dans `phases.json`
-- 🔄 **13 insights** avec variantes dans `insights.future.json`
-- 🎯 **MISSION CAPITALE** : API admin à mettre à jour pour nouvelle structure
-
-## 🚀 Système Cible
-
+### Génération de Conseil Personnalisé
 ```javascript
-// Génération optimale future
-const conseil = {
-  contexte: phases[phase].contextualEnrichments[persona][preferences][journey],
-  prenom: user.prenom,
-  contenu: insights.future[phase].personaVariants[persona], // au lieu de baseContent
-  cloture: closings[persona][journey]
+function generatePersonalizedAdvice(user, currentPhase) {
+  // 1. Sélectionner insights selon critères
+  const insights = selectInsights(user.persona, user.preferences, currentPhase);
+  
+  // 2. Enrichir avec contexte phase
+  const context = getPhaseContext(currentPhase, user.persona);
+  
+  // 3. Personnaliser avec prénom
+  const personalizedContent = personalize(insights.content, user.prenom);
+  
+  // 4. Ajouter clôture adaptée
+  const closing = getClosing(user.persona, user.journey);
+  
+  return `${context} ${personalizedContent} ${closing}`;
 }
 ```
 
-## 📊 Intelligence Adaptative
+### Navigation Adaptative
+```javascript
+function getSuggestedActions(user, currentPhase) {
+  // Filtrer vignettes par phase et persona
+  return vignettes.filter(v => 
+    v.phase === currentPhase && 
+    v.targetPersona === user.persona
+  ).slice(0, 3); // Top 3 suggestions
+}
+```
 
-Les **60 vignettes** permettent à l'IA de proposer des actions contextuelles :
-- Suggestions de chat avec prompts pré-remplis
-- Navigation vers phases détaillées
-- Ouverture du carnet avec questions ciblées
-- Adaptation selon persona et phase cyclique (4 phases × 5 personas × 3 actions)
+## 🔄 Évolution du Système
+
+### État Actuel
+- **insights.json** : 178 conseils validés avec `baseContent` générique
+- **phases.json** : Structure `editableContent` prête pour admin
+- **Sélection** : Algorithme de matching fonctionnel
+
+### Évolution Cible
+- **insights.future.json** : Variants par persona pour personnalisation maximale
+- **API Admin** : Interface d'édition pour enrichissements contextuels
+- **IA Avancée** : Génération dynamique selon profil complet
+
+## 🎨 Personnalisation par Persona
+
+### Emma (18-25 ans, Découverte)
+- **Tone** : friendly, encouraging
+- **Keywords** : découverte, apprentissage, première fois
+- **Style** : Émojis, langage accessible
+
+### Laure (26-35 ans, Optimisation)  
+- **Tone** : professional, efficient
+- **Keywords** : optimisation, performance, équilibre
+- **Style** : Concis, orienté résultats
+
+### Clara (26-35 ans, Empowerment)
+- **Tone** : inspiring, energetic
+- **Keywords** : pouvoir, confiance, révolution
+- **Style** : Motivant, moderne
+
+### Sylvie (36-45 ans, Naturel)
+- **Tone** : gentle, holistic
+- **Keywords** : nature, équilibre, sagesse
+- **Style** : Apaisant, connecté
+
+### Christine (46+ ans, Spirituel)
+- **Tone** : wise, inspiring
+- **Keywords** : sagesse, transformation, honneur
+- **Style** : Respectueux, profond
+
+## 📊 Métriques de Performance IA
+
+### Scoring des Insights
+- **Match exact persona** : +10 points
+- **Match préférences** : +5 points par préférence
+- **Match journey** : +3 points
+- **Phase appropriée** : +15 points
+- **Tone adapté** : +2 points
+
+### Optimisation Sélection
+- **Cache** : Résultats par (persona, phase, préférences)
+- **Fallback** : Toujours garantir une réponse
+- **Diversité** : Éviter répétition sur 7 jours
 
 ---
-*README orienté IA - Structure de données pour personnalisation maximale* 
+
+*Architecture données optimisée pour collaboration IA sans transfert de fichiers volumineux* 

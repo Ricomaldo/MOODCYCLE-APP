@@ -64,6 +64,7 @@ export default function EtapeVieScreen() {
   
   // États
   const [selectedAge, setSelectedAge] = useState(profile.ageRange || null);
+  const [showEncouragement, setShowEncouragement] = useState(false);
   const indicatorOpacity = useRef(new Animated.Value(1)).current;
 
   // Préparation des données avec les couleurs du thème
@@ -77,6 +78,11 @@ export default function EtapeVieScreen() {
   const handleAgeSelect = (ageRange) => {
     setSelectedAge(ageRange.id);
     updateProfile({ ageRange: ageRange.id });
+    
+    // Afficher l'encouragement si persona disponible
+    if (intelligence.personaConfidence >= 0.4) {
+      setShowEncouragement(true);
+    }
     
     intelligence.trackAction('age_range_selected', {
       range: ageRange.id
@@ -156,6 +162,17 @@ export default function EtapeVieScreen() {
                 </AnimatedCascadeCard>
               ))}
             </View>
+            
+            {/* Encouragement personnalisé après sélection */}
+            {showEncouragement && selectedAge && intelligence.personaConfidence >= 0.4 && (
+              <View style={styles.encouragementContainer}>
+                <AnimatedRevealMessage delay={300}>
+                  <BodyText style={styles.encouragementText}>
+                    {intelligence.getPersonalizedMessage('encouragement')}
+                  </BodyText>
+                </AnimatedRevealMessage>
+              </View>
+            )}
           </View>
         </ScrollView>
 
@@ -298,5 +315,18 @@ const getStyles = (theme) => StyleSheet.create({
   scrollIndicatorLabel: {
     fontSize: 12,
     color: theme.colors.textLight,
+  },
+
+  encouragementContainer: {
+    marginTop: theme.spacing.xl,
+    paddingHorizontal: theme.spacing.m,
+    alignItems: 'center',
+  },
+
+  encouragementText: {
+    fontSize: 16,
+    color: theme.colors.primary,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });
