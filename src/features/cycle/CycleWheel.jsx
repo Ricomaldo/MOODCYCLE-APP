@@ -14,12 +14,13 @@ import { useTheme } from '../../hooks/useTheme';
 import { CYCLE_DEFAULTS, PHASE_NAMES, WHEEL_CONSTANTS, THERAPEUTIC_WHEEL } from '../../config/cycleConstants';
 import { getPhaseSymbol, getPhaseMetadata } from '../../utils/formatters';
 import { useCycleStore } from '../../stores/useCycleStore';
+import { useUserStore } from '../../stores/useUserStore';
 import { getCurrentPhase, getCurrentCycleDay } from '../../utils/cycleCalculations';
 import { useTerminology } from '../../hooks/useTerminology';
 
 export default function CycleWheel({
   size = 250,
-  userName = 'Emma',
+  userName, // ✅ OPTIONNEL - peut être fourni en prop ou récupéré automatiquement du store utilisateur
   onPhasePress = () => {},
 }) {
   const { theme } = useTheme();
@@ -27,6 +28,12 @@ export default function CycleWheel({
   
   // ✅ MIGRATION: Utilisation du store Zustand au lieu des props
   const cycleData = useCycleStore((state) => state);
+  const { profile } = useUserStore();
+  
+  // ✅ Récupération du prénom depuis le store utilisateur
+  const userNameFromStore = profile?.prenom;
+  const displayUserName = userName || userNameFromStore || 'Emma';
+  
   const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
   const cycleDay = getCurrentCycleDay(cycleData.lastPeriodDate, cycleData.length);
   const cycleLength = cycleData.length;
@@ -36,9 +43,9 @@ export default function CycleWheel({
   const colors = phases.map((phase) => theme.colors.phases[phase]);
   
   // 🎯 Limite prénom selon constante
-  const displayName = userName.length > WHEEL_CONSTANTS.MAX_NAME_LENGTH 
-    ? userName.substring(0, WHEEL_CONSTANTS.MAX_NAME_LENGTH) + '...' 
-    : userName;
+  const displayName = displayUserName.length > WHEEL_CONSTANTS.MAX_NAME_LENGTH 
+    ? displayUserName.substring(0, WHEEL_CONSTANTS.MAX_NAME_LENGTH) + '...' 
+    : displayUserName;
 
   // Calculs de base pour le cercle
   const radius = size / 2;

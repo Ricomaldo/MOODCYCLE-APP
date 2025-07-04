@@ -53,7 +53,7 @@ return (
       <Tabs.Screen
         name="notebook"
         options={{
-          title: "Carnet",
+          title: "Notes",
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="book-outline" size={size} color={color} />
           ),

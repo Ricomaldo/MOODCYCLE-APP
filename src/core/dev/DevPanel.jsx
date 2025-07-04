@@ -232,16 +232,48 @@ export default function DevPanel() {
 
   // 🆕 FONCTIONS POUR LES NOUVELLES FONCTIONNALITÉS
   const simulateFakeObservations = () => {
-    const fakeObservations = [
-      { id: '1', timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), feeling: 2, energy: 2, notes: 'Fatigue, besoin de repos', phase: 'menstrual', cycleDay: 3 },
-      { id: '2', timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), feeling: 4, energy: 4, notes: 'Énergie qui revient, créativité', phase: 'follicular', cycleDay: 8 },
-      { id: '3', timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), feeling: 5, energy: 5, notes: 'Très énergique, sociale', phase: 'ovulatory', cycleDay: 14 },
-      { id: '4', timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), feeling: 3, energy: 3, notes: 'Émotions sensibles', phase: 'luteal', cycleDay: 22 },
-      { id: '5', timestamp: new Date().toISOString(), feeling: 2, energy: 2, notes: 'Fatigue prémenstruelle', phase: 'luteal', cycleDay: 26 }
-    ];
+    // ✅ CORRECTION : Utiliser la méthode addObservation du store au lieu de manipuler directement
+    const addObservation = useCycleStore.getState().addObservation;
     
-    useCycleStore.getState().observations = fakeObservations;
-    Alert.alert('✅ Observations Factices', `${fakeObservations.length} observations ajoutées`);
+    // Vérifier qu'un cycle est initialisé
+    const cycleState = useCycleStore.getState();
+    if (!cycleState.lastPeriodDate) {
+      Alert.alert('❌ Cycle non initialisé', 'Veuillez d\'abord initialiser un cycle');
+      return;
+    }
+
+    // Créer des observations réalistes sur les 7 derniers jours
+    const observations = [
+      { feeling: 2, energy: 2, notes: 'Fatigue, besoin de repos', daysAgo: 6 },
+      { feeling: 3, energy: 3, notes: 'Énergie qui revient doucement', daysAgo: 5 },
+      { feeling: 4, energy: 4, notes: 'Créativité qui émerge', daysAgo: 4 },
+      { feeling: 5, energy: 5, notes: 'Très énergique, sociale', daysAgo: 3 },
+      { feeling: 4, energy: 4, notes: 'Équilibre, projets en cours', daysAgo: 2 },
+      { feeling: 3, energy: 3, notes: 'Émotions sensibles', daysAgo: 1 },
+      { feeling: 2, energy: 2, notes: 'Fatigue prémenstruelle', daysAgo: 0 }
+    ];
+
+    // Ajouter chaque observation avec la bonne date
+    observations.forEach((obs, index) => {
+      const observationDate = new Date();
+      observationDate.setDate(observationDate.getDate() - obs.daysAgo);
+      
+      // Temporairement modifier lastPeriodDate pour simuler l'observation à la bonne date
+      const originalDate = cycleState.lastPeriodDate;
+      useCycleStore.getState().updateCycle({ 
+        lastPeriodDate: observationDate.toISOString() 
+      });
+      
+      // Ajouter l'observation
+      addObservation(obs.feeling, obs.energy, obs.notes);
+      
+      // Restaurer la date originale
+      useCycleStore.getState().updateCycle({ 
+        lastPeriodDate: originalDate 
+      });
+    });
+
+    Alert.alert('✅ Observations Test', `${observations.length} observations ajoutées sur 7 jours`);
   };
 
   // ═══════════════════════════════════════════════════════
@@ -352,25 +384,27 @@ export default function DevPanel() {
   const renderNavigationTab = () => (
     <View style={styles.tabContent}>
       <View style={styles.buttonGrid}>
-        <TouchableOpacity 
-          style={[styles.button, { backgroundColor: '#4A90E2' }]} 
-          onPress={() => router.push('/(tabs)')}>
-          <Text style={styles.buttonText}>🏠 Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.button, { backgroundColor: '#50C878' }]} 
-          onPress={() => router.push('/onboarding/100-bienvenue')}>
-          <Text style={styles.buttonText}>🎯 Onboarding</Text>
-        </TouchableOpacity>
+
         <TouchableOpacity 
           style={[styles.button, { backgroundColor: '#9B59B6' }]} 
           onPress={() => router.push('/(tabs)/cycle')}>
           <Text style={styles.buttonText}>🌙 Cycle</Text>
         </TouchableOpacity>
         <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#4A90E2' }]} 
+          onPress={() => router.push('/(tabs)/conseils')}>
+          <Text style={styles.buttonText}>💡 Conseils</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
           style={[styles.button, { backgroundColor: '#E67E22' }]} 
           onPress={() => router.push('/(tabs)/notebook')}>
           <Text style={styles.buttonText}>📔 Notes</Text>
+        </TouchableOpacity>
+    
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#50C878' }]} 
+          onPress={() => router.push('/onboarding/100-bienvenue')}>
+          <Text style={styles.buttonText}>🎯 Onboarding</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -403,6 +437,11 @@ export default function DevPanel() {
           style={[styles.button, { backgroundColor: '#20B2AA' }]} 
           onPress={simulateFakeObservations}>
           <Text style={styles.buttonText}>📊 Données Test</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#FF6B35' }]} 
+          onPress={advanceOneDay}>
+          <Text style={styles.buttonText}>⏭️ J+1</Text>
         </TouchableOpacity>
       </View>
     </View>
