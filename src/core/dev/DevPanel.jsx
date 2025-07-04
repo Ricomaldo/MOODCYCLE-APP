@@ -35,6 +35,30 @@ export default function DevPanel() {
   const [showStoreDebug, setShowStoreDebug] = useState(false);
   const [selectedStore, setSelectedStore] = useState(null);
   const panelAnim = useRef(new Animated.Value(0)).current;
+  
+  // 🆕 ÉTATS VISUELS POUR LES BOUTONS
+  const [buttonStates, setButtonStates] = useState({
+    // Cycle states
+    menstrual: false,
+    follicular: false,
+    ovulatory: false,
+    luteal: false,
+    testData: false,
+    advanceDay: false,
+    
+    // Persona states
+    personas: {},
+    
+    // Intelligence states
+    eveningActive: false,
+    morningCreative: false,
+    beginner: false,
+    
+    // Theme states
+    lightTheme: false,
+    darkTheme: false,
+    systemTheme: false,
+  });
 
   useEffect(() => {
     if (showPanel) {
@@ -68,6 +92,28 @@ export default function DevPanel() {
   
       // Cycle data
     const cycle = cycleData;
+
+  // 🆕 HELPER POUR LES ÉTATS DES BOUTONS
+  const toggleButtonState = (buttonKey, duration = 2000) => {
+    setButtonStates(prev => ({ ...prev, [buttonKey]: true }));
+    setTimeout(() => {
+      setButtonStates(prev => ({ ...prev, [buttonKey]: false }));
+    }, duration);
+  };
+
+  const getButtonStyle = (baseColor, buttonKey) => {
+    const isActive = buttonStates[buttonKey];
+    return {
+      backgroundColor: isActive ? baseColor : `${baseColor}80`, // 50% opacity quand inactif
+      opacity: isActive ? 1 : 0.7,
+      transform: [{ scale: isActive ? 1.05 : 1 }],
+      shadowColor: isActive ? baseColor : 'transparent',
+      shadowOffset: { width: 0, height: isActive ? 4 : 0 },
+      shadowOpacity: isActive ? 0.3 : 0,
+      shadowRadius: isActive ? 8 : 0,
+      elevation: isActive ? 8 : 2,
+    };
+  };
 
   // Masquer sur toutes les pages d'onboarding sauf la première
   const isHidden = pathname.startsWith('/onboarding/') && pathname !== '/onboarding/100-bienvenue';
@@ -171,10 +217,8 @@ export default function DevPanel() {
       });
     }
 
-    Alert.alert(
-      '🌟 Intelligence Simulée', 
-      `Scenario "${scenario}" activé\nConfiance: ${data.confidence}%\nPatterns: ${data.timePatterns.favoriteHours.length} heures`
-    );
+    toggleButtonState(scenario, 2000);
+    console.log(`🌟 Intelligence Simulée: Scenario "${scenario}" activé - Confiance: ${data.confidence}%`);
   };
 
   const testRevelationComponents = () => {
@@ -273,7 +317,8 @@ export default function DevPanel() {
       });
     });
 
-    Alert.alert('✅ Observations Test', `${observations.length} observations ajoutées sur 7 jours`);
+    toggleButtonState('testData', 2000);
+    console.log(`✅ Observations Test: ${observations.length} observations ajoutées sur 7 jours`);
   };
 
   // ═══════════════════════════════════════════════════════
@@ -287,15 +332,16 @@ export default function DevPanel() {
       cycleStart.setDate(today.getDate() - targetDay + 1);
       
       updateCycle({ lastPeriodDate: cycleStart.toISOString() });
-      Alert.alert('🔄 Cycle', `J${targetDay}`);
+      console.log(`🔄 Cycle: J${targetDay}`);
     } catch (error) {
-      Alert.alert('❌ Erreur cycle');
+      console.error('❌ Erreur cycle:', error);
     }
   };
 
   const jumpToPhase = (targetPhase) => {
     const phaseDays = { menstrual: 2, follicular: 10, ovulatory: 15, luteal: 22 };
     jumpToDay(phaseDays[targetPhase]);
+    toggleButtonState(targetPhase, 1500);
   };
 
   const advanceOneDay = () => {
@@ -306,10 +352,9 @@ export default function DevPanel() {
       // Si on dépasse 28 jours, on revient à J1
       const targetDay = nextDay > 28 ? 1 : nextDay;
       jumpToDay(targetDay);
-      
-      Alert.alert('🔄 Cycle', `Avancé à J${targetDay}`);
+      toggleButtonState('advanceDay', 1500);
     } catch (error) {
-      Alert.alert('❌ Erreur cycle');
+      console.error('❌ Erreur cycle:', error);
     }
   };
 
@@ -321,10 +366,9 @@ export default function DevPanel() {
       // Si on dépasse 28 jours, on calcule le modulo pour rester dans le cycle
       const targetDay = nextDay > 28 ? ((nextDay - 1) % 28) + 1 : nextDay;
       jumpToDay(targetDay);
-      
-      Alert.alert('🔄 Cycle', `Avancé de ${daysToAdvance} jours → J${targetDay}`);
+      console.log(`🔄 Cycle: Avancé de ${daysToAdvance} jours → J${targetDay}`);
     } catch (error) {
-      Alert.alert('❌ Erreur cycle');
+      console.error('❌ Erreur cycle:', error);
     }
   };
 
@@ -343,7 +387,8 @@ export default function DevPanel() {
     });
 
     setPersona(personaId, 1.0);
-    Alert.alert('🎭 Persona', `${personaData.name} activée`);
+    toggleButtonState(`persona_${personaId}`, 2000);
+    console.log(`🎭 Persona: ${personaData.name} activée`);
   };
 
   // ═══════════════════════════════════════════════════════
@@ -414,32 +459,32 @@ export default function DevPanel() {
     <View style={styles.tabContent}>
       <View style={styles.buttonGrid}>
         <TouchableOpacity 
-          style={[styles.button, { backgroundColor: '#FF69B4' }]} 
+          style={[styles.button, getButtonStyle('#FF69B4', 'menstrual')]} 
           onPress={() => jumpToPhase('menstrual')}>
           <Text style={styles.buttonText}>🌺 Menstruelle</Text>
         </TouchableOpacity>
         <TouchableOpacity 
-          style={[styles.button, { backgroundColor: '#98FB98' }]} 
+          style={[styles.button, getButtonStyle('#98FB98', 'follicular')]} 
           onPress={() => jumpToPhase('follicular')}>
           <Text style={styles.buttonText}>🌱 Folliculaire</Text>
         </TouchableOpacity>
         <TouchableOpacity 
-          style={[styles.button, { backgroundColor: '#FFD700' }]} 
+          style={[styles.button, getButtonStyle('#FFD700', 'ovulatory')]} 
           onPress={() => jumpToPhase('ovulatory')}>
           <Text style={styles.buttonText}>☀️ Ovulation</Text>
         </TouchableOpacity>
         <TouchableOpacity 
-          style={[styles.button, { backgroundColor: '#DDA0DD' }]} 
+          style={[styles.button, getButtonStyle('#DDA0DD', 'luteal')]} 
           onPress={() => jumpToPhase('luteal')}>
           <Text style={styles.buttonText}>🌙 Lutéale</Text>
         </TouchableOpacity>
         <TouchableOpacity 
-          style={[styles.button, { backgroundColor: '#20B2AA' }]} 
+          style={[styles.button, getButtonStyle('#20B2AA', 'testData')]} 
           onPress={simulateFakeObservations}>
           <Text style={styles.buttonText}>📊 Données Test</Text>
         </TouchableOpacity>
         <TouchableOpacity 
-          style={[styles.button, { backgroundColor: '#FF6B35' }]} 
+          style={[styles.button, getButtonStyle('#FF6B35', 'advanceDay')]} 
           onPress={advanceOneDay}>
           <Text style={styles.buttonText}>⏭️ J+1</Text>
         </TouchableOpacity>
@@ -453,7 +498,7 @@ export default function DevPanel() {
         {Object.entries(PERSONA_PROFILES).map(([id, profile]) => (
           <TouchableOpacity
             key={id}
-            style={[styles.button, { backgroundColor: profile.color || '#7B68EE' }]}
+            style={[styles.button, getButtonStyle(profile.color || '#7B68EE', `persona_${id}`)]}
             onPress={() => switchPersona(id)}>
             <Text style={styles.buttonText}>{profile.emoji} {profile.name}</Text>
           </TouchableOpacity>
@@ -675,17 +720,17 @@ Sync: ${syncStatus}
     <View style={styles.tabContent}>
       <View style={styles.buttonGrid}>
         <TouchableOpacity 
-          style={[styles.button, { backgroundColor: '#FF6B6B' }]} 
+          style={[styles.button, getButtonStyle('#FF6B6B', 'evening_active')]} 
           onPress={() => simulateIntelligenceData('evening_active')}>
           <Text style={styles.buttonText}>🌙 Profil Soir</Text>
         </TouchableOpacity>
         <TouchableOpacity 
-          style={[styles.button, { backgroundColor: '#4ECDC4' }]} 
+          style={[styles.button, getButtonStyle('#4ECDC4', 'morning_creative')]} 
           onPress={() => simulateIntelligenceData('morning_creative')}>
           <Text style={styles.buttonText}>🌅 Profil Matin</Text>
         </TouchableOpacity>
         <TouchableOpacity 
-          style={[styles.button, { backgroundColor: '#95A5A6' }]} 
+          style={[styles.button, getButtonStyle('#95A5A6', 'beginner')]} 
           onPress={() => simulateIntelligenceData('beginner')}>
           <Text style={styles.buttonText}>🌱 Débutante</Text>
         </TouchableOpacity>
@@ -712,18 +757,27 @@ Sync: ${syncStatus}
       </TouchableOpacity>
       <View style={styles.buttonGrid}>
         <TouchableOpacity 
-          style={[styles.button, { backgroundColor: '#3498DB' }]} 
-          onPress={() => setTheme('light')}>
+          style={[styles.button, getButtonStyle('#3498DB', 'lightTheme')]} 
+          onPress={() => {
+            setTheme('light');
+            toggleButtonState('lightTheme', 1500);
+          }}>
           <Text style={styles.buttonText}>☀️ Light</Text>
         </TouchableOpacity>
         <TouchableOpacity 
-          style={[styles.button, { backgroundColor: '#34495E' }]} 
-          onPress={() => setTheme('dark')}>
+          style={[styles.button, getButtonStyle('#34495E', 'darkTheme')]} 
+          onPress={() => {
+            setTheme('dark');
+            toggleButtonState('darkTheme', 1500);
+          }}>
           <Text style={styles.buttonText}>🌙 Dark</Text>
         </TouchableOpacity>
         <TouchableOpacity 
-          style={[styles.button, { backgroundColor: '#95A5A6' }]} 
-          onPress={() => setTheme('system')}>
+          style={[styles.button, getButtonStyle('#95A5A6', 'systemTheme')]} 
+          onPress={() => {
+            setTheme('system');
+            toggleButtonState('systemTheme', 1500);
+          }}>
           <Text style={styles.buttonText}>⚙️ System</Text>
         </TouchableOpacity>
       </View>
@@ -805,7 +859,7 @@ Sync: ${syncStatus}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>📦 Debug Stores</Text>
               {Object.entries({
-                app, profile, cycleData, intelligence, engagement, navigation
+                app: { currentTheme, devMode, isOnline }, profile, cycleData, intelligence, engagement, navigation
               }).map(([name, store]) => (
                 <View key={name} style={styles.debugItem}>
                   <Text style={styles.debugItemTitle}>{name}</Text>
