@@ -14,6 +14,7 @@ import { useEngagementStore } from '../stores/useEngagementStore';
 import { useCycleStore } from '../stores/useCycleStore';
 import { getCurrentPhase, getCurrentPhaseAdaptive, getCycleMode } from '../utils/cycleCalculations';
 import CycleObservationEngine from '../services/CycleObservationEngine';
+import { runABTest, trackABTestResult } from '../services/ABTestService';
 
 // ═══════════════════════════════════════════════════════
 // 🎣 HOOK OBSERVATION RAPIDE
@@ -37,6 +38,53 @@ export function useQuickObservation() {
   );
 
   const cycleMode = getCycleMode(intelligence, engagement?.maturity?.current);
+
+  // ──────────────────────────────────────────────────────
+  // 🧪 A/B TEST PHASE DÉTERMINATION
+  // ──────────────────────────────────────────────────────
+
+  const getPhase = useCallback(() => {
+    const observations = intelligence.observationPatterns?.lastObservations || [];
+    
+    // 🧪 Run A/B test if conditions met
+    if (observations.length > 7) {
+      const abResult = runABTest({
+        observations: observations,
+        lastPeriodDate: cycleData.lastPeriodDate,
+        cycleLength: cycleData.length,
+        periodDuration: cycleData.periodDuration
+      });
+      
+      // 📊 Track result for analytics
+      trackABTestResult(abResult);
+      
+      // 🎯 Return winner phase if test was successful
+      if (abResult.canRun) {
+        return {
+          phase: abResult.winnerPhase,
+          mode: abResult.mode,
+          confidence: abResult.metadata.confidence,
+          isABTested: true,
+          winner: abResult.winner
+        };
+      }
+    }
+    
+    // 🔄 Default to predictive mode
+    const predictivePhase = getCurrentPhase(
+      cycleData.lastPeriodDate,
+      cycleData.length,
+      cycleData.periodDuration
+    );
+    
+    return {
+      phase: predictivePhase,
+      mode: 'predictive',
+      confidence: 85, // Précision prédictive théorique
+      isABTested: false,
+      winner: 'predictive'
+    };
+  }, [intelligence.observationPatterns, cycleData]);
 
   // ──────────────────────────────────────────────────────
   // 📝 TRACKER OBSERVATION
@@ -170,6 +218,7 @@ export function useQuickObservation() {
     // Actions principales
     trackObservation,
     correctPhase,
+    getPhase, // 🆕 Fonction A/B test
     
     // Suggestions
     suggestions: getSuggestions(),

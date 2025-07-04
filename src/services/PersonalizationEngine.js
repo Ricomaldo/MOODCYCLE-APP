@@ -3,6 +3,10 @@
 // ═══════════════════════════════════════════════════════════
 
 import ContentManager from './ContentManager.js';
+import IntelligenceCache from './IntelligenceCache.js';
+
+// 🆕 CACHE GLOBAL POUR PERFORMANCES
+const cache = new IntelligenceCache();
 
 // ───────────────────────────────────────────────────────────
 // 📊 DONNÉES STATIQUES OPTIMISÉES
@@ -204,7 +208,7 @@ export const createPersonalizationEngine = (intelligenceData, preferences, curre
     }
     
     // 3. Prompts apprentissage (si confidence > 30)
-    if (intelligenceData.learning.confidence > 30) {
+    if (intelligenceData?.learning?.confidence > 30) {
       const learnedPrompts = getLearnedPrompts();
       prompts.push(...learnedPrompts.slice(0, 1));
     }
@@ -233,7 +237,7 @@ export const createPersonalizationEngine = (intelligenceData, preferences, curre
       label: ACTION_CONFIG.chat.titles[persona], // Pour useSmartSuggestions
       prompt: chatPrompts[0],
       icon: ACTION_CONFIG.chat.icons[currentPhase],
-      confidence: Math.min(intelligenceData.learning.confidence + 30, 100)
+      confidence: Math.min((intelligenceData?.learning?.confidence || 0) + 30, 100)
     });
     
     // Action 2: Notebook si préférence émotions/tracking
@@ -245,7 +249,7 @@ export const createPersonalizationEngine = (intelligenceData, preferences, curre
         label: ACTION_CONFIG.notebook.titles[persona],
         prompt: getNotebookPrompt(),
         icon: ACTION_CONFIG.notebook.icons[currentPhase],
-        confidence: intelligenceData.learning.confidence
+        confidence: intelligenceData?.learning?.confidence || 0
       });
     }
     
@@ -258,7 +262,7 @@ export const createPersonalizationEngine = (intelligenceData, preferences, curre
         label: ACTION_CONFIG.phase_detail.titles[persona],
         prompt: null,
         icon: ACTION_CONFIG.phase_detail.icons[currentPhase],
-        confidence: 100 - intelligenceData.learning.confidence
+        confidence: 100 - (intelligenceData?.learning?.confidence || 0)
       });
     }
     
@@ -289,8 +293,8 @@ export const createPersonalizationEngine = (intelligenceData, preferences, curre
   };
   
   const shouldShowPhaseDetail = () => {
-    return intelligenceData.learning.confidence < 50 ||
-           !intelligenceData.learning.phasePatterns?.[currentPhase];
+    return (intelligenceData?.learning?.confidence || 0) < 50 ||
+           !intelligenceData?.learning?.phasePatterns?.[currentPhase];
   };
   
   const getNotebookPrompt = () => {
@@ -309,16 +313,16 @@ export const createPersonalizationEngine = (intelligenceData, preferences, curre
   // ──────────────────────────────────────────────────────
   
   const getPersonalizationMetadata = () => {
-    const learning = intelligenceData.learning;
+    const learning = intelligenceData?.learning || {};
     
     return {
-      confidence: learning.confidence,
+      confidence: learning.confidence || 0,
       dataPoints: {
         timePatterns: learning.timePatterns?.favoriteHours?.length || 0,
         phaseData: Object.keys(learning.phasePatterns || {}).length,
         conversationHistory: learning.conversationCount || 0
       },
-      recommendations: getRecommendations(learning.confidence)
+      recommendations: getRecommendations(learning.confidence || 0)
     };
   };
   
@@ -341,11 +345,26 @@ export const createPersonalizationEngine = (intelligenceData, preferences, curre
   // ──────────────────────────────────────────────────────
   
   const createPersonalizedExperience = () => {
-    return {
+    // 🆕 Vérifier le cache d'abord
+    const context = { preferences, intelligence: intelligenceData };
+    const cached = cache.get(persona, currentPhase, context);
+    
+    if (cached) {
+      console.log('💾 Cache hit for PersonalizationEngine');
+      return cached;
+    }
+    
+    // 🆕 Générer l'expérience si pas en cache
+    const experience = {
       personalizedPrompts: generatePersonalizedPrompts(),
       contextualActions: generateContextualActions(),
       personalization: getPersonalizationMetadata()
     };
+    
+    // 🆕 Mettre en cache
+    cache.set(persona, currentPhase, context, experience);
+    
+    return experience;
   };
 
   return {

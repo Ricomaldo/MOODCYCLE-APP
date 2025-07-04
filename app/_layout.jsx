@@ -24,10 +24,18 @@ import { useNetworkStatus } from "../src/hooks/useNetworkStatus";
 import { useTheme } from "../src/hooks/useTheme";
 import DevPanel from "../src/core/dev/DevPanel";
 import performanceMonitor from "../src/core/monitoring/PerformanceMonitor";
+import { initializeIntelligence } from "../src/services/IntelligenceInit";
+import { useEffect } from "react";
+import Config from "../src/config/appConfig";
 
 // ✅ Composant wrapper simplifié
 function LayoutContent() {
   const { isDark } = useTheme();
+
+  // 🧠 Initialisation des services d'intelligence
+  useEffect(() => {
+    initializeIntelligence(Config.getIntelligenceConfig());
+  }, []);
 
   return (
     <>

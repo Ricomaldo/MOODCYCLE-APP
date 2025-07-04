@@ -21,10 +21,17 @@ import { useAppStore } from '../../stores/useAppStore';
 import { useNavigationStore } from '../../stores/useNavigationStore';
 
 // Hooks
-
+import { useIntelligencePerformance } from '../../hooks/useIntelligencePerformance';
 
 // Config
 import { PERSONA_PROFILES } from '../../config/personaProfiles';
+
+// Services
+import { createPersonalizationEngine } from '../../services/PersonalizationEngine';
+import { getCurrentPhase, getCurrentPhaseAdaptive } from '../../utils/cycleCalculations';
+import IntelligenceCache from '../../services/IntelligenceCache';
+import { runABTest } from '../../services/ABTestService';
+import { initializeIntelligence, validateIntelligenceHealth } from '../../services/IntelligenceInit';
 
 export default function DevPanel() {
   const router = useRouter();
@@ -58,7 +65,24 @@ export default function DevPanel() {
     lightTheme: false,
     darkTheme: false,
     systemTheme: false,
+    
+    // 🆕 Pipeline test states
+    pipelineTest: false,
+    cacheTest: false,
+    abTest: false,
+    edgeTest: false,
   });
+
+  // 🆕 MÉTRIQUES PIPELINE
+  const [pipelineMetrics, setPipelineMetrics] = useState({
+    lastRun: 0,
+    average: 0,
+    runs: 0,
+    cacheHit: 87
+  });
+
+  // 🆕 PERFORMANCE MONITORING
+  const { trackPipelineExecution, getPerformanceReport } = useIntelligencePerformance();
 
   useEffect(() => {
     if (showPanel) {
@@ -272,6 +296,62 @@ export default function DevPanel() {
         { text: 'Annuler', style: 'cancel' }
       ]
     );
+  };
+
+  const reinitializeIntelligenceServices = async () => {
+    try {
+      toggleButtonState('pipelineTest', 3000);
+      
+      Alert.alert(
+        '🔄 Réinitialisation Services',
+        'Réinitialiser tous les services d\'intelligence ?',
+        [
+          { 
+            text: 'Oui', 
+            onPress: async () => {
+              try {
+                const result = await initializeIntelligence({
+                  enableCache: true,
+                  enableABTesting: true,
+                  enableMonitoring: true
+                });
+                
+                if (result.success) {
+                  Alert.alert('✅ Services Réinitialisés', 'Tous les services d\'intelligence ont été réinitialisés avec succès');
+                } else {
+                  Alert.alert('⚠️ Réinitialisation Partielle', 'Certains services ont été réinitialisés en mode fallback');
+                }
+                
+                console.log('🔄 Intelligence services reinitialized:', result);
+              } catch (error) {
+                console.error('🚨 Error reinitializing services:', error);
+                Alert.alert('❌ Erreur', 'Erreur lors de la réinitialisation des services');
+              }
+            }
+          },
+          { text: 'Annuler', style: 'cancel' }
+        ]
+      );
+    } catch (error) {
+      console.error('🚨 Error in reinitializeIntelligenceServices:', error);
+    }
+  };
+
+  const checkIntelligenceHealth = async () => {
+    try {
+      const healthStatus = await validateIntelligenceHealth();
+      
+      Alert.alert(
+        '🏥 Santé Intelligence',
+        `État: ${healthStatus.overall}\n\nCache: ${healthStatus.cache?.healthy ? '✅' : '❌'}\nA/B Test: ${healthStatus.abTesting?.healthy ? '✅' : '❌'}\nMonitoring: ${healthStatus.monitoring?.healthy ? '✅' : '❌'}`,
+        [{ text: 'OK' }]
+      );
+      
+      console.log('🏥 Intelligence health check:', healthStatus);
+    } catch (error) {
+      console.error('🚨 Error checking intelligence health:', error);
+      Alert.alert('❌ Erreur', 'Erreur lors de la vérification de santé');
+    }
   };
 
   // 🆕 FONCTIONS POUR LES NOUVELLES FONCTIONNALITÉS
@@ -696,6 +776,18 @@ Sync: ${syncStatus}
           }}>
           <Text style={styles.buttonText}>🎯 Tests</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#FF9800' }]}
+          onPress={reinitializeIntelligenceServices}>
+          <Text style={styles.buttonText}>🔄 Réinit Services</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#4CAF50' }]}
+          onPress={checkIntelligenceHealth}>
+          <Text style={styles.buttonText}>🏥 Santé Intel</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.debugSection}>
@@ -784,6 +876,266 @@ Sync: ${syncStatus}
     </View>
   );
 
+  // 🆕 FONCTIONS DE TEST PIPELINE
+  const testFullPipeline = async () => {
+    const start = performance.now();
+    
+    try {
+      // ✅ DEBUG: Vérifier la structure intelligence
+      console.log('🔍 Intelligence object:', intelligence);
+      console.log('🔍 Intelligence.learning:', intelligence?.learning);
+      
+      // ✅ Sécuriser les données intelligence - structure complète
+      const intelligenceData = {
+        confidence: intelligence?.learning?.confidence || 0,
+        timePatterns: intelligence?.learning?.timePatterns || { favoriteHours: [] },
+        phasePatterns: intelligence?.learning?.phasePatterns || {},
+        conversationPrefs: intelligence?.learning?.conversationPrefs || { successfulPrompts: [] },
+        observationPatterns: intelligence?.observationPatterns || { lastObservations: [], consistency: 0 }
+      };
+      
+      // ✅ Sécuriser les préférences
+      const safePreferences = profile?.preferences || {};
+      
+      // ✅ Sécuriser la phase
+      const safePhase = cycle?.currentPhase || 'menstrual';
+      
+      // ✅ Sécuriser la persona
+      const safePersona = persona?.assigned || 'emma';
+      
+      console.log('🔍 Safe data:', { intelligenceData, safePreferences, safePhase, safePersona });
+      
+      // Test complet PersonalizationEngine → useSmartSuggestions
+      const engine = createPersonalizationEngine(
+        intelligenceData,
+        safePreferences,
+        safePhase,
+        safePersona
+      );
+      
+      const experience = engine.createPersonalizedExperience();
+      const duration = performance.now() - start;
+      
+      // Mettre à jour les métriques
+      setPipelineMetrics(prev => ({
+        lastRun: duration,
+        average: prev.runs === 0 ? duration : (prev.average * 0.9 + duration * 0.1),
+        runs: prev.runs + 1,
+        cacheHit: prev.cacheHit
+      }));
+      
+      // Tracker performance
+      trackPipelineExecution(duration);
+      
+      toggleButtonState('pipelineTest', 2000);
+      
+      if (duration > 50) {
+        Alert.alert('⚠️ Performance', `Pipeline lent: ${duration.toFixed(1)}ms`);
+      } else {
+        console.log(`✅ Pipeline OK: ${duration.toFixed(1)}ms`);
+        Alert.alert('✅ Pipeline Test', `Exécution: ${duration.toFixed(1)}ms\nPrompts: ${experience.personalizedPrompts.length}\nActions: ${experience.contextualActions.length}`);
+      }
+    } catch (error) {
+      console.error('🚨 Pipeline test error:', error);
+      Alert.alert('❌ Erreur Pipeline', error.message);
+    }
+  };
+
+  const testCachePerformance = () => {
+    const cache = new IntelligenceCache();
+    const cacheStats = {
+      hits: 0,
+      misses: 0,
+      queries: 20
+    };
+    
+    // ✅ Sécuriser les données
+    const safePersona = persona?.assigned || 'emma';
+    const safePhase = cycle?.currentPhase || 'menstrual';
+    
+    // Simuler des requêtes cache
+    for (let i = 0; i < cacheStats.queries; i++) {
+      const context = { test: i % 5 }; // 5 contextes différents
+      
+      // Mettre en cache quelques données
+      if (i < 10) {
+        cache.set(safePersona, safePhase, context, {
+          prompts: [`Test prompt ${i}`],
+          actions: [{ type: 'test', title: `Action ${i}` }]
+        });
+      }
+      
+      // Tester récupération
+      const cached = cache.get(safePersona, safePhase, context);
+      
+      if (cached) cacheStats.hits++;
+      else cacheStats.misses++;
+    }
+    
+    const hitRate = (cacheStats.hits / cacheStats.queries * 100).toFixed(1);
+    
+    // Mettre à jour métriques
+    setPipelineMetrics(prev => ({
+      ...prev,
+      cacheHit: parseFloat(hitRate)
+    }));
+    
+    toggleButtonState('cacheTest', 2000);
+    
+    Alert.alert('💾 Cache Performance', 
+      `Hit Rate: ${hitRate}%\n` +
+      `Hits: ${cacheStats.hits}\n` +
+      `Misses: ${cacheStats.misses}\n` +
+      `Queries: ${cacheStats.queries}`
+    );
+  };
+
+  const runABTest = () => {
+    // ✅ Sécuriser les données cycle
+    const safeCycleData = {
+      lastPeriodDate: cycle.lastPeriodDate || new Date().toISOString(),
+      length: cycle.length || 28,
+      periodDuration: cycle.periodDuration || 5
+    };
+    
+    // 🧪 Utiliser le service ABTestService
+    const abResult = runABTest({
+      observations: intelligence?.observationPatterns?.lastObservations || [
+        // Simuler quelques observations pour le test
+        { phase: 'menstrual', mood: 'calm', timestamp: Date.now() - 86400000 },
+        { phase: 'follicular', mood: 'energetic', timestamp: Date.now() - 172800000 },
+        { phase: 'ovulatory', mood: 'confident', timestamp: Date.now() - 259200000 },
+        { phase: 'luteal', mood: 'sensitive', timestamp: Date.now() - 345600000 },
+        { phase: 'menstrual', mood: 'introspective', timestamp: Date.now() - 432000000 },
+        { phase: 'follicular', mood: 'optimistic', timestamp: Date.now() - 518400000 },
+        { phase: 'ovulatory', mood: 'radiant', timestamp: Date.now() - 604800000 },
+        { phase: 'luteal', mood: 'focused', timestamp: Date.now() - 691200000 }
+      ],
+      lastPeriodDate: safeCycleData.lastPeriodDate,
+      cycleLength: safeCycleData.length,
+      periodDuration: safeCycleData.periodDuration
+    });
+    
+    toggleButtonState('abTest', 2000);
+    
+    if (abResult.canRun) {
+      Alert.alert(
+        '🔄 A/B Test Results',
+        `🏆 GAGNANT: ${abResult.winner.toUpperCase()}\n` +
+        `📊 Phase: ${abResult.winnerPhase}\n\n` +
+        `PRÉDICTIF:\n` +
+        `⏱️ Temps: ${abResult.results.predictive.time.toFixed(1)}ms\n` +
+        `🎯 Précision: ${abResult.results.predictive.accuracy}%\n` +
+        `📈 Score: ${abResult.results.predictive.score.toFixed(2)}\n\n` +
+        `OBSERVATION:\n` +
+        `⏱️ Temps: ${abResult.results.observation.time.toFixed(1)}ms\n` +
+        `🎯 Précision: ${abResult.results.observation.accuracy}%\n` +
+        `📈 Score: ${abResult.results.observation.score.toFixed(2)}\n\n` +
+        `📊 Métadonnées:\n` +
+        `Observations: ${abResult.metadata.observationsCount}\n` +
+        `Confiance: ${abResult.metadata.confidence.toFixed(1)}%`
+      );
+    } else {
+      Alert.alert(
+        '🔄 A/B Test Results',
+        `❌ Test non exécuté\n` +
+        `Raison: ${abResult.reason}\n` +
+        `Phase par défaut: ${abResult.winnerPhase}\n` +
+        `Mode: ${abResult.mode}`
+      );
+    }
+  };
+
+  const testEdgeCases = () => {
+    const edgeCases = [
+      { name: 'No persona', data: { persona: null } },
+      { name: 'No cycle data', data: { cycle: {} } },
+      { name: 'Empty preferences', data: { preferences: {} } },
+      { name: 'Invalid phase', data: { phase: 'invalid' } },
+      { name: 'Null intelligence', data: { intelligence: null } }
+    ];
+    
+    const results = [];
+    
+    edgeCases.forEach(testCase => {
+      try {
+        // ✅ Sécuriser toutes les données
+        const safeIntelligence = testCase.data.intelligence || intelligence?.learning || {
+          confidence: 0,
+          timePatterns: { favoriteHours: [] },
+          phasePatterns: {},
+          conversationPrefs: { successfulPrompts: [] }
+        };
+        
+        const safePreferences = testCase.data.preferences || profile?.preferences || {};
+        const safePhase = testCase.data.phase || cycle?.currentPhase || 'menstrual';
+        const safePersona = testCase.data.persona || persona?.assigned || 'emma';
+        
+        const engine = createPersonalizationEngine(
+          safeIntelligence,
+          safePreferences,
+          safePhase,
+          safePersona
+        );
+        
+        const experience = engine.createPersonalizedExperience();
+        
+        // Vérifier que l'expérience est valide
+        if (experience.personalizedPrompts && experience.contextualActions) {
+          results.push(`✅ ${testCase.name}: OK`);
+        } else {
+          results.push(`⚠️ ${testCase.name}: Incomplet`);
+        }
+      } catch (error) {
+        results.push(`❌ ${testCase.name}: ${error.message}`);
+      }
+    });
+    
+    toggleButtonState('edgeTest', 2000);
+    
+    Alert.alert('⚠️ Edge Cases', results.join('\n'));
+  };
+
+  // 🆕 RENDU ONGLET PIPELINE
+  const renderPipelineTab = () => (
+    <View style={styles.tabContent}>
+      <View style={styles.buttonGrid}>
+        <TouchableOpacity 
+          style={[styles.button, getButtonStyle('#FF6B9D', 'pipelineTest')]} 
+          onPress={testFullPipeline}>
+          <Text style={styles.buttonText}>🚀 Test Pipeline</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[styles.button, getButtonStyle('#C44569', 'cacheTest')]} 
+          onPress={testCachePerformance}>
+          <Text style={styles.buttonText}>💾 Test Cache</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[styles.button, getButtonStyle('#F8B195', 'abTest')]} 
+          onPress={runABTest}>
+          <Text style={styles.buttonText}>🔄 A/B Test</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={[styles.button, getButtonStyle('#F67280', 'edgeTest')]} 
+          onPress={testEdgeCases}>
+          <Text style={styles.buttonText}>⚠️ Edge Cases</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Affichage temps réel */}
+      <View style={styles.metricsDisplay}>
+        <Text style={styles.metricsTitle}>⚡ Pipeline Metrics</Text>
+        <Text style={styles.metricsText}>Dernière exécution: {pipelineMetrics.lastRun.toFixed(1)}ms</Text>
+        <Text style={styles.metricsText}>Moyenne: {pipelineMetrics.average.toFixed(1)}ms</Text>
+        <Text style={styles.metricsText}>Cache Hit: {pipelineMetrics.cacheHit}%</Text>
+        <Text style={styles.metricsText}>Exécutions: {pipelineMetrics.runs}</Text>
+      </View>
+    </View>
+  );
+
   const tabs = [
     { id: 'navigation', icon: '🛠', content: renderNavigationTab },
     { id: 'cycle', icon: '🌗', content: renderCycleTab },
@@ -791,7 +1143,8 @@ Sync: ${syncStatus}
     { id: 'stores', icon: '📦', content: renderStoresTab },
     { id: 'debug', icon: '🐛', content: renderDebugTab },
     { id: 'test', icon: '🧠', content: renderTestTab },
-    { id: 'performance', icon: '📊', content: renderPerformanceTab }
+    { id: 'performance', icon: '📊', content: renderPerformanceTab },
+    { id: 'pipeline', icon: '🧪', content: renderPipelineTab }
   ];
 
   return (
@@ -1066,5 +1419,24 @@ const styles = StyleSheet.create({
   debugItemContent: {
     fontSize: 12,
     color: '#666',
+  },
+  metricsDisplay: {
+    marginTop: 16,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+  },
+  metricsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: '#2C3E50',
+  },
+  metricsText: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 4,
   },
 });

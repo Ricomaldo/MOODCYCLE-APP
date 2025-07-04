@@ -2,7 +2,7 @@
 // 🎣 useSmartSuggestions.js - Hook Suggestions Intelligentes  
 // ═══════════════════════════════════════════════════════════
 
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState, useEffect } from 'react';
 import { useUserStore } from '../stores/useUserStore';
 import { useUserIntelligence } from '../stores/useUserIntelligence';
 import { useEngagementStore } from '../stores/useEngagementStore';
@@ -11,6 +11,7 @@ import { getCurrentPhase, getCurrentPhaseAdaptive } from '../utils/cycleCalculat
 import { usePersona } from './usePersona';
 import { createPersonalizationEngine } from '../services/PersonalizationEngine';
 import CycleObservationEngine from '../services/CycleObservationEngine';
+import { trackPipelineExecution, trackError } from '../services/ProductionMonitoring';
 
 // 🆕 Scores de vulnérabilité émotionnelle par phase
 const EMOTIONAL_VULNERABILITY_SCORES = {
@@ -24,61 +25,99 @@ const EMOTIONAL_VULNERABILITY_SCORES = {
 // 🎯 HOOK PRINCIPAL SUGGESTIONS INTELLIGENTES
 // ───────────────────────────────────────────────────────────
 
-// ✅ Stabilisation de la factory function
+// ✅ Stabilisation de la factory function avec monitoring
 const createStableSuggestions = (persona, currentPhase, intelligence, preferences) => {
-  if (!persona || !currentPhase) {
+  const start = performance.now();
+  
+  try {
+    if (!persona || !currentPhase) {
+      return {
+        actions: [],
+        prompts: [],
+        confidence: 0,
+        dataPoints: {
+          timePatterns: 0,
+          phaseData: 0,
+          conversationHistory: 0
+        },
+        recommendations: [],
+        fromCache: false
+      };
+    }
+
+    // Extraction des données d'intelligence pour la factory function
+    const intelligenceData = {
+      learning: intelligence.learning,
+      getPersonalizedPrompts: (phase, persona) => intelligence.getPersonalizedPrompts(phase, persona)
+    };
+
+    // Génération via createPersonalizationEngine
+    const personalizationEngine = createPersonalizationEngine(
+      intelligenceData,
+      preferences,
+      currentPhase,
+      persona
+    );
+
+    const experience = personalizationEngine.createPersonalizedExperience();
+    
+    // 🆕 Ajouter calcul empathie
+    const emotionalReadiness = calculateEmotionalReadiness(
+      currentPhase, 
+      intelligence
+    );
+    
+    let contextualActions = experience.contextualActions || [];
+    
+    // Adapter les actions selon readiness
+    if (emotionalReadiness.shouldDelay) {
+      contextualActions = contextualActions.map(action => ({
+        ...action,
+        title: action.title.replace('maintenant', 'quand tu te sentiras prête'),
+        softLaunch: true,
+        emotionalTiming: emotionalReadiness.timing
+      }));
+    }
+    
+    const duration = performance.now() - start;
+    
+    // 📊 Track performance
+    trackPipelineExecution({
+      duration,
+      cacheHit: experience.fromCache || false,
+      persona,
+      phase: currentPhase
+    });
+    
+    return {
+      ...experience,
+      contextualActions,
+      emotionalReadiness, // 🆕
+      fromCache: experience.fromCache || false,
+      generationTime: duration
+    };
+    
+  } catch (error) {
+    const duration = performance.now() - start;
+    
+    // 🚨 Track error
+    trackError(error, {
+      persona,
+      phase: currentPhase,
+      duration
+    });
+    
+    // Retourner fallback
     return {
       actions: [],
-      prompts: [],
+      prompts: ["Comment te sens-tu en ce moment ?"],
       confidence: 0,
-      dataPoints: {
-        timePatterns: 0,
-        phaseData: 0,
-        conversationHistory: 0
-      },
-      recommendations: []
+      dataPoints: { timePatterns: 0, phaseData: 0, conversationHistory: 0 },
+      recommendations: [],
+      fromCache: false,
+      error: true
     };
   }
-
-  // Extraction des données d'intelligence pour la factory function
-  const intelligenceData = {
-    learning: intelligence.learning,
-    getPersonalizedPrompts: (phase, persona) => intelligence.getPersonalizedPrompts(phase, persona)
-  };
-
-  // Génération via createPersonalizationEngine
-  const personalizationEngine = createPersonalizationEngine(
-    intelligenceData,
-    preferences,
-    currentPhase,
-    persona
-  );
-
-  const experience = personalizationEngine.createPersonalizedExperience();
-  
-  // 🆕 Ajouter calcul empathie
-  const emotionalReadiness = calculateEmotionalReadiness(
-    currentPhase, 
-    intelligence
-  );
-  
-  let contextualActions = experience.contextualActions || [];
-  
-  // Adapter les actions selon readiness
-  if (emotionalReadiness.shouldDelay) {
-    contextualActions = contextualActions.map(action => ({
-      ...action,
-      title: action.title.replace('maintenant', 'quand tu te sentiras prête'),
-      softLaunch: true,
-      emotionalTiming: emotionalReadiness.timing
-    }));
-  }
-  
-  return {
-    ...experience,
-    contextualActions,
-    emotionalReadiness // 🆕
-  };
 };
 
 // 🆕 Calcul empathie temporelle
@@ -115,6 +154,19 @@ export function useSmartSuggestions() {
   const intelligence = useUserIntelligence();
   const engagement = useEngagementStore();
   
+  // 🆕 État local pour suggestions avec monitoring
+  const [suggestions, setSuggestions] = useState({
+    actions: [],
+    prompts: [],
+    confidence: 0,
+    dataPoints: {},
+    recommendations: [],
+    emotionalReadiness: null,
+    fromCache: false,
+    generationTime: 0,
+    error: false
+  });
+  
   const currentPhase = getCurrentPhaseAdaptive(
     cycleData.lastPeriodDate,
     cycleData.length,
@@ -135,47 +187,92 @@ export function useSmartSuggestions() {
     getPersonalizedPrompts: intelligence.getPersonalizedPrompts
   }), [intelligence.learning, intelligence.getPersonalizedPrompts]);
 
-  // ✅ Génération suggestions avec dépendances stables
-  const suggestions = useMemo(() => {
-    const experience = createStableSuggestions(
-      stablePersona,
-      stablePhase,
-      stableIntelligence,
-      stablePreferences
-    );
-
-    let contextualActions = experience.contextualActions || [];
-
-    // AJOUT : Suggestions observation si pertinent
-    const observationReadiness = intelligence.getObservationReadiness?.();
+  // 🆕 useEffect pour génération avec monitoring
+  useEffect(() => {
+    const start = performance.now();
     
-    if (observationReadiness && !observationReadiness.hasEnoughData) {
-      // Ajouter suggestion d'observation
-      const observationAction = {
-        type: 'observation',
-        title: 'Note tes ressentis du jour',
-        label: 'Observer mon cycle',
-        prompt: CycleObservationEngine.getSuggestedObservations(
-          stablePhase, 
-          intelligence.observationPatterns?.lastObservations || []
-        )[0]?.prompt,
-        icon: '📝',
-        priority: 'medium',
-        confidence: 80
+    try {
+      // Generate suggestions
+      const experience = createStableSuggestions(
+        stablePersona,
+        stablePhase,
+        stableIntelligence,
+        stablePreferences
+      );
+
+      let contextualActions = experience.contextualActions || [];
+
+      // AJOUT : Suggestions observation si pertinent
+      const observationReadiness = intelligence.getObservationReadiness?.();
+      
+      if (observationReadiness && !observationReadiness.hasEnoughData) {
+        // Ajouter suggestion d'observation
+        const observationAction = {
+          type: 'observation',
+          title: 'Note tes ressentis du jour',
+          label: 'Observer mon cycle',
+          prompt: CycleObservationEngine.getSuggestedObservations(
+            stablePhase, 
+            intelligence.observationPatterns?.lastObservations || []
+          )[0]?.prompt,
+          icon: '📝',
+          priority: 'medium',
+          confidence: 80
+        };
+        
+        // Insérer en 2e position
+        contextualActions.splice(1, 0, observationAction);
+      }
+
+      const result = {
+        actions: contextualActions,
+        prompts: experience.personalizedPrompts || [],
+        confidence: experience.personalization?.confidence || 0,
+        dataPoints: experience.personalization?.dataPoints || {},
+        recommendations: experience.personalization?.recommendations || [],
+        emotionalReadiness: experience.emotionalReadiness,
+        fromCache: experience.fromCache || false,
+        generationTime: experience.generationTime || 0,
+        error: false
       };
       
-      // Insérer en 2e position
-      contextualActions.splice(1, 0, observationAction);
+      setSuggestions(result);
+      
+      // 📊 Track performance
+      const duration = performance.now() - start;
+      trackPipelineExecution({
+        duration,
+        cacheHit: result.fromCache,
+        persona: stablePersona,
+        phase: stablePhase
+      });
+      
+    } catch (error) {
+      const duration = performance.now() - start;
+      
+      // 🚨 Track error
+      trackError(error, {
+        persona: stablePersona,
+        phase: stablePhase,
+        duration
+      });
+      
+      // Alert if performance issue
+      if (duration > 100) { // Seuil performance critique
+        const performanceError = new Error('PERFORMANCE_THRESHOLD');
+        performanceError.type = 'PERFORMANCE_THRESHOLD';
+        performanceError.duration = duration;
+        trackError(performanceError, { persona: stablePersona, phase: stablePhase });
+      }
+      
+      // Set error state
+      setSuggestions(prev => ({
+        ...prev,
+        error: true,
+        prompts: ["Comment te sens-tu en ce moment ?"],
+        confidence: 0
+      }));
     }
-
-    return {
-      actions: contextualActions,
-      prompts: experience.personalizedPrompts || [],
-      confidence: experience.personalization?.confidence || 0,
-      dataPoints: experience.personalization?.dataPoints || {},
-      recommendations: experience.personalization?.recommendations || [],
-      emotionalReadiness: experience.emotionalReadiness // 🆕
-    };
   }, [stablePersona, stablePhase, stableIntelligence, stablePreferences, intelligence]);
 
   // ──────────────────────────────────────────────────────
