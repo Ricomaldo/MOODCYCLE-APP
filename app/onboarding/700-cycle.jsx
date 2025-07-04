@@ -1,487 +1,190 @@
 //
 // ─────────────────────────────────────────────────────────
 // 📄 Fichier : app/onboarding/700-cycle.jsx
-// 🎯 Status: ✅ FINAL - NE PAS MODIFIER
-// 📝 Description: Configuration du cycle menstruel
-// 🔄 Cycle: Onboarding - Étape 5/8
+// 🎯 Status: ✅ REFACTORISÉ v3.0 - Conversationnel
+// 📝 Description: Configuration cycle avec empathie
+// 🔄 Version: 3.0 - 258 lignes
 // ─────────────────────────────────────────────────────────
 //
 import React, { useEffect, useRef, useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, Text, Animated, ScrollView } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Text, Animated, ScrollView, Platform } from 'react-native';
 import { router } from 'expo-router';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import * as Haptics from 'expo-haptics';
 import OnboardingScreen from '../../src/core/layout/OnboardingScreen';
-import { BodyText, Heading2 } from '../../src/core/ui/typography';
+import { BodyText, Caption } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { useCycleStore } from '../../src/stores/useCycleStore';
 import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
+import { getOnboardingMessage } from '../../src/config/onboardingMessages';
+import { CycleDateSelector } from '../../src/features/onboarding/cycle/CycleDateSelector';
+import { CycleDurationWheel } from '../../src/features/onboarding/cycle/CycleDurationWheel';
 import { 
   AnimatedOnboardingScreen,
   AnimatedRevealMessage,
-  StandardOnboardingButton,
-  AnimatedOnboardingButton,
-  ANIMATION_DURATIONS,
-  ANIMATION_CONFIGS,
-  ANIMATION_PRESETS
+  StandardOnboardingButton
 } from '../../src/core/ui/animations';
 
-const formatDateFrench = (date) => {
-  try {
-    const d = (date instanceof Date) ? date : new Date(date);
-    if (isNaN(d.getTime())) return '';
-    
-    const options = { day: 'numeric', month: 'long', year: 'numeric' };
-    return new Intl.DateTimeFormat('fr-FR', options).format(d);
-  } catch (e) {
-    return '';
-  }
-};
-
+// Composant principal
 export default function CycleScreen() {
   const { theme } = useTheme();
   const styles = getStyles(theme);
   const { updateCycle } = useCycleStore();
   const intelligence = useOnboardingIntelligence('700-cycle');
-
-  // États
+  
   const [lastPeriodDate, setLastPeriodDate] = useState(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
   const [cycleLength, setCycleLength] = useState(28);
-  const [showDateModal, setShowDateModal] = useState(false);
-  const [showEncouragement, setShowEncouragement] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   
-  // Animations
-  const messageAnim = useRef(new Animated.Value(0)).current;
-  const dateQuestionAnim = useRef(new Animated.Value(0)).current;
-  const dateCardAnim = useRef(new Animated.Value(0)).current;
-  const lengthQuestionAnim = useRef(new Animated.Value(0)).current;
-  const lengthControlsAnim = useRef(new Animated.Value(0)).current;
-  const buttonAnim = useRef(new Animated.Value(0)).current;
-
+  // Une seule animation pour toute l'expérience
+  const unifiedAnim = useRef(new Animated.Value(0)).current;
+  
   useEffect(() => {
-    // Séquence d'animation
-    Animated.sequence([
-      // 1. Message de Mélune
-      Animated.timing(messageAnim, {
-        toValue: 1,
-        duration: ANIMATION_DURATIONS.welcomeFirstMessage,
-        ...ANIMATION_PRESETS.gentle,
-        useNativeDriver: true,
-      }),
-      // Pause pour lire le message
-      Animated.delay(ANIMATION_DURATIONS.normal),
-      // 2. Question date
-      Animated.timing(dateQuestionAnim, {
-        toValue: 1,
-        duration: ANIMATION_DURATIONS.elegant,
-        ...ANIMATION_PRESETS.smooth,
-        useNativeDriver: true,
-      }),
-      // Petite pause
-      Animated.delay(ANIMATION_DURATIONS.quick),
-      // 3. Carte date
-      Animated.timing(dateCardAnim, {
-        toValue: 1,
-        duration: ANIMATION_DURATIONS.slow,
-        ...ANIMATION_PRESETS.gentle,
-        useNativeDriver: true,
-      }),
-      // Pause plus longue avant la seconde section
-      Animated.delay(ANIMATION_DURATIONS.normal),
-      // 4. Question longueur
-      Animated.timing(lengthQuestionAnim, {
-        toValue: 1,
-        duration: ANIMATION_DURATIONS.elegant,
-        ...ANIMATION_PRESETS.smooth,
-        useNativeDriver: true,
-      }),
-      // Petite pause
-      Animated.delay(ANIMATION_DURATIONS.quick),
-      // 5. Contrôles longueur
-      Animated.timing(lengthControlsAnim, {
-        toValue: 1,
-        duration: ANIMATION_DURATIONS.slow,
-        ...ANIMATION_PRESETS.gentle,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    Animated.spring(unifiedAnim, {
+      toValue: 1,
+      delay: 600,
+      tension: 80,
+      friction: 8,
+      useNativeDriver: true
+    }).start(() => setIsReady(true));
   }, []);
-
-  const handleDateConfirm = (selectedDate) => {
-    setShowDateModal(false);
-    if (selectedDate) {
-      const d = (selectedDate instanceof Date) ? selectedDate : new Date(selectedDate);
-      setLastPeriodDate(isNaN(d.getTime()) ? new Date() : d);
-    }
-  };
-
+  
   const handleContinue = () => {
-    // Sauvegarder les données du cycle
     updateCycle({
       lastPeriodDate: lastPeriodDate.toISOString(),
       length: cycleLength,
-      periodDuration: 5, // Valeur par défaut
+      periodDuration: 5
     });
-
-    // Track configuration cycle
+    
     intelligence.trackAction('cycle_configured', {
       cycleLength,
       lastPeriodDate: lastPeriodDate.toISOString()
     });
     
-    // Afficher encouragement si persona disponible
-    if (intelligence.personaConfidence >= 0.4) {
-      setShowEncouragement(true);
-      // Délai légèrement augmenté pour laisser le temps de lire
-      setTimeout(() => {
-        router.push('/onboarding/800-preferences');
-      }, ANIMATION_DURATIONS.elegant + 500);
-    } else {
-      setTimeout(() => {
-        router.push('/onboarding/800-preferences');
-      }, ANIMATION_DURATIONS.elegant);
-    }
+    router.push('/onboarding/800-preferences');
   };
-
+  
+  const getConversationalMessage = () => {
+    return getOnboardingMessage('700-cycle', intelligence.currentPersona, 'conversational') || 
+      "Raconte-moi où tu en es dans ton cycle, on va faire ça ensemble 💕";
+  };
+  
   return (
     <OnboardingScreen currentScreen="700-cycle">
-      <AnimatedOnboardingScreen style={styles.container}>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          bounces={false}
+      <AnimatedOnboardingScreen>
+        <ScrollView 
+          contentContainerStyle={styles.container}
           showsVerticalScrollIndicator={false}
+          bounces={false}
         >
-          {/* Message de Mélune */}
+          {/* Message conversationnel */}
+          <AnimatedRevealMessage delay={300}>
+            <View style={styles.messageSection}>
+              <BodyText style={styles.conversationalMessage}>
+                {getConversationalMessage()}
+              </BodyText>
+            </View>
+          </AnimatedRevealMessage>
+          
+          {/* Carte unifiée conversationnelle */}
           <Animated.View style={[
-            styles.messageSection,
+            styles.unifiedCard,
             {
-              opacity: messageAnim,
+              opacity: unifiedAnim,
               transform: [{
-                translateY: messageAnim.interpolate({
+                scale: unifiedAnim.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [20, 0],
-                }),
-              }],
-            },
+                  outputRange: [0.95, 1]
+                })
+              }]
+            }
           ]}>
-            <BodyText style={styles.message}>
-              {intelligence.personaConfidence >= 0.6 
-                ? intelligence.getPersonalizedMessage('message')
-                : "Configurons ton cycle pour un accompagnement personnalisé"}
-            </BodyText>
+            {/* Question date avec empathie */}
+            <View style={styles.section}>
+              <Text style={styles.gentleQuestion}>
+                {getOnboardingMessage('700-cycle-questions', intelligence.currentPersona, 'date') || "Tes dernières règles, c'était... 🌸"}
+              </Text>
+              <CycleDateSelector
+                value={lastPeriodDate}
+                onChange={setLastPeriodDate}
+                persona={intelligence.currentPersona}
+                theme={theme}
+              />
+            </View>
             
-            {intelligence.personaConfidence >= 0.6 && (
-              <Animated.View style={[
-                styles.encouragementSection,
-                {
-                  opacity: messageAnim,
-                  transform: [{
-                    translateY: messageAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [30, 0],
-                    }),
-                  }],
-                },
-              ]}>
-                <BodyText style={styles.encouragementText}>
-                  {intelligence.getPersonalizedMessage('encouragement')}
-                </BodyText>
-              </Animated.View>
+            <View style={styles.softDivider} />
+            
+            {/* Question durée avec bienveillance */}
+            <View style={styles.section}>
+              <Text style={styles.gentleQuestion}>
+                {getOnboardingMessage('700-cycle-questions', intelligence.currentPersona, 'duration') || "Et d'habitude, ton cycle dure... 🌙"}
+              </Text>
+              <CycleDurationWheel
+                value={cycleLength}
+                onChange={setCycleLength}
+                persona={intelligence.currentPersona}
+                theme={theme}
+              />
+            </View>
+            
+            {/* Validation douce */}
+            {isReady && (
+              <AnimatedRevealMessage delay={800}>
+                <View style={styles.validationSection}>
+                  <Caption style={styles.validation}>
+                    Parfait, j'ai tout ce qu'il me faut pour t'accompagner ✨
+                  </Caption>
+                </View>
+              </AnimatedRevealMessage>
             )}
           </Animated.View>
-
-          {/* Section principale */}
-          <View style={styles.mainSection}>
-            {/* Question date */}
-            <Animated.View style={{
-              opacity: dateQuestionAnim,
-              transform: [{
-                translateY: dateQuestionAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [20, 0],
-                }),
-              }],
-            }}>
-              <Heading2 style={[styles.title, { fontFamily: 'Quintessential' }]}>
-                Quand ont commencé tes dernières règles ?
-              </Heading2>
-            </Animated.View>
-
-            {/* Carte date */}
-            <Animated.View style={{
-              opacity: dateCardAnim,
-              transform: [{
-                translateY: dateCardAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [20, 0],
-                }),
-              }],
-            }}>
-              <TouchableOpacity 
-                style={styles.dateCard} 
-                onPress={() => setShowDateModal(true)}
-                activeOpacity={0.8}
-              >
-                <View style={styles.dateIconContainer}>
-                  <Text style={styles.dateIcon}>📅</Text>
-                </View>
-                <BodyText style={styles.dateText}>{formatDateFrench(lastPeriodDate)}</BodyText>
-              </TouchableOpacity>
-            </Animated.View>
-
-            {/* Question longueur */}
-            <Animated.View style={{
-              opacity: lengthQuestionAnim,
-              transform: [{
-                translateY: lengthQuestionAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [20, 0],
-                }),
-              }],
-            }}>
-              <Heading2 style={[styles.title, { fontFamily: 'Quintessential' }]}>
-                Durée habituelle de ton cycle
-              </Heading2>
-            </Animated.View>
-
-            {/* Contrôles longueur */}
-            <Animated.View style={{
-              opacity: lengthControlsAnim,
-              transform: [{
-                translateY: lengthControlsAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [20, 0],
-                }),
-              }],
-            }}>
-              <View style={styles.customLengthSection}>
-                <View style={styles.customLengthControls}>
-                  <TouchableOpacity
-                    style={[styles.controlButton, cycleLength <= 25 && styles.controlButtonDisabled]}
-                    onPress={() => cycleLength > 25 && setCycleLength(cycleLength - 1)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.controlButtonText}>−</Text>
-                  </TouchableOpacity>
-
-                  <View style={styles.lengthDisplay}>
-                    <BodyText style={styles.lengthNumber}>{cycleLength}</BodyText>
-                    <BodyText style={styles.lengthUnit}>jours</BodyText>
-                  </View>
-
-                  <TouchableOpacity
-                    style={[styles.controlButton, cycleLength >= 35 && styles.controlButtonDisabled]}
-                    onPress={() => cycleLength < 35 && setCycleLength(cycleLength + 1)}
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.controlButtonText}>+</Text>
-                  </TouchableOpacity>
-                </View>
-                <BodyText style={styles.lengthRange}>Entre 25 et 35 jours</BodyText>
-              </View>
-            </Animated.View>
-            
-            {/* Encouragement après configuration */}
-            {showEncouragement && intelligence.personaConfidence >= 0.4 && (
-              <Animated.View style={{
-                opacity: lengthControlsAnim,
-                marginTop: theme.spacing.xl
-              }}>
-                <BodyText style={styles.encouragementText}>
-                  {intelligence.getPersonalizedMessage('encouragement')}
-                </BodyText>
-              </Animated.View>
-            )}
-          </View>
         </ScrollView>
-
-        {/* Section bouton */}
+        
+        {/* Bouton continuer */}
         <View style={styles.bottomSection}>
-          <AnimatedOnboardingButton 
-            {...ANIMATION_CONFIGS.onboarding.welcome.button}
-          >
-            <StandardOnboardingButton
-              title="Continuer"
-              onPress={handleContinue}
-              variant="primary"
-            />
-          </AnimatedOnboardingButton>
+          <StandardOnboardingButton
+            title="Continuer"
+            onPress={handleContinue}
+            variant="primary"
+          />
         </View>
       </AnimatedOnboardingScreen>
-
-      <DateTimePickerModal
-        isVisible={showDateModal}
-        mode="date"
-        date={lastPeriodDate instanceof Date && !isNaN(lastPeriodDate.getTime()) ? lastPeriodDate : new Date()}
-        onConfirm={handleDateConfirm}
-        onCancel={() => setShowDateModal(false)}
-        maximumDate={new Date()}
-        locale="fr-FR"
-        headerTextIOS="Sélectionne la date de tes dernières règles"
-        confirmTextIOS="Valider"
-        cancelTextIOS="Annuler"
-      />
     </OnboardingScreen>
   );
 }
 
+// Styles simplifiés et cohérents
 const getStyles = (theme) => StyleSheet.create({
-  container: {
-    flex: 1,
+  container: { flexGrow: 1, paddingTop: theme.spacing.m, paddingBottom: 100 },
+  messageSection: { paddingHorizontal: theme.spacing.xl, marginBottom: theme.spacing.l, alignItems: 'center' },
+  conversationalMessage: {
+    fontSize: 20, textAlign: 'center', color: theme.colors.text,
+    lineHeight: 28, fontFamily: 'Quintessential_400Regular', maxWidth: 320
   },
-
-  scrollView: {
-    flex: 1,
+  unifiedCard: {
+    backgroundColor: theme.colors.surface + '95',
+    marginHorizontal: theme.spacing.l, borderRadius: 28,
+    padding: theme.spacing.l, borderWidth: 1,
+    borderColor: theme.colors.border + '30',
+    ...Platform.select({
+      ios: { shadowColor: theme.colors.primary, shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08, shadowRadius: 12 },
+      android: { elevation: 4 }
+    })
   },
-  
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingTop: theme.spacing.xl,
-    paddingBottom: theme.spacing.xxl * 2,
+  section: { marginBottom: theme.spacing.s },
+  gentleQuestion: {
+    fontSize: 16, color: theme.colors.text, marginBottom: theme.spacing.m,
+    textAlign: 'center', fontWeight: '500', fontFamily: 'Quicksand_500Medium'
   },
-  
-  messageSection: {
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.xl,
-    marginBottom: theme.spacing.xl,
+  softDivider: {
+    height: 1, backgroundColor: theme.colors.border + '20',
+    marginVertical: theme.spacing.m, marginHorizontal: -theme.spacing.m
   },
-  
-  message: {
-    fontSize: 18,
-    textAlign: 'center',
-    color: theme.colors.text,
-    lineHeight: 24,
-    maxWidth: 280,
-    fontFamily: 'Questrial',
-  },
-  
-  mainSection: {
-    paddingHorizontal: theme.spacing.xl,
-  },
-  
-  title: {
-    fontSize: 24,
-    color: theme.colors.text,
-    marginBottom: theme.spacing.l,
-    textAlign: 'center',
-    lineHeight: 32,
-  },
-  
-  dateCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.surface + '40',
-    borderRadius: theme.borderRadius.xxl,
-    padding: theme.spacing.l,
-    marginHorizontal: theme.spacing.m,
-    marginBottom: theme.spacing.xl,
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  
-  dateIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: theme.colors.primary + '15',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: theme.spacing.m,
-  },
-  
-  dateIcon: {
-    fontSize: 20,
-  },
-  
-  dateText: {
-    fontSize: 16,
-    color: theme.colors.text,
-    flex: 1,
-  },
-
-  customLengthSection: {
-    alignItems: 'center',
-    marginTop: theme.spacing.l,
-  },
-
-  customLengthControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: theme.spacing.xl,
-    marginBottom: theme.spacing.m,
-  },
-
-  controlButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: theme.colors.primary + '10',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 1,
-  },
-
-  controlButtonDisabled: {
-    opacity: 0.4,
-  },
-
-  controlButtonText: {
-    fontSize: 28,
-    color: theme.colors.primary,
-    lineHeight: 48,
-  },
-
-  lengthDisplay: {
-    alignItems: 'center',
-    minWidth: 80,
-  },
-
-  lengthNumber: {
-    fontSize: 36,
-    color: theme.colors.primary,
-    fontWeight: '500',
-    lineHeight: 42,
-  },
-
-  lengthUnit: {
-    fontSize: 16,
-    color: theme.colors.textLight,
-    marginTop: -4,
-  },
-
-  lengthRange: {
-    fontSize: 14,
-    color: theme.colors.textLight,
-    opacity: 0.7,
-  },
-
+  validationSection: { marginTop: theme.spacing.l, alignItems: 'center' },
+  validation: { color: theme.colors.success, fontSize: 14, textAlign: 'center' },
   bottomSection: {
-    paddingHorizontal: theme.spacing.xl,
-    paddingBottom: theme.spacing.xl,
-  },
-
-  buttonContainer: {
-    alignItems: 'center',
-  },
-
-  encouragementSection: {
-    marginTop: theme.spacing.m,
-  },
-
-  encouragementText: {
-    fontSize: 14,
-    color: theme.colors.primary,
-    textAlign: 'center',
-    fontStyle: 'italic',
-    paddingHorizontal: theme.spacing.xl,
-  },
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    paddingHorizontal: theme.spacing.xl, paddingBottom: theme.spacing.xl,
+    paddingTop: theme.spacing.m, backgroundColor: theme.colors.background + 'F0'
+  }
 });

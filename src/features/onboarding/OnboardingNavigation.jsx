@@ -1,6 +1,6 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 File: src/features/shared/OnboardingNavigation.jsx
+// 📄 File: src/features/onboarding/OnboardingNavigation.jsx
 // 🧩 Type: Navigation Component
 // 📚 Description: Navigation onboarding avec progression 4 étapes groupées
 // 🕒 Version: 1.0 - 2025-06-23

@@ -105,25 +105,62 @@ export const ONBOARDING_MESSAGES = {
     '700-cycle': {
       emma: {
         message: "Dis-moi où tu en es pour que je puisse mieux t'accompagner !",
+        conversational: "Raconte-moi où tu en es dans ton cycle, on va faire ça ensemble 💕",
         encouragement: "Pas de stress, on ajustera au fur et à mesure",
       },
       laure: {
         message: "Configurons précisément ton cycle pour un suivi optimal",
+        conversational: "Prenons un moment pour configurer ton suivi personnalisé",
         encouragement: "Ces données permettront une personnalisation efficace",
       },
       clara: {
         message: "Let's tracker ton cycle ! Plus je connais, mieux je t'aide",
+        conversational: "Let's set up ton cycle ! Promis c'est super simple 🌟",
         encouragement: "On va révolutionner ta relation à ton cycle !",
       },
       sylvie: {
         message: "Prenons le temps de bien configurer ton suivi",
+        conversational: "Doucement, partageons ce qui est important pour toi",
         encouragement: "Chaque femme a son rythme unique",
       },
       christine: {
         message: "Renseignons votre cycle pour un accompagnement adapté",
+        conversational: "Configurons ensemble votre accompagnement cyclique",
         encouragement: "Cette étape est importante pour votre suivi personnalisé",
       },
-      default: "Configurons ton cycle pour un accompagnement personnalisé"
+      default: {
+        message: "Configurons ton cycle pour un accompagnement personnalisé",
+        conversational: "Raconte-moi où tu en es dans ton cycle, on va faire ça ensemble 💕",
+        encouragement: "Nous découvrirons ensemble"
+      }
+    },
+
+    // 700-cycle-questions: Questions personnalisées pour date et durée
+    '700-cycle-questions': {
+      emma: {
+        date: "Tes dernières règles, c'était quand ? 🌸",
+        duration: "Ton cycle dure combien de jours d'habitude ? ✨"
+      },
+      laure: {
+        date: "Quand ont débuté tes dernières règles ?",
+        duration: "Combien de jours dure ton cycle habituellement ?"
+      },
+      clara: {
+        date: "Quand ont commencé tes dernières règles ? 📅",
+        duration: "Combien de jours dure ton cycle d'habitude ? 🔄"
+      },
+      sylvie: {
+        date: "Quand ont débuté tes dernières lunes ?",
+        duration: "Combien de jours entre chaque lune ?"
+      },
+      christine: {
+        date: "Quand ont commencé tes dernières règles ?",
+        duration: "Combien de jours dure ton cycle habituellement ?"
+      },
+      default: {
+        date: "Quand ont commencé tes dernières règles ?",
+        duration: "Combien de jours dure ton cycle habituellement ?"
+      }
     },
   
     // 800-preferences: Suggestions personnalisées

@@ -62,6 +62,11 @@ import { useCycleStore } from '../../src/stores/useCycleStore';
 import { useUserIntelligence } from '../../src/stores/useUserIntelligence';
 
 describe('Phase Correction Flow Integration', () => {
+  // ✅ FIX FUITES MÉMOIRE : Configuration des timers
+  beforeAll(() => {
+    jest.useFakeTimers();
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     
@@ -183,7 +188,10 @@ describe('Phase Correction Flow Integration', () => {
       // Confirm
       await waitFor(() => {
         fireEvent.press(getByText(/Confirmer/i));
-      });
+      }, { timeout: 1000 }); // ✅ AJOUT TIMEOUT
+      
+      // ✅ NETTOYAGE EXPLICITE
+      jest.runOnlyPendingTimers();
       
       expect(mockCorrectPhase).toHaveBeenCalledWith('luteal');
     });
@@ -294,7 +302,10 @@ describe('Phase Correction Flow Integration', () => {
           'manual_phase_change',
           expect.any(Object)
         );
-      });
+      }, { timeout: 1000 }); // ✅ AJOUT TIMEOUT
+      
+      // ✅ NETTOYAGE EXPLICITE
+      jest.runOnlyPendingTimers();
     });
     
     it('should progress from discovery to learning after threshold', () => {
@@ -354,5 +365,16 @@ describe('Phase Correction Flow Integration', () => {
       
       expect(getByText(/Fais confiance à tes sensations/i)).toBeTruthy();
     });
+  });
+
+  // ✅ FIX FUITES MÉMOIRE : Nettoyage après chaque test
+  afterEach(() => {
+    jest.clearAllTimers();
+    jest.clearAllMocks();
+  });
+
+  // ✅ FIX FUITES MÉMOIRE : Restauration des timers réels
+  afterAll(() => {
+    jest.useRealTimers();
   });
 }); 

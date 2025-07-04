@@ -19,7 +19,7 @@ import CycleWheel from '../../../src/features/cycle/CycleWheel';
 import { getCycleDataAdaptive, useCycleStore } from '../../../src/stores/useCycleStore';
 import { useUserStore } from '../../../src/stores/useUserStore';
 import { PhaseIcon } from '../../../src/config/iconConstants';
-import QuickTrackingModal from '../../../src/features/notebook/QuickTrackingModal';
+import QuickTrackingModal from '../../../src/features/shared/QuickTrackingModal';
 import ParametresModal from '../../../src/core/settings/ParametresModal';
 import PhaseCorrectionModal from '../../../src/features/cycle/PhaseCorrectionModal';
 import { useTerminology } from '../../../src/hooks/useTerminology';

@@ -10,7 +10,7 @@
 import { Stack, usePathname } from "expo-router";
 import { View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
-import OnboardingNavigation from "../../src/features/shared/OnboardingNavigation";
+import OnboardingNavigation from "../../src/features/onboarding/OnboardingNavigation";
 
 export default function OnboardingLayout() {
   const pathname = usePathname();

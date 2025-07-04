@@ -8,7 +8,7 @@ import { getCurrentPhase, getCurrentPhaseAdaptive } from '../utils/cycleCalculat
 // 📊 MÉTRIQUES DE PERFORMANCE
 // ───────────────────────────────────────────────────────────
 
-const AB_TEST_METRICS = {
+export const AB_TEST_METRICS = {
   PREDICTIVE_ACCURACY: 85, // % de précision prédictive théorique
   MIN_OBSERVATIONS: 7,     // Nombre minimum d'observations pour test
   CONFIDENCE_THRESHOLD: 0.6, // Seuil de confiance pour observation

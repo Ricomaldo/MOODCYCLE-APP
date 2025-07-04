@@ -24,6 +24,9 @@ import {
   ANIMATION_CONFIGS
 } from '../../src/core/ui/animations';
 import { Ionicons } from '@expo/vector-icons';
+import { ObservationInvitation } from '../../src/features/onboarding/observation/ObservationInvitation';
+import { useCycleStore } from '../../src/stores/useCycleStore';
+import { useUserIntelligence } from '../../src/stores/useUserIntelligence';
 
 // 🎨 Dimensions thérapeutiques avec couleurs
 const THERAPEUTIC_DIMENSIONS = [
@@ -76,10 +79,13 @@ export default function PreferencesScreen() {
   const styles = getStyles(theme);
   const { preferences, updatePreferences } = useUserStore();
   const intelligence = useOnboardingIntelligence('800-preferences');
+  const { addObservation } = useCycleStore();
+  const { trackObservation } = useUserIntelligence();
   
   // États
   const scrollY = useRef(new Animated.Value(0)).current;
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
+  const [hasShownObservation, setHasShownObservation] = useState(false);
   
   const defaultPreferences = {
     symptoms: 0,
@@ -158,6 +164,20 @@ export default function PreferencesScreen() {
     });
     
     router.push('/onboarding/900-essai');
+  };
+
+  // Fonction de gestion de l'observation
+  const handleObservation = (data) => {
+    // Sauvegarder l'observation dans le cycle
+    addObservation(data.mood, data.energy, 'Première observation pendant onboarding');
+    
+    // Alimenter l'intelligence
+    trackObservation({
+      mood: data.mood,
+      energy: data.energy,
+      timestamp: Date.now(),
+      context: 'onboarding_preferences'
+    });
   };
 
   const handleScroll = (event) => {
@@ -284,6 +304,19 @@ export default function PreferencesScreen() {
                 )}
               </BodyText>
             </View>
+          )}
+
+          {/* Invitation à l'observation - NOUVEAU */}
+          {selectedCount > 0 && !hasShownObservation && (
+            <ObservationInvitation
+              persona={intelligence.currentPersona || 'emma'}
+              theme={theme}
+              onObservation={(data) => {
+                handleObservation(data);
+                setHasShownObservation(true);
+              }}
+              visible={selectedCount >= 2} // Apparaît après 2 sélections
+            />
           )}
         </ScrollView>
 

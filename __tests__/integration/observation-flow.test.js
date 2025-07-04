@@ -10,7 +10,7 @@
 
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import QuickTrackingModal from '../../src/features/notebook/QuickTrackingModal';
+import QuickTrackingModal from '../../src/features/shared/QuickTrackingModal';
 
 // Mock des stores avec Jest au lieu d'importer depuis __mocks__
 jest.mock('../../src/stores/useCycleStore');
@@ -20,6 +20,11 @@ import { useCycleStore } from '../../src/stores/useCycleStore';
 import { useNotebookStore } from '../../src/stores/useNotebookStore';
 
 describe('🔄 Observation Flow - Tests d\'Intégration', () => {
+  // ✅ FIX FUITES MÉMOIRE : Configuration des timers
+  beforeAll(() => {
+    jest.useFakeTimers();
+  });
+
   let cycleStore, notebookStore;
 
   beforeEach(() => {
@@ -59,7 +64,10 @@ describe('🔄 Observation Flow - Tests d\'Intégration', () => {
         'Symptômes: intuition' // notes
       );
       expect(onClose).toHaveBeenCalled();
-    });
+    }, { timeout: 1000 }); // ✅ AJOUT TIMEOUT
+    
+    // ✅ NETTOYAGE EXPLICITE
+    jest.runOnlyPendingTimers();
   });
 
   test('✅ devrait gérer les archétypes Miranda Gray', async () => {
@@ -76,5 +84,16 @@ describe('🔄 Observation Flow - Tests d\'Intégration', () => {
     expect(getByText('Facilité sociale')).toBeTruthy(); // "Communication" → "Facilité sociale"
     expect(getByText('Sensualité')).toBeTruthy();
     expect(getByText('Confiance')).toBeTruthy();
+  });
+
+  // ✅ FIX FUITES MÉMOIRE : Nettoyage après chaque test
+  afterEach(() => {
+    jest.clearAllTimers();
+    jest.clearAllMocks();
+  });
+
+  // ✅ FIX FUITES MÉMOIRE : Restauration des timers réels
+  afterAll(() => {
+    jest.useRealTimers();
   });
 });

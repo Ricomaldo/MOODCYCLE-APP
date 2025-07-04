@@ -11,7 +11,6 @@ import { View, TouchableOpacity, StyleSheet, Animated, ScrollView, TextInput, Ke
 import { router } from 'expo-router';
 import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
 import ScreenContainer from '../../src/core/layout/ScreenContainer';
-import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
 import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { useUserStore } from '../../src/stores/useUserStore';
@@ -133,46 +132,18 @@ export default function PrenomScreen() {
       >
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
           
-          {/* TopSection - Avatar + Message */}
-          <View style={styles.topSection}>
-            <Animated.View 
-              style={{ 
-                opacity: fadeAnim,
-                transform: [{ scale: heartAnim }]
-              }}
-            >
-              <MeluneAvatar 
-                phase="ovulatory" 
-                size="medium" 
-                style="classic"
-                animated={true}
-              />
-            </Animated.View>
-            
-            <Animated.View
-              style={[
-                styles.messageContainer,
-                {
-                  transform: [{ translateY: slideAnim }],
-                  opacity: slideAnim.interpolate({
-                    inputRange: [-20, 0],
-                    outputRange: [0, 1],
-                    extrapolate: 'clamp',
-                  }),
-                },
-              ]}
-            >
-              <AnimatedRevealMessage delay={800}>
-                <BodyText style={[styles.meluneMessage, { fontFamily: 'Quintessential' }]}>
-                  {intelligence.personaConfidence >= 0.4 
-                    ? intelligence.getPersonalizedMessage('question')
-                    : "Comment aimerais-tu que je t'appelle ?"}
-                </BodyText>
-              </AnimatedRevealMessage>
-            </Animated.View>
+          {/* Message de Mélune */}
+          <View style={styles.messageSection}>
+            <AnimatedRevealMessage delay={800}>
+              <BodyText style={[styles.meluneMessage, { fontFamily: 'Quintessential' }]}>
+                {intelligence.personaConfidence >= 0.4 
+                  ? intelligence.getPersonalizedMessage('question')
+                  : "Comment aimerais-tu que je t'appelle ?"}
+              </BodyText>
+            </AnimatedRevealMessage>
           </View>
 
-          {/* MainSection - Input + Preview */}
+          {/* Section principale */}
           <View style={styles.mainSection}>
             <Animated.View
               style={[
@@ -285,21 +256,17 @@ const getStyles = (theme) => StyleSheet.create({
   
   scrollContent: {
     flexGrow: 1,
+    paddingBottom: theme.spacing.xxl,
   },
   
   content: {
     flex: 1,
   },
   
-  topSection: {
+  messageSection: {
     alignItems: 'center',
-    paddingTop: theme.spacing.xxl,
-  },
-  
-  messageContainer: {
-    alignItems: 'center',
+    paddingTop: theme.spacing.xl,
     paddingHorizontal: theme.spacing.xl,
-    marginTop: theme.spacing.xl,
   },
   
   meluneMessage: {
@@ -312,8 +279,8 @@ const getStyles = (theme) => StyleSheet.create({
   
   mainSection: {
     flex: 1,
-    paddingTop: theme.spacing.xxl,
     paddingHorizontal: theme.spacing.xl,
+    paddingTop: theme.spacing.xxl,
   },
   
   formContainer: {
