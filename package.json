@@ -7,7 +7,11 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "test": "jest --watchAll",
+    "test": "node --max-old-space-size=4096 node_modules/.bin/jest --watchAll",
+    "test:unit": "node --max-old-space-size=2048 node_modules/.bin/jest __tests__/unit",
+    "test:integration": "node --max-old-space-size=4096 node_modules/.bin/jest __tests__/integration",
+    "test:performance": "node --max-old-space-size=4096 node_modules/.bin/jest __tests__/performance",
+    "test:single": "node --max-old-space-size=2048 node_modules/.bin/jest --runInBand",
     "lint": "eslint . --ext .js,.jsx --ignore-path .gitignore",
     "lint:fix": "eslint . --ext .js,.jsx --fix",
     "format": "prettier . --write"
@@ -37,7 +41,11 @@
       "<rootDir>/node_modules/",
       "<rootDir>/__tests__/__mocks__/",
       ".*\\.future\\..*"
-    ]
+    ],
+    "maxWorkers": 1,
+    "workerIdleMemoryLimit": "512MB",
+    "detectLeaks": true,
+    "detectOpenHandles": true
   },
   "dependencies": {
     "@expo-google-fonts/quicksand": "^0.3.0",

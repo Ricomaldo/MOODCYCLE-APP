@@ -58,6 +58,11 @@ describe('🔌 Connexions Intelligence - Tests Intégration', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     
+    // Forcer le garbage collector si disponible
+    if (global.gc) {
+      global.gc();
+    }
+    
     // Nettoyer le cache du FeatureGatingSystem pour éviter les interférences entre tests
     const FeatureGatingSystem = require('../../src/services/FeatureGatingSystem').default;
     if (FeatureGatingSystem && FeatureGatingSystem.clearCache) {
@@ -112,6 +117,17 @@ describe('🔌 Connexions Intelligence - Tests Intégration', () => {
     mockEngagementHook.getState = jest.fn(() => mockEngagementData);
     
     require('../../src/stores/useEngagementStore').useEngagementStore = mockEngagementHook;
+  });
+
+  afterEach(() => {
+    // Nettoyer les références pour éviter les fuites mémoire
+    jest.clearAllMocks();
+    jest.resetModules();
+    
+    // Forcer le garbage collector si disponible
+    if (global.gc) {
+      global.gc();
+    }
   });
 
   describe('getCycleDataAdaptive', () => {
@@ -175,19 +191,11 @@ describe('🔌 Connexions Intelligence - Tests Intégration', () => {
 
       const { result } = renderHook(() => useAdaptiveInterface());
       
-      // DEBUG 1 : Affichage complet de la structure retournée
-      // eslint-disable-next-line no-console
-      console.log('🟢 DEBUG features:', JSON.stringify(result.current.features, null, 2));
+      // DEBUG simplifié pour éviter les fuites mémoire
       // eslint-disable-next-line no-console
       console.log('🟢 DEBUG maturity:', result.current.maturityLevel);
       // eslint-disable-next-line no-console
-      console.log('🟢 DEBUG metrics:', JSON.stringify(result.current.metrics, null, 2));
-      // eslint-disable-next-line no-console
-      console.log('🟢 DEBUG config.features:', JSON.stringify(result.current.config?.features, null, 2));
-      // eslint-disable-next-line no-console
-      console.log('🟢 DEBUG pendingFeatures:', JSON.stringify(result.current.pendingFeatures, null, 2));
-      // eslint-disable-next-line no-console
-      console.log('🟢 DEBUG engagement metrics:', JSON.stringify(mockLearningData.metrics, null, 2));
+      console.log('🟢 DEBUG features count:', Object.keys(result.current.features || {}).length);
       
       // Test souple : juste vérifier que features existe
       expect(result.current.features).toBeDefined();
