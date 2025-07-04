@@ -1,52 +1,54 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 File: app/onboarding/800-demarrage.jsx
-// 🧩 Type: Écran Onboarding
-// 📚 Description: Premier cadeau + activation intelligence complète
-// 🕒 Version: 2.0 - 2025-01-21
-// 🧭 Used in: Parcours onboarding, étape finale
+// 📄 Fichier : app/onboarding/950-demarrage.jsx
+// 🎯 Status: ✅ FINAL - NE PAS MODIFIER
+// 📝 Description: Finalisation et activation de l'intelligence
+// 🔄 Cycle: Onboarding - Étape finale
 // ─────────────────────────────────────────────────────────
 //
 import React, { useEffect, useRef, useState } from 'react';
 import { View, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { router } from 'expo-router';
-import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
-import { getPersonalizedInsight } from '../../src/services/InsightsEngine';
-import ScreenContainer from '../../src/core/layout/ScreenContainer';
-import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
-import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
+import OnboardingScreen from '../../src/core/layout/OnboardingScreen';
 import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
+import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
+import { getPersonalizedInsight } from '../../src/services/InsightsEngine';
+import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
+import { AnimatedRevealMessage } from '../../src/core/ui/animations';
 
 export default function CadeauScreen() {
   const { theme } = useTheme();
   const styles = getStyles(theme);
-  const intelligence = useOnboardingIntelligence('800-cadeau');
+  const intelligence = useOnboardingIntelligence('950-demarrage');
   
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
-  const sparkleAnim = useRef(new Animated.Value(0)).current;
-  
+  // États
   const [isLoading, setIsLoading] = useState(true);
   const [personalizedInsight, setPersonalizedInsight] = useState(null);
   const [error, setError] = useState(false);
   const [intelligenceRecap, setIntelligenceRecap] = useState(null);
+  
+  // Animations
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+  const sparkleAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    // Séquence d'animation
     Animated.sequence([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 500,
+        duration: 600,
         useNativeDriver: true,
       }),
-      Animated.delay(400),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 600,
+        duration: 800,
         useNativeDriver: true,
       }),
     ]).start();
 
+    // Animation continue des étincelles
     Animated.loop(
       Animated.sequence([
         Animated.timing(sparkleAnim, {
@@ -113,8 +115,6 @@ export default function CadeauScreen() {
         ...insightResult,
         content: personalizedContent
       });
-
-
 
       intelligence.updateProfile({ 
         completed: true,
@@ -206,7 +206,8 @@ export default function CadeauScreen() {
 
     return (
       <View style={styles.successContainer}>
-        <View style={styles.header}>
+        {/* Message de Mélune */}
+        <View style={styles.messageSection}>
           <MeluneAvatar 
             phase="ovulatory" 
             size="large" 
@@ -214,14 +215,25 @@ export default function CadeauScreen() {
             animated={true}
           />
           
-          <BodyText style={styles.welcomeTitle}>
-            Ton voyage commence maintenant ! 🌟
-          </BodyText>
-          
+          <Animated.View
+            style={[
+              styles.messageContainer,
+              {
+                transform: [{ translateY: slideAnim }]
+              }
+            ]}
+          >
+            <AnimatedRevealMessage delay={800}>
+              <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
+                Ton voyage commence maintenant ! 🌟
+              </BodyText>
+            </AnimatedRevealMessage>
+          </Animated.View>
         </View>
 
+        {/* Section principale */}
         {personalizedInsight && (
-          <View style={styles.insightContainer}>
+          <View style={styles.mainSection}>
             <View style={styles.insightCard}>
               <BodyText style={styles.insightText}>
                 {personalizedInsight.content}
@@ -229,143 +241,142 @@ export default function CadeauScreen() {
             </View>
           </View>
         )}
+
+        {/* Section bouton */}
+        <View style={styles.bottomSection}>
+          <TouchableOpacity
+            style={styles.continueButton}
+            onPress={handleFinishOnboarding}
+            activeOpacity={0.8}
+          >
+            <BodyText style={styles.continueButtonText}>
+              Commencer mon voyage
+            </BodyText>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   };
 
   return (
-    <ScreenContainer edges={['top', 'bottom']}>
-      <OnboardingNavigation currentScreen="800-cadeau" hideProgress={true} />
-      
+    <OnboardingScreen currentScreen="950-demarrage" hideProgress={true}>
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-        <Animated.View
-          style={[
-            styles.mainContent,
-            {
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          {renderContent()}
-        </Animated.View>
-
-        <TouchableOpacity 
-          style={styles.finishButton}
-          onPress={handleFinishOnboarding}
-          disabled={isLoading}
-        >
-          <BodyText style={styles.finishButtonText}>
-            Commencer l'aventure ! 🚀
-          </BodyText>
-        </TouchableOpacity>
+        {renderContent()}
       </Animated.View>
-    </ScreenContainer>
+    </OnboardingScreen>
   );
 }
 
 const getStyles = (theme) => StyleSheet.create({
   content: {
     flex: 1,
-    padding: 24,
-    justifyContent: 'space-between',
   },
-  mainContent: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  loadingContainer: {
+  
+  messageSection: {
     alignItems: 'center',
-    padding: 32,
+    paddingTop: theme.spacing.xxl,
   },
+  
+  messageContainer: {
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.xl,
+    marginTop: theme.spacing.xl,
+  },
+  
+  message: {
+    fontSize: 20,
+    textAlign: 'center',
+    color: theme.colors.text,
+    lineHeight: 28,
+    maxWidth: 300,
+  },
+  
+  mainSection: {
+    flex: 1,
+    paddingHorizontal: theme.spacing.xl,
+    paddingTop: theme.spacing.xl,
+  },
+  
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: theme.spacing.xl,
+  },
+  
   loadingEmoji: {
-    fontSize: 48,
-    marginBottom: 16,
+    fontSize: 32,
+    marginBottom: theme.spacing.l,
   },
+  
   loadingText: {
     fontSize: 16,
+    color: theme.colors.textLight,
     textAlign: 'center',
-    color: theme.colors.textSecondary,
   },
+  
   errorContainer: {
+    flex: 1,
     alignItems: 'center',
-    padding: 32,
+    justifyContent: 'center',
+    paddingHorizontal: theme.spacing.xl,
   },
+  
   errorText: {
     fontSize: 16,
+    color: theme.colors.error,
     textAlign: 'center',
-    color: theme.colors.textSecondary,
-    marginBottom: 24,
+    marginBottom: theme.spacing.l,
   },
+  
   retryButton: {
-    backgroundColor: theme.colors.primary,
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 20,
-  },
-  retryButtonText: {
-    color: 'white',
-    fontWeight: '600',
-  },
-  successContainer: {
-    alignItems: 'center',
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  welcomeTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginTop: 16,
-    color: theme.colors.text,
-  },
-  intelligenceRecap: {
-    marginTop: 16,
-    padding: 16,
     backgroundColor: theme.colors.surface,
-    borderRadius: 12,
-    alignItems: 'center',
+    paddingVertical: theme.spacing.m,
+    paddingHorizontal: theme.spacing.xl,
+    borderRadius: theme.borderRadius.medium,
+    borderWidth: 2,
+    borderColor: theme.colors.border,
   },
-  recapTitle: {
+  
+  retryButtonText: {
     fontSize: 14,
-    fontWeight: '600',
     color: theme.colors.text,
-    marginBottom: 8,
+    fontWeight: '600',
   },
-  recapText: {
-    fontSize: 12,
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
+  
+  successContainer: {
+    flex: 1,
   },
-  insightContainer: {
-    marginBottom: 24,
-    width: '100%',
-  },
+  
   insightCard: {
-    backgroundColor: theme.colors.primary + '10',
-    padding: 20,
-    borderRadius: 16,
-    borderLeftWidth: 4,
-    borderLeftColor: theme.colors.primary,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.large,
+    padding: theme.spacing.xl,
+    borderWidth: 2,
+    borderColor: theme.colors.border,
   },
+  
   insightText: {
     fontSize: 16,
-    lineHeight: 24,
     color: theme.colors.text,
-    textAlign: 'center',
+    lineHeight: 24,
   },
-
-  finishButton: {
+  
+  bottomSection: {
+    paddingHorizontal: theme.spacing.xl,
+    paddingBottom: theme.spacing.xxl,
+  },
+  
+  continueButton: {
     backgroundColor: theme.colors.primary,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    borderRadius: 24,
+    borderRadius: theme.borderRadius.medium,
+    paddingVertical: theme.spacing.l,
     alignItems: 'center',
   },
-  finishButtonText: {
-    color: 'white',
-    fontSize: 18,
+  
+  continueButtonText: {
+    color: theme.colors.white,
+    fontSize: 16,
     fontWeight: '600',
   },
 });

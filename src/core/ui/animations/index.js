@@ -27,7 +27,9 @@ export {
   AnimatedSparkle,
   AnimatedSignature,
   StandardOnboardingButton,
-  AnimatedOnboardingScreen
+  AnimatedOnboardingScreen,
+  AnimatedCascadeCard,
+  AnimatedOnboardingButton
 } from './OnboardingAnimations';
 
 // ═══════════════════════════════════════════════════════
@@ -62,6 +64,7 @@ export {
  * 3. ✅ Présets standardisés (ANIMATION_PRESETS, DURATIONS, etc.)
  * 4. ✅ Compatibilité legacy maintenue
  * 5. ✅ Documentation complète et JSDoc
+ * 6. ✅ Nouveaux patterns réutilisables (AnimatedCascadeCard)
  * 
  * 🚀 PROCHAINES ÉTAPES :
  * - Migration progressive des imports existants

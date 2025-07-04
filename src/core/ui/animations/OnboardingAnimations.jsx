@@ -11,7 +11,7 @@ import React, { useEffect, useRef } from 'react';
 import { View, TouchableOpacity, StyleSheet, Animated, Text } from 'react-native';
 import { useTheme } from '../../../hooks/useTheme';
 import { BodyText } from '../typography';
-import { ANIMATION_PRESETS } from './constants/animationPresets';
+import { ANIMATION_PRESETS, ANIMATION_DURATIONS, ANIMATION_CONFIGS, AnimationHelpers } from './constants/animationPresets';
 
 /**
  * Message de révélation séquentielle pour onboarding
@@ -331,6 +331,95 @@ export function AnimatedOnboardingScreen({ children, delay = 0 }) {
         opacity: fadeAnim,
         transform: [{ translateY: slideAnim }],
       }}
+    >
+      {children}
+    </Animated.View>
+  );
+}
+
+/**
+ * Animation en cascade pour cartes/éléments
+ * @param {ReactNode} children - Contenu à animer
+ * @param {number} index - Index pour délai décalé
+ * @param {Object} style - Styles additionnels
+ */
+export function AnimatedCascadeCard({ children, index = 0, style }) {
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+  const translateYAnim = useRef(new Animated.Value(20)).current;
+
+  useEffect(() => {
+    const delay = AnimationHelpers.getStaggerDelay(index, 100);
+    
+    Animated.sequence([
+      Animated.delay(ANIMATION_DURATIONS.elegant + delay),
+      Animated.parallel([
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: ANIMATION_DURATIONS.normal,
+          ...ANIMATION_PRESETS.smooth,
+          useNativeDriver: true,
+        }),
+        Animated.spring(translateYAnim, {
+          toValue: 0,
+          ...ANIMATION_PRESETS.gentle,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+  }, [index]);
+
+  return (
+    <Animated.View
+      style={[
+        style,
+        {
+          opacity: opacityAnim,
+          transform: [{ translateY: translateYAnim }]
+        }
+      ]}
+    >
+      {children}
+    </Animated.View>
+  );
+}
+
+/**
+ * Bouton avec animation d'apparition élégante pour onboarding
+ * @param {ReactNode} children - Contenu du bouton
+ * @param {number} delay - Délai avant apparition (ms)
+ * @param {Object} style - Styles additionnels
+ */
+export function AnimatedOnboardingButton({ children, delay = ANIMATION_DURATIONS.welcomeButton, style }) {
+  const buttonFadeAnim = useRef(new Animated.Value(0)).current;
+  const buttonScaleAnim = useRef(new Animated.Value(0.95)).current;
+
+  useEffect(() => {
+    const { button } = ANIMATION_CONFIGS.onboarding.welcome;
+    
+    Animated.sequence([
+      Animated.delay(delay),
+      Animated.parallel([
+        Animated.spring(buttonScaleAnim, {
+          toValue: 1,
+          ...button.scale
+        }),
+        Animated.timing(buttonFadeAnim, {
+          toValue: 1,
+          ...button.fade
+        }),
+      ]),
+    ]).start();
+  }, [delay]);
+
+  return (
+    <Animated.View
+      style={[
+        style,
+        {
+          opacity: buttonFadeAnim,
+          transform: [{ scale: buttonScaleAnim }]
+        }
+      ]}
     >
       {children}
     </Animated.View>

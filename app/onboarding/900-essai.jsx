@@ -1,20 +1,19 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 File: app/onboarding/700-essai.jsx
-// 🧩 Type: Écran Onboarding
-// 📚 Description: Choix du type d'accompagnement
-// 🕒 Version: 2.0 - 2025-01-21
-// 🧭 Used in: Parcours onboarding, choix version
+// 📄 Fichier : app/onboarding/900-essai.jsx
+// 🎯 Status: ✅ FINAL - NE PAS MODIFIER
+// 📝 Description: Choix de la version d'accompagnement
+// 🔄 Cycle: Onboarding - Étape 8/8
 // ─────────────────────────────────────────────────────────
 //
 import React, { useEffect, useRef, useState } from 'react';
 import { View, TouchableOpacity, StyleSheet, Animated, ScrollView } from 'react-native';
 import { router } from 'expo-router';
-import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
-import ScreenContainer from '../../src/core/layout/ScreenContainer';
-import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
+import OnboardingScreen from '../../src/core/layout/OnboardingScreen';
 import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
+import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
+import { AnimatedRevealMessage } from '../../src/core/ui/animations';
 import { Feather } from '@expo/vector-icons';
 
 // 🎯 Options d'accompagnement personnalisées par persona
@@ -112,32 +111,27 @@ const VERSION_ESSENTIELLE = {
 export default function ChoixVersionScreen() {
   const { theme } = useTheme();
   const styles = getStyles(theme);
-  const intelligence = useOnboardingIntelligence('700-essai');
+  const intelligence = useOnboardingIntelligence('900-essai');
   
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
-  const cardsAnim = useRef(new Animated.Value(0)).current;
-  
+  // États
   const persona = intelligence.currentPersona || 'emma';
   const personaContent = PERSONA_ARGUMENTS[persona];
+  
+  // Animations
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
+    // Séquence d'animation
     Animated.sequence([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-      Animated.delay(400),
-      Animated.timing(slideAnim, {
-        toValue: 0,
         duration: 600,
         useNativeDriver: true,
       }),
-      Animated.delay(300),
-      Animated.timing(cardsAnim, {
-        toValue: 1,
-        duration: 400,
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
         useNativeDriver: true,
       }),
     ]).start();
@@ -150,60 +144,44 @@ export default function ChoixVersionScreen() {
       persona,
       onboardingDuration: Date.now() - (intelligence.userProfile.startDate || Date.now())
     });
-    router.push('/onboarding/800-demarrage');
+    router.push('/onboarding/950-demarrage');
   };
 
   const handleEssentielleChoice = () => {
     intelligence.trackAction('essential_version_selected', { persona });
-    router.push('/onboarding/800-demarrage');
+    router.push('/onboarding/950-demarrage');
   };
 
   return (
-    <ScreenContainer edges={['top', 'bottom']}>
-      <OnboardingNavigation currentScreen="700-essai" />
-      
-      <ScrollView 
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-          
-          {/* Header */}
-          <View style={styles.header}>
-            <Animated.View
-              style={[
-                styles.titleContainer,
-                {
-                  transform: [{ translateY: slideAnim }],
-                  opacity: slideAnim.interpolate({
-                    inputRange: [-20, 0],
-                    outputRange: [0, 1],
-                  }),
-                },
-              ]}
-            >
-              <BodyText style={styles.title}>{personaContent.title}</BodyText>
-              <BodyText style={styles.subtitle}>{personaContent.subtitle}</BodyText>
-            </Animated.View>
-          </View>
-
-          {/* Version Complète */}
-          <Animated.View 
+    <OnboardingScreen currentScreen="900-essai">
+      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+        
+        {/* Message de Mélune */}
+        <View style={styles.messageSection}>
+          <Animated.View
             style={[
-              styles.versionCard,
-              styles.completeCard,
+              styles.messageContainer,
               {
-                opacity: cardsAnim,
-                transform: [{
-                  translateY: cardsAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [20, 0],
-                  })
-                }]
+                transform: [{ translateY: slideAnim }]
               }
             ]}
           >
+            <AnimatedRevealMessage delay={800}>
+              <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
+                {personaContent.subtitle}
+              </BodyText>
+            </AnimatedRevealMessage>
+          </Animated.View>
+        </View>
+
+        {/* Section principale */}
+        <ScrollView 
+          style={styles.mainSection}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Version Complète */}
+          <View style={[styles.versionCard, styles.completeCard]}>
             <View style={styles.cardHeader}>
               <BodyText style={styles.cardTitle}>
                 {personaContent.complete.title}
@@ -229,13 +207,13 @@ export default function ChoixVersionScreen() {
             <TouchableOpacity
               style={styles.completeButton}
               onPress={handleCompleteChoice}
-              activeOpacity={0.7}
+              activeOpacity={0.8}
             >
               <BodyText style={styles.completeButtonText}>
                 {personaContent.complete.cta}
               </BodyText>
             </TouchableOpacity>
-          </Animated.View>
+          </View>
 
           {/* Séparateur */}
           <View style={styles.separator}>
@@ -245,21 +223,7 @@ export default function ChoixVersionScreen() {
           </View>
 
           {/* Version Essentielle */}
-          <Animated.View 
-            style={[
-              styles.versionCard,
-              styles.essentialCard,
-              {
-                opacity: cardsAnim,
-                transform: [{
-                  translateY: cardsAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [30, 0],
-                  })
-                }]
-              }
-            ]}
-          >
+          <View style={[styles.versionCard, styles.essentialCard]}>
             <View style={styles.cardHeader}>
               <BodyText style={styles.cardTitle}>
                 {VERSION_ESSENTIELLE.title}
@@ -280,164 +244,121 @@ export default function ChoixVersionScreen() {
             <TouchableOpacity
               style={styles.essentialButton}
               onPress={handleEssentielleChoice}
-              activeOpacity={0.7}
+              activeOpacity={0.8}
             >
               <BodyText style={styles.essentialButtonText}>
                 {VERSION_ESSENTIELLE.cta}
               </BodyText>
             </TouchableOpacity>
-          </Animated.View>
-          
-          {/* Note de transparence */}
-          <View style={styles.footerContainer}>
-            <BodyText style={styles.footerText}>
-              Version Complète après 14 jours : 9,99€/mois
-            </BodyText>
-            <BodyText style={styles.footerSubtext}>
-              🔔 Rappel 3 jours avant • 🔒 Annulation simple
-            </BodyText>
           </View>
-          
-        </Animated.View>
-      </ScrollView>
-    </ScreenContainer>
+        </ScrollView>
+      </Animated.View>
+    </OnboardingScreen>
   );
 }
 
 const getStyles = (theme) => StyleSheet.create({
-  scrollView: { flex: 1 },
-  scrollContent: { flexGrow: 1 },
-  content: { flex: 1, paddingHorizontal: theme.spacing.l },
+  content: {
+    flex: 1,
+  },
   
-  header: {
+  messageSection: {
     alignItems: 'center',
-    paddingTop: theme.spacing.xl,
-    marginBottom: theme.spacing.xl,
+    paddingTop: theme.spacing.xxl,
   },
   
-  titleContainer: { alignItems: 'center' },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: theme.colors.text,
-    textAlign: 'center',
-    marginBottom: theme.spacing.m,
+  messageContainer: {
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.xl,
+    marginTop: theme.spacing.xl,
   },
-  subtitle: {
-    fontSize: 16,
-    color: theme.colors.textLight,
+  
+  message: {
+    fontSize: 20,
     textAlign: 'center',
-    lineHeight: 22,
+    color: theme.colors.text,
+    lineHeight: 28,
+    maxWidth: 300,
+  },
+  
+  mainSection: {
+    flex: 1,
+    paddingHorizontal: theme.spacing.xl,
+  },
+  
+  scrollContent: {
+    paddingTop: theme.spacing.xl,
+    paddingBottom: theme.spacing.xxl,
   },
   
   versionCard: {
     backgroundColor: theme.colors.surface,
-    padding: theme.spacing.l,
     borderRadius: theme.borderRadius.large,
+    padding: theme.spacing.xl,
     borderWidth: 2,
+    borderColor: theme.colors.border,
     marginBottom: theme.spacing.l,
-    shadowColor: theme.colors.text,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
   },
   
   completeCard: {
     borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary + '04',
+    backgroundColor: theme.colors.primary + '08',
   },
   
   essentialCard: {
-    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
   },
   
   cardHeader: {
-    alignItems: 'center',
     marginBottom: theme.spacing.l,
   },
   
   cardTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '600',
     color: theme.colors.text,
-    textAlign: 'center',
     marginBottom: theme.spacing.s,
   },
   
   cardDescription: {
-    fontSize: 14,
+    fontSize: 16,
     color: theme.colors.textLight,
-    textAlign: 'center',
     marginBottom: theme.spacing.m,
   },
   
   badge: {
-    backgroundColor: theme.colors.primary,
-    paddingHorizontal: theme.spacing.l,
+    backgroundColor: theme.colors.success + '20',
+    paddingHorizontal: theme.spacing.m,
     paddingVertical: theme.spacing.s,
-    borderRadius: theme.borderRadius.large,
+    borderRadius: theme.borderRadius.small,
+    alignSelf: 'flex-start',
   },
   
   badgeText: {
-    color: 'white',
     fontSize: 12,
-    fontWeight: '700',
+    color: theme.colors.success,
+    fontWeight: '600',
   },
   
   benefitsContainer: {
-    marginBottom: theme.spacing.l,
+    marginBottom: theme.spacing.xl,
   },
   
   benefitRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: theme.spacing.s,
+    marginBottom: theme.spacing.m,
   },
   
   benefitText: {
-    fontSize: 15,
-    color: theme.colors.text,
-    flex: 1,
-  },
-  
-  completeButton: {
-    backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.l,
-    borderRadius: theme.borderRadius.large,
-    alignItems: 'center',
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  
-  completeButtonText: {
-    color: 'white',
     fontSize: 16,
-    fontWeight: '700',
-  },
-  
-  essentialButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: theme.colors.primary,
-    paddingVertical: theme.spacing.m,
-    borderRadius: theme.borderRadius.large,
-    alignItems: 'center',
-  },
-  
-  essentialButtonText: {
-    color: theme.colors.primary,
-    fontSize: 15,
-    fontWeight: '600',
+    color: theme.colors.text,
   },
   
   separator: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: theme.spacing.l,
+    marginVertical: theme.spacing.xl,
   },
   
   separatorLine: {
@@ -447,26 +368,36 @@ const getStyles = (theme) => StyleSheet.create({
   },
   
   separatorText: {
-    marginHorizontal: theme.spacing.m,
+    marginHorizontal: theme.spacing.l,
     color: theme.colors.textLight,
     fontSize: 14,
   },
   
-  footerContainer: {
+  completeButton: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.medium,
+    paddingVertical: theme.spacing.l,
     alignItems: 'center',
-    paddingBottom: theme.spacing.xl,
   },
   
-  footerText: {
-    fontSize: 12,
-    color: theme.colors.textLight,
-    textAlign: 'center',
-    marginBottom: theme.spacing.xs,
+  completeButtonText: {
+    color: theme.colors.white,
+    fontSize: 16,
+    fontWeight: '600',
   },
   
-  footerSubtext: {
-    fontSize: 11,
-    color: theme.colors.textLight,
-    textAlign: 'center',
+  essentialButton: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.medium,
+    paddingVertical: theme.spacing.l,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: theme.colors.border,
+  },
+  
+  essentialButtonText: {
+    color: theme.colors.text,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

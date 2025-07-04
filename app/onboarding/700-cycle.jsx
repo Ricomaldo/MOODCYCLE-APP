@@ -1,6 +1,6 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 Fichier : app/onboarding/400-cycle.jsx
+// 📄 Fichier : app/onboarding/700-cycle.jsx
 // 🎯 Status: ✅ FINAL - NE PAS MODIFIER
 // 📝 Description: Configuration du cycle menstruel
 // 🔄 Cycle: Onboarding - Étape 5/8
@@ -41,7 +41,7 @@ export default function CycleScreen() {
   const { theme } = useTheme();
   const styles = getStyles(theme);
   const { updateCycle } = useCycleStore();
-  const intelligence = useOnboardingIntelligence('400-cycle');
+  const intelligence = useOnboardingIntelligence('700-cycle');
 
   // États
   const [lastPeriodDate, setLastPeriodDate] = useState(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
@@ -128,12 +128,12 @@ export default function CycleScreen() {
     });
     
     setTimeout(() => {
-      router.push('/onboarding/500-preferences');
+      router.push('/onboarding/800-preferences');
     }, ANIMATION_DURATIONS.elegant);
   };
 
   return (
-    <OnboardingScreen currentScreen="400-cycle">
+    <OnboardingScreen currentScreen="700-cycle">
       <AnimatedOnboardingScreen style={styles.container}>
         <ScrollView
           style={styles.scrollView}

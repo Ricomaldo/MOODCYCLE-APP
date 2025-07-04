@@ -7,7 +7,7 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Animated, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -169,26 +169,18 @@ const getStyles = (theme, phase) => {
       alignItems: 'flex-end',
       marginVertical: 4,
     },
+    
     userBubble: {
-      // ✅ GLASSMORPHISM POUR USER CENTRALISÉ
-      ...theme.getGlassmorphismStyle(theme.colors.primary, {
-        bgOpacity: theme.glassmorphism.opacity.medium,
-        borderOpacity: theme.glassmorphism.opacity.accent,
-        borderRadius: theme.borderRadius.large,
-        shadowOffset: { width: 0, height: 4 },
-        shadowRadius: 12,
-        elevation: 4,
-      }),
-      borderBottomRightRadius: theme.borderRadius.small,
-      paddingHorizontal: 16,
-      paddingVertical: 10,
-      maxWidth: '75%',
+      backgroundColor: theme.colors.primary,
+      paddingHorizontal: theme.spacing.l,
+      paddingVertical: theme.spacing.m,
+      borderRadius: 20,
+      maxWidth: '80%',
     },
+    
     userText: {
-      color: theme.colors.primary,
+      color: theme.colors.onPrimary,
       fontSize: 16,
-      lineHeight: 20,
-      fontWeight: '500',
     },
     
     meluneContainer: {
@@ -197,49 +189,45 @@ const getStyles = (theme, phase) => {
       marginVertical: 8,
       paddingRight: 40,
     },
+    
     bubbleAndActions: {
       flex: 1,
       marginLeft: 8,
     },
+    
     meluneBubble: {
-      // ✅ GLASSMORPHISM SIGNATURE CENTRALISÉ
-      ...theme.getPhaseGlassmorphismStyle(phase, {
-        borderRadius: theme.borderRadius.large,
-        shadowOffset: { width: 0, height: 4 },
-        shadowRadius: 12,
-        elevation: 4,
-      }),
-      borderBottomLeftRadius: theme.borderRadius.small,
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      maxWidth: '85%',
-    },
-    meluneText: {
-      fontSize: 16,
-      lineHeight: 22,
-      color: theme.colors.text,
-      fontWeight: '500',
+      backgroundColor: theme.colors.backgroundSecondary,
+      paddingHorizontal: theme.spacing.l,
+      paddingVertical: theme.spacing.m,
+      borderRadius: 20,
+      maxWidth: '80%',
     },
     
-    // ✅ ACTIONS GLASSMORPHISM
+    meluneText: {
+      color: theme.colors.text,
+      fontSize: 16,
+    },
+    
     actionsContainer: {
       flexDirection: 'row',
       marginTop: 12,
       gap: 12,
     },
+    
     actionButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      ...theme.getActionGlassmorphismStyle(phaseColor, {
-        borderRadius: theme.borderRadius.large,
-      }),
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.borderRadius.large,
       paddingHorizontal: 16,
       paddingVertical: 8,
       gap: 6,
+      borderWidth: 1,
+      borderColor: phaseColor + '20',
     },
+    
     actionText: {
       fontSize: 14,
-      fontWeight: '500',
       color: theme.colors.text,
     },
   });

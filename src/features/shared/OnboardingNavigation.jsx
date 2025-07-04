@@ -18,22 +18,23 @@ import { useUserStore } from '../../stores/useUserStore';
 // Mapping écrans vers étapes groupées
 const SCREEN_MAPPING = {
   '100-bienvenue': { step: 1, title: 'Bienvenue' },
-  '200-rencontre': { step: 1, title: 'Rencontre' },
-  '300-etape-vie': { step: 2, title: 'Ton rythme' },
-  '400-cycle': { step: 2, title: 'Cycle' },
-  '500-preferences': { step: 3, title: 'Préférences' },
-  '550-prenom': { step: 3, title: 'Personnalisation' },
-  '600-avatar': { step: 3, title: 'Avatar' },
-  '650-terminology': { step: 4, title: 'Terminologie' },
-  '700-essai': { step: 4, title: 'Essai' },
-  '800-demarrage': { step: 4, title: 'Démarrage' }
+  '200-bonjour': { step: 1, title: 'Bonjour' },
+  '250-rencontre': { step: 1, title: 'Rencontre' },
+  '300-etape-vie': { step: 1, title: 'Étape de vie' },
+  '400-prenom': { step: 2, title: 'Personnalisation' },
+  '500-avatar': { step: 2, title: 'Avatar' },
+  '600-terminology': { step: 2, title: 'Terminologie' },
+  '700-cycle': { step: 3, title: 'Cycle' },
+  '800-preferences': { step: 3, title: 'Préférences' },
+  '900-essai': { step: 4, title: 'Essai' },
+  '950-demarrage': { step: 4, title: 'Démarrage' }
 };
 
 const STEP_LABELS = {
   1: 'Connexion',
-  2: 'Ton rythme',
-  3: 'Ton style',
-  4: 'Ton langage',
+  2: 'Personnalisation',
+  3: 'Configuration',
+  4: 'Finalisation'
 };
 
 export default function OnboardingNavigation({ currentScreen, canGoBack = true }) {
@@ -43,6 +44,7 @@ export default function OnboardingNavigation({ currentScreen, canGoBack = true }
   const progressAnim = useRef(new Animated.Value(0)).current;
   const backButtonAnim = useRef(new Animated.Value(0)).current;
   const forwardButtonAnim = useRef(new Animated.Value(0)).current;
+  const navBarAnim = useRef(new Animated.Value(0)).current;
   const { profile } = useUserStore();
 
   // Calculer la dernière étape validée
@@ -55,6 +57,13 @@ export default function OnboardingNavigation({ currentScreen, canGoBack = true }
   }, [profile]);
 
   useEffect(() => {
+    // Animation d'entrée de la barre de navigation - Fade in simple
+    Animated.timing(navBarAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: true,
+    }).start();
+
     // Animation progression
     Animated.timing(progressAnim, {
       toValue: currentStep,
@@ -64,7 +73,7 @@ export default function OnboardingNavigation({ currentScreen, canGoBack = true }
 
     // Animation bouton retour
     Animated.timing(backButtonAnim, {
-      toValue: canGoBack && currentScreen !== '100-promesse' ? 1 : 0,
+      toValue: canGoBack && currentScreen !== '100-bienvenue' ? 1 : 0,
       duration: 300,
       useNativeDriver: true,
     }).start();
@@ -78,7 +87,7 @@ export default function OnboardingNavigation({ currentScreen, canGoBack = true }
   }, [currentStep, canGoBack, currentScreen, lastValidatedStep]);
 
   const handleBack = () => {
-    if (canGoBack && currentScreen !== '100-promesse') {
+    if (canGoBack && currentScreen !== '100-bienvenue') {
       router.back();
     }
   };
@@ -96,7 +105,14 @@ export default function OnboardingNavigation({ currentScreen, canGoBack = true }
   };
 
   return (
-    <View style={styles.container}>
+    <Animated.View 
+      style={[
+        styles.container,
+        {
+          opacity: navBarAnim
+        }
+      ]}
+    >
       {/* Bouton retour animé */}
       <Animated.View
         style={[
@@ -118,7 +134,7 @@ export default function OnboardingNavigation({ currentScreen, canGoBack = true }
           style={styles.backButton}
           onPress={handleBack}
           activeOpacity={0.7}
-          disabled={!canGoBack || currentScreen === '100-promesse'}
+          disabled={!canGoBack || currentScreen === '100-bienvenue'}
         >
           <Feather name="chevron-left" size={24} color={theme.colors.text} />
         </TouchableOpacity>
@@ -183,7 +199,7 @@ export default function OnboardingNavigation({ currentScreen, canGoBack = true }
           <Feather name="chevron-right" size={24} color={theme.colors.text} />
         </TouchableOpacity>
       </Animated.View>
-    </View>
+    </Animated.View>
   );
 }
 

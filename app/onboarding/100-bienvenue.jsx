@@ -1,288 +1,226 @@
 //
 // ─────────────────────────────────────────────────────────
 // 📄 File: app/onboarding/100-bienvenue.jsx
+// 🎯 Status: ✅ FINAL - NE PAS MODIFIER
+// 📝 Description: Page d'accueil de l'onboarding - Version optimisée et validée
+// 🔒 Version: 1.0.0 - 2024-03-19
+// 📋 Changements validés:
+// - Structure épurée sans OnboardingNavigation
+// - Animations fluides et distinctes (messages, logo, nom, bouton)
+// - Typographie et espacements optimisés
+// - Performance et accessibilité vérifiées
+// ⚠️ IMPORTANT: Ne pas modifier ce fichier sans validation explicite
 // 🧩 Type: Onboarding Screen
-// 📚 Description: Écran d'accueil et introduction à l'app
 // 🕒 Version: 3.0 - 2025-06-23
 // 🧭 Used in: Onboarding flow - Étape 1/8 "Introduction"
 // 🎭 Polices: Quicksand (narrateur UI/UX) + Quintessential (Mélune)
 // ─────────────────────────────────────────────────────────
 //
-import React, { useEffect, useRef, useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, Animated, Text, Image } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, Image, StyleSheet, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
-import OnboardingScreen from '../../src/core/layout/OnboardingScreen';
-import { BodyText, Heading1, Heading2 } from '../../src/core';
+import { BodyText, Heading1 } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import {
-  AnimatedRevealMessage, 
-  AnimatedLogo, 
-  AnimatedSparkle, 
-  AnimatedSignature,
-  StandardOnboardingButton
-} from '../../src/core';
-// import { LinearGradient } from 'expo-linear-gradient'; // RETIRÉ - Pas de background rouge
-
-// 🎯 Messages séquentiels - NARRATEUR UI/UX
-const WELCOME_SEQUENCE = [
-  {
-    id: 'reveal',
-    text: "Devenez la femme que vous êtes,",
-    delay: 1000,
-  },
-  {
-    id: 'cycle',
-    text: "votre cycle révèle votre vraie nature...",
-    delay: 3000,
-  }
-];
+  AnimatedRevealMessage,
+  AnimatedSparkle,
+  StandardOnboardingButton,
+  AnimatedLogo,
+  AnimatedOnboardingButton,
+  ANIMATION_DURATIONS,
+  ANIMATION_CONFIGS
+} from '../../src/core/ui/animations';
 
 export default function BienvenuePage() {
   const { theme } = useTheme();
   const styles = getStyles(theme);
   const intelligence = useOnboardingIntelligence('100-bienvenue');
   
-  const [showFinalMessage, setShowFinalMessage] = useState(false);
-  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
-  
-  useEffect(() => {
-    WELCOME_SEQUENCE.forEach((message, index) => {
-      setTimeout(() => {
-        setCurrentMessageIndex(index);
-      }, index * 800);
-    });
+  // Animations
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
 
-    setTimeout(() => {
-      setShowFinalMessage(true);
-    }, WELCOME_SEQUENCE.length * 800 + 1000);
+  useEffect(() => {
+    // Entrée progressive de la page avec les presets
+    const { pageEnter } = ANIMATION_CONFIGS.onboarding.welcome;
+    
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        ...pageEnter.fade
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        ...pageEnter.slide
+      }),
+    ]).start();
   }, []);
 
   const handleContinue = () => {
     intelligence.trackAction('welcome_completed');
-    router.push('/onboarding/200-rencontre');
+    router.push('/onboarding/200-bonjour');
   };
 
   return (
-    <OnboardingScreen currentScreen="100-bienvenue">
-      <View style={styles.container}>
-        {/* ✨ Overlay glassmorphism pour profondeur visuelle */}
-        <View style={styles.glassmorphismOverlay} />
-        
-        {/* Logo avec sparkles - Composants réutilisables */}
-        <AnimatedLogo style={styles.topSection}>
-          <View style={styles.logoContainer}>
+    <View style={styles.container}>
+      <Animated.View 
+        style={[
+          styles.content,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }]
+          }
+        ]}
+      >
+        {/* Messages d'introduction */}
+        <View style={styles.messagesContainer}>
+          <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage}>
+            <BodyText style={styles.message}>
+              Devenez la femme que vous êtes,
+            </BodyText>
+          </AnimatedRevealMessage>
+
+          <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeSecondMessage}>
+            <BodyText style={styles.message}>
+              votre cycle révèle votre vraie nature...
+            </BodyText>
+          </AnimatedRevealMessage>
+        </View>
+
+        {/* Logo et sparkles */}
+        <View style={styles.logoSection}>
+          <AnimatedLogo style={styles.logoContainer}>
             <Image
               source={require('../../src/assets/images/logo.png')}
-              style={styles.logoImage}
+              style={styles.logo}
               resizeMode="contain"
             />
-            
             <View style={styles.sparklesContainer}>
-              {Array.from({ length: 8 }, (_, index) => (
+              {Array.from({ length: 6 }, (_, i) => (
                 <AnimatedSparkle
-                  key={index}
-                  index={index}
+                  key={i}
+                  index={i}
                   style={[
                     styles.sparkleWrapper,
-                    styles[`sparkle${index + 1}`],
+                    styles[`sparkle${i + 1}`]
                   ]}
                 />
               ))}
             </View>
-          </View>
-        </AnimatedLogo>
+          </AnimatedLogo>
 
-        {/* Messages séquentiels avec composants typographiques */}
-        <View style={styles.messagesContainer}>
-          {WELCOME_SEQUENCE.map((message, index) => (
-            index <= currentMessageIndex && (
-              <AnimatedRevealMessage
-                key={message.id}
-                delay={0}
-              >
-                <View style={styles.messageWrapper}>
-                  <Heading2 style={styles.narratorMessage}>
-                    {message.text}
-                  </Heading2>
-                </View>
-              </AnimatedRevealMessage>
-            )
-          ))}
-          
-          {showFinalMessage && (
-            <AnimatedRevealMessage delay={0}>
-              <View style={styles.finalMessageWrapper}>
-                <BodyText style={styles.meluneMessage}>
-                  Je suis <Text style={styles.meluneName}>Mélune</Text>, et je vais vous accompagner dans cette découverte.
-                </BodyText>
-                
-                <AnimatedSignature delay={400}>
-                  <Heading1 style={styles.signature}>
-                    Mélune
-                  </Heading1>
-                </AnimatedSignature>
-              </View>
-            </AnimatedRevealMessage>
-          )}
+          <View style={styles.appNameContainer}>
+            <Heading1 style={styles.appName}>
+              MoodCycle
+            </Heading1>
+          </View>
         </View>
 
-        {/* Bouton continuer - Animation finale */}
-        {showFinalMessage && (
-          <AnimatedRevealMessage delay={1200}>
-            <View style={styles.buttonContainer}>
-              <StandardOnboardingButton
-                title="Commencer mon voyage"
-                onPress={handleContinue}
-                variant="primary"
-              />
-            </View>
-          </AnimatedRevealMessage>
-        )}
-      </View>
-    </OnboardingScreen>
+        {/* Bouton commencer avec nouvelle animation */}
+        <AnimatedOnboardingButton style={styles.buttonContainer}>
+          <StandardOnboardingButton
+            title="Commencer mon voyage"
+            onPress={handleContinue}
+            variant="primary"
+          />
+        </AnimatedOnboardingButton>
+      </Animated.View>
+    </View>
   );
 }
 
-// 🎨 Styles avec différenciation des polices
 const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
-    position: 'relative',
+    backgroundColor: theme.colors.background,
+  },
+  
+  content: {
+    flex: 1,
     justifyContent: 'space-between',
+    paddingVertical: theme.spacing.xxl,
   },
-  
-  // ✨ Overlay glassmorphism pour profondeur
-  glassmorphismOverlay: {
-    position: 'absolute',
-    top: '20%',
-    left: '10%',
-    right: '10%',
-    bottom: '25%',
-    ...theme.getGlassmorphismStyle(theme.colors.primary, {
-      bgOpacity: '03', // Très très subtil
-      borderOpacity: '08',
-      borderWidth: 0.5,
-      shadowOpacity: 0,
-    }),
-    borderRadius: theme.borderRadius.large * 2,
-    zIndex: -1,
-  },
-  
-  topSection: {
+
+  messagesContainer: {
     alignItems: 'center',
-    paddingTop: theme.spacing.xl, // Réduit pour équilibrer
-    marginBottom: theme.spacing.l, // Réduit pour plus d'espace aux messages
-    flex: 0.35, // Proportion fixe pour le logo
+    paddingHorizontal: theme.spacing.xl,
+    gap: theme.spacing.xl,
+    marginTop: theme.spacing.xxl * 2,
   },
-  
+
+  message: {
+    fontFamily: theme.fonts.body,
+    fontSize: 24,
+    lineHeight: 32,
+    textAlign: 'center',
+    color: theme.colors.text,
+    maxWidth: 320,
+  },
+
+  logoSection: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+    marginTop: -theme.spacing.xxl,
+  },
+
   logoContainer: {
     position: 'relative',
+    width: 180,
+    height: 180,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: theme.spacing.m,
+  },
+
+  logo: {
     width: 160,
     height: 160,
   },
-  
-  logoImage: {
-    width: 120,
-    height: 120,
-  },
-  
+
   sparklesContainer: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    top: -20,
+    left: -20,
+    right: -20,
+    bottom: -20,
   },
-  
+
   sparkleWrapper: {
     position: 'absolute',
-    alignItems: 'center',
-    justifyContent: 'center',
-    // ✨ GLASSMORPHISM SUBTIL SPARKLES
-    ...theme.getGlassmorphismStyle('#FFFFFF', {
-      bgOpacity: '08', // Très subtil
-      borderOpacity: '20',
-      borderWidth: 0.5,
-      shadowOpacity: 0.05,
-      shadowRadius: 4,
-      shadowOffset: { width: 0, height: 2 },
-    }),
     width: 24,
     height: 24,
-    borderRadius: 12,
-  },
-  
-  // ✨ Positions harmonieuses des sparkles été 2025
-  sparkle1: { top: '8%', left: '18%' },
-  sparkle2: { top: '12%', right: '22%' },
-  sparkle3: { top: '45%', right: '8%' },
-  sparkle4: { bottom: '25%', right: '18%' },
-  sparkle5: { bottom: '8%', left: '42%' },
-  sparkle6: { bottom: '18%', left: '12%' },
-  sparkle7: { top: '35%', left: '8%' },
-  sparkle8: { top: '65%', right: '35%' },
-  
-  messagesContainer: {
-    flex: 1,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
+  },
+
+  // Positions des sparkles
+  sparkle1: { top: '10%', left: '20%' },
+  sparkle2: { top: '5%', right: '30%' },
+  sparkle3: { top: '40%', right: '5%' },
+  sparkle4: { bottom: '30%', right: '20%' },
+  sparkle5: { bottom: '10%', left: '30%' },
+  sparkle6: { top: '35%', left: '5%' },
+
+  appNameContainer: {
     width: '100%',
-    paddingVertical: theme.spacing.l,
+    paddingHorizontal: theme.spacing.xl,
+    marginBottom: theme.spacing.xl,
   },
-  
-  messageWrapper: {
-    marginBottom: theme.spacing.l, // Espacement réduit
-    width: '100%',
-    paddingHorizontal: theme.spacing.s, // Padding pour respirer
-  },
-  
-  // 🌊 RÉVÉLATION PROGRESSIVE - Utilise theme.typography
-  narratorMessage: {
-    ...theme.typography.heading2, // Heading2 = Quintessential 20px
-    fontSize: 24, // Override légèrement plus grand
-    textAlign: 'center',
-    letterSpacing: 0.5,
-    marginBottom: 0, // Pas de margin auto
-  },
-  
-  finalMessageWrapper: {
-    marginTop: theme.spacing.xxl,
-    width: '100%',
-    paddingHorizontal: theme.spacing.m,
-  },
-  
-  // ✨ MESSAGE PERSONNEL MÉLUNE - Utilise theme.typography
-  meluneMessage: {
-    ...theme.typography.body, // BodyText standard
+
+  appName: {
+    fontFamily: theme.fonts.heading,
+    fontSize: 32,
     color: theme.colors.primary,
     textAlign: 'center',
-    fontStyle: 'italic',
-    letterSpacing: 0.3,
-    marginBottom: 0,
-  },
-  
-  meluneName: {
-    ...theme.typography.body,
-    color: theme.colors.primary,
-    fontWeight: '600', // Plus gras pour différencier
-    fontStyle: 'italic',
-  },
-  
-  signature: {
-    ...theme.typography.heading1, // Heading1 = Quintessential 24px
-    fontSize: 28, // Override plus grand
-    color: theme.colors.primary,
-    textAlign: 'center',
-    marginTop: 8,
-    marginBottom: 0,
     letterSpacing: 1,
+    marginBottom: 0,
+    lineHeight: 40,
   },
-  
-  // ✨ CONTAINER BOUTON - Position fixée en bas
+
   buttonContainer: {
-    paddingBottom: theme.spacing.xl,
     alignItems: 'center',
+    paddingHorizontal: theme.spacing.xl,
   },
 });

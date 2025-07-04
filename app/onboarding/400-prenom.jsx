@@ -1,10 +1,9 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 File: app/onboarding/550-prenom.jsx
-// 🧩 Type: Onboarding Screen
-// 📚 Description: Relation personnalisée + finalisation persona
-// 🕒 Version: 2.0 - Intelligence Intégrée
-// 🧭 Used in: Onboarding flow - Étape 3/4 "Ton style"
+// 📄 Fichier : app/onboarding/400-prenom.jsx
+// 🎯 Status: ✅ FINAL - NE PAS MODIFIER
+// 📝 Description: Écran de personnalisation de la relation
+// 🔄 Cycle: Onboarding - Étape 5/8
 // ─────────────────────────────────────────────────────────
 //
 import React, { useEffect, useRef, useState } from 'react';
@@ -12,18 +11,17 @@ import { View, TouchableOpacity, StyleSheet, Animated, ScrollView, TextInput, Ke
 import { router } from 'expo-router';
 import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
 import ScreenContainer from '../../src/core/layout/ScreenContainer';
-import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
 import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
-import { getPhaseSymbol } from '../../src/utils/formatters';
 import { useUserStore } from '../../src/stores/useUserStore';
+import { AnimatedRevealMessage } from '../../src/core/ui/animations';
 
 export default function PrenomScreen() {
   const { theme } = useTheme();
   const styles = getStyles(theme);
   const { profile, updateProfile } = useUserStore();
-  const intelligence = useOnboardingIntelligence('550-prenom');
+  const intelligence = useOnboardingIntelligence('400-prenom');
   
   // 🎨 Animations Standard
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -41,13 +39,12 @@ export default function PrenomScreen() {
     Animated.sequence([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 500,
+        duration: 600,
         useNativeDriver: true,
       }),
-      Animated.delay(400),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 600,
+        duration: 800,
         useNativeDriver: true,
       }),
     ]).start();
@@ -106,7 +103,7 @@ export default function PrenomScreen() {
 
     // Délai pour feedback
     setTimeout(() => {
-      router.push('/onboarding/600-avatar');
+      router.push('/onboarding/500-avatar');
     }, 1500);
   };
 
@@ -123,9 +120,7 @@ export default function PrenomScreen() {
   };
 
   return (
-    <ScreenContainer edges={['top', 'bottom']}>
-      <OnboardingNavigation currentScreen="550-prenom" />
-      
+    <ScreenContainer edges={['top', 'bottom']}>      
       <ScrollView 
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
@@ -163,9 +158,11 @@ export default function PrenomScreen() {
                 },
               ]}
             >
-              <BodyText style={styles.meluneMessage}>
-                {intelligence.meluneMessage}
-              </BodyText>
+              <AnimatedRevealMessage delay={800}>
+                <BodyText style={[styles.meluneMessage, { fontFamily: 'Quintessential' }]}>
+                  Comment aimerais-tu que je t'appelle ?
+                </BodyText>
+              </AnimatedRevealMessage>
             </Animated.View>
           </View>
 
@@ -286,32 +283,31 @@ const getStyles = (theme) => StyleSheet.create({
   
   content: {
     flex: 1,
-    paddingHorizontal: theme.spacing.l,
   },
   
   topSection: {
     alignItems: 'center',
-    paddingTop: theme.spacing.l,
-    marginBottom: theme.spacing.l,
-    minHeight: '25%',
+    paddingTop: theme.spacing.xxl,
   },
   
   messageContainer: {
-    marginTop: theme.spacing.l,
-    paddingHorizontal: theme.spacing.m,
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.xl,
+    marginTop: theme.spacing.xl,
   },
   
   meluneMessage: {
-    fontSize: 16,
-    color: theme.colors.textLight,
+    fontSize: 20,
     textAlign: 'center',
-    lineHeight: 24,
-    fontStyle: 'italic',
+    color: theme.colors.text,
+    lineHeight: 28,
+    maxWidth: 300,
   },
   
   mainSection: {
     flex: 1,
-    justifyContent: 'center',
+    paddingTop: theme.spacing.xxl,
+    paddingHorizontal: theme.spacing.xl,
   },
   
   formContainer: {
@@ -319,58 +315,46 @@ const getStyles = (theme) => StyleSheet.create({
   },
   
   subtext: {
-    fontSize: 15,
+    fontSize: 16,
     textAlign: 'center',
     color: theme.colors.textLight,
     marginBottom: theme.spacing.xl,
-    lineHeight: 22,
   },
   
   inputContainer: {
     width: '100%',
-    alignItems: 'center',
     marginBottom: theme.spacing.l,
   },
   
   prenomInput: {
-    fontSize: 18,
-    textAlign: 'center',
-    paddingVertical: theme.spacing.l,
-    paddingHorizontal: theme.spacing.xl,
+    width: '100%',
+    height: 50,
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.large,
+    borderRadius: theme.borderRadius.medium,
     borderWidth: 2,
     borderColor: theme.colors.border,
+    paddingHorizontal: theme.spacing.l,
+    fontSize: 18,
     color: theme.colors.text,
-    fontFamily: theme.fonts.body,
-    width: '80%',
-    shadowColor: theme.colors.text,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    textAlign: 'center',
   },
   
   prenomInputValid: {
     borderColor: theme.colors.success,
-    backgroundColor: theme.colors.success + '08',
   },
   
   prenomInputInvalid: {
     borderColor: theme.colors.error,
-    backgroundColor: theme.colors.error + '08',
   },
   
   validationContainer: {
-    height: 20,
+    alignItems: 'center',
     marginTop: theme.spacing.s,
-    justifyContent: 'center',
+    height: 20,
   },
   
   validationText: {
     fontSize: 14,
-    textAlign: 'center',
-    fontWeight: '500',
   },
   
   validationValid: {
@@ -384,57 +368,37 @@ const getStyles = (theme) => StyleSheet.create({
   previewContainer: {
     width: '100%',
     marginTop: theme.spacing.xl,
-    alignItems: 'center',
-  },
-  
-  previewLabel: {
-    fontSize: 14,
-    color: theme.colors.textLight,
-    marginBottom: theme.spacing.m,
-    fontWeight: '500',
   },
   
   previewBubble: {
-    backgroundColor: theme.colors.primary + '10',
-    padding: theme.spacing.l,
+    backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.large,
-    borderWidth: 1,
-    borderColor: theme.colors.primary + '30',
-    maxWidth: '90%',
+    padding: theme.spacing.l,
+    borderWidth: 2,
+    borderColor: theme.colors.border,
   },
   
   previewText: {
     fontSize: 16,
-    color: theme.colors.primary,
+    color: theme.colors.text,
     textAlign: 'center',
-    lineHeight: 22,
-    fontFamily: theme.fonts.body,
   },
   
   bottomSection: {
-    paddingBottom: theme.spacing.xl,
-    minHeight: '20%',
-    justifyContent: 'flex-end',
+    paddingHorizontal: theme.spacing.xl,
+    paddingBottom: theme.spacing.xxl,
   },
   
   continueButton: {
-    backgroundColor: theme.colors.border,
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.medium,
     paddingVertical: theme.spacing.l,
-    paddingHorizontal: theme.spacing.xl,
-    borderRadius: theme.borderRadius.large,
-    shadowColor: theme.colors.text,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    alignItems: 'center',
+    opacity: 0.5,
   },
   
   continueButtonActive: {
-    backgroundColor: theme.colors.primary,
-    shadowColor: theme.colors.primary,
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    opacity: 1,
   },
   
   continueButtonProcessing: {
@@ -442,11 +406,9 @@ const getStyles = (theme) => StyleSheet.create({
   },
   
   continueButtonText: {
+    color: theme.colors.white,
     fontSize: 16,
     fontWeight: '600',
-    textAlign: 'center',
-    fontFamily: theme.fonts.body,
-    color: theme.colors.textLight,
   },
   
   continueButtonTextActive: {

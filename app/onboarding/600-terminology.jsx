@@ -1,22 +1,21 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 File: app/onboarding/650-terminology.jsx
-// 🧩 Type: Onboarding Screen
-// 📚 Description: Sélection de terminologie cyclique
-// 🕒 Version: 1.0 - 2025-01-21
-// 🧭 Used in: Onboarding flow - Étape 4/5 "Terminologie"
+// 📄 Fichier : app/onboarding/600-terminology.jsx
+// 🎯 Status: ✅ FINAL - NE PAS MODIFIER
+// 📝 Description: Personnalisation de la terminologie cyclique
+// 🔄 Cycle: Onboarding - Étape 7/8
 // ─────────────────────────────────────────────────────────
 //
 
 import React, { useEffect, useRef, useState } from 'react';
 import { View, TouchableOpacity, StyleSheet, Animated, ScrollView } from 'react-native';
 import { router } from 'expo-router';
-import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
-import ScreenContainer from '../../src/core/layout/ScreenContainer';
-import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
+import OnboardingScreen from '../../src/core/layout/OnboardingScreen';
 import { BodyText, Caption } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { useTerminologySelector } from '../../src/hooks/useTerminology';
+import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
+import { AnimatedRevealMessage } from '../../src/core/ui/animations';
 
 // Options de terminologie
 const TERMINOLOGY_OPTIONS = [
@@ -51,36 +50,30 @@ const TERMINOLOGY_OPTIONS = [
 ];
 
 export default function TerminologyScreen() {
-  const intelligence = useOnboardingIntelligence('650-terminology');
   const { theme } = useTheme();
-  const { currentTerminology, onSelect } = useTerminologySelector();
   const styles = getStyles(theme);
+  const { currentTerminology, onSelect } = useTerminologySelector();
+  const intelligence = useOnboardingIntelligence('600-terminology');
+  
+  // États
+  const [selectedTerminology, setSelectedTerminology] = useState(currentTerminology || 'modern');
+  const [previewPhases, setPreviewPhases] = useState([]);
   
   // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
-  const optionsAnim = useRef(new Animated.Value(0)).current;
-  
-  const [selectedTerminology, setSelectedTerminology] = useState(currentTerminology || 'modern');
-  const [previewPhases, setPreviewPhases] = useState([]);
 
   useEffect(() => {
+    // Séquence d'animation
     Animated.sequence([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-      Animated.delay(300),
-      Animated.timing(slideAnim, {
-        toValue: 0,
         duration: 600,
         useNativeDriver: true,
       }),
-      Animated.delay(200),
-      Animated.timing(optionsAnim, {
-        toValue: 1,
-        duration: 400,
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
         useNativeDriver: true,
       }),
     ]).start();
@@ -114,7 +107,7 @@ export default function TerminologyScreen() {
     
     // Navigation vers l'étape suivante
     setTimeout(() => {
-      router.push('/onboarding/700-essai');
+      router.push('/onboarding/700-cycle');
     }, 300);
   };
 
@@ -177,121 +170,98 @@ export default function TerminologyScreen() {
   };
 
   return (
-    <ScreenContainer edges={['top', 'bottom']}>
-      <OnboardingNavigation currentScreen="650-terminology" />
-      
-      <ScrollView 
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-          
-          {/* Header */}
-          <View style={styles.header}>
-            <Animated.View
-              style={[
-                styles.messageContainer,
-                {
-                  transform: [{ translateY: slideAnim }],
-                  opacity: slideAnim.interpolate({
-                    inputRange: [-20, 0],
-                    outputRange: [0, 1],
-                  }),
-                },
-              ]}
-            >
-              <BodyText style={styles.title}>
-                Terminologie cyclique
+    <OnboardingScreen currentScreen="600-terminology">
+      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+        
+        {/* Message de Mélune */}
+        <View style={styles.messageSection}>
+          <Animated.View
+            style={[
+              styles.messageContainer,
+              {
+                transform: [{ translateY: slideAnim }]
+              }
+            ]}
+          >
+            <AnimatedRevealMessage delay={800}>
+              <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
+                Choisis les termes qui te correspondent le mieux pour parler de ton cycle
               </BodyText>
-              <BodyText style={styles.subtitle}>
-                {intelligence.meluneMessage}
-              </BodyText>
-            </Animated.View>
-          </View>
+            </AnimatedRevealMessage>
+          </Animated.View>
+        </View>
 
-          {/* Options terminologies */}
-          <Animated.View style={[styles.optionsContainer, { opacity: optionsAnim }]}>
+        {/* Section principale */}
+        <ScrollView 
+          style={styles.mainSection}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          <View style={styles.optionsContainer}>
             {TERMINOLOGY_OPTIONS.map(renderTerminologyOption)}
-          </Animated.View>
-          
-          {/* Continue Button */}
-          <Animated.View style={styles.continueContainer}>
-            <TouchableOpacity
-              style={styles.continueButton}
-              onPress={handleContinue}
-              activeOpacity={0.7}
-            >
-              <BodyText style={styles.continueText}>
-                Continuer
-              </BodyText>
-            </TouchableOpacity>
-          </Animated.View>
-          
-        </Animated.View>
-      </ScrollView>
-    </ScreenContainer>
+          </View>
+        </ScrollView>
+
+        {/* Section bouton */}
+        <View style={styles.bottomSection}>
+          <TouchableOpacity
+            style={styles.continueButton}
+            onPress={handleContinue}
+            activeOpacity={0.8}
+          >
+            <BodyText style={styles.continueButtonText}>
+              Continuer
+            </BodyText>
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
+    </OnboardingScreen>
   );
 }
 
 const getStyles = (theme) => StyleSheet.create({
-  scrollView: {
-    flex: 1,
-  },
-  
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: theme.spacing.xl,
-  },
-  
   content: {
     flex: 1,
-    paddingHorizontal: theme.spacing.l,
   },
   
-  header: {
+  messageSection: {
     alignItems: 'center',
-    paddingTop: theme.spacing.l,
-    marginBottom: theme.spacing.l,
+    paddingTop: theme.spacing.xxl,
   },
   
   messageContainer: {
-    marginTop: theme.spacing.l,
     alignItems: 'center',
+    paddingHorizontal: theme.spacing.xl,
+    marginTop: theme.spacing.xl,
   },
   
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
+  message: {
+    fontSize: 20,
+    textAlign: 'center',
     color: theme.colors.text,
-    textAlign: 'center',
-    marginBottom: theme.spacing.s,
+    lineHeight: 28,
+    maxWidth: 300,
   },
   
-  subtitle: {
-    fontSize: 16,
-    color: theme.colors.textLight,
-    textAlign: 'center',
-    lineHeight: 22,
-    paddingHorizontal: theme.spacing.m,
+  mainSection: {
+    flex: 1,
+    paddingHorizontal: theme.spacing.xl,
+  },
+  
+  scrollContent: {
+    paddingTop: theme.spacing.xl,
   },
   
   optionsContainer: {
-    padding: 0,
-    gap: theme.spacing.m,
+    gap: theme.spacing.l,
   },
   
   optionCard: {
     backgroundColor: theme.colors.surface,
-    padding: theme.spacing.l,
     borderRadius: theme.borderRadius.large,
+    padding: theme.spacing.l,
     borderWidth: 2,
     borderColor: theme.colors.border,
-    shadowColor: theme.colors.text,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
   },
   
   optionCardSelected: {
@@ -306,17 +276,17 @@ const getStyles = (theme) => StyleSheet.create({
   },
   
   optionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: theme.colors.background,
-    justifyContent: 'center',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.colors.surface,
     alignItems: 'center',
+    justifyContent: 'center',
     marginRight: theme.spacing.m,
   },
   
   optionEmoji: {
-    fontSize: 20,
+    fontSize: 24,
   },
   
   optionContent: {
@@ -324,10 +294,10 @@ const getStyles = (theme) => StyleSheet.create({
   },
   
   optionName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: theme.colors.text,
-    marginBottom: 2,
+    marginBottom: theme.spacing.xs,
   },
   
   optionNameSelected: {
@@ -350,54 +320,51 @@ const getStyles = (theme) => StyleSheet.create({
     backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
+    marginLeft: theme.spacing.m,
   },
   
   checkmark: {
-    color: 'white',
+    color: theme.colors.white,
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
   
   optionExamples: {
     marginTop: theme.spacing.m,
+    paddingTop: theme.spacing.m,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
   },
   
   examplePhases: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: theme.spacing.xs,
+    gap: theme.spacing.s,
   },
   
   examplePhase: {
-    fontSize: 13,
+    fontSize: 12,
     color: theme.colors.textLight,
     backgroundColor: theme.colors.surface,
-    paddingVertical: theme.spacing.xs,
     paddingHorizontal: theme.spacing.s,
+    paddingVertical: theme.spacing.xs,
     borderRadius: theme.borderRadius.small,
-    overflow: 'hidden',
   },
   
-  continueContainer: {
-    marginTop: theme.spacing.xl,
-    paddingBottom: theme.spacing.xl,
+  bottomSection: {
+    paddingHorizontal: theme.spacing.xl,
+    paddingBottom: theme.spacing.xxl,
   },
   
   continueButton: {
     backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.medium,
     paddingVertical: theme.spacing.l,
-    paddingHorizontal: theme.spacing.xl,
-    borderRadius: theme.borderRadius.large,
     alignItems: 'center',
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
   },
   
-  continueText: {
-    color: theme.getTextColorOn(theme.colors.primary),
+  continueButtonText: {
+    color: theme.colors.white,
     fontSize: 16,
     fontWeight: '600',
   },

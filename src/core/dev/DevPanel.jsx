@@ -4,9 +4,11 @@
 // 🚀 CASCADE 3.1: Testing Intelligence Revelation
 // ─────────────────────────────────────────────────────────
 
-import React, { useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, Alert, ScrollView, Text } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, TouchableOpacity, StyleSheet, Alert, ScrollView, Text, Animated, Platform, Dimensions } from 'react-native';
+import { useRouter, usePathname } from 'expo-router';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import PerformanceDashboard from './PerformanceDashboard';
 
 // Stores
 import { useUserStore } from '../../stores/useUserStore';
@@ -15,6 +17,8 @@ import { useNotebookStore } from '../../stores/useNotebookStore';
 import { useUserIntelligence } from '../../stores/useUserIntelligence';
 import { useEngagementStore } from '../../stores/useEngagementStore';
 import { useCycleStore } from '../../stores/useCycleStore';
+import { useAppStore } from '../../stores/useAppStore';
+import { useNavigationStore } from '../../stores/useNavigationStore';
 
 // Hooks
 
@@ -24,8 +28,31 @@ import { PERSONA_PROFILES } from '../../config/personaProfiles';
 
 export default function DevPanel() {
   const router = useRouter();
+  const pathname = usePathname();
   const [showPanel, setShowPanel] = useState(false);
-  const [activeTab, setActiveTab] = useState('revelation');
+  const [activeTab, setActiveTab] = useState('navigation');
+  const [showPerformance, setShowPerformance] = useState(false);
+  const [showStoreDebug, setShowStoreDebug] = useState(false);
+  const [selectedStore, setSelectedStore] = useState(null);
+  const panelAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (showPanel) {
+      Animated.spring(panelAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 9,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.spring(panelAnim, {
+        toValue: 0,
+        tension: 50,
+        friction: 9,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [showPanel]);
 
   // Stores
   const { profile, persona, updateProfile, setPersona, reset: resetUser } = useUserStore();
@@ -36,13 +63,16 @@ export default function DevPanel() {
   // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
   const cycleData = useCycleStore((state) => state);
   const updateCycle = useCycleStore((state) => state.updateCycle);
+  const { devMode, toggleDevMode, setTheme, currentTheme, isOnline } = useAppStore();
+  const navigation = useNavigationStore();
   
       // Cycle data
     const cycle = cycleData;
 
-  if (process.env.NODE_ENV === 'production') {
-    return null;
-  }
+  // Masquer sur toutes les pages d'onboarding sauf la première
+  const isHidden = pathname.startsWith('/onboarding/') && pathname !== '/onboarding/100-bienvenue';
+  
+  if (isHidden || !__DEV__) return null;
 
   // ═══════════════════════════════════════════════════════
   // 🌟 REVELATION TESTING - NOUVEAU
@@ -176,16 +206,12 @@ export default function DevPanel() {
       autonomySignals: engagement.metrics.autonomySignals
     };
 
-    console.info('🧠 Intelligence Debug:', JSON.stringify(debugInfo, null, 2));
+    console.info('🪄 Intelligence Debug:', JSON.stringify(debugInfo, null, 2));
     
     Alert.alert(
-      '🧠 État Intelligence',
-      `Confiance: ${debugInfo.confidence}%\n` +
-      `Patterns temporels: ${debugInfo.timePatterns}\n` +
-      `Phases documentées: ${debugInfo.phasePatterns}\n` +
-      `Conversations: ${debugInfo.conversations}\n` +
-      `Signaux autonomie: ${debugInfo.autonomySignals}`,
-      [{ text: 'Voir Console', onPress: () => console.info('🧠 Full Intelligence:', intelligence.learning) }]
+      '🪄 État Intelligence',
+      `Étape: ${intelligence.currentStep}\nPhase: ${intelligence.currentPhase}`,
+      [{ text: 'Voir Console', onPress: () => console.info('🪄 Full Intelligence:', intelligence.learning) }]
     );
   };
 
@@ -323,251 +349,437 @@ export default function DevPanel() {
   // 🎨 RENDU
   // ═══════════════════════════════════════════════════════
 
-  return (
-    <View style={styles.container}>
-      {/* Toggle Button */}
+  const renderNavigationTab = () => (
+    <View style={styles.tabContent}>
+      <View style={styles.buttonGrid}>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#4A90E2' }]} 
+          onPress={() => router.push('/(tabs)')}>
+          <Text style={styles.buttonText}>🏠 Home</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#50C878' }]} 
+          onPress={() => router.push('/onboarding/100-bienvenue')}>
+          <Text style={styles.buttonText}>🎯 Onboarding</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#9B59B6' }]} 
+          onPress={() => router.push('/(tabs)/cycle')}>
+          <Text style={styles.buttonText}>🌙 Cycle</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#E67E22' }]} 
+          onPress={() => router.push('/(tabs)/notebook')}>
+          <Text style={styles.buttonText}>📔 Notes</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const renderCycleTab = () => (
+    <View style={styles.tabContent}>
+      <View style={styles.buttonGrid}>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#FF69B4' }]} 
+          onPress={() => jumpToPhase('menstrual')}>
+          <Text style={styles.buttonText}>🌺 Menstruelle</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#98FB98' }]} 
+          onPress={() => jumpToPhase('follicular')}>
+          <Text style={styles.buttonText}>🌱 Folliculaire</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#FFD700' }]} 
+          onPress={() => jumpToPhase('ovulatory')}>
+          <Text style={styles.buttonText}>☀️ Ovulation</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#DDA0DD' }]} 
+          onPress={() => jumpToPhase('luteal')}>
+          <Text style={styles.buttonText}>🌙 Lutéale</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#20B2AA' }]} 
+          onPress={simulateFakeObservations}>
+          <Text style={styles.buttonText}>📊 Données Test</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const renderPersonaTab = () => (
+    <View style={styles.tabContent}>
+      <View style={styles.buttonGrid}>
+        {Object.entries(PERSONA_PROFILES).map(([id, profile]) => (
+          <TouchableOpacity
+            key={id}
+            style={[styles.button, { backgroundColor: profile.color || '#7B68EE' }]}
+            onPress={() => switchPersona(id)}>
+            <Text style={styles.buttonText}>{profile.emoji} {profile.name}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+
+  const renderStoresTab = () => (
+    <View style={styles.tabContent}>
+      <View style={styles.storeHeader}>
+        <Text style={styles.storeTitle}>🏪 État des Stores</Text>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#4CAF50' }]}
+          onPress={() => setShowStoreDebug(true)}>
+          <Text style={styles.buttonText}>🔍 Debug Détaillé</Text>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView style={styles.storeList}>
+        {/* App Store */}
+        <View style={styles.storeItem}>
+          <Text style={styles.storeName}>📱 App Store</Text>
+          <View style={styles.storeInfo}>
+            <Text style={styles.storeText}>Theme: {currentTheme}</Text>
+            <Text style={styles.storeText}>Dev: {devMode ? 'ON' : 'OFF'}</Text>
+            <Text style={styles.storeText}>Online: {isOnline ? 'ON' : 'OFF'}</Text>
+          </View>
+        </View>
+
+        {/* User Store */}
+        <View style={styles.storeItem}>
+          <Text style={styles.storeName}>👤 User Store</Text>
+          <View style={styles.storeInfo}>
+            <Text style={styles.storeText}>Persona: {persona?.currentPersona || 'auto'}</Text>
+            <Text style={styles.storeText}>Profile: {profile?.name || 'N/A'}</Text>
+          </View>
+        </View>
+
+        {/* Cycle Store */}
+        <View style={styles.storeItem}>
+          <Text style={styles.storeName}>🌙 Cycle Store</Text>
+          <View style={styles.storeInfo}>
+            <Text style={styles.storeText}>Phase: {cycleData?.currentPhase || '?'}</Text>
+            <Text style={styles.storeText}>Jour: J{cycleData?.currentDay || 0}</Text>
+            <Text style={styles.storeText}>Obs: {cycleData?.observations?.length || 0}</Text>
+          </View>
+        </View>
+
+        {/* Chat Store */}
+        <View style={styles.storeItem}>
+          <Text style={styles.storeName}>💬 Chat Store</Text>
+          <View style={styles.storeInfo}>
+            <Text style={styles.storeText}>Messages: {getMessagesCount()?.total || 0}</Text>
+            <Text style={styles.storeText}>Non lus: {getMessagesCount()?.unread || 0}</Text>
+          </View>
+        </View>
+
+        {/* Notebook Store */}
+        <View style={styles.storeItem}>
+          <Text style={styles.storeName}>📔 Notebook Store</Text>
+          <View style={styles.storeInfo}>
+            <Text style={styles.storeText}>Entrées: {entries?.length || 0}</Text>
+            <Text style={styles.storeText}>Quick: {entries?.filter(e => e.type === 'quick')?.length || 0}</Text>
+          </View>
+        </View>
+
+        {/* Intelligence Store */}
+        <View style={styles.storeItem}>
+          <Text style={styles.storeName}>🧠 Intelligence Store</Text>
+          <View style={styles.storeInfo}>
+            <Text style={styles.storeText}>Confiance: {intelligence.learning.confidence || 0}%</Text>
+            <Text style={styles.storeText}>Patterns: {Object.keys(intelligence.learning.phasePatterns || {}).length}</Text>
+          </View>
+        </View>
+
+        {/* Engagement Store */}
+        <View style={styles.storeItem}>
+          <Text style={styles.storeName}>📊 Engagement Store</Text>
+          <View style={styles.storeInfo}>
+            <Text style={styles.storeText}>Jours: {engagement.metrics.daysUsed || 0}</Text>
+            <Text style={styles.storeText}>Signaux: {engagement.metrics.autonomySignals || 0}</Text>
+          </View>
+        </View>
+
+        {/* Navigation Store */}
+        <View style={styles.storeItem}>
+          <Text style={styles.storeName}>🧭 Navigation Store</Text>
+          <View style={styles.storeInfo}>
+            <Text style={styles.storeText}>Route: {pathname}</Text>
+            <Text style={styles.storeText}>History: {navigation.history?.length || 0}</Text>
+          </View>
+        </View>
+      </ScrollView>
+
+      <View style={styles.buttonGrid}>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#FF5722' }]}
+          onPress={resetAll}>
+          <Text style={styles.buttonText}>🗑️ Reset Global</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#009688' }]}
+          onPress={() => {
+            Alert.alert(
+              '📦 Export Stores',
+              'Exporter l\'état de tous les stores ?',
+              [
+                { text: 'Annuler', style: 'cancel' },
+                { 
+                  text: 'Exporter', 
+                  onPress: () => {
+                    const state = {
+                      app: { currentTheme, devMode, isOnline },
+                      user: { profile, persona },
+                      cycle: cycleData,
+                      chat: { messages: getMessagesCount() },
+                      notebook: { entries },
+                      intelligence: intelligence.learning,
+                      engagement: engagement.metrics,
+                      navigation: { current: pathname, history: navigation.history }
+                    };
+                    console.info('📦 Stores State:', JSON.stringify(state, null, 2));
+                    Alert.alert('✅ Export', 'État exporté dans la console');
+                  }
+                }
+              ]
+            );
+          }}>
+          <Text style={styles.buttonText}>📦 Export État</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const renderDebugTab = () => (
+    <View style={styles.tabContent}>
+      <View style={styles.buttonGrid}>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#3F51B5' }]}
+          onPress={() => {
+            const errors = [];
+            if (!isOnline) errors.push('Offline');
+            if (intelligence.learning.confidence < 30) errors.push('Low Confidence');
+            if (!cycleData.observations?.length) errors.push('No Observations');
+            Alert.alert('🔍 Diagnostic', 
+              errors.length ? `Issues:\n${errors.join('\n')}` : 'Tout est OK !'
+            );
+          }}>
+          <Text style={styles.buttonText}>🔍 Diagnostic</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#795548' }]}
+          onPress={() => {
+            Alert.alert('📱 Info Device', `
+OS: ${Platform.OS}
+Version: ${Platform.Version}
+Screen: ${Dimensions.get('window').width}x${Dimensions.get('window').height}
+            `);
+          }}>
+          <Text style={styles.buttonText}>📱 Info Device</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#607D8B' }]}
+          onPress={() => {
+            const networkInfo = isOnline ? 'Online' : 'Offline';
+            const syncStatus = 'OK'; // À implémenter
+            Alert.alert('🌐 Network', `
+Status: ${networkInfo}
+Sync: ${syncStatus}
+            `);
+          }}>
+          <Text style={styles.buttonText}>🌐 Network</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#9C27B0' }]}
+          onPress={() => {
+            Alert.alert('🎯 Tests',
+              'Lancer les tests ?',
+              [
+                { text: 'Annuler', style: 'cancel' },
+                { 
+                  text: 'UI', 
+                  onPress: () => testRevelationComponents() 
+                },
+                { 
+                  text: 'Data', 
+                  onPress: () => simulateIntelligenceData('evening_active')
+                }
+              ]
+            );
+          }}>
+          <Text style={styles.buttonText}>🎯 Tests</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.debugSection}>
+        <Text style={styles.debugTitle}>🔄 Dernières Actions</Text>
+        <ScrollView style={styles.debugLog}>
+          {/* Simuler un log d'actions */}
+          {[
+            { time: '10:30:15', action: 'Navigation: /cycle' },
+            { time: '10:30:00', action: 'Store Update: cycle.currentDay' },
+            { time: '10:29:45', action: 'Intelligence Update' }
+          ].map((log, i) => (
+            <Text key={i} style={styles.debugText}>
+              {log.time} - {log.action}
+            </Text>
+          ))}
+        </ScrollView>
+      </View>
+    </View>
+  );
+
+  const renderTestTab = () => (
+    <View style={styles.tabContent}>
+      <View style={styles.buttonGrid}>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#FF6B6B' }]} 
+          onPress={() => simulateIntelligenceData('evening_active')}>
+          <Text style={styles.buttonText}>🌙 Profil Soir</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#4ECDC4' }]} 
+          onPress={() => simulateIntelligenceData('morning_creative')}>
+          <Text style={styles.buttonText}>🌅 Profil Matin</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#95A5A6' }]} 
+          onPress={() => simulateIntelligenceData('beginner')}>
+          <Text style={styles.buttonText}>🌱 Débutante</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#8E44AD' }]} 
+          onPress={showIntelligenceDebug}>
+          <Text style={styles.buttonText}>🔍 Debug Intel</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#E74C3C' }]} 
+          onPress={resetIntelligence}>
+          <Text style={styles.buttonText}>🗑️ Reset Intel</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const renderPerformanceTab = () => (
+    <View style={styles.tabContent}>
       <TouchableOpacity 
-        style={[styles.toggleButton, showPanel && styles.toggleActive]} 
-        onPress={() => setShowPanel(!showPanel)}
-      >
-        <Text style={styles.toggleText}>{showPanel ? '✕' : '🧠'}</Text>
+        style={[styles.button, { backgroundColor: '#2ECC71', marginBottom: 8 }]} 
+        onPress={() => setShowPerformance(true)}>
+        <Text style={styles.buttonText}>📊 Dashboard Performance</Text>
+      </TouchableOpacity>
+      <View style={styles.buttonGrid}>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#3498DB' }]} 
+          onPress={() => setTheme('light')}>
+          <Text style={styles.buttonText}>☀️ Light</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#34495E' }]} 
+          onPress={() => setTheme('dark')}>
+          <Text style={styles.buttonText}>🌙 Dark</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#95A5A6' }]} 
+          onPress={() => setTheme('system')}>
+          <Text style={styles.buttonText}>⚙️ System</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const tabs = [
+    { id: 'navigation', icon: '🛠', content: renderNavigationTab },
+    { id: 'cycle', icon: '🌗', content: renderCycleTab },
+    { id: 'persona', icon: '👤', content: renderPersonaTab },
+    { id: 'stores', icon: '📦', content: renderStoresTab },
+    { id: 'debug', icon: '🐛', content: renderDebugTab },
+    { id: 'test', icon: '🧠', content: renderTestTab },
+    { id: 'performance', icon: '📊', content: renderPerformanceTab }
+  ];
+
+  return (
+    <>
+      <TouchableOpacity
+        style={styles.toggleButton}
+        onPress={() => setShowPanel(!showPanel)}>
+        <MaterialCommunityIcons name="dev-to" size={24} color="#fff" />
       </TouchableOpacity>
 
-      {/* Dev Panel */}
       {showPanel && (
-        <View style={styles.panel}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>🧠 Test Révélation</Text>
-            <Text style={styles.status}>
-              {persona?.currentPersona || 'auto'} | {cycle?.currentPhase || '?'} J{cycle?.currentDay || 0} | 
-              Conf: {intelligence.learning.confidence || 0}%
-            </Text>
-          </View>
-
-          {/* Tabs */}
-          <View style={styles.tabs}>
-            {[
-              { id: 'revelation', icon: '🌟', label: 'Test' },
-              { id: 'cycle', icon: '🔄', label: 'Cycle' },
-              { id: 'persona', icon: '🎭', label: 'Persona' },
-              { id: 'utils', icon: '🧹', label: 'Utils' }
-            ].map(tab => (
+        <Animated.View
+          style={[
+            styles.panel,
+            {
+              transform: [
+                {
+                  translateY: panelAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-300, 0],
+                  }),
+                },
+              ],
+            },
+          ]}>
+          <View style={styles.tabBar}>
+            {tabs.map(tab => (
               <TouchableOpacity
                 key={tab.id}
-                style={[styles.tab, activeTab === tab.id && styles.tabActive]}
-                onPress={() => setActiveTab(tab.id)}
-              >
+                style={[
+                  styles.tab,
+                  activeTab === tab.id && styles.activeTab,
+                ]}
+                onPress={() => setActiveTab(tab.id)}>
                 <Text style={styles.tabText}>{tab.icon}</Text>
-                <Text style={styles.tabLabel}>{tab.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          <ScrollView style={styles.content}>
-            {/* 🌟 REVELATION TAB - NOUVEAU */}
-            {activeTab === 'revelation' && (
-              <View>
-                <Text style={styles.sectionTitle}>🌟 Test Intelligence Révélation</Text>
-                
-                <Text style={styles.subTitle}>Scénarios Utilisatrice :</Text>
-                <TouchableOpacity 
-                  style={styles.scenarioButton} 
-                  onPress={() => simulateIntelligenceData('evening_active')}
-                >
-                  <Text style={styles.scenarioText}>🌙 Active le Soir</Text>
-                  <Text style={styles.scenarioSub}>65% conf • Patterns émotionnels</Text>
-                </TouchableOpacity>
+          <View style={styles.content}>
+            {tabs.find(tab => tab.id === activeTab)?.content()}
+          </View>
+        </Animated.View>
+      )}
 
-                <TouchableOpacity 
-                  style={styles.scenarioButton} 
-                  onPress={() => simulateIntelligenceData('morning_creative')}
-                >
-                  <Text style={styles.scenarioText}>🌅 Matinale Créative</Text>
-                  <Text style={styles.scenarioSub}>78% conf • Patterns artistiques</Text>
-                </TouchableOpacity>
+      {showPerformance && (
+        <View style={styles.performanceOverlay}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setShowPerformance(false)}>
+            <Text style={styles.closeButtonText}>✕</Text>
+          </TouchableOpacity>
+          <PerformanceDashboard />
+        </View>
+      )}
 
-                <TouchableOpacity 
-                  style={styles.scenarioButton} 
-                  onPress={() => simulateIntelligenceData('beginner')}
-                >
-                  <Text style={styles.scenarioText}>🌱 Débutante</Text>
-                  <Text style={styles.scenarioSub}>15% conf • Peu de données</Text>
-                </TouchableOpacity>
-
-                <Text style={styles.subTitle}>Tests Composants :</Text>
-                <TouchableOpacity style={styles.testButton} onPress={testRevelationComponents}>
-                  <Text style={styles.testButtonText}>🧪 Test Composants</Text>
-                  <Text style={styles.testButtonSub}>PersonalPatterns + Insight</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.debugButton} onPress={showIntelligenceDebug}>
-                  <Text style={styles.debugButtonText}>🐛 Debug Intelligence</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.resetButton} onPress={resetIntelligence}>
-                  <Text style={styles.resetButtonText}>🧹 Reset Intelligence</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity 
-                  style={styles.debugButton} 
-                  onPress={() => {
-                    const hasObs = cycle?.observations?.length > 0;
-                    if (hasObs) {
-                      // Clear observations
-                      useCycleStore.getState().observations = [];
-                    } else {
-                      // Add fake observations
-                      simulateFakeObservations();
-                    }
-                    Alert.alert('🔄 Observations', hasObs ? 'Cleared' : 'Added fake data');
-                  }}
-                >
-                  <Text style={styles.debugButtonText}>
-                    {cycle?.observations?.length > 0 ? '🗑️ Clear Observations' : '➕ Add Fake Obs'}
+      {showStoreDebug && (
+        <View style={styles.performanceOverlay}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setShowStoreDebug(false)}>
+            <Text style={styles.closeButtonText}>✕</Text>
+          </TouchableOpacity>
+          <ScrollView style={styles.container}>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>📦 Debug Stores</Text>
+              {Object.entries({
+                app, profile, cycleData, intelligence, engagement, navigation
+              }).map(([name, store]) => (
+                <View key={name} style={styles.debugItem}>
+                  <Text style={styles.debugItemTitle}>{name}</Text>
+                  <Text style={styles.debugItemContent}>
+                    {JSON.stringify(store, null, 2)}
                   </Text>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {/* 🔄 CYCLE TAB */}
-            {activeTab === 'cycle' && (
-              <View>
-                <Text style={styles.sectionTitle}>🔄 Contrôle Cycle</Text>
-                
-                <Text style={styles.subTitle}>Phases Rapides :</Text>
-                <View style={styles.buttonGrid}>
-                  {['menstrual', 'follicular', 'ovulatory', 'luteal'].map(phase => (
-                    <TouchableOpacity
-                      key={phase}
-                      style={[styles.phaseButton, cycle?.currentPhase === phase && styles.phaseActive]}
-                      onPress={() => jumpToPhase(phase)}
-                    >
-                      <Text style={styles.phaseText}>{phase.slice(0, 3)}</Text>
-                    </TouchableOpacity>
-                  ))}
                 </View>
-
-                <Text style={styles.subTitle}>Navigation Rapide :</Text>
-                <View style={styles.buttonGrid}>
-                  <TouchableOpacity
-                    style={[styles.dayJumpButton, { backgroundColor: '#00D4AA' }]}
-                    onPress={advanceOneDay}
-                  >
-                    <Text style={styles.dayJumpText}>J+1</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.dayJumpButton, { backgroundColor: '#00D4AA' }]}
-                    onPress={() => advanceDays(2)}
-                  >
-                    <Text style={styles.dayJumpText}>J+2</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.dayJumpButton, { backgroundColor: '#00D4AA' }]}
-                    onPress={() => advanceDays(3)}
-                  >
-                    <Text style={styles.dayJumpText}>J+3</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.dayJumpButton, { backgroundColor: '#00D4AA' }]}
-                    onPress={() => advanceDays(7)}
-                  >
-                    <Text style={styles.dayJumpText}>J+7</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <Text style={styles.subTitle}>Jours Spécifiques :</Text>
-                <View style={styles.buttonGrid}>
-                  {[1, 7, 14, 21, 28].map(day => (
-                    <TouchableOpacity
-                      key={day}
-                      style={styles.dayJumpButton}
-                      onPress={() => jumpToDay(day)}
-                    >
-                      <Text style={styles.dayJumpText}>J{day}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                <Text style={styles.subTitle}>Simulation Complète :</Text>
-                <TouchableOpacity
-                  style={[styles.dayJumpButton, { backgroundColor: '#FF6B6B', width: '100%' }]}
-                  onPress={() => {
-                    let day = 1;
-                    const interval = setInterval(() => {
-                      jumpToDay(day);
-                      day++;
-                      if (day > 28) {
-                        clearInterval(interval);
-                        Alert.alert('✅ Cycle Complet', 'J1 → J28 simulé');
-                      }
-                    }, 500);
-                  }}
-                >
-                  <Text style={styles.dayJumpText}>🎬 Simuler J1→J28</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {/* 🎭 PERSONA TAB */}
-            {activeTab === 'persona' && (
-              <View>
-                <Text style={styles.sectionTitle}>🎭 Personas</Text>
-                
-                <View style={styles.buttonGrid}>
-                  {Object.entries(PERSONA_PROFILES).map(([personaId, data]) => (
-                    <TouchableOpacity
-                      key={personaId}
-                      style={[styles.personaButton, persona?.currentPersona === personaId && styles.personaActive]}
-                      onPress={() => switchPersona(personaId)}
-                    >
-                      <Text style={styles.personaText}>{data.name}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {/* 🧹 UTILS TAB */}
-            {activeTab === 'utils' && (
-              <View>
-                <Text style={styles.sectionTitle}>🧹 Utils</Text>
-                
-                <Text style={styles.subTitle}>Navigation :</Text>
-                <View style={styles.buttonGrid}>
-                  {[
-                    { route: '/onboarding', label: 'Onboarding' },
-                    { route: '/(tabs)/cycle', label: 'Cycle' },
-                    { route: '/(tabs)/conseil', label: 'Conseil' },
-                    { route: '/(tabs)/notebook', label: 'Carnet' }
-                  ].map(nav => (
-                    <TouchableOpacity
-                      key={nav.route}
-                      style={styles.navButton}
-                      onPress={() => navigateTo(nav.route)}
-                    >
-                      <Text style={styles.navText}>{nav.label}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                <TouchableOpacity style={styles.utilButton} onPress={resetAll}>
-                  <Text style={styles.utilButtonText}>🗑️ Reset Complet</Text>
-                </TouchableOpacity>
-
-                <View style={styles.statsContainer}>
-                  <Text style={styles.statsText}>📊 État Actuel:</Text>
-                  <Text style={styles.statsText}>• {getMessagesCount()?.total || 0} messages</Text>
-                  <Text style={styles.statsText}>• {entries?.length || 0} entrées</Text>
-                  <Text style={styles.statsText}>• {intelligence.learning.confidence || 0}% confiance</Text>
-                  <Text style={styles.statsText}>• {engagement.metrics.autonomySignals || 0} signaux auto</Text>
-                </View>
-              </View>
-            )}
+              ))}
+            </View>
           </ScrollView>
         </View>
       )}
-    </View>
+    </>
   );
 }
 
@@ -576,291 +788,190 @@ export default function DevPanel() {
 // ═══════════════════════════════════════════════════════
 
 const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    zIndex: 9999,
-    width: '100%',
-    height: '100%',
-    pointerEvents: 'box-none',
-  },
-  
   toggleButton: {
     position: 'absolute',
-    top: 60,
+    top: Platform.OS === 'ios' ? 50 : 20,
     right: 20,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#8B5CF6',
-    alignItems: 'center',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#2C3E50',
     justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
   },
-  
-  toggleActive: {
-    backgroundColor: '#FF3B30',
-  },
-  
-  toggleText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  
   panel: {
     position: 'absolute',
-    top: 115,
-    right: 15,
-    width: 320,
-    height: 650,
-    backgroundColor: '#FFFFFF',
+    top: Platform.OS === 'ios' ? 100 : 70,
+    right: 10,
+    width: 300,
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
     borderRadius: 12,
+    padding: 8,
+    zIndex: 999,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowRadius: 3.84,
+    elevation: 5,
     borderWidth: 1,
-    borderColor: '#E5E5EA',
+    borderColor: 'rgba(0, 0, 0, 0.1)',
   },
-  
-  header: {
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
-  },
-  
-  title: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1C1C1E',
-    textAlign: 'center',
-  },
-  
-  status: {
-    fontSize: 10,
-    color: '#8E8E93',
-    textAlign: 'center',
-    marginTop: 4,
-  },
-  
-  tabs: {
+  tabBar: {
     flexDirection: 'row',
-    backgroundColor: '#F2F2F7',
+    marginBottom: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    borderRadius: 8,
+    padding: 4,
   },
-  
   tab: {
     flex: 1,
-    padding: 8,
+    paddingVertical: 8,
     alignItems: 'center',
+    borderRadius: 6,
   },
-  
-  tabActive: {
-    backgroundColor: '#FFFFFF',
+  activeTab: {
+    backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+    elevation: 2,
   },
-  
   tabText: {
-    fontSize: 14,
+    fontSize: 16,
   },
-  
-  tabLabel: {
-    fontSize: 9,
-    color: '#8E8E93',
-    marginTop: 2,
-  },
-  
   content: {
-    flex: 1,
-    padding: 16,
+    padding: 4,
   },
-  
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1C1C1E',
-    marginBottom: 12,
+  tabContent: {
+    gap: 8,
   },
-  
-  subTitle: {
-    fontSize: 12,
-    color: '#8E8E93',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-
-  // 🌟 NOUVEAUX STYLES RÉVÉLATION
-  scenarioButton: {
-    backgroundColor: '#8B5CF6',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  
-  scenarioText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  
-  scenarioSub: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 11,
-    marginTop: 2,
-  },
-  
-  testButton: {
-    backgroundColor: '#00D4AA',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  
-  testButtonText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  
-  testButtonSub: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 10,
-    marginTop: 2,
-  },
-  
-  debugButton: {
-    backgroundColor: '#FF9500',
-    padding: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  
-  debugButtonText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  
-  resetButton: {
-    backgroundColor: '#FF6B6B',
-    padding: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  
-  resetButtonText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  
   buttonGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    marginBottom: 16,
   },
-  
-  phaseButton: {
-    backgroundColor: '#34C759',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
-    minWidth: 50,
-    alignItems: 'center',
-  },
-  
-  phaseActive: {
-    backgroundColor: '#FF9500',
-  },
-  
-  phaseText: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: '600',
-    textTransform: 'capitalize',
-  },
-  
-  dayJumpButton: {
-    backgroundColor: '#5856D6',
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 6,
-    minWidth: 40,
-    alignItems: 'center',
-  },
-  
-  dayJumpText: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  
-  personaButton: {
-    backgroundColor: '#FF6B6B',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
-    minWidth: 60,
-    alignItems: 'center',
-  },
-  
-  personaActive: {
-    backgroundColor: '#FF3B30',
-  },
-  
-  personaText: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  
-  navButton: {
-    backgroundColor: '#5856D6',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
-    minWidth: 60,
-    alignItems: 'center',
-  },
-  
-  navText: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  
-  utilButton: {
-    backgroundColor: '#8E8E93',
-    padding: 10,
+  button: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 8,
+    minWidth: '45%',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+    elevation: 2,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 13,
+  },
+  performanceOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#fff',
+    zIndex: 1001,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 50 : 20,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#2C3E50',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1002,
+  },
+  closeButtonText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  storeHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
   },
-  
-  utilButtonText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: '600',
+  storeTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
-
-  statsContainer: {
-    backgroundColor: '#F2F2F7',
+  storeList: {
+    maxHeight: 400,
+  },
+  storeItem: {
+    backgroundColor: '#f8f9fa',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  storeName: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  storeInfo: {
+    marginLeft: 8,
+  },
+  storeText: {
+    fontSize: 12,
+    color: '#666',
+    marginVertical: 1,
+  },
+  debugSection: {
+    marginTop: 16,
+    backgroundColor: '#f8f9fa',
     padding: 12,
     borderRadius: 8,
   },
-  
-  statsText: {
-    fontSize: 11,
-    color: '#8E8E93',
-    marginBottom: 2,
+  debugTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  debugLog: {
+    maxHeight: 200,
+  },
+  debugText: {
+    fontSize: 12,
+    color: '#666',
+    marginVertical: 2,
+  },
+  container: {
+    flex: 1,
+  },
+  section: {
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  debugItem: {
+    marginBottom: 8,
+  },
+  debugItemTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  debugItemContent: {
+    fontSize: 12,
+    color: '#666',
   },
 });

@@ -1,22 +1,23 @@
 //
 // ─────────────────────────────────────────────────────────
-// 📄 File: app/onboarding/600-avatar.jsx
-// 🧩 Type: Onboarding Screen
-// 📚 Description: Configuration initiale de Melune
-// 🕒 Version: 3.0 - Configuration simple et modifiable
-// 🧭 Used in: Onboarding flow - Étape 3/4 "Ton style"
+// 📄 Fichier : app/onboarding/500-avatar.jsx
+// 🎯 Status: ✅ FINAL - NE PAS MODIFIER
+// 📝 Description: Personnalisation de l'apparence de Melune
+// 🔄 Cycle: Onboarding - Étape 6/8
 // ─────────────────────────────────────────────────────────
 //
 import React, { useEffect, useRef, useState } from 'react';
 import { View, TouchableOpacity, StyleSheet, Animated, ScrollView, Image } from 'react-native';
 import { router } from 'expo-router';
-import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
-import ScreenContainer from '../../src/core/layout/ScreenContainer';
-import OnboardingNavigation from '../../src/features/shared/OnboardingNavigation';
-import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
+import OnboardingScreen from '../../src/core/layout/OnboardingScreen';
 import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { useUserStore } from '../../src/stores/useUserStore';
+import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
+import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
+import { AnimatedRevealMessage } from '../../src/core/ui/animations';
+
+// Images
 import meluneClassic from '../../src/assets/images/melune/melune-classic.png';
 import meluneModern from '../../src/assets/images/melune/melune-modern.png';
 import meluneMystique from '../../src/assets/images/melune/melune-mystique.png';
@@ -63,33 +64,33 @@ const AVATAR_IMAGES = {
 };
 
 export default function AvatarScreen() {
-  const intelligence = useOnboardingIntelligence('600-avatar');
   const { theme } = useTheme();
-  const { updateMelune } = useUserStore();
   const styles = getStyles(theme);
+  const { updateMelune } = useUserStore();
+  const intelligence = useOnboardingIntelligence('500-avatar');
   
-  // Animations
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
-  
-  // État des sélections
+  // États
   const [selections, setSelections] = useState({
     style: 'classic',
     tone: 'friendly',
     position: 'bottom-right'
   });
+  
+  // Animations
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
+    // Séquence d'animation
     Animated.sequence([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 500,
+        duration: 600,
         useNativeDriver: true,
       }),
-      Animated.delay(300),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 600,
+        duration: 800,
         useNativeDriver: true,
       }),
     ]).start();
@@ -120,7 +121,7 @@ export default function AvatarScreen() {
     
     // Navigation vers la page de terminologie
     setTimeout(() => {
-      router.push('/onboarding/650-terminology');
+      router.push('/onboarding/600-terminology');
     }, 300);
   };
 
@@ -241,149 +242,113 @@ export default function AvatarScreen() {
   };
 
   return (
-    <ScreenContainer edges={['top', 'bottom']}>
-      <OnboardingNavigation currentScreen="600-avatar" />
-      
-      <ScrollView 
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-          
-          {/* Header */}
-          <View style={styles.header}>
-            <Animated.View style={{ opacity: fadeAnim }}>
-              <Image
-                source={AVATAR_IMAGES[selections.style]}
-                style={styles.avatarMain}
-                resizeMode="contain"
-              />
-            </Animated.View>
-            
-            <Animated.View
-              style={[
-                styles.messageContainer,
-                {
-                  transform: [{ translateY: slideAnim }],
-                  opacity: slideAnim.interpolate({
-                    inputRange: [-20, 0],
-                    outputRange: [0, 1],
-                  }),
-                },
-              ]}
-            >
-              <BodyText style={styles.title}>
-                Personnalise Melune
+    <OnboardingScreen currentScreen="500-avatar">
+      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+        
+        {/* Message de Mélune */}
+        <View style={styles.messageSection}>
+          <Animated.View
+            style={[
+              styles.messageContainer,
+              {
+                transform: [{ translateY: slideAnim }]
+              }
+            ]}
+          >
+            <AnimatedRevealMessage delay={800}>
+              <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
+                Choisis comment tu souhaites me voir apparaître dans l'application
               </BodyText>
-              <BodyText style={styles.subtitle}>
-                {intelligence.meluneMessage}
-              </BodyText>
-            </Animated.View>
-          </View>
-
-          {/* Options */}
-          <View style={styles.optionsContainer}>
-            {INITIAL_OPTIONS.map(renderCategory)}
-          </View>
-          
-          {/* Continue Button */}
-          <Animated.View style={styles.continueContainer}>
-            <TouchableOpacity
-              style={styles.continueButton}
-              onPress={handleContinue}
-              activeOpacity={0.7}
-            >
-              <BodyText style={styles.continueText}>
-                Continuer
-              </BodyText>
-            </TouchableOpacity>
+            </AnimatedRevealMessage>
           </Animated.View>
-          
-        </Animated.View>
-      </ScrollView>
-    </ScreenContainer>
+        </View>
+
+        {/* Section principale */}
+        <ScrollView 
+          style={styles.mainSection}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {INITIAL_OPTIONS.map(renderCategory)}
+        </ScrollView>
+
+        {/* Section bouton */}
+        <View style={styles.bottomSection}>
+          <TouchableOpacity
+            style={styles.continueButton}
+            onPress={handleContinue}
+            activeOpacity={0.8}
+          >
+            <BodyText style={styles.continueButtonText}>
+              Continuer
+            </BodyText>
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
+    </OnboardingScreen>
   );
 }
 
 const getStyles = (theme) => StyleSheet.create({
-  scrollView: {
-    flex: 1,
-  },
-  
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: theme.spacing.xl,
-  },
-  
   content: {
     flex: 1,
-    paddingHorizontal: theme.spacing.l,
   },
   
-  header: {
+  messageSection: {
     alignItems: 'center',
-    paddingTop: theme.spacing.l,
-    marginBottom: theme.spacing.xl,
+    paddingTop: theme.spacing.xxl,
   },
   
   messageContainer: {
-    marginTop: theme.spacing.l,
     alignItems: 'center',
+    paddingHorizontal: theme.spacing.xl,
+    marginTop: theme.spacing.xl,
   },
   
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
+  message: {
+    fontSize: 20,
+    textAlign: 'center',
     color: theme.colors.text,
-    textAlign: 'center',
-    marginBottom: theme.spacing.s,
+    lineHeight: 28,
+    maxWidth: 300,
   },
   
-  subtitle: {
-    fontSize: 16,
-    color: theme.colors.textLight,
-    textAlign: 'center',
-    lineHeight: 22,
-    paddingHorizontal: theme.spacing.m,
-  },
-  
-  optionsContainer: {
+  mainSection: {
     flex: 1,
-    gap: theme.spacing.xl,
+    paddingHorizontal: theme.spacing.xl,
+  },
+  
+  scrollContent: {
+    paddingTop: theme.spacing.xl,
   },
   
   categoryContainer: {
-    gap: theme.spacing.m,
+    marginBottom: theme.spacing.xl,
   },
   
   categoryTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: theme.colors.text,
+    marginBottom: theme.spacing.s,
   },
   
   categoryDescription: {
     fontSize: 14,
     color: theme.colors.textLight,
-    lineHeight: 20,
+    marginBottom: theme.spacing.l,
   },
   
   optionsGrid: {
-    gap: theme.spacing.s,
+    gap: theme.spacing.m,
   },
   
   optionCard: {
     backgroundColor: theme.colors.surface,
-    padding: theme.spacing.l,
     borderRadius: theme.borderRadius.large,
+    padding: theme.spacing.l,
     borderWidth: 2,
     borderColor: theme.colors.border,
-    shadowColor: theme.colors.text,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
   },
   
   optionCardSelected: {
@@ -407,22 +372,14 @@ const getStyles = (theme) => StyleSheet.create({
   
   optionName: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: '600',
     color: theme.colors.text,
-    marginBottom: 2,
-  },
-  
-  optionNameSelected: {
-    color: theme.colors.primary,
+    marginBottom: theme.spacing.xs,
   },
   
   optionDescription: {
     fontSize: 14,
     color: theme.colors.textLight,
-  },
-  
-  optionDescriptionSelected: {
-    color: theme.colors.primary + 'CC',
   },
   
   selectedIndicator: {
@@ -435,97 +392,52 @@ const getStyles = (theme) => StyleSheet.create({
   },
   
   checkmark: {
-    color: 'white',
+    color: theme.colors.white,
     fontSize: 14,
-    fontWeight: 'bold',
-  },
-  
-  continueContainer: {
-    marginTop: theme.spacing.xl,
-    paddingBottom: theme.spacing.xl,
-  },
-  
-  continueButton: {
-    backgroundColor: theme.colors.primary,
-    paddingVertical: theme.spacing.l,
-    paddingHorizontal: theme.spacing.xl,
-    borderRadius: theme.borderRadius.large,
-    alignItems: 'center',
-    shadowColor: theme.colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  
-  continueText: {
-    color: theme.getTextColorOn(theme.colors.primary),
-    fontSize: 16,
     fontWeight: '600',
   },
   
   avatarPreview: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#fff',
+    width: 40,
+    height: 40,
     marginRight: theme.spacing.m,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  
-  avatarMain: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#fff',
-    borderWidth: 2,
-    borderColor: theme.colors.primary,
-    marginBottom: theme.spacing.m,
-    alignSelf: 'center',
   },
   
   phonePreview: {
+    width: 40,
+    height: 60,
     marginRight: theme.spacing.m,
-    alignItems: 'center',
-  },
-  
-  phoneScreen: {
-    width: 50,
-    height: 90,
-    backgroundColor: theme.colors.background,
-    borderRadius: 12,
+    borderRadius: theme.borderRadius.small,
     borderWidth: 2,
     borderColor: theme.colors.border,
-    position: 'relative',
     overflow: 'hidden',
   },
   
-  fakeHeader: {
-    height: 16,
+  phoneScreen: {
+    flex: 1,
     backgroundColor: theme.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+  },
+  
+  fakeHeader: {
+    height: 8,
+    backgroundColor: theme.colors.border,
   },
   
   fakeContent: {
     flex: 1,
     padding: 4,
-    gap: 2,
   },
   
   fakeLine: {
     height: 2,
     backgroundColor: theme.colors.border,
-    borderRadius: 1,
-    width: '100%',
+    marginBottom: 2,
+    width: '80%',
   },
   
   fakeTabBar: {
-    height: 16,
-    backgroundColor: theme.colors.surface,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
+    height: 6,
+    backgroundColor: theme.colors.border,
   },
   
   floatingMelune: {
@@ -533,16 +445,28 @@ const getStyles = (theme) => StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    borderWidth: 1,
-    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.border,
   },
   
   floatingMeluneSelected: {
-    borderColor: theme.colors.primary,
-    borderWidth: 2,
+    backgroundColor: theme.colors.primary,
   },
   
-  positionCard: {
-    minHeight: 80,
+  bottomSection: {
+    paddingHorizontal: theme.spacing.xl,
+    paddingBottom: theme.spacing.xxl,
+  },
+  
+  continueButton: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.medium,
+    paddingVertical: theme.spacing.l,
+    alignItems: 'center',
+  },
+  
+  continueButtonText: {
+    color: theme.colors.white,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

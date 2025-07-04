@@ -216,22 +216,26 @@ export const getDaysSinceLastPeriod = (lastPeriodDate) => {
     return 0;
   }
   
-  const lastDate = new Date(lastPeriodDate);
-  
-  if (isNaN(lastDate.getTime())) {
-    return 0; // ✅ Date invalide
+  try {
+    const lastDate = new Date(lastPeriodDate);
+    
+    if (isNaN(lastDate.getTime())) {
+      console.warn('Date invalide dans getDaysSinceLastPeriod:', lastPeriodDate);
+      return 0;
+    }
+    
+    // Normaliser les dates à minuit UTC pour éviter les problèmes de timezone
+    const today = new Date();
+    const todayUTC = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
+    const lastDateUTC = Date.UTC(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate());
+    
+    const result = Math.floor((todayUTC - lastDateUTC) / (1000 * 60 * 60 * 24));
+    
+    return Math.max(0, result); // Toujours retourner un nombre positif
+  } catch (error) {
+    console.error('Erreur dans getDaysSinceLastPeriod:', error);
+    return 0;
   }
-  
-  // ✅ FIX: Utiliser new Date() au lieu de Date.now() pour éviter les problèmes de timezone
-  const today = new Date();
-  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const lastDateStart = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate());
-  
-  const result = Math.floor(
-    (todayStart.getTime() - lastDateStart.getTime()) / (1000 * 60 * 60 * 24)
-  );
-  
-  return result;
 };
 
 export const getCurrentCycleDay = (lastPeriodDate, cycleLength = CYCLE_DEFAULTS.LENGTH) => {
@@ -250,46 +254,58 @@ export const getCurrentCycleDay = (lastPeriodDate, cycleLength = CYCLE_DEFAULTS.
 };
 
 export const getCurrentPhase = (lastPeriodDate, cycleLength = CYCLE_DEFAULTS.LENGTH, periodDuration = CYCLE_DEFAULTS.PERIOD_DURATION) => {
-  if (!lastPeriodDate) {
-    return 'menstrual';
+  try {
+    if (!lastPeriodDate) {
+      return 'menstrual';
+    }
+    
+    // Vérifier si la date est valide
+    const lastDate = new Date(lastPeriodDate);
+    if (isNaN(lastDate.getTime())) {
+      console.warn('Date invalide dans getCurrentPhase:', lastPeriodDate);
+      return 'menstrual';
+    }
+    
+    // ✅ Sanitize params
+    const sanitizedCycleLength = Math.max(CYCLE_DEFAULTS.MIN_LENGTH, 
+      Math.min(CYCLE_DEFAULTS.MAX_LENGTH, cycleLength || CYCLE_DEFAULTS.LENGTH));
+    const sanitizedPeriodDuration = Math.max(CYCLE_DEFAULTS.MIN_PERIOD_DURATION, 
+      Math.min(CYCLE_DEFAULTS.MAX_PERIOD_DURATION, periodDuration || CYCLE_DEFAULTS.PERIOD_DURATION));
+    
+    const daysSince = getDaysSinceLastPeriod(lastPeriodDate);
+    
+    // ✅ FIX: Dates futures = menstrual
+    if (daysSince < 0) {
+      return 'menstrual';
+    }
+    
+    const currentDay = (daysSince % sanitizedCycleLength) + 1;
+    
+    // ✅ FIX: Logique phases corrigée pour cycles variables
+    if (currentDay <= sanitizedPeriodDuration) {
+      return 'menstrual';
+    }
+    
+    // Folliculaire: après règles jusqu'à jour 13 (ou 40% du cycle si court)
+    const follicularEnd = Math.max(13, Math.floor(sanitizedCycleLength * 0.4));
+    
+    if (currentDay <= follicularEnd) {
+      return 'follicular';
+    }
+    
+    // Ovulatoire: ~3 jours autour de l'ovulation 
+    const ovulatoryStart = follicularEnd + 1;
+    const ovulatoryEnd = Math.min(ovulatoryStart + 2, Math.floor(sanitizedCycleLength * 0.6));
+    
+    if (currentDay <= ovulatoryEnd) {
+      return 'ovulatory';
+    }
+    
+    return 'luteal';
+  } catch (error) {
+    console.error('Erreur dans getCurrentPhase:', error);
+    return 'menstrual'; // Valeur par défaut en cas d'erreur
   }
-  
-  // ✅ Sanitize params
-  const sanitizedCycleLength = Math.max(CYCLE_DEFAULTS.MIN_LENGTH, 
-    Math.min(CYCLE_DEFAULTS.MAX_LENGTH, cycleLength || CYCLE_DEFAULTS.LENGTH));
-  const sanitizedPeriodDuration = Math.max(CYCLE_DEFAULTS.MIN_PERIOD_DURATION, 
-    Math.min(CYCLE_DEFAULTS.MAX_PERIOD_DURATION, periodDuration || CYCLE_DEFAULTS.PERIOD_DURATION));
-  
-  const daysSince = getDaysSinceLastPeriod(lastPeriodDate);
-  
-  // ✅ FIX: Dates futures = menstrual
-  if (daysSince < 0) {
-    return 'menstrual';
-  }
-  
-  const currentDay = (daysSince % sanitizedCycleLength) + 1;
-  
-  // ✅ FIX: Logique phases corrigée pour cycles variables
-  if (currentDay <= sanitizedPeriodDuration) {
-    return 'menstrual';
-  }
-  
-  // Folliculaire: après règles jusqu'à jour 13 (ou 40% du cycle si court)
-  const follicularEnd = Math.max(13, Math.floor(sanitizedCycleLength * 0.4));
-  
-  if (currentDay <= follicularEnd) {
-    return 'follicular';
-  }
-  
-  // Ovulatoire: ~3 jours autour de l'ovulation 
-  const ovulatoryStart = follicularEnd + 1;
-  const ovulatoryEnd = Math.min(ovulatoryStart + 2, Math.floor(sanitizedCycleLength * 0.6));
-  
-  if (currentDay <= ovulatoryEnd) {
-    return 'ovulatory';
-  }
-  
-  return 'luteal';
 };
 
 // ═══════════════════════════════════════════════════════

@@ -74,7 +74,12 @@ export const ANIMATION_DURATIONS = {
   
   // Onboarding et intro
   reveal: 1200,
-  dramatic: 1500
+  dramatic: 1500,
+  
+  // Délais spéciaux onboarding
+  welcomeFirstMessage: 1000,
+  welcomeSecondMessage: 2500,
+  welcomeButton: 5200
 };
 
 /**
@@ -134,6 +139,28 @@ export const ANIMATION_CONFIGS = {
     logo: {
       ...ANIMATION_PRESETS.smooth,
       duration: ANIMATION_DURATIONS.elegant
+    },
+    welcome: {
+      pageEnter: {
+        fade: {
+          duration: ANIMATION_DURATIONS.slow,
+          useNativeDriver: true
+        },
+        slide: {
+          ...ANIMATION_PRESETS.gentle,
+          useNativeDriver: true
+        }
+      },
+      button: {
+        scale: {
+          ...ANIMATION_PRESETS.gentle,
+          useNativeDriver: true
+        },
+        fade: {
+          duration: ANIMATION_DURATIONS.elegant,
+          useNativeDriver: true
+        }
+      }
     }
   },
 
