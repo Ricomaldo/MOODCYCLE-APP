@@ -76,8 +76,14 @@ export default function ConseilsView() {
     insight,
     loading: insightLoading,
     error: insightError,
-    refresh: refreshInsight
-  } = usePersonalizedInsight();
+    refresh: refreshInsight,
+    revelationLevel,
+    hasPersonalizedElements,
+    intelligenceAnalysis
+  } = usePersonalizedInsight({
+    enableRevelation: true, // 🆕 Activer révélations
+    enrichWithContext: true
+  });
   
   const insightRevealAnim = React.useRef(new Animated.Value(0)).current;
   const insightScaleAnim = React.useRef(new Animated.Value(0.95)).current;
@@ -260,6 +266,16 @@ export default function ConseilsView() {
             </Animated.View>
           ) : null}
         </View>
+
+        {/* 🆕 Indicateur révélations personnalisées */}
+        {hasPersonalizedElements && revelationLevel > 0 && (
+          <Animated.View style={[styles.revelationIndicator, { opacity: insightRevealAnim }]}>
+            <Feather name="sparkles" size={14} color={theme.colors.primary} />
+            <Caption style={styles.revelationText}>
+              Insight adapté à tes patterns personnels
+            </Caption>
+          </Animated.View>
+        )}
 
         <View style={styles.quickNavSection}>
           <BodyText style={styles.quickNavTitle}>Actions rapides</BodyText>
@@ -543,5 +559,22 @@ const getStyles = (theme) => StyleSheet.create({
   },
   vignettesContainer: {
     marginTop: 8,
+  },
+  // 🆕 Indicateur révélations
+  revelationIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: theme.colors.primary + '10',
+    borderRadius: 16,
+    alignSelf: 'flex-start',
+  },
+  revelationText: {
+    marginLeft: 6,
+    color: theme.colors.primary,
+    fontSize: 12,
+    fontWeight: '500',
   },
 });

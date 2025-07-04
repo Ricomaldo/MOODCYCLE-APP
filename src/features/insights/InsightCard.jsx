@@ -154,9 +154,19 @@ export default function InsightCard({
             </Caption>
             
             {insight?.revelationLevel > 0 && (
-              <View style={styles.aiIndicator}>
-                <Feather name="zap" size={12} color={phaseColor} />
-              </View>
+              <Animated.View style={[
+                styles.aiIndicator,
+                { opacity: revelationFadeAnim }
+              ]}>
+                <Feather 
+                  name={insight.revelationLevel >= 2 ? "sparkles" : "zap"} 
+                  size={12} 
+                  color={phaseColor} 
+                />
+                <Caption style={styles.revelationBadge}>
+                  {insight.revelationLevel >= 3 ? "Ultra personnalisé" : "Personnalisé"}
+                </Caption>
+              </Animated.View>
             )}
           </View>
           
@@ -288,12 +298,18 @@ const getStyles = (theme, phase) => {
       opacity: 0.8,
     },
     aiIndicator: {
-      width: 20,
-      height: 20,
-      borderRadius: 10,
-      backgroundColor: phaseColor + '20',
+      flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'center',
+      paddingHorizontal: theme.spacing.xs,
+      paddingVertical: theme.spacing.xs,
+      borderRadius: theme.borderRadius.medium,
+      backgroundColor: phaseColor + '20',
+    },
+    revelationBadge: {
+      fontSize: 10,
+      color: phaseColor,
+      marginLeft: 4,
+      fontWeight: '600',
     },
     
     // ✅ ACTIONS GLASSMORPHISM

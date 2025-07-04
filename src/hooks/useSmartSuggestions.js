@@ -12,6 +12,14 @@ import { usePersona } from './usePersona';
 import { createPersonalizationEngine } from '../services/PersonalizationEngine';
 import CycleObservationEngine from '../services/CycleObservationEngine';
 
+// 🆕 Scores de vulnérabilité émotionnelle par phase
+const EMOTIONAL_VULNERABILITY_SCORES = {
+  menstrual: { base: 0.8, peak: 0.9, timing: 'sensitive' },
+  follicular: { base: 0.3, peak: 0.4, timing: 'energetic' },
+  ovulatory: { base: 0.2, peak: 0.3, timing: 'confident' },
+  luteal: { base: 0.6, peak: 0.8, timing: 'introspective' }
+};
+
 // ───────────────────────────────────────────────────────────
 // 🎯 HOOK PRINCIPAL SUGGESTIONS INTELLIGENTES
 // ───────────────────────────────────────────────────────────
@@ -46,7 +54,57 @@ const createStableSuggestions = (persona, currentPhase, intelligence, preference
     persona
   );
 
-  return personalizationEngine.createPersonalizedExperience();
+  const experience = personalizationEngine.createPersonalizedExperience();
+  
+  // 🆕 Ajouter calcul empathie
+  const emotionalReadiness = calculateEmotionalReadiness(
+    currentPhase, 
+    intelligence
+  );
+  
+  let contextualActions = experience.contextualActions || [];
+  
+  // Adapter les actions selon readiness
+  if (emotionalReadiness.shouldDelay) {
+    contextualActions = contextualActions.map(action => ({
+      ...action,
+      title: action.title.replace('maintenant', 'quand tu te sentiras prête'),
+      softLaunch: true,
+      emotionalTiming: emotionalReadiness.timing
+    }));
+  }
+  
+  return {
+    ...experience,
+    contextualActions,
+    emotionalReadiness // 🆕
+  };
+};
+
+// 🆕 Calcul empathie temporelle
+const calculateEmotionalReadiness = (phase, intelligence, hour) => {
+  const vulnerability = EMOTIONAL_VULNERABILITY_SCORES[phase] || { base: 0.5 };
+  const currentHour = hour || new Date().getHours();
+  
+  // Facteurs temporels
+  let timingScore = 1;
+  if (currentHour < 8 || currentHour > 22) timingScore = 0.7; // Tôt/tard
+  if (currentHour >= 10 && currentHour <= 16) timingScore = 1.2; // Optimal
+  
+  // Facteurs intelligence
+  const recentMood = intelligence.learning?.phasePatterns?.[phase]?.mood;
+  const moodMultiplier = recentMood === 'low' ? 1.3 : recentMood === 'high' ? 0.8 : 1;
+  
+  // Score final
+  const readiness = (1 - vulnerability.base) * timingScore * moodMultiplier;
+  
+  return {
+    score: Math.min(1, Math.max(0, readiness)),
+    timing: vulnerability.timing,
+    shouldDelay: readiness < 0.3,
+    optimalDelay: readiness < 0.3 ? 30 : 0, // minutes
+    emotionalState: vulnerability.timing
+  };
 };
 
 export function useSmartSuggestions() {
@@ -115,7 +173,8 @@ export function useSmartSuggestions() {
       prompts: experience.personalizedPrompts || [],
       confidence: experience.personalization?.confidence || 0,
       dataPoints: experience.personalization?.dataPoints || {},
-      recommendations: experience.personalization?.recommendations || []
+      recommendations: experience.personalization?.recommendations || [],
+      emotionalReadiness: experience.emotionalReadiness // 🆕
     };
   }, [stablePersona, stablePhase, stableIntelligence, stablePreferences, intelligence]);
 

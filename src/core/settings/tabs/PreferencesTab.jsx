@@ -8,10 +8,12 @@
 //
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../../hooks/useTheme';
 import { Heading3, BodyText, Caption } from '../../ui/typography';
 import { useUserStore } from '../../../stores/useUserStore';
 import ThemeSelector from '../ThemeSelector';
+import { useTerminology, useTerminologySelector } from '../../../hooks/useTerminology';
 
 // 🎨 Dimensions thérapeutiques identiques à l'onboarding
 const THERAPEUTIC_DIMENSIONS = [
@@ -64,6 +66,7 @@ const SLIDER_LABELS = ['Pas du tout', 'Un peu', 'Moyennement', 'Beaucoup', 'Pass
 export default function PreferencesTab({ onDataChange }) {
   const { theme } = useTheme();
   const { preferences, updatePreferences } = useUserStore();
+  const { currentTerminology, options, onSelect } = useTerminologySelector();
   
   const [localPreferences, setLocalPreferences] = useState(
     preferences || {
@@ -168,6 +171,46 @@ export default function PreferencesTab({ onDataChange }) {
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Sélecteur de thème */}
       <ThemeSelector onDataChange={onDataChange} />
+      
+      {/* Sélecteur de terminologie */}
+      <View style={styles.terminologySection}>
+        <Heading3 style={styles.sectionTitle}>Langage des phases</Heading3>
+        <Caption style={styles.sectionDescription}>
+          Choisis comment tu préfères nommer tes phases cycliques
+        </Caption>
+        
+        <View style={styles.terminologyOptions}>
+          {options.map((option) => (
+            <TouchableOpacity
+              key={option.key}
+              style={[
+                styles.terminologyOption,
+                option.selected && styles.terminologyOptionSelected
+              ]}
+              onPress={() => {
+                onSelect(option.key);
+                onDataChange?.();
+              }}
+            >
+              <BodyText style={styles.terminologyIcon}>{option.icon}</BodyText>
+              <View style={styles.terminologyContent}>
+                <BodyText style={[
+                  styles.terminologyName,
+                  option.selected && styles.terminologyNameSelected
+                ]}>
+                  {option.name}
+                </BodyText>
+                <Caption style={styles.terminologyDesc}>
+                  {option.description}
+                </Caption>
+              </View>
+              {option.selected && (
+                <Feather name="check" size={20} color={theme.colors.primary} />
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
       
       {/* Header explicatif */}
       <View style={styles.header}>
@@ -363,5 +406,57 @@ const getStyles = (theme) => StyleSheet.create({
     color: theme.colors.textLight,
     textAlign: 'center',
     fontStyle: 'italic',
+  },
+  
+  // 🆕 Sélecteur de terminologie
+  terminologySection: {
+    paddingHorizontal: theme.spacing.l,
+    paddingVertical: theme.spacing.l,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border + '50',
+  },
+  sectionTitle: {
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+  },
+  sectionDescription: {
+    color: theme.colors.textLight,
+    marginBottom: theme.spacing.m,
+  },
+  terminologyOptions: {
+    gap: theme.spacing.s,
+  },
+  terminologyOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: theme.spacing.m,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.medium,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  terminologyOptionSelected: {
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primary + '10',
+  },
+  terminologyIcon: {
+    fontSize: 24,
+    marginRight: theme.spacing.m,
+  },
+  terminologyContent: {
+    flex: 1,
+  },
+  terminologyName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: 2,
+  },
+  terminologyNameSelected: {
+    color: theme.colors.primary,
+  },
+  terminologyDesc: {
+    fontSize: 12,
+    color: theme.colors.textLight,
   },
 }); 

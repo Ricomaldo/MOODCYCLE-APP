@@ -201,6 +201,30 @@ const CONTEXTUAL_ACTIONS = {
   }
 };
 
+// 🆕 Messages empathiques par phase
+const EMPATHETIC_MESSAGES = {
+  menstrual: {
+    vulnerable: "Je sens que cette phase peut être intense. Prenons notre temps 💜",
+    supportive: "Chaque ressenti compte. Je suis là pour t'accompagner en douceur",
+    timing: "Quand tu te sentiras prête, on pourra explorer ensemble"
+  },
+  follicular: {
+    encouraging: "Ton énergie remonte ! C'est le moment parfait pour explorer",
+    playful: "Je sens cette belle énergie créative qui arrive 🌱",
+    timing: "Profite de ce renouveau pour découvrir"
+  },
+  ovulatory: {
+    empowering: "Tu rayonnes ! Utilisons cette confiance pour avancer",
+    celebratory: "Quelle belle énergie aujourd'hui ! ✨",
+    timing: "C'est ton moment de briller"
+  },
+  luteal: {
+    understanding: "Cette phase demande plus de douceur. Respectons ton rythme",
+    validating: "Tes émotions sont légitimes et précieuses",
+    timing: "Prenons le temps qu'il faut, sans pression"
+  }
+};
+
 // ───────────────────────────────────────────────────────────
 // 🏭 FACTORY FUNCTION PRINCIPALE
 // ───────────────────────────────────────────────────────────
@@ -247,6 +271,14 @@ export const createAdaptiveGuidance = (userProfile, engagementData, currentPhase
     let message = template;
     if (context.phase) {
       message = message.replace('{phase}', context.phase);
+    }
+    
+    // 🆕 Enrichir avec empathie si contexte émotionnel
+    if (context.emotionalReadiness) {
+      const phaseMessages = EMPATHETIC_MESSAGES[context.phase];
+      if (phaseMessages && context.emotionalReadiness.score < 0.5) {
+        return phaseMessages.vulnerable || phaseMessages.understanding || message;
+      }
     }
     
     return message;

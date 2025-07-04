@@ -27,6 +27,7 @@ import { useAdaptiveInterface } from '../../../src/hooks/useAdaptiveInterface';
 import { useSmartSuggestions } from '../../../src/hooks/useSmartSuggestions';
 import { useQuickObservation } from '../../../src/hooks/useQuickObservation';
 import { useEngagementStore } from '../../../src/stores/useEngagementStore';
+import { useUserIntelligence } from '../../../src/stores/useUserIntelligence';
 import CycleProgressionIndicator from '../../../src/features/cycle/CycleProgressionIndicator';
 import CycleObservationEngine from '../../../src/services/CycleObservationEngine';
 
@@ -70,12 +71,13 @@ export default function CycleView() {
   const { isHybridMode, isObservationMode } = useQuickObservation();
   
   // Guidance observation
+  const intelligence = useUserIntelligence();
   const observationGuidance = React.useMemo(() => 
     CycleObservationEngine.getObservationGuidance(
       currentPhase, 
-      useUserIntelligence.getState(),
+      intelligence,
       maturityLevel
-    ), [currentPhase, maturityLevel]
+    ), [currentPhase, maturityLevel, intelligence]
   );
 
   const observationPrompts = React.useMemo(() =>
@@ -504,7 +506,7 @@ export default function CycleView() {
         visible={showPhaseCorrection}
         onClose={() => setShowPhaseCorrection(false)}
         currentPhase={currentPhase}
-        predictedPhase={getCycleData().currentPhase}
+        predictedPhase={currentPhase}
       />
       
       <ParametresModal 
