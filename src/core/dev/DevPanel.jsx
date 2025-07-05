@@ -35,6 +35,7 @@ import { runABTest } from '../../services/ABTestService';
 import { initializeIntelligence, validateIntelligenceHealth } from '../../services/IntelligenceInit';
 import TestDataGenerator from '../../services/TestDataGenerator';
 import behaviorAnalytics from '../../services/BehaviorAnalyticsService';
+import deviceMetrics from '../../services/DeviceMetricsService';
 
 export default function DevPanel() {
   const router = useRouter();
@@ -951,6 +952,82 @@ export default function DevPanel() {
            </TouchableOpacity>
          </View>
        </View>
+       
+       {/* 📊 DEVICE METRICS SECTION */}
+       <View style={styles.deviceSection}>
+         <Text style={styles.sectionTitle}>📊 Métriques Device</Text>
+         <View style={styles.deviceStats}>
+           <Text style={styles.syncText}>
+             Device: {deviceMetrics.getStats().device}
+           </Text>
+           <Text style={styles.syncText}>
+             Performance: {deviceMetrics.getStats().currentStatus.performance}
+           </Text>
+           <Text style={styles.syncText}>
+             Réseau: {deviceMetrics.getStats().currentStatus.network}
+           </Text>
+           <Text style={styles.syncText}>
+             Session: {Math.round(deviceMetrics.getStats().sessionDuration / 1000 / 60)}min
+           </Text>
+         </View>
+         <View style={styles.buttonGrid}>
+           <TouchableOpacity 
+             style={[styles.button, { backgroundColor: '#FF9800' }]}
+             onPress={() => {
+               const analysis = deviceMetrics.analyzeMetrics();
+               Alert.alert(
+                 '📊 Analyse Device',
+                 `Score: ${analysis.overallScore.score}/100 (${analysis.overallScore.grade})\nPerformance: ${analysis.performance.status}\nRéseau: ${analysis.network.status}\nBatterie: ${analysis.battery.status}`
+               );
+               console.log('📊 Device Analysis:', analysis);
+             }}>
+             <Text style={styles.buttonText}>📊 Analyser</Text>
+           </TouchableOpacity>
+           
+           <TouchableOpacity 
+             style={[styles.button, { backgroundColor: '#4CAF50' }]}
+             onPress={() => {
+               const syncData = deviceMetrics.getSyncData();
+               Alert.alert(
+                 '📤 Données Device',
+                 `Device: ${syncData.device.model}\nPlateforme: ${syncData.device.platform}\nCrashes: ${syncData.crashes.length}\nTaille: ${JSON.stringify(syncData).length} chars`
+               );
+               console.log('📤 Device Sync Data:', syncData);
+             }}>
+             <Text style={styles.buttonText}>📤 Sync Data</Text>
+           </TouchableOpacity>
+           
+           <TouchableOpacity 
+             style={[styles.button, { backgroundColor: '#2196F3' }]}
+             onPress={() => {
+               // Simuler un crash pour test
+               const testError = new Error('Test crash pour DevPanel');
+               deviceMetrics.recordCrash(testError, { 
+                 screen: 'DevPanel', 
+                 action: 'test_crash',
+                 userAgent: 'test'
+               });
+               Alert.alert('💥 Test', 'Crash simulé enregistré');
+             }}>
+             <Text style={styles.buttonText}>💥 Test Crash</Text>
+           </TouchableOpacity>
+           
+           <TouchableOpacity 
+             style={[styles.button, { backgroundColor: '#FF5722' }]}
+             onPress={() => {
+               Alert.alert(
+                 '🔄 Reset Metrics',
+                 'Réinitialiser les métriques device ?',
+                 [
+                   { text: 'Annuler', style: 'cancel' },
+                   { text: 'Reset', onPress: () => deviceMetrics.resetData() }
+                 ]
+               );
+             }}>
+             <Text style={styles.buttonText}>🔄 Reset</Text>
+           </TouchableOpacity>
+         </View>
+       </View>
      </View>
 
       <View style={styles.buttonGrid}>
@@ -1777,6 +1854,20 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(103, 58, 183, 0.3)',
   },
   behaviorStats: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  deviceSection: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: 'rgba(255, 152, 0, 0.1)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 152, 0, 0.3)',
+  },
+  deviceStats: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',

@@ -28,20 +28,14 @@ const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
   },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: theme.spacing.xxl,
-  },
   content: {
     flex: 1,
+    paddingTop: theme.spacing.m,
   },
   messageSection: {
     alignItems: 'center',
-    paddingTop: theme.spacing.m,
     paddingHorizontal: theme.spacing.xl,
+    paddingBottom: theme.spacing.l,
   },
   meluneMessage: {
     fontSize: 20,
@@ -53,7 +47,7 @@ const getStyles = (theme) => StyleSheet.create({
   mainSection: {
     flex: 1,
     paddingHorizontal: theme.spacing.xl,
-    paddingTop: theme.spacing.xxl,
+    justifyContent: 'center', // Centrer le contenu
   },
   formContainer: {
     alignItems: 'center',
@@ -122,9 +116,10 @@ const getStyles = (theme) => StyleSheet.create({
   validationInvalid: {
     color: theme.colors.error,
   },
-  buttonContainer: {
+  bottomSection: {
+    paddingHorizontal: theme.spacing.xl,
+    paddingBottom: theme.spacing.l,
     alignItems: 'center',
-    paddingTop: theme.spacing.xl,
   },
 });
 
@@ -186,13 +181,7 @@ export default function PrenomScreen() {
   return (
     <ScreenContainer edges={['bottom']} style={styles.container}>
       <AnimatedOnboardingScreen>
-        <ScrollView 
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          bounces={false}
-          keyboardShouldPersistTaps="handled"
-        >
+        <View style={styles.content}>
           {/* 1. Message de Mélune */}
           <View style={styles.messageSection}>
             <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage}>
@@ -202,7 +191,7 @@ export default function PrenomScreen() {
             </AnimatedRevealMessage>
           </View>
 
-          {/* 2. Section principale */}
+          {/* 2. Section principale - flex pour occuper l'espace */}
           <View style={styles.mainSection}>
             <AnimatedCascadeCard index={0}>
               <View style={styles.formContainer}>
@@ -252,17 +241,18 @@ export default function PrenomScreen() {
             </AnimatedCascadeCard>
           </View>
 
-          {/* 5. Bouton avec animation autonome */}
-          <OnboardingButton
-            onPress={handleSubmit}
-            title={buttonTitle}
-            disabled={!isValid || isProcessing}
-            loading={isProcessing}
-            showAnimation={true}
-            delay={ANIMATION_DURATIONS.welcomeButton}
-            style={styles.buttonContainer}
-          />
-        </ScrollView>
+          {/* 3. Bouton en bas - position fixe */}
+          <View style={styles.bottomSection}>
+            <OnboardingButton
+              onPress={handleSubmit}
+              title={buttonTitle}
+              disabled={!isValid || isProcessing}
+              loading={isProcessing}
+              showAnimation={true}
+              delay={ANIMATION_DURATIONS.welcomeButton}
+            />
+          </View>
+        </View>
       </AnimatedOnboardingScreen>
     </ScreenContainer>
   );

@@ -7,7 +7,7 @@
 // ─────────────────────────────────────────────────────────
 //
 import React, { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Text, Animated } from 'react-native';
+import { View, StyleSheet, ScrollView, Text, Animated, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import { BodyText } from '../../src/core/ui/typography';
@@ -20,7 +20,7 @@ import {
   ANIMATION_DURATIONS,
   ANIMATION_CONFIGS
 } from '../../src/core/ui/animations';
-import OnboardingCard from '../../src/features/onboarding/shared/OnboardingCard';
+
 
 // 🎯 Tranches d'âge avec descriptions psychologiques
 const AGE_RANGES = [
@@ -70,7 +70,6 @@ export default function EtapeVieScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
   const cardsAnim = useRef(AGE_RANGES.map(() => new Animated.Value(0))).current;
-  const indicatorOpacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     // Phase 1 : Entrée page
@@ -130,109 +129,158 @@ export default function EtapeVieScreen() {
     }, 1800); // Laisser 1.8s pour lire l'encouragement
   };
 
-  const handleScroll = (event) => {
-    const offsetY = event.nativeEvent.contentOffset.y;
-    
-    // Dès qu'on commence à scroller, on cache l'indicateur
-    if (offsetY > 10) {
-      Animated.timing(indicatorOpacity, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
-    }
-  };
+
 
   return (
     <ScreenContainer edges={['bottom']} style={styles.container}>
       <AnimatedOnboardingScreen>
-        <ScrollView 
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          bounces={false}
-          onScroll={handleScroll}
-          scrollEventThrottle={16}
-        >
-          <Animated.View style={[
-            styles.content,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }]
-            }
-          ]}>
-            
-            {/* Message Section */}
-            <View style={styles.messageSection}>
-              <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage}>
-                <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
-                  {/* ✅ SIMPLIFIÉ : Toujours utiliser le message default car confiance < 40% */}
-                  {intelligence.getPersonalizedMessage('message') || 
-                   "Chaque étape de la vie d'une femme porte sa propre magie... Dis-moi où tu en es de ton voyage"}
-                </BodyText>
-              </AnimatedRevealMessage>
-            </View>
+        <Animated.View style={[
+          styles.content,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }]
+          }
+        ]}>
+          
+          {/* Message Section */}
+          <View style={styles.messageSection}>
+            <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage}>
+              <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
+                {/* ✅ SIMPLIFIÉ : Toujours utiliser le message default car confiance < 40% */}
+                {intelligence.getPersonalizedMessage('message') || 
+                 "Chaque étape de la vie d'une femme porte sa propre magie... Dis-moi où tu en es de ton voyage"}
+              </BodyText>
+            </AnimatedRevealMessage>
+          </View>
 
-            {/* Choix Section */}
+                      {/* Choix Section - Grid 2 colonnes */}
             <View style={styles.choicesSection}>
-              <View style={styles.choicesContainer}>
-                {AGE_RANGES.map((ageRange, index) => (
-                  <Animated.View
-                    key={ageRange.id}
-                    style={[
-                      styles.cardWrapper,
-                      {
-                        opacity: cardsAnim[index],
-                        transform: [{
-                          translateY: cardsAnim[index].interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [20, 0]
-                          })
-                        }]
-                      }
-                    ]}
-                  >
-                    <OnboardingCard
-                      variant="lifecycle"
-                      icon={ageRange.icon}
-                      title={ageRange.title}
-                      description={ageRange.description}
-                      isSelected={selectedAge === ageRange.id}
-                      onPress={() => handleAgeSelect(ageRange)}
-                      color={theme.colors.phases?.[['follicular', 'ovulatory', 'luteal', 'menstrual', 'primary'][index]] || theme.colors.primary}
-                      index={index}
-                    />
-                  </Animated.View>
-                ))}
-              </View>
-              
-              {/* ✅ SIMPLIFIÉ : Encouragement default toujours disponible */}
-              {showEncouragement && selectedAge && (
-                <View style={styles.encouragementContainer}>
-                  <AnimatedRevealMessage delay={300}>
-                    <BodyText style={styles.encouragementText}>
-                      {intelligence.getPersonalizedMessage('encouragement') || 
-                       "Nous allons découvrir ensemble ton chemin unique."}
-                    </BodyText>
-                  </AnimatedRevealMessage>
+              <View style={styles.choicesGrid}>
+                {/* Première rangée */}
+                <View style={styles.gridRow}>
+                  {AGE_RANGES.slice(0, 2).map((ageRange, index) => (
+                    <Animated.View
+                      key={ageRange.id}
+                      style={[
+                        styles.gridItem,
+                        {
+                          opacity: cardsAnim[index],
+                          transform: [{
+                            translateY: cardsAnim[index].interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [20, 0]
+                            })
+                          }]
+                        }
+                      ]}
+                    >
+                      <TouchableOpacity
+                        style={[
+                          styles.compactCard,
+                          selectedAge === ageRange.id && styles.compactCardSelected
+                        ]}
+                        onPress={() => handleAgeSelect(ageRange)}
+                        activeOpacity={0.8}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${ageRange.title}: ${ageRange.description}`}
+                        accessibilityState={{ selected: selectedAge === ageRange.id }}
+                      >
+                        <BodyText style={styles.compactIcon}>{ageRange.icon}</BodyText>
+                        <BodyText style={styles.compactTitle}>{ageRange.title}</BodyText>
+                        <BodyText style={styles.compactDescription}>{ageRange.description}</BodyText>
+                      </TouchableOpacity>
+                    </Animated.View>
+                  ))}
                 </View>
-              )}
-            </View>
 
-          </Animated.View>
-        </ScrollView>
+                {/* Deuxième rangée */}
+                <View style={styles.gridRow}>
+                  {AGE_RANGES.slice(2, 4).map((ageRange, index) => (
+                    <Animated.View
+                      key={ageRange.id}
+                      style={[
+                        styles.gridItem,
+                        {
+                          opacity: cardsAnim[index + 2],
+                          transform: [{
+                            translateY: cardsAnim[index + 2].interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [20, 0]
+                            })
+                          }]
+                        }
+                      ]}
+                    >
+                      <TouchableOpacity
+                        style={[
+                          styles.compactCard,
+                          selectedAge === ageRange.id && styles.compactCardSelected
+                        ]}
+                        onPress={() => handleAgeSelect(ageRange)}
+                        activeOpacity={0.8}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${ageRange.title}: ${ageRange.description}`}
+                        accessibilityState={{ selected: selectedAge === ageRange.id }}
+                      >
+                        <BodyText style={styles.compactIcon}>{ageRange.icon}</BodyText>
+                        <BodyText style={styles.compactTitle}>{ageRange.title}</BodyText>
+                        <BodyText style={styles.compactDescription}>{ageRange.description}</BodyText>
+                      </TouchableOpacity>
+                    </Animated.View>
+                  ))}
+                </View>
 
-        {/* Indicateur de scroll avec animation */}
-        <Animated.View 
-          style={[
-            styles.scrollIndicator,
-            { opacity: indicatorOpacity }
-          ]}
-          pointerEvents="none"
-          accessibilityLabel="Indicateur de défilement vers le bas"
-        >
-          <Text style={styles.scrollIndicatorText}>↓</Text>
-          <BodyText style={styles.scrollIndicatorLabel}>Découvrir plus</BodyText>
+                {/* Troisième rangée - 1 seule carte centrée */}
+                <View style={styles.gridRowCenter}>
+                  {AGE_RANGES.slice(4, 5).map((ageRange, index) => (
+                    <Animated.View
+                      key={ageRange.id}
+                      style={[
+                        styles.gridItem,
+                        {
+                          opacity: cardsAnim[index + 4],
+                          transform: [{
+                            translateY: cardsAnim[index + 4].interpolate({
+                              inputRange: [0, 1],
+                              outputRange: [20, 0]
+                            })
+                          }]
+                        }
+                      ]}
+                    >
+                      <TouchableOpacity
+                        style={[
+                          styles.compactCard,
+                          selectedAge === ageRange.id && styles.compactCardSelected
+                        ]}
+                        onPress={() => handleAgeSelect(ageRange)}
+                        activeOpacity={0.8}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${ageRange.title}: ${ageRange.description}`}
+                        accessibilityState={{ selected: selectedAge === ageRange.id }}
+                      >
+                        <BodyText style={styles.compactIcon}>{ageRange.icon}</BodyText>
+                        <BodyText style={styles.compactTitle}>{ageRange.title}</BodyText>
+                        <BodyText style={styles.compactDescription}>{ageRange.description}</BodyText>
+                      </TouchableOpacity>
+                    </Animated.View>
+                  ))}
+                </View>
+              </View>
+            
+            {/* ✅ SIMPLIFIÉ : Encouragement default toujours disponible */}
+            {showEncouragement && selectedAge && (
+              <View style={styles.encouragementContainer}>
+                <AnimatedRevealMessage delay={300}>
+                  <BodyText style={styles.encouragementText}>
+                    {intelligence.getPersonalizedMessage('encouragement') || 
+                     "Nous allons découvrir ensemble ton chemin unique."}
+                  </BodyText>
+                </AnimatedRevealMessage>
+              </View>
+            )}
+          </View>
+
         </Animated.View>
       </AnimatedOnboardingScreen>
     </ScreenContainer>
@@ -247,70 +295,89 @@ const getStyles = (theme) => StyleSheet.create({
 
   content: {
     flex: 1,
-  },
-  
-  scrollView: {
-    flex: 1,
-  },
-  
-  scrollContent: {
-    flexGrow: 1,
     paddingTop: theme.spacing.m,
-    paddingBottom: theme.spacing.xxl,
   },
   
   messageSection: {
     alignItems: 'center',
     paddingHorizontal: theme.spacing.xl,
+    paddingBottom: theme.spacing.m,
   },
   
   message: {
-    fontSize: 20,
+    fontSize: 18, // Légèrement réduit pour gagner de l'espace
     textAlign: 'center',
     color: theme.colors.text,
-    lineHeight: 28,
+    lineHeight: 26,
     maxWidth: 300,
   },
   
   choicesSection: {
     flex: 1,
     paddingHorizontal: theme.spacing.xl,
-    paddingTop: theme.spacing.l,
+    justifyContent: 'center', // Centrer le grid
   },
   
-  choicesContainer: {
-    gap: theme.spacing.l,
+  choicesGrid: {
+    gap: theme.spacing.m,
   },
 
-  cardWrapper: {
-    width: '100%',
+  gridRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: theme.spacing.m,
   },
 
-  scrollIndicator: {
-    position: 'absolute',
-    bottom: theme.spacing.xl,
-    alignSelf: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.surface + '80',
-    paddingHorizontal: theme.spacing.m,
-    paddingVertical: theme.spacing.s,
+  gridRowCenter: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+
+  gridItem: {
+    width: '48%', // 2 colonnes avec un peu d'espace
+  },
+
+  compactCard: {
+    backgroundColor: theme.colors.surface,
+    padding: theme.spacing.s, // Padding réduit pour plus d'espace interne
     borderRadius: theme.borderRadius.medium,
+    borderWidth: 2,
+    borderColor: theme.colors.border,
+    alignItems: 'center',
+    height: 150, // Hauteur augmentée (100 * 1.5)
+    justifyContent: 'center',
   },
 
-  scrollIndicatorText: {
-    fontSize: 20,
-    color: theme.colors.primary,
-    marginBottom: -4,
+  compactCardSelected: {
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primary + '08',
   },
 
-  scrollIndicatorLabel: {
-    fontSize: 14, // ✅ WCAG 2.1 AA - Taille minimum corrigée
-    color: theme.colors.textLight,
+  compactIcon: {
+    fontSize: 22,
+    marginBottom: theme.spacing.xs,
+  },
+
+  compactTitle: {
+    fontSize: 13, // Légèrement augmenté pour éviter les retours à la ligne
+    fontWeight: '600',
+    color: theme.colors.text,
+    textAlign: 'center',
+    marginBottom: theme.spacing.xs,
+    lineHeight: 16, // Contrôle de la hauteur de ligne
+  },
+
+  compactDescription: {
+    fontSize: 11, // ✅ WCAG 2.1 AA - Taille augmentée pour l'accessibilité
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 15,
+    paddingHorizontal: theme.spacing.xs, // Petit padding pour éviter les bords
   },
 
   encouragementContainer: {
-    marginTop: theme.spacing.xl,
     paddingHorizontal: theme.spacing.m,
+    paddingTop: theme.spacing.m,
     alignItems: 'center',
   },
 

@@ -22,6 +22,7 @@ import { useUserIntelligence } from '../stores/useUserIntelligence';
 import { useNavigationStore } from '../stores/useNavigationStore';
 import { useAppStore } from '../stores/useAppStore';
 import behaviorAnalytics from './BehaviorAnalyticsService';
+import deviceMetrics from './DeviceMetricsService';
 
 class StoresSyncService {
   constructor() {
@@ -79,7 +80,9 @@ class StoresSyncService {
         navigationStore: useNavigationStore.getState(),
         appStore: useAppStore.getState(),
         // Ajouter les données comportementales
-        behaviorStore: behaviorAnalytics.getSyncData()
+        behaviorStore: behaviorAnalytics.getSyncData(),
+        // Ajouter les métriques device
+        deviceStore: deviceMetrics.getSyncData()
       };
 
       // Nettoyer les données pour éviter les références circulaires
@@ -93,7 +96,8 @@ class StoresSyncService {
         notebookStore: cleanStores.notebookStore?.entries?.length || 0,
         engagementStore: Object.keys(cleanStores.engagementStore || {}).length,
         userIntelligence: Object.keys(cleanStores.userIntelligence || {}).length,
-        behaviorStore: cleanStores.behaviorStore?.behaviors?.length || 0
+        behaviorStore: cleanStores.behaviorStore?.behaviors?.length || 0,
+        deviceStore: cleanStores.deviceStore?.metrics?.length || 0
       });
       
       return cleanStores;
@@ -328,7 +332,8 @@ class StoresSyncService {
         notebookStore: JSON.stringify(stores.notebookStore || {}).length,
         engagementStore: JSON.stringify(stores.engagementStore || {}).length,
         userIntelligence: JSON.stringify(stores.userIntelligence || {}).length,
-        behaviorStore: JSON.stringify(stores.behaviorStore || {}).length
+        behaviorStore: JSON.stringify(stores.behaviorStore || {}).length,
+        deviceStore: JSON.stringify(stores.deviceStore || {}).length
       },
       totalDataSize: JSON.stringify(stores).length,
       syncInProgress: this.syncInProgress
