@@ -3,7 +3,7 @@
 // 📄 File: src/services/BehaviorAnalyticsService.js
 // 🧩 Type: Analytics Service
 // 📚 Description: Service avancé d'analyse comportementale
-// 🕒 Version: 1.1 - 2025-01-15 - Fixed iterator errors
+// 🕒 Version: 1.0 - 2025-01-15
 // 🧭 Used in: App-wide behavior tracking
 // ─────────────────────────────────────────────────────────
 //
@@ -134,12 +134,7 @@ class BehaviorAnalyticsService {
     try {
       const data = {
         behaviors: this.behaviors.slice(-this.maxBehaviors),
-        patterns: {
-          navigation: Object.fromEntries(this.patterns.navigation),
-          interactions: Object.fromEntries(this.patterns.interactions),
-          timing: Object.fromEntries(this.patterns.timing),
-          sequences: this.patterns.sequences
-        },
+        patterns: this.patterns,
         lastSaved: Date.now()
       };
       
@@ -275,16 +270,16 @@ class BehaviorAnalyticsService {
       action, // 'tap', 'swipe', 'save', 'share'
       cardType: cardData.type, // 'insight', 'vignette', 'observation'
       cardPhase: cardData.phase,
-      cardContent: cardData.content?.substring(0, 100) // Limiter la taille
+      cardTags: cardData.tags
     });
   }
 
   /**
-   * Tracker les gestes utilisateur
+   * Tracker les gestes tactiles
    */
   trackGesture(gestureType, gestureData) {
     this.trackInteraction('gesture', {
-      gestureType, // 'swipe', 'pinch', 'rotate', 'long_press'
+      gestureType, // 'swipe', 'pinch', 'long_press', 'drag'
       direction: gestureData.direction,
       velocity: gestureData.velocity,
       distance: gestureData.distance,
@@ -297,47 +292,44 @@ class BehaviorAnalyticsService {
    */
   trackUserError(errorType, errorData) {
     this.trackInteraction('user_error', {
-      errorType, // 'validation', 'network', 'input', 'navigation'
+      errorType, // 'validation', 'network', 'input'
       errorMessage: errorData.message,
       errorContext: errorData.context,
-      recoveryAction: errorData.recoveryAction
+      recoveryAction: errorData.recovery
     });
   }
 
   /**
-   * Mettre à jour les patterns comportementaux
+   * Mettre à jour les patterns de comportement
    */
   updatePatterns(interaction) {
-    try {
-      // Valider les patterns avant utilisation
-      this.validatePatterns();
-      
-      // Pattern interactions
-      const interactionKey = `${interaction.type}_${interaction.screen || 'unknown'}`;
-      const currentCount = this.patterns.interactions.get(interactionKey) || 0;
-      this.patterns.interactions.set(interactionKey, currentCount + 1);
-      
-      // Pattern timing (pour les sorties d'écran)
-      if (interaction.type === 'screen_exit' && interaction.data.duration) {
-        const screen = interaction.data.screen;
-        const durations = this.patterns.timing.get(screen) || [];
-        durations.push(interaction.data.duration);
-        this.patterns.timing.set(screen, durations.slice(-10)); // Garder les 10 dernières
-      }
-      
-      // Pattern séquences
-      this.patterns.sequences.push({
-        type: interaction.type,
-        timestamp: interaction.timestamp,
-        screen: interaction.screen
-      });
-      
-      // Limiter les séquences
-      if (this.patterns.sequences.length > 100) {
-        this.patterns.sequences = this.patterns.sequences.slice(-100);
-      }
-    } catch (error) {
-      console.error('❌ Erreur mise à jour patterns:', error);
+    const { type, data } = interaction;
+
+    // Patterns d'interaction
+    const interactionKey = `${type}_${data.screen || 'global'}`;
+    this.patterns.interactions.set(
+      interactionKey,
+      (this.patterns.interactions.get(interactionKey) || 0) + 1
+    );
+
+    // Patterns de timing
+    if (type === 'screen_exit' && data.duration) {
+      const timingKey = `screen_time_${data.screen}`;
+      const existing = this.patterns.timing.get(timingKey) || [];
+      existing.push(data.duration);
+      this.patterns.timing.set(timingKey, existing.slice(-20)); // Garder 20 dernières valeurs
+    }
+
+    // Séquences d'actions
+    this.patterns.sequences.push({
+      type,
+      screen: data.screen,
+      timestamp: interaction.timestamp
+    });
+
+    // Garder seulement les 100 dernières séquences
+    if (this.patterns.sequences.length > 100) {
+      this.patterns.sequences = this.patterns.sequences.slice(-100);
     }
   }
 
@@ -345,37 +337,40 @@ class BehaviorAnalyticsService {
    * Mettre à jour les patterns de navigation
    */
   updateNavigationPatterns(screenName) {
-    try {
-      this.validatePatterns();
-      
-      const navKey = `nav_${screenName}`;
-      const currentCount = this.patterns.navigation.get(navKey) || 0;
-      this.patterns.navigation.set(navKey, currentCount + 1);
-    } catch (error) {
-      console.error('❌ Erreur mise à jour navigation patterns:', error);
-    }
+    const navKey = `nav_${screenName}`;
+    this.patterns.navigation.set(
+      navKey,
+      (this.patterns.navigation.get(navKey) || 0) + 1
+    );
   }
 
   /**
-   * Vider le buffer d'interactions
+   * Flusher le buffer d'interactions
    */
   flushInteractionBuffer() {
-    if (this.interactionBuffer.length > 0) {
-      this.behaviors.push(...this.interactionBuffer);
-      this.interactionBuffer = [];
-      
-      // Limiter le nombre total de comportements
-      if (this.behaviors.length > this.maxBehaviors) {
-        this.behaviors = this.behaviors.slice(-this.maxBehaviors);
-      }
+    if (this.interactionBuffer.length === 0) return;
+
+    // Ajouter au stockage principal
+    this.behaviors.push(...this.interactionBuffer);
+    
+    // Limiter la taille
+    if (this.behaviors.length > this.maxBehaviors) {
+      this.behaviors = this.behaviors.slice(-this.maxBehaviors);
     }
+
+    // Vider le buffer
+    this.interactionBuffer = [];
   }
 
   /**
-   * Analyser tous les patterns
+   * Analyser les patterns comportementaux
    */
   analyzePatterns() {
     const analysis = {
+      timestamp: Date.now(),
+      sessionDuration: Date.now() - this.sessionStart,
+      totalInteractions: this.behaviors.length,
+      
       // Analyse navigation
       navigation: this.analyzeNavigationPatterns(),
       
@@ -453,88 +448,71 @@ class BehaviorAnalyticsService {
    * Analyser les patterns de timing
    */
   analyzeTimingPatterns() {
-    try {
-      const timingData = {};
-      
-      // Protection contre les Maps non initialisées
-      if (this.patterns.timing && this.patterns.timing instanceof Map) {
-        this.patterns.timing.forEach((durations, screen) => {
-          if (durations && Array.isArray(durations) && durations.length > 0) {
-            const avg = durations.reduce((sum, d) => sum + d, 0) / durations.length;
-            const min = Math.min(...durations);
-            const max = Math.max(...durations);
-            
-            timingData[screen] = {
-              averageTime: Math.round(avg),
-              minTime: min,
-              maxTime: max,
-              totalSessions: durations.length
-            };
-          }
-        });
-      }
-      
-      return timingData;
-    } catch (error) {
-      console.error('❌ Error in analyzeTimingPatterns:', error);
-      return {};
+    const timingData = {};
+    
+    // Protection contre les Maps non initialisées
+    if (this.patterns.timing && this.patterns.timing instanceof Map) {
+      this.patterns.timing.forEach((durations, screen) => {
+        if (durations && Array.isArray(durations) && durations.length > 0) {
+          const avg = durations.reduce((sum, d) => sum + d, 0) / durations.length;
+          const min = Math.min(...durations);
+          const max = Math.max(...durations);
+          
+          timingData[screen] = {
+            averageTime: Math.round(avg),
+            minTime: min,
+            maxTime: max,
+            totalSessions: durations.length
+          };
+        }
+      });
     }
+    
+    return timingData;
   }
 
   /**
    * Analyser les patterns de séquence
    */
   analyzeSequencePatterns() {
-    try {
-      const sequences = this.patterns.sequences;
-      if (!Array.isArray(sequences) || sequences.length < 2) {
-        return { commonSequences: [], totalSequences: 0 };
-      }
-      
-      const sequencePairs = [];
-      for (let i = 0; i < sequences.length - 1; i++) {
-        const current = sequences[i];
-        const next = sequences[i + 1];
-        const pair = `${current.type}→${next.type}`;
-        sequencePairs.push(pair);
-      }
-      
-      const sequenceCounts = {};
-      sequencePairs.forEach(pair => {
-        sequenceCounts[pair] = (sequenceCounts[pair] || 0) + 1;
-      });
-      
-      return {
-        commonSequences: Object.entries(sequenceCounts)
-          .sort(([,a], [,b]) => b - a)
-          .slice(0, 5)
-          .map(([sequence, count]) => ({ sequence, count })),
-        totalSequences: sequencePairs.length
-      };
-    } catch (error) {
-      console.error('❌ Error in analyzeSequencePatterns:', error);
-      return { commonSequences: [], totalSequences: 0 };
+    const sequences = this.patterns.sequences;
+    if (sequences.length < 2) return { commonSequences: [], totalSequences: 0 };
+    
+    const sequencePairs = [];
+    for (let i = 0; i < sequences.length - 1; i++) {
+      const current = sequences[i];
+      const next = sequences[i + 1];
+      const pair = `${current.type}→${next.type}`;
+      sequencePairs.push(pair);
     }
+    
+    const sequenceCounts = {};
+    sequencePairs.forEach(pair => {
+      sequenceCounts[pair] = (sequenceCounts[pair] || 0) + 1;
+    });
+    
+    return {
+      commonSequences: Object.entries(sequenceCounts)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 5)
+        .map(([sequence, count]) => ({ sequence, count })),
+      totalSequences: sequencePairs.length
+    };
   }
 
   /**
    * Analyser les patterns d'engagement
    */
   analyzeEngagementPatterns() {
-    try {
-      const recentBehaviors = this.behaviors.filter(b => Date.now() - b.timestamp < 24 * 60 * 60 * 1000);
-      const sessionDuration = Date.now() - this.sessionStart;
-      
-      return {
-        sessionDuration: Math.round(sessionDuration / 1000), // en secondes
-        recentInteractions: recentBehaviors.length,
-        interactionRate: recentBehaviors.length / (sessionDuration / 1000 / 60), // par minute
-        engagementLevel: this.calculateEngagementLevel(recentBehaviors, sessionDuration)
-      };
-    } catch (error) {
-      console.error('❌ Error in analyzeEngagementPatterns:', error);
-      return { sessionDuration: 0, recentInteractions: 0, interactionRate: 0, engagementLevel: 'minimal' };
-    }
+    const recentBehaviors = this.behaviors.filter(b => Date.now() - b.timestamp < 24 * 60 * 60 * 1000);
+    const sessionDuration = Date.now() - this.sessionStart;
+    
+    return {
+      sessionDuration: Math.round(sessionDuration / 1000), // en secondes
+      recentInteractions: recentBehaviors.length,
+      interactionRate: recentBehaviors.length / (sessionDuration / 1000 / 60), // par minute
+      engagementLevel: this.calculateEngagementLevel(recentBehaviors, sessionDuration)
+    };
   }
 
   /**
@@ -556,7 +534,18 @@ class BehaviorAnalyticsService {
   getSyncData() {
     try {
       // Vérifier que les patterns sont correctement initialisés
-      this.validatePatterns();
+      if (!this.patterns.navigation || !(this.patterns.navigation instanceof Map)) {
+        this.patterns.navigation = new Map();
+      }
+      if (!this.patterns.interactions || !(this.patterns.interactions instanceof Map)) {
+        this.patterns.interactions = new Map();
+      }
+      if (!this.patterns.timing || !(this.patterns.timing instanceof Map)) {
+        this.patterns.timing = new Map();
+      }
+      if (!Array.isArray(this.patterns.sequences)) {
+        this.patterns.sequences = [];
+      }
 
       return {
         behaviors: this.behaviors.slice(-100), // 100 derniers comportements
@@ -609,7 +598,12 @@ class BehaviorAnalyticsService {
   async resetData() {
     this.behaviors = [];
     this.interactionBuffer = [];
-    this.initializePatterns();
+    this.patterns = {
+      navigation: new Map(),
+      interactions: new Map(),
+      timing: new Map(),
+      sequences: []
+    };
     
     await AsyncStorage.removeItem(this.storageKey);
     console.log('🔄 BehaviorAnalyticsService réinitialisé');
@@ -627,39 +621,19 @@ class BehaviorAnalyticsService {
    * Obtenir les statistiques
    */
   getStats() {
-    try {
-      this.validatePatterns();
-      
-      return {
-        totalBehaviors: this.behaviors.length,
-        bufferSize: this.interactionBuffer.length,
-        sessionDuration: Date.now() - this.sessionStart,
-        currentScreen: this.currentScreen,
-        isTracking: this.isTracking,
-        patterns: {
-          navigationCount: this.patterns.navigation.size,
-          interactionCount: this.patterns.interactions.size,
-          timingCount: this.patterns.timing.size,
-          sequenceCount: this.patterns.sequences.length
-        }
-      };
-    } catch (error) {
-      console.error('❌ Error in getStats:', error);
-      return {
-        totalBehaviors: 0,
-        bufferSize: 0,
-        sessionDuration: 0,
-        currentScreen: null,
-        isTracking: false,
-        patterns: {
-          navigationCount: 0,
-          interactionCount: 0,
-          timingCount: 0,
-          sequenceCount: 0
-        },
-        __error: error.message
-      };
-    }
+    return {
+      totalBehaviors: this.behaviors.length,
+      bufferSize: this.interactionBuffer.length,
+      sessionDuration: Date.now() - this.sessionStart,
+      currentScreen: this.currentScreen,
+      isTracking: this.isTracking,
+      patterns: {
+        navigationCount: this.patterns.navigation.size,
+        interactionCount: this.patterns.interactions.size,
+        timingCount: this.patterns.timing.size,
+        sequenceCount: this.patterns.sequences.length
+      }
+    };
   }
 }
 

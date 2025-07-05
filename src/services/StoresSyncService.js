@@ -69,22 +69,41 @@ class StoresSyncService {
    */
   collectAllStores() {
     try {
+      console.log('🔄 Starting store collection...');
+      
+      // Fonction helper pour collecter un store en sécurité
+      const safeCollectStore = (storeName, collectFn) => {
+        try {
+          const result = collectFn();
+          console.log(`✅ ${storeName} collected successfully`);
+          return result;
+        } catch (error) {
+          console.error(`❌ Failed to collect ${storeName}:`, error);
+          return { 
+            __collection_failed: true, 
+            __store_name: storeName,
+            __error: error.message 
+          };
+        }
+      };
+      
       // Utiliser getState() pour récupérer l'état actuel des stores
       const stores = {
-        userStore: useUserStore.getState(),
-        cycleStore: useCycleStore.getState(),
-        chatStore: useChatStore.getState(),
-        notebookStore: useNotebookStore.getState(),
-        engagementStore: useEngagementStore.getState(),
-        userIntelligence: useUserIntelligence.getState(),
-        navigationStore: useNavigationStore.getState(),
-        appStore: useAppStore.getState(),
+        userStore: safeCollectStore('userStore', () => useUserStore.getState()),
+        cycleStore: safeCollectStore('cycleStore', () => useCycleStore.getState()),
+        chatStore: safeCollectStore('chatStore', () => useChatStore.getState()),
+        notebookStore: safeCollectStore('notebookStore', () => useNotebookStore.getState()),
+        engagementStore: safeCollectStore('engagementStore', () => useEngagementStore.getState()),
+        userIntelligence: safeCollectStore('userIntelligence', () => useUserIntelligence.getState()),
+        navigationStore: safeCollectStore('navigationStore', () => useNavigationStore.getState()),
+        appStore: safeCollectStore('appStore', () => useAppStore.getState()),
         // Ajouter les données comportementales
-        behaviorStore: behaviorAnalytics.getSyncData(),
+        behaviorStore: safeCollectStore('behaviorStore', () => behaviorAnalytics.getSyncData()),
         // Ajouter les métriques device
-        deviceStore: deviceMetrics.getSyncData()
+        deviceStore: safeCollectStore('deviceStore', () => deviceMetrics.getSyncData())
       };
 
+      console.log('🔄 Cleaning stores data...');
       // Nettoyer les données pour éviter les références circulaires
       const cleanStores = this.sanitizeStores(stores);
       
@@ -136,18 +155,53 @@ class StoresSyncService {
       return obj.map(item => this.cleanObject(item));
     }
     
-    const cleaned = {};
-    for (const [key, value] of Object.entries(obj)) {
-      // Exclure les fonctions et propriétés internes
-      if (typeof value === 'function') continue;
-      if (key.startsWith('_')) continue;
-      if (key.includes('hydrate')) continue;
-      if (key.includes('persist')) continue;
-      
-      cleaned[key] = this.cleanObject(value);
+    // Protection contre les Map, Set, et autres objets non-itérables
+    if (obj instanceof Map) {
+      return Object.fromEntries(obj);
     }
     
-    return cleaned;
+    if (obj instanceof Set) {
+      return Array.from(obj);
+    }
+    
+    // Protection contre les objets avec Symbol.iterator malformé
+    try {
+      // Vérifier si Object.entries peut être appelé en sécurité
+      if (typeof obj === 'object' && obj.constructor === Object) {
+        const cleaned = {};
+        for (const [key, value] of Object.entries(obj)) {
+          // Exclure les fonctions et propriétés internes
+          if (typeof value === 'function') continue;
+          if (key.startsWith('_')) continue;
+          if (key.includes('hydrate')) continue;
+          if (key.includes('persist')) continue;
+          
+          cleaned[key] = this.cleanObject(value);
+        }
+        return cleaned;
+      } else {
+        // Pour les objets complexes, essayer de les sérialiser
+        try {
+          const serialized = JSON.parse(JSON.stringify(obj));
+          return this.cleanObject(serialized);
+        } catch (serializationError) {
+          // Si la sérialisation échoue, retourner un objet vide avec info
+          console.warn('⚠️ Object serialization failed:', serializationError);
+          return { 
+            __serialization_failed: true, 
+            __type: obj.constructor?.name || 'unknown',
+            __error: serializationError.message 
+          };
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Object cleaning failed:', error);
+      return { 
+        __cleaning_failed: true, 
+        __type: obj.constructor?.name || 'unknown',
+        __error: error.message 
+      };
+    }
   }
 
   /**

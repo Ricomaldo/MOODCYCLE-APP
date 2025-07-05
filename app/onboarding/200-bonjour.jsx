@@ -277,7 +277,7 @@ export default function BonjourScreen() {
                     <AnimatedRevealMessage delay={ANIMATION_DURATIONS.quick}>
                       <View style={styles.meluneBubble}>
                         <Animated.Text style={styles.meluneText}>
-                          Enchantée ! Je suis ravie de faire ta connaissance. Je serai ton guide tout au long de ton voyage...
+                          Enchantée ! Je serai ta guide tout au long de ton voyage...
                         </Animated.Text>
                       </View>
                     </AnimatedRevealMessage>

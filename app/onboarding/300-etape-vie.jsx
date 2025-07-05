@@ -6,70 +6,98 @@
 // 🔄 Cycle: Onboarding - Étape 4/8
 // ─────────────────────────────────────────────────────────
 //
-import React, { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Text, Animated, TouchableOpacity } from 'react-native';
-import { router } from 'expo-router';
-import ScreenContainer from '../../src/core/layout/ScreenContainer';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { useRouter } from 'expo-router';
+import { ScreenContainer } from '../../src/core/layout/ScreenContainer';
 import { BodyText } from '../../src/core/ui/typography';
-import { useTheme } from '../../src/hooks/useTheme';
 import { useUserStore } from '../../src/stores/useUserStore';
 import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
-import { 
-  AnimatedRevealMessage, 
-  AnimatedOnboardingScreen,
-  ANIMATION_DURATIONS,
-  ANIMATION_CONFIGS
-} from '../../src/core/ui/animations';
+import { AnimatedOnboardingScreen, AnimatedRevealMessage } from '../../src/core/ui/animations/OnboardingAnimations';
+import { ANIMATION_DURATIONS, ANIMATION_CONFIGS } from '../../src/core/ui/animations/constants/animationPresets';
+import { theme } from '../../src/config/theme';
 
 
 // 🎯 Tranches d'âge avec descriptions psychologiques
 const AGE_RANGES = [
   {
     id: '18-25',
-    title: 'Exploratrice (18-25 ans)',
-    description: 'Découverte de ton cycle et de ta nature féminine',
+    title: 'Exploratrice',
+    age: '18-25 ans',
+    description: 'Découverte & liberté',
     icon: '🌸',
   },
   {
     id: '26-35',
-    title: 'Créatrice (26-35 ans)', 
-    description: 'Équilibre entre ambitions et sagesse cyclique',
-    icon: '🌿',
+    title: 'Créatrice',
+    age: '26-35 ans',
+    description: 'Épanouissement & projets',
+    icon: '🌺',
   },
   {
     id: '36-45',
-    title: 'Sage (36-45 ans)',
-    description: 'Maîtrise de ton pouvoir féminin et transmission',
-    icon: '🌙',
+    title: 'Sage',
+    age: '36-45 ans',
+    description: 'Équilibre & maturité',
+    icon: '🌷',
   },
   {
     id: '46-55',
-    title: 'Transformation (46-55 ans)',
-    description: 'Honorer les transitions et la sagesse acquise',
-    icon: '✨',
+    title: 'Transformation',
+    age: '46-55 ans',
+    description: 'Renouveau & sagesse',
+    icon: '🌻',
   },
   {
     id: '55+',
-    title: 'Liberté (55+ ans)',
-    description: 'Épanouissement au-delà des cycles traditionnels',
-    icon: '🦋',
-  }
+    title: 'Liberté',
+    age: '55+ ans',
+    description: 'Plénitude & sérénité',
+    icon: '🌹',
+  },
 ];
 
+// ═══════════════════════════════════════════════════════
+// 🎯 COMPOSANT PRINCIPAL
+// ═══════════════════════════════════════════════════════
 export default function EtapeVieScreen() {
-  const theme = useTheme();
+  const router = useRouter();
   const styles = getStyles(theme);
-  const { profile, updateProfile } = useUserStore();
+  
+  // Protection robuste contre l'hydratation avec try-catch
+  let userStore = null;
+  try {
+    userStore = useUserStore();
+  } catch (error) {
+    console.warn('Erreur hydratation store:', error);
+  }
+  
+  // Valeurs par défaut sécurisées
+  const profile = userStore?.profile || {};
+  const updateProfile = userStore?.updateProfile || (() => {});
+  
+  // Si le store n'est pas encore hydraté, afficher un loading
+  if (!userStore) {
+    return (
+      <ScreenContainer edges={['bottom']} style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <BodyText style={styles.loadingText}>Chargement...</BodyText>
+        </View>
+      </ScreenContainer>
+    );
+  }
+
   const intelligence = useOnboardingIntelligence('300-etape-vie');
   
   // États
-  const [selectedAge, setSelectedAge] = useState(profile.ageRange || null);
+  const [selectedAge, setSelectedAge] = useState(profile?.ageRange || null);
   const [showEncouragement, setShowEncouragement] = useState(false);
   
   // Animations - PATTERN OBLIGATOIRE
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
   const cardsAnim = useRef(AGE_RANGES.map(() => new Animated.Value(0))).current;
+  const cardsOpacityAnim = useRef(AGE_RANGES.map(() => new Animated.Value(1))).current;
 
   useEffect(() => {
     // Phase 1 : Entrée page
@@ -85,12 +113,20 @@ export default function EtapeVieScreen() {
         ...pageEnter.slide
       }),
     ]).start(() => {
-      // Phase 2 : Cascade progressive
-      cardsAnim.forEach((anim, index) => {
-        Animated.timing(anim, {
+      // Phase 2 : Cascade progressive intelligente (suit la structure du grid)
+      const cascadeOrder = [
+        { index: 0, delay: 0 },     // Exploratrice (haut gauche)
+        { index: 1, delay: 120 },   // Créatrice (haut droite) - plus rapide
+        { index: 2, delay: 240 },   // Sage (milieu gauche)
+        { index: 3, delay: 360 },   // Transformation (milieu droite)
+        { index: 4, delay: 480 }    // Liberté (bas centre) - finale élégante
+      ];
+
+      cascadeOrder.forEach(({ index, delay }) => {
+        Animated.timing(cardsAnim[index], {
           toValue: 1,
           duration: ANIMATION_DURATIONS.elegant,
-          delay: ANIMATION_DURATIONS.welcomeFirstMessage + (index * 200),
+          delay: ANIMATION_DURATIONS.welcomeFirstMessage + delay,
           ...ANIMATION_CONFIGS.onboarding.welcome.elementEnter,
           useNativeDriver: true,
         }).start();
@@ -102,9 +138,40 @@ export default function EtapeVieScreen() {
     setSelectedAge(ageRange.id);
     updateProfile({ ageRange: ageRange.id });
     
-    intelligence.trackAction('age_range_selected', {
+    intelligence?.trackAction?.('age_range_selected', {
       range: ageRange.id
     });
+
+    // Animation de feedback immédiat sur la carte sélectionnée
+    const selectedIndex = AGE_RANGES.findIndex(range => range.id === ageRange.id);
+    if (selectedIndex !== -1) {
+      // Petit bounce satisfaisant sur la carte sélectionnée
+      Animated.sequence([
+        Animated.spring(cardsAnim[selectedIndex], {
+          toValue: 1.05,
+          tension: 300,
+          friction: 8,
+          useNativeDriver: true,
+        }),
+        Animated.spring(cardsAnim[selectedIndex], {
+          toValue: 1,
+          tension: 200,
+          friction: 10,
+          useNativeDriver: true,
+        })
+      ]).start();
+
+      // Fade subtil des autres cartes pour mettre en valeur le choix
+      cardsOpacityAnim.current.forEach((anim, index) => {
+        if (index !== selectedIndex) {
+          Animated.timing(anim, {
+            toValue: 0.6,
+            duration: 300,
+            useNativeDriver: true,
+          }).start();
+        }
+      });
+    }
     
     // ✅ SIMPLIFIÉ : À ce stade, confiance < 40%, donc encouragement basique
     // Afficher l'encouragement default
@@ -112,24 +179,31 @@ export default function EtapeVieScreen() {
     
     // Attendre que l'encouragement s'affiche puis naviguer
     setTimeout(() => {
-      // Phase 3 : Cascade inversée
-      const exitAnimations = cardsAnim.map((anim, index) => 
-        Animated.timing(anim, {
+      // Phase 3 : Cascade de sortie fluide (de bas en haut, centre vers extérieur)
+      const exitOrder = [
+        { index: 4, delay: 0 },     // Liberté (bas centre) - part en premier
+        { index: 2, delay: 100 },   // Sage (milieu gauche)
+        { index: 3, delay: 100 },   // Transformation (milieu droite) - simultané
+        { index: 0, delay: 200 },   // Exploratrice (haut gauche)
+        { index: 1, delay: 200 }    // Créatrice (haut droite) - simultané
+      ];
+
+      exitOrder.forEach(({ index, delay }) => {
+        Animated.timing(cardsAnim[index], {
           toValue: 0,
           duration: ANIMATION_DURATIONS.elegant,
-          delay: ((AGE_RANGES.length - 1) - index) * 100,
+          delay: delay,
           ...ANIMATION_CONFIGS.onboarding.welcome.elementExit,
           useNativeDriver: true,
-        })
-      );
-
-      Animated.parallel(exitAnimations).start(() => {
-        router.push('/onboarding/400-prenom');
+        }).start();
       });
+
+      // Navigation après la fin de la cascade
+      setTimeout(() => {
+        router.push('/onboarding/400-prenom');
+      }, 400); // Temps pour que toutes les animations se terminent
     }, 1800); // Laisser 1.8s pour lire l'encouragement
   };
-
-
 
   return (
     <ScreenContainer edges={['bottom']} style={styles.container}>
@@ -142,18 +216,32 @@ export default function EtapeVieScreen() {
           }
         ]}>
           
-          {/* Message Section */}
+                    {/* Message Section */}
           <View style={styles.messageSection}>
             <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage}>
               <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
                 {/* ✅ SIMPLIFIÉ : Toujours utiliser le message default car confiance < 40% */}
-                {intelligence.getPersonalizedMessage('message') || 
-                 "Chaque étape de la vie d'une femme porte sa propre magie... Dis-moi où tu en es de ton voyage"}
+                {intelligence?.getPersonalizedMessage?.('message') || 
+                 "Chaque étape de la vie d'une femme porte sa propre magie... Dis-moi où tu en es"}
               </BodyText>
             </AnimatedRevealMessage>
+
+            {/* Zone d'encouragement fixe en haut */}
+            <View style={styles.encouragementZone}>
+              {showEncouragement && selectedAge && (
+                <AnimatedRevealMessage delay={300}>
+                  <View style={styles.encouragementCard}>
+                    <BodyText style={styles.encouragementText}>
+                      {intelligence?.getPersonalizedMessage?.('encouragement') || 
+                       "Nous allons découvrir ensemble ton chemin unique."}
+                    </BodyText>
+                  </View>
+                </AnimatedRevealMessage>
+              )}
+            </View>
           </View>
 
-                      {/* Choix Section - Grid 2 colonnes */}
+          {/* Choix Section - Grid 2 colonnes */}
             <View style={styles.choicesSection}>
               <View style={styles.choicesGrid}>
                 {/* Première rangée */}
@@ -164,7 +252,7 @@ export default function EtapeVieScreen() {
                       style={[
                         styles.gridItem,
                         {
-                          opacity: cardsAnim[index],
+                          opacity: Animated.multiply(cardsAnim[index], cardsOpacityAnim.current[index]),
                           transform: [{
                             translateY: cardsAnim[index].interpolate({
                               inputRange: [0, 1],
@@ -186,7 +274,10 @@ export default function EtapeVieScreen() {
                         accessibilityState={{ selected: selectedAge === ageRange.id }}
                       >
                         <BodyText style={styles.compactIcon}>{ageRange.icon}</BodyText>
-                        <BodyText style={styles.compactTitle}>{ageRange.title}</BodyText>
+                        <View style={styles.compactTitleContainer}>
+                          <BodyText style={styles.compactTitle}>{ageRange.title}</BodyText>
+                          <BodyText style={styles.compactAge}>{ageRange.age}</BodyText>
+                        </View>
                         <BodyText style={styles.compactDescription}>{ageRange.description}</BodyText>
                       </TouchableOpacity>
                     </Animated.View>
@@ -201,7 +292,7 @@ export default function EtapeVieScreen() {
                       style={[
                         styles.gridItem,
                         {
-                          opacity: cardsAnim[index + 2],
+                          opacity: Animated.multiply(cardsAnim[index + 2], cardsOpacityAnim.current[index + 2]),
                           transform: [{
                             translateY: cardsAnim[index + 2].interpolate({
                               inputRange: [0, 1],
@@ -223,7 +314,10 @@ export default function EtapeVieScreen() {
                         accessibilityState={{ selected: selectedAge === ageRange.id }}
                       >
                         <BodyText style={styles.compactIcon}>{ageRange.icon}</BodyText>
-                        <BodyText style={styles.compactTitle}>{ageRange.title}</BodyText>
+                        <View style={styles.compactTitleContainer}>
+                          <BodyText style={styles.compactTitle}>{ageRange.title}</BodyText>
+                          <BodyText style={styles.compactAge}>{ageRange.age}</BodyText>
+                        </View>
                         <BodyText style={styles.compactDescription}>{ageRange.description}</BodyText>
                       </TouchableOpacity>
                     </Animated.View>
@@ -238,7 +332,7 @@ export default function EtapeVieScreen() {
                       style={[
                         styles.gridItem,
                         {
-                          opacity: cardsAnim[index + 4],
+                          opacity: Animated.multiply(cardsAnim[index + 4], cardsOpacityAnim.current[index + 4]),
                           transform: [{
                             translateY: cardsAnim[index + 4].interpolate({
                               inputRange: [0, 1],
@@ -260,25 +354,16 @@ export default function EtapeVieScreen() {
                         accessibilityState={{ selected: selectedAge === ageRange.id }}
                       >
                         <BodyText style={styles.compactIcon}>{ageRange.icon}</BodyText>
-                        <BodyText style={styles.compactTitle}>{ageRange.title}</BodyText>
+                        <View style={styles.compactTitleContainer}>
+                          <BodyText style={styles.compactTitle}>{ageRange.title}</BodyText>
+                          <BodyText style={styles.compactAge}>{ageRange.age}</BodyText>
+                        </View>
                         <BodyText style={styles.compactDescription}>{ageRange.description}</BodyText>
                       </TouchableOpacity>
                     </Animated.View>
                   ))}
                 </View>
               </View>
-            
-            {/* ✅ SIMPLIFIÉ : Encouragement default toujours disponible */}
-            {showEncouragement && selectedAge && (
-              <View style={styles.encouragementContainer}>
-                <AnimatedRevealMessage delay={300}>
-                  <BodyText style={styles.encouragementText}>
-                    {intelligence.getPersonalizedMessage('encouragement') || 
-                     "Nous allons découvrir ensemble ton chemin unique."}
-                  </BodyText>
-                </AnimatedRevealMessage>
-              </View>
-            )}
           </View>
 
         </Animated.View>
@@ -287,104 +372,152 @@ export default function EtapeVieScreen() {
   );
 }
 
-const getStyles = (theme) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-
-  content: {
-    flex: 1,
-    paddingTop: theme.spacing.m,
-  },
+const getStyles = (theme) => {
+  // Protection contre theme undefined
+  if (!theme || !theme.colors || !theme.spacing) {
+    return StyleSheet.create({
+      container: { flex: 1, backgroundColor: '#ffffff' },
+      loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+      loadingText: { fontSize: 18, fontWeight: 'bold', color: '#007AFF' },
+    });
+  }
   
-  messageSection: {
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.xl,
-    paddingBottom: theme.spacing.m,
-  },
-  
-  message: {
-    fontSize: 18, // Légèrement réduit pour gagner de l'espace
-    textAlign: 'center',
-    color: theme.colors.text,
-    lineHeight: 26,
-    maxWidth: 300,
-  },
-  
-  choicesSection: {
-    flex: 1,
-    paddingHorizontal: theme.spacing.xl,
-    justifyContent: 'center', // Centrer le grid
-  },
-  
-  choicesGrid: {
-    gap: theme.spacing.m,
-  },
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
 
-  gridRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: theme.spacing.m,
-  },
+    content: {
+      flex: 1,
+      paddingTop: theme.spacing.m, // Padding encore plus réduit
+    },
+    
+    messageSection: {
+      alignItems: 'center',
+      paddingHorizontal: theme.spacing.xl,
+      paddingBottom: theme.spacing.m, // Espace réduit après le message
+    },
+    
+    message: {
+      fontSize: 18, // Légèrement réduit pour gagner de l'espace
+      textAlign: 'center',
+      color: theme.colors.text,
+      lineHeight: 26,
+      maxWidth: 300,
+    },
+    
+    choicesSection: {
+      flex: 1,
+      paddingHorizontal: theme.spacing.xl,
+      justifyContent: 'center', // Centrer le grid
+    },
+    
+    choicesGrid: {
+      // Pas de gap ici, on gère l'espacement dans les rows
+    },
 
-  gridRowCenter: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
+    gridRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: theme.spacing.m, // Gap vertical réduit
+    },
 
-  gridItem: {
-    width: '48%', // 2 colonnes avec un peu d'espace
-  },
+    gridRowCenter: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+    },
 
-  compactCard: {
-    backgroundColor: theme.colors.surface,
-    padding: theme.spacing.s, // Padding réduit pour plus d'espace interne
-    borderRadius: theme.borderRadius.medium,
-    borderWidth: 2,
-    borderColor: theme.colors.border,
-    alignItems: 'center',
-    height: 150, // Hauteur augmentée (100 * 1.5)
-    justifyContent: 'center',
-  },
+    gridItem: {
+      width: '47%', // Ajusté pour gap horizontal = gap vertical (spacing.m)
+    },
 
-  compactCardSelected: {
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary + '08',
-  },
+    compactCard: {
+      backgroundColor: theme.colors.surface,
+      padding: theme.spacing.m, // Padding normal pour bien encadrer
+      borderRadius: theme.borderRadius.medium,
+      borderWidth: 2,
+      borderColor: theme.colors.border,
+      alignItems: 'center',
+      height: 160, // Hauteur légèrement augmentée pour les icônes
+      justifyContent: 'space-between', // Répartir l'espace équitablement
+      paddingVertical: theme.spacing.s, // Padding vertical spécifique
+    },
 
-  compactIcon: {
-    fontSize: 22,
-    marginBottom: theme.spacing.xs,
-  },
+    compactCardSelected: {
+      borderColor: theme.colors.primary,
+      backgroundColor: theme.colors.primary + '08',
+    },
 
-  compactTitle: {
-    fontSize: 13, // Légèrement augmenté pour éviter les retours à la ligne
-    fontWeight: '600',
-    color: theme.colors.text,
-    textAlign: 'center',
-    marginBottom: theme.spacing.xs,
-    lineHeight: 16, // Contrôle de la hauteur de ligne
-  },
+    compactIcon: {
+      fontSize: 28, // Icône plus grande pour éviter la troncature
+      lineHeight: 32, // Line height pour centrage parfait
+      marginBottom: theme.spacing.xs,
+    },
 
-  compactDescription: {
-    fontSize: 11, // ✅ WCAG 2.1 AA - Taille augmentée pour l'accessibilité
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 15,
-    paddingHorizontal: theme.spacing.xs, // Petit padding pour éviter les bords
-  },
+    compactTitleContainer: {
+      alignItems: 'center',
+      marginBottom: theme.spacing.xs,
+    },
 
-  encouragementContainer: {
-    paddingHorizontal: theme.spacing.m,
-    paddingTop: theme.spacing.m,
-    alignItems: 'center',
-  },
+    compactTitle: {
+      fontSize: 14, // Taille augmentée pour meilleure lisibilité
+      fontWeight: '600',
+      color: theme.colors.text,
+      textAlign: 'center',
+      lineHeight: 18, // Line height ajusté
+    },
 
-  encouragementText: {
-    fontSize: 16,
-    color: theme.colors.primary,
-    textAlign: 'center',
-    fontStyle: 'italic',
-  },
-});
+    compactAge: {
+      fontSize: 12, // Légèrement plus petit que le titre
+      fontWeight: '500',
+      color: theme.colors.textSecondary,
+      textAlign: 'center',
+      lineHeight: 16,
+    },
+
+    compactDescription: {
+      fontSize: 12, // ✅ WCAG 2.1 AA - Taille nettement augmentée
+      color: theme.colors.textSecondary,
+      textAlign: 'center',
+      lineHeight: 16, // Line height augmenté pour la lisibilité
+      paddingHorizontal: theme.spacing.xs,
+    },
+
+    encouragementZone: {
+      minHeight: 50, // Espace réservé réduit
+      justifyContent: 'center',
+      paddingTop: theme.spacing.s, // Padding réduit
+    },
+
+    encouragementCard: {
+      backgroundColor: theme.colors.primary + '10',
+      borderLeftWidth: 3,
+      borderLeftColor: theme.colors.primary,
+      paddingHorizontal: theme.spacing.m,
+      paddingVertical: theme.spacing.s,
+      borderRadius: theme.borderRadius.medium,
+      marginHorizontal: theme.spacing.s,
+    },
+
+    encouragementText: {
+      fontSize: 14,
+      color: theme.colors.primary,
+      textAlign: 'center',
+      fontStyle: 'italic',
+      lineHeight: 20,
+    },
+
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+
+    loadingText: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: theme.colors.primary,
+    },
+  });
+};

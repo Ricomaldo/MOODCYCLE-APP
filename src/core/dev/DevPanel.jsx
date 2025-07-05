@@ -767,269 +767,6 @@ export default function DevPanel() {
         </View>
       </ScrollView>
 
-      {/* 📊 STORES SYNC SECTION */}
-      <View style={styles.syncSection}>
-        <Text style={styles.sectionTitle}>📊 Synchronisation Analytics</Text>
-        <View style={styles.syncStatus}>
-          <Text style={styles.syncText}>
-            Status: {initialized ? '✅ Initialisé' : '⏳ En cours...'}
-          </Text>
-          <Text style={styles.syncText}>
-            Dernière sync: {metrics?.lastSync ? new Date(metrics.lastSync).toLocaleString('fr-FR') : 'Jamais'}
-          </Text>
-          <Text style={styles.syncText}>
-            Taille données: {metrics?.dataSize || 'N/A'}
-          </Text>
-          {error && (
-            <Text style={[styles.syncText, { color: '#FF5722' }]}>
-              Erreur: {error}
-            </Text>
-          )}
-        </View>
-        
-        <View style={styles.buttonGrid}>
-          <TouchableOpacity 
-            style={[styles.button, { backgroundColor: loading ? '#9E9E9E' : '#2196F3' }]}
-            onPress={manualSync}
-            disabled={loading}>
-            <Text style={styles.buttonText}>
-              {loading ? '⏳ Sync...' : '🚀 Sync Manuelle'}
-            </Text>
-          </TouchableOpacity>
-          
-                     <TouchableOpacity 
-             style={[styles.button, { backgroundColor: '#FF9800' }]}
-             onPress={() => {
-               Alert.alert(
-                 '🔄 Reset Sync',
-                 'Réinitialiser la synchronisation ?',
-                 [
-                   { text: 'Annuler', style: 'cancel' },
-                   { text: 'Reset', onPress: resetSync }
-                 ]
-               );
-             }}>
-             <Text style={styles.buttonText}>🔄 Reset Sync</Text>
-           </TouchableOpacity>
-         </View>
-         
-         {/* 🧪 TEST DATA SECTION */}
-         <View style={styles.testSection}>
-           <Text style={styles.sectionTitle}>🧪 Données de Test</Text>
-           <View style={styles.buttonGrid}>
-             <TouchableOpacity 
-               style={[styles.button, { backgroundColor: '#9C27B0' }]}
-               onPress={async () => {
-                 const result = await TestDataGenerator.populateAllStores('emma');
-                 if (result.success) {
-                   Alert.alert(
-                     '✅ Données générées',
-                     `Persona: ${result.persona}\nCycle: ${result.stats.cycleLength}j\nMessages: ${result.stats.messagesCount}\nConfiance: ${result.stats.confidence}%`
-                   );
-                 } else {
-                   Alert.alert('❌ Erreur', result.error);
-                 }
-               }}>
-               <Text style={styles.buttonText}>👩 Emma</Text>
-             </TouchableOpacity>
-             
-             <TouchableOpacity 
-               style={[styles.button, { backgroundColor: '#E91E63' }]}
-               onPress={async () => {
-                 const result = await TestDataGenerator.populateAllStores('laure');
-                 if (result.success) {
-                   Alert.alert(
-                     '✅ Données générées',
-                     `Persona: ${result.persona}\nCycle: ${result.stats.cycleLength}j\nMessages: ${result.stats.messagesCount}\nConfiance: ${result.stats.confidence}%`
-                   );
-                 } else {
-                   Alert.alert('❌ Erreur', result.error);
-                 }
-               }}>
-               <Text style={styles.buttonText}>👩‍💼 Laure</Text>
-             </TouchableOpacity>
-             
-             <TouchableOpacity 
-               style={[styles.button, { backgroundColor: '#4CAF50' }]}
-               onPress={async () => {
-                 const result = await TestDataGenerator.populateAllStores('sylvie');
-                 if (result.success) {
-                   Alert.alert(
-                     '✅ Données générées',
-                     `Persona: ${result.persona}\nCycle: ${result.stats.cycleLength}j\nMessages: ${result.stats.messagesCount}\nConfiance: ${result.stats.confidence}%`
-                   );
-                 } else {
-                   Alert.alert('❌ Erreur', result.error);
-                 }
-               }}>
-               <Text style={styles.buttonText}>🌿 Sylvie</Text>
-             </TouchableOpacity>
-             
-             <TouchableOpacity 
-               style={[styles.button, { backgroundColor: '#FF5722' }]}
-               onPress={async () => {
-                 const report = TestDataGenerator.generateTestReport();
-                 Alert.alert(
-                   '📊 Rapport Test',
-                   `Taille totale: ${(report.totalDataSize / 1024).toFixed(1)} KB\nStores: ${Object.keys(report.stores).length}\nQualité: ${Object.values(report.dataQuality).filter(Boolean).length}/${Object.keys(report.dataQuality).length}`
-                 );
-                 console.log('📊 Test Report:', report);
-               }}>
-               <Text style={styles.buttonText}>📊 Rapport</Text>
-             </TouchableOpacity>
-                    </View>
-       </View>
-       
-       {/* 🎯 BEHAVIOR ANALYTICS SECTION */}
-       <View style={styles.behaviorSection}>
-         <Text style={styles.sectionTitle}>🎯 Analytics Comportementaux</Text>
-         <View style={styles.behaviorStats}>
-           <Text style={styles.syncText}>
-             Interactions: {behaviorAnalytics.getStats().totalBehaviors}
-           </Text>
-           <Text style={styles.syncText}>
-             Buffer: {behaviorAnalytics.getStats().bufferSize}
-           </Text>
-           <Text style={styles.syncText}>
-             Écran: {behaviorAnalytics.getStats().currentScreen || 'N/A'}
-           </Text>
-           <Text style={styles.syncText}>
-             Session: {Math.round(behaviorAnalytics.getStats().sessionDuration / 1000 / 60)}min
-           </Text>
-         </View>
-         <View style={styles.buttonGrid}>
-           <TouchableOpacity 
-             style={[styles.button, { backgroundColor: '#673AB7' }]}
-             onPress={() => {
-               const patterns = behaviorAnalytics.analyzePatterns();
-               Alert.alert(
-                 '📊 Analyse Patterns',
-                 `Interactions: ${patterns.totalInteractions}\nNavigation: ${patterns.navigation.totalNavigations}\nEngagement: ${patterns.engagement.engagementLevel}`
-               );
-               console.log('🎯 Behavior Patterns:', patterns);
-             }}>
-             <Text style={styles.buttonText}>📊 Analyser</Text>
-           </TouchableOpacity>
-           
-           <TouchableOpacity 
-             style={[styles.button, { backgroundColor: '#3F51B5' }]}
-             onPress={() => {
-               const syncData = behaviorAnalytics.getSyncData();
-               Alert.alert(
-                 '📤 Données Sync',
-                 `Behaviors: ${syncData.behaviors.length}\nPatterns: ${Object.keys(syncData.patterns.interactions).length}\nTaille: ${JSON.stringify(syncData).length} chars`
-               );
-               console.log('📤 Behavior Sync Data:', syncData);
-             }}>
-             <Text style={styles.buttonText}>📤 Sync Data</Text>
-           </TouchableOpacity>
-           
-           <TouchableOpacity 
-             style={[styles.button, { backgroundColor: '#2196F3' }]}
-             onPress={() => {
-               // Simuler quelques interactions
-               behaviorAnalytics.trackButtonPress('test_button', { location: 'devpanel' });
-               behaviorAnalytics.trackInteraction('test_interaction', { type: 'manual' });
-               behaviorAnalytics.trackNavigation('test_screen', { source: 'devpanel' });
-               Alert.alert('✅ Test', 'Interactions simulées ajoutées');
-             }}>
-             <Text style={styles.buttonText}>🧪 Test</Text>
-           </TouchableOpacity>
-           
-           <TouchableOpacity 
-             style={[styles.button, { backgroundColor: '#FF5722' }]}
-             onPress={() => {
-               Alert.alert(
-                 '🔄 Reset Analytics',
-                 'Réinitialiser les données comportementales ?',
-                 [
-                   { text: 'Annuler', style: 'cancel' },
-                   { text: 'Reset', onPress: () => behaviorAnalytics.resetData() }
-                 ]
-               );
-             }}>
-             <Text style={styles.buttonText}>🔄 Reset</Text>
-           </TouchableOpacity>
-         </View>
-       </View>
-       
-       {/* 📊 DEVICE METRICS SECTION */}
-       <View style={styles.deviceSection}>
-         <Text style={styles.sectionTitle}>📊 Métriques Device</Text>
-         <View style={styles.deviceStats}>
-           <Text style={styles.syncText}>
-             Device: {deviceMetrics.getStats().device}
-           </Text>
-           <Text style={styles.syncText}>
-             Performance: {deviceMetrics.getStats().currentStatus.performance}
-           </Text>
-           <Text style={styles.syncText}>
-             Réseau: {deviceMetrics.getStats().currentStatus.network}
-           </Text>
-           <Text style={styles.syncText}>
-             Session: {Math.round(deviceMetrics.getStats().sessionDuration / 1000 / 60)}min
-           </Text>
-         </View>
-         <View style={styles.buttonGrid}>
-           <TouchableOpacity 
-             style={[styles.button, { backgroundColor: '#FF9800' }]}
-             onPress={() => {
-               const analysis = deviceMetrics.analyzeMetrics();
-               Alert.alert(
-                 '📊 Analyse Device',
-                 `Score: ${analysis.overallScore.score}/100 (${analysis.overallScore.grade})\nPerformance: ${analysis.performance.status}\nRéseau: ${analysis.network.status}\nBatterie: ${analysis.battery.status}`
-               );
-               console.log('📊 Device Analysis:', analysis);
-             }}>
-             <Text style={styles.buttonText}>📊 Analyser</Text>
-           </TouchableOpacity>
-           
-           <TouchableOpacity 
-             style={[styles.button, { backgroundColor: '#4CAF50' }]}
-             onPress={() => {
-               const syncData = deviceMetrics.getSyncData();
-               Alert.alert(
-                 '📤 Données Device',
-                 `Device: ${syncData.device.model}\nPlateforme: ${syncData.device.platform}\nCrashes: ${syncData.crashes.length}\nTaille: ${JSON.stringify(syncData).length} chars`
-               );
-               console.log('📤 Device Sync Data:', syncData);
-             }}>
-             <Text style={styles.buttonText}>📤 Sync Data</Text>
-           </TouchableOpacity>
-           
-           <TouchableOpacity 
-             style={[styles.button, { backgroundColor: '#2196F3' }]}
-             onPress={() => {
-               // Simuler un crash pour test
-               const testError = new Error('Test crash pour DevPanel');
-               deviceMetrics.recordCrash(testError, { 
-                 screen: 'DevPanel', 
-                 action: 'test_crash',
-                 userAgent: 'test'
-               });
-               Alert.alert('💥 Test', 'Crash simulé enregistré');
-             }}>
-             <Text style={styles.buttonText}>💥 Test Crash</Text>
-           </TouchableOpacity>
-           
-           <TouchableOpacity 
-             style={[styles.button, { backgroundColor: '#FF5722' }]}
-             onPress={() => {
-               Alert.alert(
-                 '🔄 Reset Metrics',
-                 'Réinitialiser les métriques device ?',
-                 [
-                   { text: 'Annuler', style: 'cancel' },
-                   { text: 'Reset', onPress: () => deviceMetrics.resetData() }
-                 ]
-               );
-             }}>
-             <Text style={styles.buttonText}>🔄 Reset</Text>
-           </TouchableOpacity>
-         </View>
-       </View>
-     </View>
-
       <View style={styles.buttonGrid}>
         <TouchableOpacity 
           style={[styles.button, { backgroundColor: '#FF5722' }]}
@@ -1067,6 +804,275 @@ export default function DevPanel() {
           <Text style={styles.buttonText}>📦 Export État</Text>
         </TouchableOpacity>
       </View>
+    </View>
+  );
+
+  const renderPreferencesTab = () => (
+    <View style={styles.tabContent}>
+      <ScrollView style={styles.storeList}>
+        {/* 📊 STORES SYNC SECTION */}
+        <View style={styles.syncSection}>
+          <Text style={styles.sectionTitle}>📊 Synchronisation Analytics</Text>
+          <View style={styles.syncStatus}>
+            <Text style={styles.syncText}>
+              Status: {initialized ? '✅ Initialisé' : '⏳ En cours...'}
+            </Text>
+            <Text style={styles.syncText}>
+              Dernière sync: {metrics?.lastSync ? new Date(metrics.lastSync).toLocaleString('fr-FR') : 'Jamais'}
+            </Text>
+            <Text style={styles.syncText}>
+              Taille données: {metrics?.dataSize || 'N/A'}
+            </Text>
+            {error && (
+              <Text style={[styles.syncText, { color: '#FF5722' }]}>
+                Erreur: {error}
+              </Text>
+            )}
+          </View>
+          
+          <View style={styles.buttonGrid}>
+            <TouchableOpacity 
+              style={[styles.button, { backgroundColor: loading ? '#9E9E9E' : '#2196F3' }]}
+              onPress={manualSync}
+              disabled={loading}>
+              <Text style={styles.buttonText}>
+                {loading ? '⏳ Sync...' : '🚀 Sync Manuelle'}
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.button, { backgroundColor: '#FF9800' }]}
+              onPress={() => {
+                Alert.alert(
+                  '🔄 Reset Sync',
+                  'Réinitialiser la synchronisation ?',
+                  [
+                    { text: 'Annuler', style: 'cancel' },
+                    { text: 'Reset', onPress: resetSync }
+                  ]
+                );
+              }}>
+              <Text style={styles.buttonText}>🔄 Reset Sync</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        
+        {/* 🧪 TEST DATA SECTION */}
+        <View style={styles.testSection}>
+          <Text style={styles.sectionTitle}>🧪 Données de Test</Text>
+          <View style={styles.buttonGrid}>
+            <TouchableOpacity 
+              style={[styles.button, { backgroundColor: '#9C27B0' }]}
+              onPress={async () => {
+                const result = await TestDataGenerator.populateAllStores('emma');
+                if (result.success) {
+                  Alert.alert(
+                    '✅ Données générées',
+                    `Persona: ${result.persona}\nCycle: ${result.stats.cycleLength}j\nMessages: ${result.stats.messagesCount}\nConfiance: ${result.stats.confidence}%`
+                  );
+                } else {
+                  Alert.alert('❌ Erreur', result.error);
+                }
+              }}>
+              <Text style={styles.buttonText}>👩 Emma</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.button, { backgroundColor: '#E91E63' }]}
+              onPress={async () => {
+                const result = await TestDataGenerator.populateAllStores('laure');
+                if (result.success) {
+                  Alert.alert(
+                    '✅ Données générées',
+                    `Persona: ${result.persona}\nCycle: ${result.stats.cycleLength}j\nMessages: ${result.stats.messagesCount}\nConfiance: ${result.stats.confidence}%`
+                  );
+                } else {
+                  Alert.alert('❌ Erreur', result.error);
+                }
+              }}>
+              <Text style={styles.buttonText}>👩‍💼 Laure</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.button, { backgroundColor: '#4CAF50' }]}
+              onPress={async () => {
+                const result = await TestDataGenerator.populateAllStores('sylvie');
+                if (result.success) {
+                  Alert.alert(
+                    '✅ Données générées',
+                    `Persona: ${result.persona}\nCycle: ${result.stats.cycleLength}j\nMessages: ${result.stats.messagesCount}\nConfiance: ${result.stats.confidence}%`
+                  );
+                } else {
+                  Alert.alert('❌ Erreur', result.error);
+                }
+              }}>
+              <Text style={styles.buttonText}>🌿 Sylvie</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.button, { backgroundColor: '#FF5722' }]}
+              onPress={async () => {
+                const report = TestDataGenerator.generateTestReport();
+                Alert.alert(
+                  '📊 Rapport Test',
+                  `Taille totale: ${(report.totalDataSize / 1024).toFixed(1)} KB\nStores: ${Object.keys(report.stores).length}\nQualité: ${Object.values(report.dataQuality).filter(Boolean).length}/${Object.keys(report.dataQuality).length}`
+                );
+                console.log('📊 Test Report:', report);
+              }}>
+              <Text style={styles.buttonText}>📊 Rapport</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        
+        {/* 🎯 BEHAVIOR ANALYTICS SECTION */}
+        <View style={styles.behaviorSection}>
+          <Text style={styles.sectionTitle}>🎯 Analytics Comportementaux</Text>
+          <View style={styles.behaviorStats}>
+            <Text style={styles.syncText}>
+              Interactions: {behaviorAnalytics.getStats().totalBehaviors}
+            </Text>
+            <Text style={styles.syncText}>
+              Buffer: {behaviorAnalytics.getStats().bufferSize}
+            </Text>
+            <Text style={styles.syncText}>
+              Écran: {behaviorAnalytics.getStats().currentScreen || 'N/A'}
+            </Text>
+            <Text style={styles.syncText}>
+              Session: {Math.round(behaviorAnalytics.getStats().sessionDuration / 1000 / 60)}min
+            </Text>
+          </View>
+          <View style={styles.buttonGrid}>
+            <TouchableOpacity 
+              style={[styles.button, { backgroundColor: '#673AB7' }]}
+              onPress={() => {
+                const patterns = behaviorAnalytics.analyzePatterns();
+                Alert.alert(
+                  '📊 Analyse Patterns',
+                  `Interactions: ${patterns.totalInteractions}\nNavigation: ${patterns.navigation.totalNavigations}\nEngagement: ${patterns.engagement.engagementLevel}`
+                );
+                console.log('🎯 Behavior Patterns:', patterns);
+              }}>
+              <Text style={styles.buttonText}>📊 Analyser</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.button, { backgroundColor: '#3F51B5' }]}
+              onPress={() => {
+                const syncData = behaviorAnalytics.getSyncData();
+                Alert.alert(
+                  '📤 Données Sync',
+                  `Behaviors: ${syncData.behaviors.length}\nPatterns: ${Object.keys(syncData.patterns.interactions).length}\nTaille: ${JSON.stringify(syncData).length} chars`
+                );
+                console.log('📤 Behavior Sync Data:', syncData);
+              }}>
+              <Text style={styles.buttonText}>📤 Sync Data</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.button, { backgroundColor: '#2196F3' }]}
+              onPress={() => {
+                // Simuler quelques interactions
+                behaviorAnalytics.trackButtonPress('test_button', { location: 'devpanel' });
+                behaviorAnalytics.trackInteraction('test_interaction', { type: 'manual' });
+                behaviorAnalytics.trackNavigation('test_screen', { source: 'devpanel' });
+                Alert.alert('✅ Test', 'Interactions simulées ajoutées');
+              }}>
+              <Text style={styles.buttonText}>🧪 Test</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.button, { backgroundColor: '#FF5722' }]}
+              onPress={() => {
+                Alert.alert(
+                  '🔄 Reset Analytics',
+                  'Réinitialiser les données comportementales ?',
+                  [
+                    { text: 'Annuler', style: 'cancel' },
+                    { text: 'Reset', onPress: () => behaviorAnalytics.resetData() }
+                  ]
+                );
+              }}>
+              <Text style={styles.buttonText}>🔄 Reset</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        
+        {/* 📊 DEVICE METRICS SECTION */}
+        <View style={styles.deviceSection}>
+          <Text style={styles.sectionTitle}>📊 Métriques Device</Text>
+          <View style={styles.deviceStats}>
+            <Text style={styles.syncText}>
+              Device: {deviceMetrics.getStats().device}
+            </Text>
+            <Text style={styles.syncText}>
+              Performance: {deviceMetrics.getStats().currentStatus.performance}
+            </Text>
+            <Text style={styles.syncText}>
+              Réseau: {deviceMetrics.getStats().currentStatus.network}
+            </Text>
+            <Text style={styles.syncText}>
+              Session: {Math.round(deviceMetrics.getStats().sessionDuration / 1000 / 60)}min
+            </Text>
+          </View>
+          <View style={styles.buttonGrid}>
+            <TouchableOpacity 
+              style={[styles.button, { backgroundColor: '#FF9800' }]}
+              onPress={() => {
+                const analysis = deviceMetrics.analyzeMetrics();
+                Alert.alert(
+                  '📊 Analyse Device',
+                  `Score: ${analysis.overallScore.score}/100 (${analysis.overallScore.grade})\nPerformance: ${analysis.performance.status}\nRéseau: ${analysis.network.status}\nBatterie: ${analysis.battery.status}`
+                );
+                console.log('📊 Device Analysis:', analysis);
+              }}>
+              <Text style={styles.buttonText}>📊 Analyser</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.button, { backgroundColor: '#4CAF50' }]}
+              onPress={() => {
+                const syncData = deviceMetrics.getSyncData();
+                Alert.alert(
+                  '📤 Données Device',
+                  `Device: ${syncData.device.model}\nPlateforme: ${syncData.device.platform}\nCrashes: ${syncData.crashes.length}\nTaille: ${JSON.stringify(syncData).length} chars`
+                );
+                console.log('📤 Device Sync Data:', syncData);
+              }}>
+              <Text style={styles.buttonText}>📤 Sync Data</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.button, { backgroundColor: '#2196F3' }]}
+              onPress={() => {
+                // Simuler un crash pour test
+                const testError = new Error('Test crash pour DevPanel');
+                deviceMetrics.recordCrash(testError, { 
+                  screen: 'DevPanel', 
+                  action: 'test_crash',
+                  userAgent: 'test'
+                });
+                Alert.alert('💥 Test', 'Crash simulé enregistré');
+              }}>
+              <Text style={styles.buttonText}>💥 Test Crash</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.button, { backgroundColor: '#FF5722' }]}
+              onPress={() => {
+                Alert.alert(
+                  '🔄 Reset Metrics',
+                  'Réinitialiser les métriques device ?',
+                  [
+                    { text: 'Annuler', style: 'cancel' },
+                    { text: 'Reset', onPress: () => deviceMetrics.resetData() }
+                  ]
+                );
+              }}>
+              <Text style={styles.buttonText}>🔄 Reset</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
     </View>
   );
 
@@ -1521,6 +1527,7 @@ Sync: ${syncStatus}
     { id: 'cycle', icon: '🌗', content: renderCycleTab },
     { id: 'persona', icon: '👤', content: renderPersonaTab },
     { id: 'stores', icon: '📦', content: renderStoresTab },
+    { id: 'preferences', icon: '⚙️', content: renderPreferencesTab },
     { id: 'debug', icon: '🐛', content: renderDebugTab },
     { id: 'test', icon: '🧠', content: renderTestTab },
     { id: 'performance', icon: '📊', content: renderPerformanceTab },

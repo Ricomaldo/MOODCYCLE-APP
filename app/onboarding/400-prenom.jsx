@@ -47,7 +47,7 @@ const getStyles = (theme) => StyleSheet.create({
   mainSection: {
     flex: 1,
     paddingHorizontal: theme.spacing.xl,
-    justifyContent: 'center', // Centrer le contenu
+    justifyContent: 'center',
   },
   formContainer: {
     alignItems: 'center',
@@ -73,7 +73,7 @@ const getStyles = (theme) => StyleSheet.create({
     paddingVertical: theme.spacing.m,
     textAlign: 'center',
     borderRadius: theme.borderRadius.medium,
-    minHeight: 44, // ✅ WCAG 2.1 AA - Zone de touch minimum
+    minHeight: 44,
   },
   prenomInputValid: {
     ...theme.glassmorphism.getStyle(theme.colors.success, {
@@ -237,6 +237,22 @@ export default function PrenomScreen() {
                     </View>
                   </AnimatedRevealMessage>
                 )}
+
+                {/* 5. Validation feedback */}
+                <View style={styles.validationContainer}>
+                  <BodyText style={[
+                    styles.validationText,
+                    isValid && styles.validationValid,
+                    !isValid && prenom.length > 0 && styles.validationInvalid
+                  ]}>
+                    {prenom.length === 0 
+                      ? "Entre 2 et 12 caractères" 
+                      : isValid 
+                        ? "✓ Parfait !" 
+                        : "Prénom trop court ou trop long"
+                    }
+                  </BodyText>
+                </View>
               </View>
             </AnimatedCascadeCard>
           </View>

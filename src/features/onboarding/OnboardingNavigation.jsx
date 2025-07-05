@@ -71,9 +71,9 @@ export default function OnboardingNavigation({ currentScreen, canGoBack = true }
       useNativeDriver: false,
     }).start();
 
-    // Animation bouton retour - activé seulement à partir de l'écran 500 (personnalisation)
+    // Animation bouton retour - activé à partir de l'étape personnalisation (400-prenom)
     const shouldShowBackButton = canGoBack && 
-      !['100-bienvenue', '200-bonjour', '250-rencontre', '300-etape-vie', '400-prenom'].includes(currentScreen);
+      !['100-bienvenue', '200-bonjour', '250-rencontre', '300-etape-vie'].includes(currentScreen);
     
     Animated.timing(backButtonAnim, {
       toValue: shouldShowBackButton ? 1 : 0,
@@ -94,7 +94,7 @@ export default function OnboardingNavigation({ currentScreen, canGoBack = true }
 
   const handleBack = () => {
     const shouldAllowBack = canGoBack && 
-      !['100-bienvenue', '200-bonjour', '250-rencontre', '300-etape-vie', '400-prenom'].includes(currentScreen);
+      !['100-bienvenue', '200-bonjour', '250-rencontre', '300-etape-vie'].includes(currentScreen);
     
     if (shouldAllowBack) {
       router.back();
@@ -146,7 +146,7 @@ export default function OnboardingNavigation({ currentScreen, canGoBack = true }
           style={styles.backButton}
           onPress={handleBack}
           activeOpacity={0.7}
-          disabled={!canGoBack || ['100-bienvenue', '200-bonjour', '250-rencontre', '300-etape-vie', '400-prenom'].includes(currentScreen)}
+          disabled={!canGoBack || ['100-bienvenue', '200-bonjour', '250-rencontre', '300-etape-vie'].includes(currentScreen)}
         >
           <Feather name="chevron-left" size={24} color={theme.colors.text} />
         </TouchableOpacity>
