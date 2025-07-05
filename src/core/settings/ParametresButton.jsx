@@ -14,7 +14,7 @@ import { useTheme } from '../../hooks/useTheme';
 import ParametresModal from './ParametresModal';
 
 export default function ParametresButton({ color, size = 24, style }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const finalColor = color || theme.colors.textLight;
   const styles = getStyles(theme);
   const [modalVisible, setModalVisible] = useState(false);

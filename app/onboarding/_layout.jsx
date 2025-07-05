@@ -11,9 +11,11 @@ import { Stack, usePathname } from "expo-router";
 import { View } from "react-native";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import OnboardingNavigation from "../../src/features/onboarding/OnboardingNavigation";
+import { useTheme } from "../../src/hooks/useTheme";
 
 export default function OnboardingLayout() {
   const pathname = usePathname();
+  const { theme } = useTheme();
   const currentScreen = pathname.split('/').pop(); // Extrait '200-bonjour' de '/onboarding/200-bonjour'
   const showNavigation = currentScreen !== '100-bienvenue';
 
@@ -35,7 +37,7 @@ export default function OnboardingLayout() {
             presentation: 'card',
             animationDuration: 200,
             contentStyle: {
-              backgroundColor: 'white', // ou theme.colors.background
+              backgroundColor: theme.colors.background,
             },
           }}
         >

@@ -36,7 +36,7 @@ const PROGRESSION_STEPS = [
 ];
 
 export default function CycleProgressionIndicator({ compact = false, onPress }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const { maturity, getNextMilestone } = useEngagementStore();
   const { totalObservations, canSwitchToObservation } = useQuickObservation();
   

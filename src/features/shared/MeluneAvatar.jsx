@@ -21,7 +21,7 @@ function MeluneAvatar({
   animated = true 
 }) {
   const { melune } = useUserStore();
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   const finalAvatarStyle = avatarStyle || melune?.avatarStyle || 'classic';
 

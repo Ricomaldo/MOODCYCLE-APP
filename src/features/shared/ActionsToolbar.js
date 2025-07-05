@@ -21,7 +21,7 @@ export default function ActionsToolbar({
   direction = 'horizontal', // 'horizontal' | 'vertical'
   size = 'medium' // 'small' | 'medium' | 'large'
 }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme, direction, size);
   
   const opacityAnim = useRef(new Animated.Value(0)).current;

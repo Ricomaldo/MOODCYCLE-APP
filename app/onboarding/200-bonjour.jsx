@@ -9,10 +9,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, TextInput, StyleSheet, Animated, KeyboardAvoidingView, Platform, TouchableOpacity, ScrollView } from 'react-native';
 import { router } from 'expo-router';
-import { Feather } from "@expo/vector-icons";
-import OnboardingScreen from '../../src/core/layout/OnboardingScreen';
+import { Feather, Ionicons } from "@expo/vector-icons";
+import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
-import { Heading2 } from '../../src/core/ui/typography';
+import { Heading2, BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { 
   AnimatedRevealMessage,
@@ -23,6 +23,7 @@ import {
   ANIMATION_PRESETS
 } from '../../src/core/ui/animations';
 import * as Haptics from 'expo-haptics';
+import { useUserStore } from '../../src/stores/useUserStore';
 
 function TypingIndicator({ theme }) {
   const dot1Anim = useRef(new Animated.Value(0.4)).current;
@@ -106,7 +107,7 @@ function TypingIndicator({ theme }) {
 }
 
 export default function BonjourScreen() {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   
   // États
@@ -204,17 +205,20 @@ export default function BonjourScreen() {
   };
 
   return (
-    <OnboardingScreen currentScreen="200-bonjour">
-      <AnimatedOnboardingScreen>
-        <KeyboardAvoidingView
-          style={styles.container}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 120 : 0}
-        >
+    <ScreenContainer edges={['top', 'bottom']} style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 140 : 0}
+      >
+        <AnimatedOnboardingScreen>
           <View style={styles.mainContent}>
             <ScrollView
               style={styles.scrollView}
-              contentContainerStyle={styles.scrollContent}
+              contentContainerStyle={[
+                styles.scrollContent,
+                !hasResponded && styles.scrollContentExpanded
+              ]}
               bounces={false}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
@@ -228,12 +232,18 @@ export default function BonjourScreen() {
                   }
                 ]}
               >
-                {/* Section Mélune */}
-                <View style={[styles.meluneSection, !hasResponded && styles.meluneSectionExpanded]}>
-                  <View style={styles.meluneContainer}>
+                {/* Section Mélune encore plus compacte sur iOS */}
+                <View style={[
+                  styles.meluneSection, 
+                  !hasResponded && styles.meluneSectionExpanded
+                ]}>
+                  <View style={[
+                    styles.meluneContainer,
+                    !hasResponded && styles.meluneContainerExpanded
+                  ]}>
                     <MeluneAvatar 
                       phase="follicular"
-                      size="large"
+                      size={Platform.OS === "ios" ? "medium" : "large"}
                       style="classic"
                       animated={startContent}
                     />
@@ -248,8 +258,11 @@ export default function BonjourScreen() {
                   </Animated.View>
                 </View>
 
-                {/* Zone de conversation */}
-                <View style={styles.chatContainer}>
+                {/* Zone de conversation avec padding ajusté */}
+                <View style={[
+                  styles.chatContainer,
+                  hasResponded && styles.chatContainerExpanded
+                ]}>
                   {hasResponded && (
                     <View style={styles.userBubble}>
                       <Animated.Text style={styles.userText}>
@@ -273,7 +286,7 @@ export default function BonjourScreen() {
               </Animated.View>
             </ScrollView>
 
-            {/* Zone de saisie - Toujours présente mais invisible au début */}
+            {/* Zone de saisie avec padding optimisé */}
             <Animated.View 
               style={[
                 styles.inputWrapper,
@@ -291,37 +304,37 @@ export default function BonjourScreen() {
               <View style={styles.inputContainer}>
                 <TextInput
                   style={styles.input}
+                  placeholder="Dis-moi bonjour..."
+                  placeholderTextColor={theme.colors.textSecondary}
                   value={input}
                   onChangeText={setInput}
-                  placeholder="Dis-moi bonjour..."
-                  placeholderTextColor={theme.colors.textLight}
-                  returnKeyType="send"
                   onSubmitEditing={handleSend}
-                  editable={!hasResponded && showInput}
-                  autoFocus={showInput}
+                  returnKeyType="send"
+                  autoFocus={true}
+                  autoCorrect={false}
+                  autoCapitalize="none"
+                  blurOnSubmit={false}
                 />
-                <AnimatedOnboardingButton>
-                  <TouchableOpacity
-                    onPress={handleSend}
-                    disabled={!input.trim() || hasResponded || !showInput}
-                    style={[
-                      styles.sendButton,
-                      (!input.trim() || hasResponded || !showInput) && styles.sendButtonDisabled
-                    ]}
-                  >
-                    <Feather 
-                      name="arrow-right"
-                      size={24}
-                      color={(!input.trim() || hasResponded || !showInput) ? theme.colors.textLight : theme.colors.primary}
-                    />
-                  </TouchableOpacity>
-                </AnimatedOnboardingButton>
+                <TouchableOpacity
+                  style={[
+                    styles.sendButton,
+                    !input.trim() && styles.sendButtonDisabled
+                  ]}
+                  onPress={handleSend}
+                  disabled={!input.trim()}
+                >
+                  <Ionicons
+                    name="arrow-forward"
+                    size={24}
+                    color={input.trim() ? theme.colors.primary : theme.colors.textSecondary}
+                  />
+                </TouchableOpacity>
               </View>
             </Animated.View>
           </View>
-        </KeyboardAvoidingView>
-      </AnimatedOnboardingScreen>
-    </OnboardingScreen>
+        </AnimatedOnboardingScreen>
+      </KeyboardAvoidingView>
+    </ScreenContainer>
   );
 }
 
@@ -341,6 +354,11 @@ const getStyles = (theme) => StyleSheet.create({
 
   scrollContent: {
     flexGrow: 1,
+    paddingBottom: Platform.OS === 'ios' ? 250 : theme.spacing.xxl,
+  },
+
+  scrollContentExpanded: {
+    justifyContent: 'center',
   },
 
   content: {
@@ -349,16 +367,20 @@ const getStyles = (theme) => StyleSheet.create({
 
   meluneSection: {
     alignItems: 'center',
-    paddingTop: theme.spacing.xl,
+    paddingTop: Platform.OS === 'ios' ? theme.spacing.s : theme.spacing.xl,
   },
 
   meluneSectionExpanded: {
-    flex: 1,
+    flex: Platform.OS === 'ios' ? 0.25 : 0.6,
     justifyContent: 'center',
   },
 
   meluneContainer: {
-    marginBottom: theme.spacing.l,
+    marginBottom: Platform.OS === 'ios' ? theme.spacing.s : theme.spacing.m,
+  },
+
+  meluneContainerExpanded: {
+    marginBottom: Platform.OS === 'ios' ? theme.spacing.m : theme.spacing.l,
   },
 
   messageContainer: {
@@ -367,17 +389,21 @@ const getStyles = (theme) => StyleSheet.create({
   },
 
   greeting: {
-    fontSize: 28,
+    fontSize: Platform.OS === 'ios' ? 22 : 28,
     textAlign: 'center',
     color: theme.colors.text,
-    lineHeight: 36,
+    lineHeight: Platform.OS === 'ios' ? 28 : 36,
   },
 
   chatContainer: {
     flex: 1,
     paddingHorizontal: theme.spacing.xl,
-    paddingTop: theme.spacing.xxl,
+    paddingTop: theme.spacing.l,
     gap: theme.spacing.m,
+  },
+
+  chatContainerExpanded: {
+    paddingTop: theme.spacing.xxl,
   },
 
   userBubble: {
@@ -409,13 +435,9 @@ const getStyles = (theme) => StyleSheet.create({
   },
 
   inputWrapper: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: theme.spacing.l,
-    paddingVertical: theme.spacing.m,
     backgroundColor: theme.colors.background,
+    paddingHorizontal: theme.spacing.s,
+    paddingVertical: Platform.OS === 'ios' ? theme.spacing.xs : theme.spacing.m,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
   },
@@ -423,22 +445,23 @@ const getStyles = (theme) => StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.large,
-    paddingHorizontal: theme.spacing.l,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.backgroundSecondary,
+    borderRadius: 25,
+    paddingLeft: theme.spacing.l,
+    paddingRight: theme.spacing.m,
+    borderWidth: 0,
   },
 
   input: {
     flex: 1,
     fontSize: 16,
     color: theme.colors.text,
-    paddingVertical: theme.spacing.m,
+    paddingVertical: Platform.OS === 'ios' ? theme.spacing.xs : theme.spacing.m,
+    minHeight: Platform.OS === 'ios' ? 40 : 48,
   },
 
   sendButton: {
-    padding: theme.spacing.s,
+    padding: theme.spacing.xs,
   },
 
   sendButtonDisabled: {

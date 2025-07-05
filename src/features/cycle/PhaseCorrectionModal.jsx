@@ -56,7 +56,7 @@ export default function PhaseCorrectionModal({
   currentPhase,
   predictedPhase 
 }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const { getPhaseLabel, getArchetypeLabel } = useTerminology();
   const { correctPhase, confidence, isHybridMode } = useQuickObservation();
   

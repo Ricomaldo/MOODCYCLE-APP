@@ -7,9 +7,9 @@
 // ─────────────────────────────────────────────────────────
 //
 import React, { useState, useRef } from 'react';
-import { View, TouchableOpacity, StyleSheet, ScrollView, Text, Animated } from 'react-native';
+import { View, StyleSheet, ScrollView, Text, Animated } from 'react-native';
 import { router } from 'expo-router';
-import OnboardingScreen from '../../src/core/layout/OnboardingScreen';
+import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { useUserStore } from '../../src/stores/useUserStore';
@@ -17,10 +17,10 @@ import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntellig
 import { 
   AnimatedRevealMessage, 
   AnimatedOnboardingScreen,
-  AnimatedCascadeCard,
   ANIMATION_DURATIONS,
   ANIMATION_PRESETS
 } from '../../src/core/ui/animations';
+import OnboardingCard from '../../src/features/onboarding/shared/OnboardingCard';
 
 // 🎯 Tranches d'âge avec descriptions psychologiques
 const AGE_RANGES_DATA = [
@@ -57,7 +57,7 @@ const AGE_RANGES_DATA = [
 ];
 
 export default function EtapeVieScreen() {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   const { profile, updateProfile } = useUserStore();
   const intelligence = useOnboardingIntelligence('300-etape-vie');
@@ -107,7 +107,7 @@ export default function EtapeVieScreen() {
   };
 
   return (
-    <OnboardingScreen currentScreen="300-etape-vie">
+    <ScreenContainer edges={['top', 'bottom']} style={styles.container}>
       <AnimatedOnboardingScreen>
         <ScrollView 
           style={styles.scrollView}
@@ -119,7 +119,7 @@ export default function EtapeVieScreen() {
         >
           {/* Message de Mélune */}
           <View style={styles.messageSection}>
-            <AnimatedRevealMessage delay={ANIMATION_DURATIONS.normal}>
+            <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage}>
               <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
                 {intelligence.personaConfidence >= 0.4 
                   ? intelligence.getPersonalizedMessage('message')
@@ -132,34 +132,18 @@ export default function EtapeVieScreen() {
           <View style={styles.mainSection}>
             <View style={styles.choicesContainer}>
               {AGE_RANGES.map((ageRange, index) => (
-                <AnimatedCascadeCard
+                <OnboardingCard
                   key={ageRange.id}
+                  variant="lifecycle"
+                  icon={ageRange.icon}
+                  title={ageRange.title}
+                  description={ageRange.description}
+                  isSelected={selectedAge === ageRange.id}
+                  onPress={() => handleAgeSelect(ageRange)}
+                  color={ageRange.color}
                   index={index}
-                  style={styles.cardContainer}
-                >
-                  <TouchableOpacity
-                    style={[
-                      styles.ageCard,
-                      selectedAge === ageRange.id && styles.ageCardSelected,
-                      { borderLeftColor: ageRange.color }
-                    ]}
-                    onPress={() => handleAgeSelect(ageRange)}
-                    activeOpacity={0.8}
-                  >
-                    <View style={styles.ageHeader}>
-                      <View style={[styles.ageIcon, { backgroundColor: ageRange.color + '20' }]}>
-                        <BodyText style={styles.iconText}>{ageRange.icon}</BodyText>
-                      </View>
-                      <BodyText style={styles.ageTitle}>
-                        {ageRange.title}
-                      </BodyText>
-                    </View>
-                    
-                    <BodyText style={styles.ageDescription}>
-                      {ageRange.description}
-                    </BodyText>
-                  </TouchableOpacity>
-                </AnimatedCascadeCard>
+                  delay={ANIMATION_DURATIONS.welcomeFirstMessage + 500}
+                />
               ))}
             </View>
             
@@ -188,7 +172,7 @@ export default function EtapeVieScreen() {
           <BodyText style={styles.scrollIndicatorLabel}>Découvrir plus</BodyText>
         </Animated.View>
       </AnimatedOnboardingScreen>
-    </OnboardingScreen>
+    </ScreenContainer>
   );
 }
 
@@ -208,11 +192,6 @@ const getStyles = (theme) => StyleSheet.create({
     paddingHorizontal: theme.spacing.xl,
   },
   
-  messageContainer: {
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.xl,
-  },
-  
   message: {
     fontSize: 20,
     textAlign: 'center',
@@ -227,72 +206,8 @@ const getStyles = (theme) => StyleSheet.create({
     paddingTop: theme.spacing.xxl,
   },
   
-  subtext: {
-    fontSize: 16,
-    textAlign: 'center',
-    color: theme.colors.textLight,
-    marginBottom: theme.spacing.xl,
-  },
-  
   choicesContainer: {
     gap: theme.spacing.m,
-  },
-  
-  cardContainer: {
-    // Pour que l'animation de fade n'affecte pas le shadow
-    shadowColor: theme.colors.text,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  
-  ageCard: {
-    backgroundColor: theme.colors.surface,
-    padding: theme.spacing.l,
-    borderRadius: theme.borderRadius.large,
-    borderWidth: 2,
-    borderColor: theme.colors.border,
-    borderLeftWidth: 4,
-  },
-  
-  ageCardSelected: {
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary + '08',
-  },
-  
-  ageHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: theme.spacing.m,
-  },
-  
-  ageIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: theme.spacing.m,
-  },
-  
-  iconText: {
-    fontSize: 24,
-    lineHeight: 48,
-    textAlign: 'center',
-  },
-  
-  ageTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.text,
-    flex: 1,
-  },
-  
-  ageDescription: {
-    fontSize: 14,
-    color: theme.colors.textLight,
-    lineHeight: 20,
   },
 
   scrollIndicator: {
@@ -328,5 +243,9 @@ const getStyles = (theme) => StyleSheet.create({
     color: theme.colors.primary,
     textAlign: 'center',
     fontStyle: 'italic',
+  },
+
+  container: {
+    flex: 1,
   },
 });

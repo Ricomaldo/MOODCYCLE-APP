@@ -10,12 +10,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, TouchableOpacity, StyleSheet, Animated, ScrollView } from 'react-native';
 import { router } from 'expo-router';
-import OnboardingScreen from '../../src/core/layout/OnboardingScreen';
+import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import { BodyText, Caption } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { useTerminologySelector } from '../../src/hooks/useTerminology';
 import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
-import { AnimatedRevealMessage } from '../../src/core/ui/animations';
+import { AnimatedRevealMessage, AnimatedOnboardingScreen } from '../../src/core/ui/animations';
 
 // Options de terminologie
 const TERMINOLOGY_OPTIONS = [
@@ -50,7 +50,7 @@ const TERMINOLOGY_OPTIONS = [
 ];
 
 export default function TerminologyScreen() {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   const { currentTerminology, onSelect } = useTerminologySelector();
   const intelligence = useOnboardingIntelligence('600-terminology');
@@ -172,56 +172,62 @@ export default function TerminologyScreen() {
   };
 
   return (
-    <OnboardingScreen currentScreen="600-terminology">
-      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-        
-        {/* Message de Mélune */}
-        <View style={styles.messageSection}>
-          <Animated.View
-            style={[
-              styles.messageContainer,
-              {
-                transform: [{ translateY: slideAnim }]
-              }
-            ]}
-          >
-            <AnimatedRevealMessage delay={800}>
-              <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
-                Choisis les termes qui te correspondent le mieux pour parler de ton cycle
-              </BodyText>
-            </AnimatedRevealMessage>
-          </Animated.View>
-        </View>
-
-        {/* Section principale */}
-        <ScrollView 
-          style={styles.mainSection}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          <View style={styles.optionsContainer}>
-            {TERMINOLOGY_OPTIONS.map(renderTerminologyOption)}
+    <ScreenContainer edges={['top', 'bottom']} style={styles.container}>
+      <AnimatedOnboardingScreen>
+        <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+          
+          {/* Message de Mélune */}
+          <View style={styles.messageSection}>
+            <Animated.View
+              style={[
+                styles.messageContainer,
+                {
+                  transform: [{ translateY: slideAnim }]
+                }
+              ]}
+            >
+              <AnimatedRevealMessage delay={800}>
+                <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
+                  Choisis les termes qui te correspondent le mieux pour parler de ton cycle
+                </BodyText>
+              </AnimatedRevealMessage>
+            </Animated.View>
           </View>
-        </ScrollView>
 
-        {/* Section bouton */}
-        <View style={styles.bottomSection}>
-          <TouchableOpacity
-            style={styles.continueButton}
-            onPress={handleContinue}
-            activeOpacity={0.8}
+          {/* Section principale */}
+          <ScrollView 
+            style={styles.mainSection}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
           >
-            <BodyText style={styles.continueButtonText}>
-              Continuer
-            </BodyText>
-          </TouchableOpacity>
-        </View>
-      </Animated.View>
-    </OnboardingScreen>
+            <View style={styles.optionsContainer}>
+              {TERMINOLOGY_OPTIONS.map(renderTerminologyOption)}
+            </View>
+          </ScrollView>
+
+          {/* Section bouton */}
+          <View style={styles.bottomSection}>
+            <TouchableOpacity
+              style={styles.continueButton}
+              onPress={handleContinue}
+              activeOpacity={0.8}
+            >
+              <BodyText style={styles.continueButtonText}>
+                Continuer
+              </BodyText>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+      </AnimatedOnboardingScreen>
+    </ScreenContainer>
   );
 }
 
 const getStyles = (theme) => StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  
   content: {
     flex: 1,
   },

@@ -47,7 +47,7 @@ export default function ConseilsView() {
   const currentDay = getCurrentCycleDay(cycleData.lastPeriodDate, cycleData.length);
   const hasData = !!(cycleData.lastPeriodDate && cycleData.length);
   const { profile } = useUserStore();
-  const { theme } = useTheme();
+  const theme = useTheme();
   const { getPhaseLabel } = useTerminology();
 
   const safeProfile = profile || { prenom: null };

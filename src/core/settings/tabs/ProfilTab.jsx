@@ -44,7 +44,7 @@ const JOURNEY_CHOICES = [
 
 export default function ProfilTab({ onDataChange }) {
   const { profile, updateProfile } = useUserStore();
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   
   const [localProfile, setLocalProfile] = useState({

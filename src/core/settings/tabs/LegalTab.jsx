@@ -85,7 +85,7 @@ const getStatusConfig = (theme) => ({
 });
 
 export default function LegalTab({ onDataChange }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   const STATUS_CONFIG = getStatusConfig(theme);
   

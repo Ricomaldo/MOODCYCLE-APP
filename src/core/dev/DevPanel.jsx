@@ -509,7 +509,6 @@ export default function DevPanel() {
   const renderNavigationTab = () => (
     <View style={styles.tabContent}>
       <View style={styles.buttonGrid}>
-
         <TouchableOpacity 
           style={[styles.button, { backgroundColor: '#9B59B6' }]} 
           onPress={() => router.push('/(tabs)/cycle')}>
@@ -525,11 +524,37 @@ export default function DevPanel() {
           onPress={() => router.push('/(tabs)/notebook')}>
           <Text style={styles.buttonText}>📔 Notes</Text>
         </TouchableOpacity>
-    
+        
+        {/* Onboarding buttons */}
         <TouchableOpacity 
           style={[styles.button, { backgroundColor: '#50C878' }]} 
           onPress={() => router.push('/onboarding/100-bienvenue')}>
-          <Text style={styles.buttonText}>🎯 Onboarding</Text>
+          <Text style={styles.buttonText}>1️⃣ Bienvenue</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#50C878' }]} 
+          onPress={() => router.push('/onboarding/200-bonjour')}>
+          <Text style={styles.buttonText}>2️⃣ Bonjour</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#50C878' }]} 
+          onPress={() => router.push('/onboarding/300-etape-vie')}>
+          <Text style={styles.buttonText}>3️⃣ Étape Vie</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#50C878' }]} 
+          onPress={() => router.push('/onboarding/500-avatar')}>
+          <Text style={styles.buttonText}>4️⃣ Avatar</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#50C878' }]} 
+          onPress={() => router.push('/onboarding/700-cycle')}>
+          <Text style={styles.buttonText}>5️⃣ Cycle</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#50C878' }]} 
+          onPress={() => router.push('/onboarding/900-essai')}>
+          <Text style={styles.buttonText}>6️⃣ Essai</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -1137,7 +1162,7 @@ Sync: ${syncStatus}
   );
 
   const tabs = [
-    { id: 'navigation', icon: '🛠', content: renderNavigationTab },
+    { id: 'navigation', icon: '🧭', content: renderNavigationTab },
     { id: 'cycle', icon: '🌗', content: renderCycleTab },
     { id: 'persona', icon: '👤', content: renderPersonaTab },
     { id: 'stores', icon: '📦', content: renderStoresTab },

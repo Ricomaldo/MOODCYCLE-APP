@@ -2,9 +2,9 @@
 
 ## ⚠️ **ALERTE CRITIQUE - MISE À JOUR URGENTE REQUISE**
 
-**Date** : 26 juin 2025  
+**Date** : 26 juin 2025 - **Mise à jour** : 5 juillet 2025  
 **Priorité** : CRITIQUE  
-**Impact** : Système de personnalisation IA  
+**Impact** : Système de personnalisation IA + Architecture API  
 
 ---
 

@@ -63,14 +63,14 @@ export {
 // ✨ MODULES EFFETS
 // ═══════════════════════════════════════════════════════
 
-// ✨ Effects (MIGRATED TO core/ui/effects)
+// ✨ Effects
 export {
   createGlassmorphismStyle,
   createPhaseGlassmorphismStyle,
   createActionGlassmorphismStyle,
   GLASSMORPHISM_PRESETS,
   GLASSMORPHISM_QUICK_STYLES,
-} from '../../core/ui/effects/glassmorphism.js';
+} from '../../core/ui/effects/glassmorphism';
 
 // ═══════════════════════════════════════════════════════
 // 🌙 MODULES THÈMES
@@ -108,7 +108,7 @@ import {
   createPhaseGlassmorphismStyle, 
   createActionGlassmorphismStyle,
   GLASSMORPHISM_PRESETS 
-} from '../../core/ui/effects/glassmorphism.js';
+} from '../../core/ui/effects/glassmorphism';
 import { ANIMATION_PRESETS } from '../../core/ui/animations/constants/animationPresets.js';
 import { 
   isLightColor, 
@@ -137,10 +137,20 @@ export const theme = {
   phaseNeedsWhiteText,
   phaseNeedsBlackText,
   getPhaseTextStyle,
+  
+  // ✨ Effets glassmorphism
+  glassmorphism: {
+    getStyle: createGlassmorphismStyle,
+    getPhaseStyle: createPhaseGlassmorphismStyle,
+    getActionStyle: createActionGlassmorphismStyle,
+    presets: GLASSMORPHISM_PRESETS
+  },
+  
+  // Alias pour compatibilité
   getGlassmorphismStyle: createGlassmorphismStyle,
   getPhaseGlassmorphismStyle: createPhaseGlassmorphismStyle,
   getActionGlassmorphismStyle: createActionGlassmorphismStyle,
-  glassmorphism: GLASSMORPHISM_PRESETS,
+  
   animations: ANIMATION_PRESETS,
 };
 
@@ -152,6 +162,21 @@ export const darkTheme = {
   spacing: SPACING,
   borderRadius: BORDER_RADIUS,
   tabBar: DARK_TAB_BAR,
+  
+  // ✨ Effets glassmorphism
+  glassmorphism: {
+    getStyle: createGlassmorphismStyle,
+    getPhaseStyle: createPhaseGlassmorphismStyle,
+    getActionStyle: createActionGlassmorphismStyle,
+    presets: GLASSMORPHISM_PRESETS
+  },
+  
+  // Alias pour compatibilité
+  getGlassmorphismStyle: createGlassmorphismStyle,
+  getPhaseGlassmorphismStyle: createPhaseGlassmorphismStyle,
+  getActionGlassmorphismStyle: createActionGlassmorphismStyle,
+  
+  animations: ANIMATION_PRESETS,
 };
 
 // ═══════════════════════════════════════════════════════
@@ -205,4 +230,6 @@ export const themeUtils = {
   getTextColorOnPhase: (phase, isDarkTheme = false) => {
     return getTextColorOnPhase(phase, isDarkTheme);
   },
-}; 
+};
+
+export default theme; 

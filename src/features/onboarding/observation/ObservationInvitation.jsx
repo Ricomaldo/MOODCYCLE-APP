@@ -11,7 +11,7 @@ import { View, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../../hooks/useTheme';
 import { BodyText, Caption } from '../../../core/ui/typography';
-import { MeluneAvatar } from '../../shared/MeluneAvatar';
+import MeluneAvatar from '../../shared/MeluneAvatar';
 
 export function ObservationInvitation({ 
   persona = 'emma', 
@@ -19,7 +19,7 @@ export function ObservationInvitation({
   onObservation, 
   visible = false 
 }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const currentTheme = themeProp || theme;
   const [showModal, setShowModal] = useState(false);
   const [mood, setMood] = useState(3);
@@ -81,7 +81,7 @@ export function ObservationInvitation({
       >
         <View style={styles.invitationContent}>
           <View style={styles.meluneContainer}>
-            <MeluneAvatar persona={persona} size={40} />
+            <MeluneAvatar size={40} />
           </View>
           <View style={styles.textContainer}>
             <BodyText style={styles.invitationTitle}>
@@ -104,7 +104,7 @@ export function ObservationInvitation({
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <MeluneAvatar persona={persona} size={50} />
+              <MeluneAvatar size={50} />
               <BodyText style={styles.modalTitle}>
                 Comment te sens-tu ?
               </BodyText>

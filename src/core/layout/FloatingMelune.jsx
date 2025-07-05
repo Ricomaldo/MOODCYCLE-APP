@@ -20,7 +20,7 @@ import ChatModal from '../../features/chat/ChatModal';
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 export default function FloatingMelune({ hideInOnboarding = false }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const insets = useSafeAreaInsets();
   const { melune } = useUserStore();
   const [showChat, setShowChat] = useState(false);

@@ -43,7 +43,7 @@ export default function EntryDetailModal({
   showActions = true,
   initialIndex = 0 
 }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   const insets = useSafeAreaInsets();
   const { deleteEntry, formatTrackingEmotional, calculateTrends, addTagToEntry } = useNotebookStore();

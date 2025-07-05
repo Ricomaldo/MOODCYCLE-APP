@@ -57,7 +57,7 @@ export default function ParametresModal({ visible, onClose }) {
   // ✅ UTILISATION DIRECTE DU STORE ZUSTAND
   const cycleData = useCycleStore((state) => state);
   const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   
   // Phase color pour le header

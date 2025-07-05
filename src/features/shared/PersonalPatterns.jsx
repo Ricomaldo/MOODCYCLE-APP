@@ -38,7 +38,7 @@ patternsCard: {
 */
 
 export default function PersonalPatterns({ style, minimal = false }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const { learning } = useUserIntelligence();
   const { metrics } = useEngagementStore();
   // ✅ UTILISATION DIRECTE DU STORE ZUSTAND

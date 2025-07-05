@@ -11,7 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../src/hooks/useTheme";
 
 export default function TabLayout() {
-  const { theme } = useTheme();
+  const theme = useTheme();
   
 return (
     <Tabs

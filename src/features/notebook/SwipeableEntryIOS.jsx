@@ -35,7 +35,7 @@ export default function SwipeableEntryIOS({
   getEntryTags,
   phase,
 }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   const { deleteEntry, addTagToEntry } = useNotebookStore();
   // ✅ UTILISATION DIRECTE DU STORE ZUSTAND

@@ -1,19 +1,27 @@
 //
 // ─────────────────────────────────────────────────────────
 // 📄 Fichier : app/onboarding/900-essai.jsx
-// 🎯 Status: ✅ FINAL - NE PAS MODIFIER
-// 📝 Description: Choix de la version d'accompagnement
+// 🎯 Status: 🔄 TRANSFORMÉ - ÉQUIPE 3 Mission Paywall Intelligent
+// 📝 Description: Expérience de démonstration de valeur AVANT choix version
 // 🔄 Cycle: Onboarding - Étape 8/8
 // ─────────────────────────────────────────────────────────
 //
-import React, { useEffect, useRef, useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, Animated, ScrollView } from 'react-native';
+import React, { useState } from 'react';
+import { View, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { router } from 'expo-router';
-import OnboardingScreen from '../../src/core/layout/OnboardingScreen';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
+import { useUserStore } from '../../src/stores/useUserStore';
 import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
-import { AnimatedRevealMessage } from '../../src/core/ui/animations';
+import OnboardingButton from '../../src/features/onboarding/shared/OnboardingButton';
+import { 
+  AnimatedRevealMessage,
+  AnimatedCascadeCard,
+  ANIMATION_DURATIONS,
+  ANIMATION_PRESETS
+} from '../../src/core/ui/animations';
+import ValuePreview from '../../src/features/onboarding/ValuePreview';
 import { Feather } from '@expo/vector-icons';
 
 // 🎯 Options d'accompagnement personnalisées par persona
@@ -109,35 +117,21 @@ const VERSION_ESSENTIELLE = {
 };
 
 export default function ChoixVersionScreen() {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   const intelligence = useOnboardingIntelligence('900-essai');
   
   // États
   const persona = intelligence.currentPersona || 'emma';
   const personaContent = PERSONA_ARGUMENTS[persona];
-  
-  // Animations
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
+  const [showValuePreview, setShowValuePreview] = useState(true);
+  const [valuePreviewComplete, setValuePreviewComplete] = useState(false);
 
-  useEffect(() => {
-    // Séquence d'animation
-    Animated.sequence([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    intelligence.trackAction('version_choice_viewed', { persona });
-  }, []);
+  const handleValuePreviewComplete = () => {
+    setValuePreviewComplete(true);
+    setShowValuePreview(false);
+    intelligence.trackAction('value_preview_completed', { persona });
+  };
 
   const handleCompleteChoice = () => {
     intelligence.trackAction('complete_version_selected', {
@@ -152,119 +146,176 @@ export default function ChoixVersionScreen() {
     router.push('/onboarding/950-demarrage');
   };
 
+  // Récupérer les données pour la démo
+  const getDemoData = () => {
+    const cycleData = intelligence.cycle;
+    return {
+      persona: persona,
+      phase: cycleData?.currentPhase || 'follicular',
+      preferences: intelligence.userProfile.preferences || {}
+    };
+  };
+
   return (
-    <OnboardingScreen currentScreen="900-essai">
-      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <View style={styles.content}>
         
-        {/* Message de Mélune */}
-        <View style={styles.messageSection}>
-          <Animated.View
-            style={[
-              styles.messageContainer,
-              {
-                transform: [{ translateY: slideAnim }]
-              }
-            ]}
-          >
-            <AnimatedRevealMessage delay={800}>
-              <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
-                {personaContent.subtitle}
+        {showValuePreview ? (
+          // 🎯 NOUVELLE EXPÉRIENCE : Démonstration de valeur
+          <View style={styles.valuePreviewContainer}>
+            <AnimatedRevealMessage 
+              delay={1000}
+              style={styles.messageContainer}
+            >
+              <BodyText style={[styles.valuePreviewTitle, { fontFamily: 'Quintessential' }]}>
+                Découvre la magie de Mélune ✨
               </BodyText>
             </AnimatedRevealMessage>
-          </Animated.View>
-        </View>
 
-        {/* Section principale */}
-        <ScrollView 
-          style={styles.mainSection}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          {/* Version Complète */}
-          <View style={[styles.versionCard, styles.completeCard]}>
-            <View style={styles.cardHeader}>
-              <BodyText style={styles.cardTitle}>
-                {personaContent.complete.title}
-              </BodyText>
-              <BodyText style={styles.cardDescription}>
-                {personaContent.complete.description}
-              </BodyText>
-              <View style={styles.badge}>
-                <BodyText style={styles.badgeText}>
-                  14 JOURS GRATUITS
+            <AnimatedCascadeCard
+              delay={2000}
+              style={styles.valuePreviewCard}
+            >
+              <ValuePreview
+                demoData={getDemoData()}
+                onComplete={handleValuePreviewComplete}
+                persona={persona}
+                theme={theme}
+              />
+            </AnimatedCascadeCard>
+          </View>
+        ) : (
+          // 🎯 CHOIX DE VERSION après démonstration
+          <View style={styles.choiceContainer}>
+            {/* Message personnalisé */}
+            <View style={styles.messageSection}>
+              <AnimatedRevealMessage 
+                delay={800}
+                style={styles.messageContainer}
+              >
+                <BodyText style={[styles.title, { fontFamily: 'Quintessential' }]}>
+                  {personaContent.title}
                 </BodyText>
-              </View>
+              </AnimatedRevealMessage>
+              
+              <AnimatedRevealMessage 
+                delay={1400}
+                style={styles.messageContainer}
+              >
+                <BodyText style={[styles.subtitle, { fontFamily: 'Quintessential' }]}>
+                  {personaContent.subtitle}
+                </BodyText>
+              </AnimatedRevealMessage>
             </View>
-            
-            <View style={styles.benefitsContainer}>
-              {personaContent.complete.benefits.map((benefit, index) => (
-                <View key={index} style={styles.benefitRow}>
-                  <BodyText style={styles.benefitText}>{benefit}</BodyText>
-                </View>
-              ))}
-            </View>
-            
-            <TouchableOpacity
-              style={styles.completeButton}
-              onPress={handleCompleteChoice}
-              activeOpacity={0.8}
-            >
-              <BodyText style={styles.completeButtonText}>
-                {personaContent.complete.cta}
-              </BodyText>
-            </TouchableOpacity>
-          </View>
 
-          {/* Séparateur */}
-          <View style={styles.separator}>
-            <View style={styles.separatorLine} />
-            <BodyText style={styles.separatorText}>ou</BodyText>
-            <View style={styles.separatorLine} />
-          </View>
-
-          {/* Version Essentielle */}
-          <View style={[styles.versionCard, styles.essentialCard]}>
-            <View style={styles.cardHeader}>
-              <BodyText style={styles.cardTitle}>
-                {VERSION_ESSENTIELLE.title}
-              </BodyText>
-              <BodyText style={styles.cardDescription}>
-                {VERSION_ESSENTIELLE.description}
-              </BodyText>
-            </View>
-            
-            <View style={styles.benefitsContainer}>
-              {VERSION_ESSENTIELLE.benefits.map((benefit, index) => (
-                <View key={index} style={styles.benefitRow}>
-                  <BodyText style={styles.benefitText}>{benefit}</BodyText>
-                </View>
-              ))}
-            </View>
-            
-            <TouchableOpacity
-              style={styles.essentialButton}
-              onPress={handleEssentielleChoice}
-              activeOpacity={0.8}
+            {/* Options de version */}
+            <ScrollView 
+              style={styles.mainSection}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContent}
             >
-              <BodyText style={styles.essentialButtonText}>
-                {VERSION_ESSENTIELLE.cta}
-              </BodyText>
-            </TouchableOpacity>
+              {/* Version Complète */}
+              <AnimatedCascadeCard
+                delay={2200}
+                style={styles.versionCard}
+              >
+                <TouchableOpacity
+                  style={styles.versionOption}
+                  onPress={handleCompleteChoice}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.versionHeader}>
+                    <BodyText style={styles.versionTitle}>
+                      {personaContent.complete.title}
+                    </BodyText>
+                    <View style={styles.premiumBadge}>
+                      <BodyText style={styles.premiumText}>PREMIUM</BodyText>
+                    </View>
+                  </View>
+                  
+                  <BodyText style={styles.versionDescription}>
+                    {personaContent.complete.description}
+                  </BodyText>
+                  
+                  <View style={styles.benefitsList}>
+                    {personaContent.complete.benefits.map((benefit, index) => (
+                      <BodyText key={index} style={styles.benefitItem}>
+                        {benefit}
+                      </BodyText>
+                    ))}
+                  </View>
+                  
+                  <View style={styles.ctaContainer}>
+                    <BodyText style={styles.ctaText}>
+                      {personaContent.complete.cta}
+                    </BodyText>
+                    <Feather name="arrow-right" size={20} color={theme.colors.primary} />
+                  </View>
+                </TouchableOpacity>
+              </AnimatedCascadeCard>
+
+              {/* Version Essentielle */}
+              <AnimatedCascadeCard
+                delay={2800}
+                style={styles.versionCard}
+              >
+                <TouchableOpacity
+                  style={styles.versionOption}
+                  onPress={handleEssentielleChoice}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.versionHeader}>
+                    <BodyText style={styles.versionTitle}>
+                      {VERSION_ESSENTIELLE.title}
+                    </BodyText>
+                    <View style={styles.freeBadge}>
+                      <BodyText style={styles.freeText}>GRATUIT</BodyText>
+                    </View>
+                  </View>
+                  
+                  <BodyText style={styles.versionDescription}>
+                    {VERSION_ESSENTIELLE.description}
+                  </BodyText>
+                  
+                  <View style={styles.benefitsList}>
+                    {VERSION_ESSENTIELLE.benefits.map((benefit, index) => (
+                      <BodyText key={index} style={styles.benefitItem}>
+                        {benefit}
+                      </BodyText>
+                    ))}
+                  </View>
+                  
+                  <View style={styles.ctaContainer}>
+                    <BodyText style={styles.ctaText}>
+                      {VERSION_ESSENTIELLE.cta}
+                    </BodyText>
+                    <Feather name="arrow-right" size={20} color={theme.colors.text} />
+                  </View>
+                </TouchableOpacity>
+              </AnimatedCascadeCard>
+            </ScrollView>
           </View>
-        </ScrollView>
-      </Animated.View>
-    </OnboardingScreen>
+        )}
+      </View>
+    </SafeAreaView>
   );
 }
 
 const getStyles = (theme) => StyleSheet.create({
-  content: {
+  container: {
     flex: 1,
   },
   
-  messageSection: {
+  content: {
+    flex: 1,
+    justifyContent: 'space-between',
+    paddingVertical: theme.spacing.xxl,
+  },
+  
+  // Value Preview Section
+  valuePreviewContainer: {
+    flex: 1,
     alignItems: 'center',
-    paddingTop: theme.spacing.xxl,
   },
   
   messageContainer: {
@@ -273,131 +324,143 @@ const getStyles = (theme) => StyleSheet.create({
     marginTop: theme.spacing.xl,
   },
   
-  message: {
-    fontSize: 20,
+  valuePreviewTitle: {
+    fontSize: 24,
     textAlign: 'center',
     color: theme.colors.text,
-    lineHeight: 28,
+    lineHeight: 32,
+    maxWidth: 300,
+  },
+  
+  valuePreviewCard: {
+    flex: 1,
+    marginTop: theme.spacing.xl,
+    marginHorizontal: theme.spacing.xl,
+  },
+  
+  // Choice Section
+  choiceContainer: {
+    flex: 1,
+  },
+  
+  messageSection: {
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.xl,
+  },
+  
+  title: {
+    fontSize: 24,
+    textAlign: 'center',
+    color: theme.colors.text,
+    lineHeight: 32,
+    marginBottom: theme.spacing.m,
+  },
+  
+  subtitle: {
+    fontSize: 18,
+    textAlign: 'center',
+    color: theme.colors.textLight,
+    lineHeight: 24,
     maxWidth: 300,
   },
   
   mainSection: {
     flex: 1,
     paddingHorizontal: theme.spacing.xl,
+    marginTop: theme.spacing.xl,
   },
   
   scrollContent: {
-    paddingTop: theme.spacing.xl,
-    paddingBottom: theme.spacing.xxl,
+    paddingBottom: theme.spacing.xl,
+    gap: theme.spacing.l,
   },
   
   versionCard: {
     backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.large,
-    padding: theme.spacing.xl,
+    padding: theme.spacing.l,
     borderWidth: 2,
     borderColor: theme.colors.border,
-    marginBottom: theme.spacing.l,
+    shadowColor: theme.colors.text,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   
-  completeCard: {
-    borderColor: theme.colors.primary,
-    backgroundColor: theme.colors.primary + '08',
+  versionOption: {
+    flex: 1,
   },
   
-  essentialCard: {
-    backgroundColor: theme.colors.surface,
+  versionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.m,
   },
   
-  cardHeader: {
-    marginBottom: theme.spacing.l,
-  },
-  
-  cardTitle: {
+  versionTitle: {
     fontSize: 20,
     fontWeight: '600',
     color: theme.colors.text,
-    marginBottom: theme.spacing.s,
   },
   
-  cardDescription: {
-    fontSize: 16,
-    color: theme.colors.textLight,
-    marginBottom: theme.spacing.m,
-  },
-  
-  badge: {
-    backgroundColor: theme.colors.success + '20',
-    paddingHorizontal: theme.spacing.m,
-    paddingVertical: theme.spacing.s,
-    borderRadius: theme.borderRadius.small,
-    alignSelf: 'flex-start',
-  },
-  
-  badgeText: {
-    fontSize: 12,
-    color: theme.colors.success,
-    fontWeight: '600',
-  },
-  
-  benefitsContainer: {
-    marginBottom: theme.spacing.xl,
-  },
-  
-  benefitRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: theme.spacing.m,
-  },
-  
-  benefitText: {
-    fontSize: 16,
-    color: theme.colors.text,
-  },
-  
-  separator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: theme.spacing.xl,
-  },
-  
-  separatorLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: theme.colors.border,
-  },
-  
-  separatorText: {
-    marginHorizontal: theme.spacing.l,
-    color: theme.colors.textLight,
-    fontSize: 14,
-  },
-  
-  completeButton: {
+  premiumBadge: {
     backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.medium,
-    paddingVertical: theme.spacing.l,
-    alignItems: 'center',
+    paddingHorizontal: theme.spacing.s,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.small,
   },
   
-  completeButtonText: {
+  premiumText: {
     color: theme.colors.white,
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '600',
   },
   
-  essentialButton: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.medium,
-    paddingVertical: theme.spacing.l,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: theme.colors.border,
+  freeBadge: {
+    backgroundColor: theme.colors.success,
+    paddingHorizontal: theme.spacing.s,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.small,
   },
   
-  essentialButtonText: {
+  freeText: {
+    color: theme.colors.white,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  
+  versionDescription: {
+    fontSize: 16,
+    color: theme.colors.textLight,
+    lineHeight: 22,
+    marginBottom: theme.spacing.m,
+  },
+  
+  benefitsList: {
+    gap: theme.spacing.s,
+    marginBottom: theme.spacing.l,
+  },
+  
+  benefitItem: {
+    fontSize: 14,
     color: theme.colors.text,
+    lineHeight: 20,
+  },
+  
+  ctaContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: theme.spacing.m,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+  },
+  
+  ctaText: {
     fontSize: 16,
     fontWeight: '600',
+    color: theme.colors.primary,
   },
 });

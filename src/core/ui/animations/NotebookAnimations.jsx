@@ -22,7 +22,7 @@ import { BodyText } from '../typography';
  * @param {Function} onClear - Callback nettoyage
  */
 export function AnimatedSearchBar({ visible, query, onChangeText, onClear }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   const scaleYAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -81,7 +81,7 @@ export function AnimatedSearchBar({ visible, query, onChangeText, onClear }) {
  * @param {number} index - Index pour délai d'animation
  */
 export function AnimatedFilterPill({ item, isActive, onPress, index }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const backgroundAnim = useRef(new Animated.Value(0)).current;
@@ -141,7 +141,7 @@ export function AnimatedFilterPill({ item, isActive, onPress, index }) {
  * Utilisé pendant les opérations async (sync, recherche, etc.)
  */
 export function EntryLoadingSkeleton() {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   // TODO: Utiliser useLoopAnimation après migration complète
   const pulseAnim = useRef(new Animated.Value(0)).current;

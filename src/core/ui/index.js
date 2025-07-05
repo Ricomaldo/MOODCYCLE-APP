@@ -48,8 +48,9 @@ export {
 // 📝 Typography (Option A)
 export * from './typography/index';
 
-// ✨ Effects (Option A)
-export * from './effects/index';
+// ✨ Effects (MIGRATED TO THEME V8.0)
+// ⚠️ DEPRECATED: Effects moved to src/config/theme/effects
+// Use: import { createGlassmorphismStyle } from '@/config/theme';
 
-// 🎯 Onboarding Components (Option A)
+// 🎯 Onboarding Components
 export * from './animations/OnboardingAnimations'; 

@@ -38,7 +38,7 @@ const STEP_LABELS = {
 };
 
 export default function OnboardingNavigation({ currentScreen, canGoBack = true }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   const currentStep = SCREEN_MAPPING[currentScreen]?.step || 1;
   const progressAnim = useRef(new Animated.Value(0)).current;

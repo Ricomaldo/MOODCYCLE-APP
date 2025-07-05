@@ -27,7 +27,7 @@ export default function VignetteCard({
   showCategory = false,
   trackEngagement = true 
 }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   // ✅ DEBUG: Vérification données vignette
   if (!vignette) {
@@ -409,7 +409,7 @@ export function VignettesContainer({
   showCategories = false,
   style 
 }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   
   // ✅ Protection contre vignettes undefined ou non-array

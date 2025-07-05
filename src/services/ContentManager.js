@@ -36,19 +36,20 @@ class ContentManager {
    * qui changent régulièrement (voir constructor)
    */
   async getInsights() {
-    return this.getContent('insights', getEndpointUrl('admin.insights'), localInsights);
+    // Essayer d'abord l'endpoint public, puis fallback local
+    return this.getContent('insights', getEndpointUrl('insights'), localInsights);
   }
 
   async getPhases() {
-    return this.getContent('phases', getEndpointUrl('admin.phases'), localPhases);
+    return this.getContent('phases', getEndpointUrl('phases'), localPhases);
   }
 
   async getClosings() {
-    return this.getContent('closings', getEndpointUrl('admin.closings'), localClosings);
+    return this.getContent('closings', getEndpointUrl('closings'), localClosings);
   }
 
   async getVignettes() {
-    return this.getContent('vignettes', getEndpointUrl('admin.vignettes'), localVignettes);
+    return this.getContent('vignettes', getEndpointUrl('vignettes'), localVignettes);
   }
 
   async getContent(type, endpoint, fallbackData) {

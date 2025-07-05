@@ -1,25 +1,25 @@
 {
     "workbench.colorCustomizations": {
-        "activityBar.activeBackground": "#04294f",
-        "activityBar.background": "#04294f",
+        "activityBar.activeBackground": "#0000b3",
+        "activityBar.background": "#0000b3",
         "activityBar.foreground": "#e7e7e7",
         "activityBar.inactiveForeground": "#e7e7e799",
         "activityBarBadge.background": "#df0000",
         "activityBarBadge.foreground": "#e7e7e7",
         "commandCenter.border": "#e7e7e799",
         "sash.hoverBorder": "#0000b3",
-        "statusBar.background": "#04294f",
+        "statusBar.background": "#000080",
         "statusBar.foreground": "#e7e7e7",
-        "statusBarItem.hoverBackground": "#30a1c4",
-        "statusBarItem.remoteBackground": "#04294f",
+        "statusBarItem.hoverBackground": "#0000b3",
+        "statusBarItem.remoteBackground": "#000080",
         "statusBarItem.remoteForeground": "#e7e7e7",
-        "titleBar.activeBackground": "#04294f",
+        "titleBar.activeBackground": "#000080",
         "titleBar.activeForeground": "#e7e7e7",
-        "titleBar.inactiveBackground": "#04294f99",
+        "titleBar.inactiveBackground": "#00008099",
         "titleBar.inactiveForeground": "#e7e7e799"
     },
     "peacock.color": "navy",
-    "workbench.preferredDarkColorTheme": "Default Dark+",
+    "workbench.preferredDarkColorTheme": "Sea Green Theme",
     "workbench.preferredLightColorTheme": "Tiny Light",
     "window.autoDetectColorScheme": true
 }

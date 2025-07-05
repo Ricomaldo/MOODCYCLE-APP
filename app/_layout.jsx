@@ -27,6 +27,7 @@ import performanceMonitor from "../src/core/monitoring/PerformanceMonitor";
 import { initializeIntelligence } from "../src/services/IntelligenceInit";
 import { useEffect } from "react";
 import Config from "../src/config/appConfig";
+import { AppStoreProvider } from "../src/core/AppStoreProvider";
 
 // ✅ Composant wrapper simplifié
 function LayoutContent() {
@@ -92,9 +93,11 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <LayoutContent />
-      </SafeAreaProvider>
+      <AppStoreProvider>
+        <SafeAreaProvider>
+          <LayoutContent />
+        </SafeAreaProvider>
+      </AppStoreProvider>
     </GestureHandlerRootView>
   );
 }

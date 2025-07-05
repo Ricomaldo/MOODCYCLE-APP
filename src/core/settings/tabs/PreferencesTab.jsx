@@ -64,7 +64,7 @@ const THERAPEUTIC_DIMENSIONS = [
 const SLIDER_LABELS = ['Pas du tout', 'Un peu', 'Moyennement', 'Beaucoup', 'Passionnément'];
 
 export default function PreferencesTab({ onDataChange }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const { preferences, updatePreferences } = useUserStore();
   const { currentTerminology, options, onSelect } = useTerminologySelector();
   

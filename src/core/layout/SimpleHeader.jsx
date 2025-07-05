@@ -14,7 +14,7 @@ import { Heading } from '../ui/typography';
 
 // Header Mon Cycle avec rouage
 export function CycleHeader({ onSettingsPress }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
 
   return (
@@ -32,7 +32,7 @@ export function CycleHeader({ onSettingsPress }) {
 
 // Header Conseils simple
 export function ConseilsHeader() {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
 
   return (
@@ -48,7 +48,7 @@ export function NotebookHeader({
   onToggleSearch, 
   showCalendar = false 
 }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
 
   return (

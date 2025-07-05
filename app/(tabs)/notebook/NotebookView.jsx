@@ -318,7 +318,7 @@ const getStyles = (theme, insets) => StyleSheet.create({
 
 export default function NotebookView() {
   const params = useLocalSearchParams();
-  const { theme } = useTheme();
+  const theme = useTheme();
   const insets = useSafeAreaInsets();
   const styles = getStyles(theme, insets);
   

@@ -24,7 +24,7 @@ export default function PhaseDetailScreen() {
   const [loading, setLoading] = useState(true);
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const { theme } = useTheme();
+  const theme = useTheme();
   const { getPhaseLabel } = useTerminology();
   const styles = getStyles(theme);
 

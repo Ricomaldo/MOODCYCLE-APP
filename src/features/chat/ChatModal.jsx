@@ -203,7 +203,7 @@ function QuickSuggestions({ suggestions, contextualActions, onSuggestionPress, t
 }
 
 export default function ChatModal() {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const insets = useSafeAreaInsets();
   const scrollViewRef = useRef(null);
   
@@ -529,16 +529,16 @@ export default function ChatModal() {
             />
             <TouchableOpacity
               style={[
-                styles.sendButton, 
+                styles.sendButton,
                 (!input.trim() || isLoading) && styles.sendButtonDisabled
               ]}
               onPress={() => handleSend()}
               disabled={!input.trim() || isLoading}
             >
-              <Feather
-                name="send"
-                size={20}
-                color={(!input.trim() || isLoading) ? theme.colors.textLight + '60' : theme.colors.primary}
+              <Feather 
+                name="arrow-right"
+                size={24}
+                color={(!input.trim() || isLoading) ? theme.colors.textLight : theme.colors.primary}
               />
             </TouchableOpacity>
           </View>
@@ -636,17 +636,7 @@ const getStyles = (theme) => StyleSheet.create({
     lineHeight: 20,
   },
   sendButton: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    ...theme.getGlassmorphismStyle(theme.colors.primary, {
-      bgOpacity: theme.glassmorphism.opacity.bg,
-      borderOpacity: theme.glassmorphism.opacity.border,
-      borderWidth: 1,
-      shadowOpacity: 0,  // Pas de shadow sur le bouton send
-    }),
+    padding: theme.spacing.s,
   },
   sendButtonDisabled: {
     backgroundColor: 'transparent',

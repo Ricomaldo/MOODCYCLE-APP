@@ -13,6 +13,12 @@ const API_CONFIG = {
     endpoints: {
       chat: '/api/chat',
       health: '/api/health',
+      // Endpoints publics pour l'app mobile (pas d'auth requise)
+      insights: '/api/insights',
+      phases: '/api/phases',
+      closings: '/api/closings',
+      vignettes: '/api/vignettes',
+      // Endpoints admin pour l'édition (auth requise)
       admin: {
         insights: '/api/admin/insights',
         phases: '/api/admin/phases', 
@@ -28,6 +34,12 @@ const API_CONFIG = {
     endpoints: {
       chat: '/api/chat',
       health: '/api/health',
+      // Endpoints publics pour l'app mobile (pas d'auth requise)
+      insights: '/api/insights',
+      phases: '/api/phases',
+      closings: '/api/closings',
+      vignettes: '/api/vignettes',
+      // Endpoints admin pour l'édition (auth requise)
       admin: {
         insights: '/api/admin/insights',
         phases: '/api/admin/phases',

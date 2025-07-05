@@ -6,16 +6,22 @@
 // 🔄 Cycle: Onboarding - Étape 6/8
 // ─────────────────────────────────────────────────────────
 //
-import React, { useEffect, useRef, useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, Animated, ScrollView, Image } from 'react-native';
+import React, { useState } from 'react';
+import { View, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
 import { router } from 'expo-router';
-import OnboardingScreen from '../../src/core/layout/OnboardingScreen';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { useUserStore } from '../../src/stores/useUserStore';
 import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
-import { AnimatedRevealMessage } from '../../src/core/ui/animations';
+import OnboardingButton from '../../src/features/onboarding/shared/OnboardingButton';
+import { 
+  AnimatedRevealMessage,
+  AnimatedCascadeCard,
+  ANIMATION_DURATIONS,
+  ANIMATION_PRESETS
+} from '../../src/core/ui/animations';
 
 // Images
 import meluneClassic from '../../src/assets/images/melune/melune-classic.png';
@@ -64,7 +70,7 @@ const AVATAR_IMAGES = {
 };
 
 export default function AvatarScreen() {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   const { updateMelune } = useUserStore();
   const intelligence = useOnboardingIntelligence('500-avatar');
@@ -88,26 +94,6 @@ export default function AvatarScreen() {
     ...getPersonalizedDefaults(),
     position: 'bottom-right'
   });
-  
-  // Animations
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
-
-  useEffect(() => {
-    // Séquence d'animation
-    Animated.sequence([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
 
   const handleOptionSelect = (category, optionId) => {
     setSelections(prev => ({
@@ -261,47 +247,47 @@ export default function AvatarScreen() {
 
   const renderCategory = (category) => {
     return (
-      <View key={category.id} style={styles.categoryContainer}>
+      <AnimatedCascadeCard
+        key={category.id}
+        delay={ANIMATION_DURATIONS.initialMessage + 800 + (category.id === 'style' ? 0 : category.id === 'tone' ? 200 : 400)}
+        style={styles.categoryContainer}
+      >
         <BodyText style={styles.categoryTitle}>{category.title}</BodyText>
         <BodyText style={styles.categoryDescription}>{category.description}</BodyText>
         
         <View style={styles.optionsGrid}>
           {category.options.map(option => renderOptionCard(category.id, option))}
         </View>
-      </View>
+      </AnimatedCascadeCard>
     );
   };
 
   return (
-    <OnboardingScreen currentScreen="500-avatar">
-      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-        
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <View style={styles.content}>
         {/* Message de Mélune */}
         <View style={styles.messageSection}>
-          <Animated.View
-            style={[
-              styles.messageContainer,
-              {
-                transform: [{ translateY: slideAnim }]
-              }
-            ]}
+          <AnimatedRevealMessage 
+            delay={ANIMATION_DURATIONS.initialMessage}
+            style={styles.messageContainer}
           >
-            <AnimatedRevealMessage delay={800}>
-              <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
-                {intelligence.personaConfidence >= 0.4 
-                  ? intelligence.getPersonalizedMessage('message')
-                  : "Choisis comment tu souhaites me voir apparaître dans l'application"}
+            <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
+              {intelligence.personaConfidence >= 0.4 
+                ? intelligence.getPersonalizedMessage('message')
+                : "Choisis comment tu souhaites me voir apparaître dans l'application"}
+            </BodyText>
+          </AnimatedRevealMessage>
+          
+          {intelligence.personaConfidence >= 0.4 && (
+            <AnimatedRevealMessage 
+              delay={ANIMATION_DURATIONS.initialMessage + 400}
+              style={styles.hintContainer}
+            >
+              <BodyText style={styles.hintText}>
+                {intelligence.getPersonalizedMessage('style_hint')}
               </BodyText>
             </AnimatedRevealMessage>
-            
-            {intelligence.personaConfidence >= 0.4 && (
-              <AnimatedRevealMessage delay={1200}>
-                <BodyText style={styles.hintText}>
-                  {intelligence.getPersonalizedMessage('style_hint')}
-                </BodyText>
-              </AnimatedRevealMessage>
-            )}
-          </Animated.View>
+          )}
         </View>
 
         {/* Section principale */}
@@ -315,22 +301,23 @@ export default function AvatarScreen() {
 
         {/* Section bouton */}
         <View style={styles.bottomSection}>
-          <TouchableOpacity
-            style={styles.continueButton}
+          <OnboardingButton
+            title="Continuer"
             onPress={handleContinue}
-            activeOpacity={0.8}
-          >
-            <BodyText style={styles.continueButtonText}>
-              Continuer
-            </BodyText>
-          </TouchableOpacity>
+            delay={ANIMATION_DURATIONS.initialMessage + 1200}
+            variant="primary"
+          />
         </View>
-      </Animated.View>
-    </OnboardingScreen>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const getStyles = (theme) => StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  
   content: {
     flex: 1,
   },
@@ -515,16 +502,9 @@ const getStyles = (theme) => StyleSheet.create({
     paddingBottom: theme.spacing.xxl,
   },
   
-  continueButton: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.medium,
-    paddingVertical: theme.spacing.l,
+  hintContainer: {
     alignItems: 'center',
-  },
-  
-  continueButtonText: {
-    color: theme.colors.white,
-    fontSize: 16,
-    fontWeight: '600',
+    paddingHorizontal: theme.spacing.xl,
+    marginTop: theme.spacing.xl,
   },
 });

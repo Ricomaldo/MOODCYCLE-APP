@@ -23,7 +23,7 @@ export default function CycleWheel({
   userName, // ✅ OPTIONNEL - peut être fourni en prop ou récupéré automatiquement du store utilisateur
   onPhasePress = () => {},
 }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   
   // ✅ MIGRATION: Utilisation du store Zustand au lieu des props

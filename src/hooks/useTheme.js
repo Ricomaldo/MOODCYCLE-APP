@@ -10,7 +10,7 @@
 import { useColorScheme } from 'react-native';
 import { useMemo } from 'react';
 import { useAppStore } from '../stores/useAppStore';
-import { getTheme, themeUtils } from '../config/theme';
+import { theme as defaultTheme, getTheme } from '../config/theme/index';
 
 
 export const useTheme = () => {
@@ -27,7 +27,7 @@ export const useTheme = () => {
   // ✅ CORRECTION : Mémoriser tout l'objet retourné pour éviter les re-créations
   return useMemo(() => {
     // Obtenir l'objet thème complet
-    const theme = getTheme(isDark);
+    const themeObject = getTheme(isDark);
     
     // Fonctions utilitaires
     const toggleTheme = () => {
@@ -47,21 +47,14 @@ export const useTheme = () => {
       setTheme('dark');
     };
     
-    // Fonctions utilitaires étendues avec le contexte du thème actuel
-    const utils = {
-      ...themeUtils,
-      // Override avec le thème actuel
-      getTextColorOn: (backgroundColor) => {
-        return themeUtils.getTextColorOn(backgroundColor, isDark);
-      },
-      getTextColorOnPhase: (phase) => {
-        return themeUtils.getTextColorOnPhase(phase, isDark);
-      },
-    };
-    
     return {
       // État du thème
-      theme,
+      theme: themeObject,
+      colors: themeObject.colors,
+      fonts: themeObject.fonts,
+      spacing: themeObject.spacing,
+      borderRadius: themeObject.borderRadius,
+      typography: themeObject.typography,
       isDark,
       isLight: !isDark,
       currentTheme,
@@ -75,7 +68,7 @@ export const useTheme = () => {
       setDarkTheme,
       
       // Utilitaires
-      ...utils,
+      ...themeObject,
     };
   }, [isDark, currentTheme, systemColorScheme, setTheme]);
 };

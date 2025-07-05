@@ -19,22 +19,22 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Image, StyleSheet, Animated } from 'react-native';
 import { router } from 'expo-router';
+import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
 import { BodyText, Heading1 } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import {
   AnimatedRevealMessage,
   AnimatedSparkle,
-  StandardOnboardingButton,
   AnimatedLogo,
-  AnimatedOnboardingButton,
   ANIMATION_DURATIONS,
   ANIMATION_CONFIGS
 } from '../../src/core/ui/animations';
+import OnboardingButton from '../../src/features/onboarding/shared/OnboardingButton';
 
-export default function BienvenuePage() {
-  const { theme } = useTheme();
-  const styles = getStyles(theme);
+export default function BienvenueScreen() {
+  const { theme, colors, fonts, spacing } = useTheme();
+  const styles = getStyles({ colors, fonts, spacing });
   const intelligence = useOnboardingIntelligence('100-bienvenue');
   
   // Animations
@@ -63,7 +63,7 @@ export default function BienvenuePage() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScreenContainer edges={['top', 'bottom']} style={styles.container}>
       <Animated.View 
         style={[
           styles.content,
@@ -117,44 +117,41 @@ export default function BienvenuePage() {
           </View>
         </View>
 
-        {/* Bouton commencer avec nouvelle animation */}
-        <AnimatedOnboardingButton style={styles.buttonContainer}>
-          <StandardOnboardingButton
-            title="Commencer mon voyage"
-            onPress={handleContinue}
-            variant="primary"
-          />
-        </AnimatedOnboardingButton>
+        {/* Bouton commencer isolé en composant */}
+        <OnboardingButton
+          onPress={handleContinue}
+          style={styles.buttonContainer}
+        />
       </Animated.View>
-    </View>
+    </ScreenContainer>
   );
 }
 
-const getStyles = (theme) => StyleSheet.create({
+const getStyles = ({ colors, fonts, spacing }) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: colors.background,
   },
   
   content: {
     flex: 1,
     justifyContent: 'space-between',
-    paddingVertical: theme.spacing.xxl,
+    paddingVertical: spacing.xxl,
   },
 
   messagesContainer: {
     alignItems: 'center',
-    paddingHorizontal: theme.spacing.xl,
-    gap: theme.spacing.xl,
-    marginTop: theme.spacing.xxl * 2,
+    paddingHorizontal: spacing.xl,
+    gap: spacing.xl,
+    marginTop: spacing.xxl * 2,
   },
 
   message: {
-    fontFamily: theme.fonts.body,
+    fontFamily: fonts.body,
     fontSize: 24,
     lineHeight: 32,
     textAlign: 'center',
-    color: theme.colors.text,
+    color: colors.text,
     maxWidth: 320,
   },
 
@@ -162,7 +159,7 @@ const getStyles = (theme) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
-    marginTop: -theme.spacing.xxl,
+    marginTop: -spacing.xxl,
   },
 
   logoContainer: {
@@ -171,7 +168,7 @@ const getStyles = (theme) => StyleSheet.create({
     height: 180,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: theme.spacing.m,
+    marginBottom: spacing.m,
   },
 
   logo: {
@@ -201,26 +198,21 @@ const getStyles = (theme) => StyleSheet.create({
   sparkle3: { top: '40%', right: '5%' },
   sparkle4: { bottom: '30%', right: '20%' },
   sparkle5: { bottom: '10%', left: '30%' },
-  sparkle6: { top: '35%', left: '5%' },
+  sparkle6: { bottom: '40%', left: '5%' },
 
   appNameContainer: {
-    width: '100%',
-    paddingHorizontal: theme.spacing.xl,
-    marginBottom: theme.spacing.xl,
+    marginTop: spacing.l,
   },
 
   appName: {
-    fontFamily: theme.fonts.heading,
+    fontFamily: fonts.heading,
     fontSize: 32,
-    color: theme.colors.primary,
+    color: colors.text,
     textAlign: 'center',
-    letterSpacing: 1,
-    marginBottom: 0,
-    lineHeight: 40,
   },
 
   buttonContainer: {
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.xl,
+    marginTop: spacing.xl,
+    paddingHorizontal: spacing.xl,
   },
 });

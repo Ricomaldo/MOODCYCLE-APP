@@ -82,7 +82,7 @@ export default function FreeWritingModal({
   suggestedTags: propSuggestedTags = [],
   mode = 'free' // 'free', 'guided', 'vignette'
 }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   const insets = useSafeAreaInsets();
   const { addEntry } = useNotebookStore();

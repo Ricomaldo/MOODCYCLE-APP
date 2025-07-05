@@ -203,6 +203,8 @@ export const useOnboardingIntelligence = (screenName) => {
     setPersona: userStore.setPersona,
     
     // Contexte cycle
-    ...getContextualData()
+    getContextualData,
+    cycle: getCycleData(),
+    updateCycle: useCycleStore.getState().updateCycle,
   };
 };

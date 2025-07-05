@@ -89,7 +89,7 @@ const MELUNE_POSITIONS = [
 
 export default function MeluneTab({ onDataChange }) {
   const { melune, updateMelune } = useUserStore();
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   const [selectedAvatar, setSelectedAvatar] = useState(melune?.avatarStyle || 'classic');
   const [selectedTone, setSelectedTone] = useState(melune?.tone || 'friendly');

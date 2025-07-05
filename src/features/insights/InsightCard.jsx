@@ -36,7 +36,7 @@ export default function InsightCard({
   style,
   isObservationBased = false  // 🆕 BLOC 2
 }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme, phase);
   const { profile } = useUserStore();
   const { addEntry } = useNotebookStore();

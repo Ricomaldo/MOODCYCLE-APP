@@ -26,7 +26,7 @@ export default function ChatBubble({
   delay = 0,
   showActions = true
 }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const { saveFromChat } = useNotebookStore();
   const cycleData = useCycleStore((state) => state);
   const currentPhase = getCurrentPhase(cycleData.lastPeriodDate, cycleData.length, cycleData.periodDuration);

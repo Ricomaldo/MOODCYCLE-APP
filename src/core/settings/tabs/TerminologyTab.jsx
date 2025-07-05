@@ -17,7 +17,7 @@ import { useTheme } from '../../../hooks/useTheme';
 import { useTerminologySelector } from '../../../hooks/useTerminology';
 
 export default function TerminologyTab({ onDataChange }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const { currentTerminology, options, onSelect } = useTerminologySelector();
   
   const handleTerminologySelect = (terminologyKey) => {

@@ -8,7 +8,7 @@
 // ─────────────────────────────────────────────────────────
 //
 import React, { useEffect, useRef } from 'react';
-import { View, TouchableOpacity, StyleSheet, Animated, Text } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Animated, Text, ActivityIndicator } from 'react-native';
 import { useTheme } from '../../../hooks/useTheme';
 import { BodyText } from '../typography';
 import { ANIMATION_PRESETS, ANIMATION_DURATIONS, ANIMATION_CONFIGS, AnimationHelpers } from './constants/animationPresets';
@@ -21,22 +21,24 @@ import { ANIMATION_PRESETS, ANIMATION_DURATIONS, ANIMATION_CONFIGS, AnimationHel
  */
 export function AnimatedRevealMessage({ children, delay = 0, onComplete }) {
   const opacityAnim = useRef(new Animated.Value(0)).current;
-  const translateYAnim = useRef(new Animated.Value(12)).current;
+  const translateYAnim = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      // Animation simple et fluide - Ease out naturel
-      Animated.timing(opacityAnim, {
-        toValue: 1,
-        duration: 400,
-        useNativeDriver: true,
-      }).start();
-
-      Animated.timing(translateYAnim, {
-        toValue: 0,
-        duration: 400,
-        useNativeDriver: true,
-      }).start(() => {
+      // Animation plus lente et plus fluide
+      Animated.parallel([
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: 800,
+          useNativeDriver: true,
+        }),
+        Animated.spring(translateYAnim, {
+          toValue: 0,
+          tension: 100,
+          friction: 8,
+          useNativeDriver: true,
+        })
+      ]).start(() => {
         if (onComplete) onComplete();
       });
     }, delay);
@@ -124,7 +126,7 @@ export function AnimatedLogo({ children, style }) {
  * @param {Object} style - Styles de positionnement
  */
 export function AnimatedSparkle({ index, style }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
@@ -265,33 +267,35 @@ export function StandardOnboardingButton({
   variant = 'primary',
   disabled = false,
   loading = false,
-  style 
+  style,
+  children
 }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
-  
-  const buttonStyle = [
-    styles.standardButton,
-    styles[`standardButton${variant.charAt(0).toUpperCase() + variant.slice(1)}`],
-    disabled && styles.standardButtonDisabled,
-    style
-  ];
-
-  const textStyle = [
-    styles.standardButtonText,
-    styles[`standardButtonText${variant.charAt(0).toUpperCase() + variant.slice(1)}`]
-  ];
 
   return (
     <TouchableOpacity
-      style={buttonStyle}
       onPress={onPress}
-      activeOpacity={disabled ? 1 : 0.8}
       disabled={disabled || loading}
+      style={[
+        styles.button,
+        variant === 'primary' && styles.buttonPrimary,
+        variant === 'secondary' && styles.buttonSecondary,
+        disabled && styles.buttonDisabled,
+        style
+      ]}
     >
-      <BodyText style={textStyle}>
-        {loading ? 'Chargement...' : title}
-      </BodyText>
+      {loading ? (
+        <ActivityIndicator color={theme.colors.white} />
+      ) : (
+        <Text style={[
+          styles.buttonText,
+          variant === 'secondary' && styles.buttonTextSecondary,
+          disabled && styles.buttonTextDisabled
+        ]}>
+          {children || title}
+        </Text>
+      )}
     </TouchableOpacity>
   );
 }
@@ -438,46 +442,50 @@ const getStyles = (theme) => StyleSheet.create({
   },
 
   // 🎯 Standard Onboarding Button
-  standardButton: {
-    paddingVertical: theme.spacing.m + 4,
-    paddingHorizontal: theme.spacing.xl + 8,
-    borderRadius: theme.borderRadius.large,
-    minWidth: 240,
+  button: {
+    paddingVertical: theme.spacing.m,
+    paddingHorizontal: theme.spacing.xl,
+    borderRadius: 25,
+    minWidth: 200,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    // Shadow premium baseline
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 16,
-    elevation: 12,
   },
-  standardButtonPrimary: {
+
+  buttonPrimary: {
     backgroundColor: theme.colors.primary,
-    borderColor: `${theme.colors.primary}40`,
-    shadowColor: theme.colors.primary,
-    shadowOpacity: 0.25,
   },
-  standardButtonSecondary: {
-    backgroundColor: theme.colors.background,
+
+  buttonSecondary: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: theme.colors.primary,
+  },
+
+  buttonDisabled: {
+    backgroundColor: theme.colors.backgroundSecondary,
     borderColor: theme.colors.border,
-    shadowColor: theme.colors.text,
-    shadowOpacity: 0.15,
   },
-  standardButtonDisabled: {
-    opacity: 0.6,
-    shadowOpacity: 0.1,
-    elevation: 4,
-  },
-  standardButtonText: {
-    ...theme.typography.body,
+
+  buttonText: {
+    fontFamily: theme.fonts.heading,
     fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 0,
-  },
-  standardButtonTextPrimary: {
     color: theme.colors.white,
+    textAlign: 'center',
   },
-  standardButtonTextSecondary: {
-    color: theme.colors.text,
+
+  buttonTextSecondary: {
+    color: theme.colors.primary,
+  },
+
+  buttonTextDisabled: {
+    color: theme.colors.textSecondary,
+  },
+
+  // Styles pour AnimatedSparkle
+  sparkle: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: theme.colors.primary,
   },
 }); 

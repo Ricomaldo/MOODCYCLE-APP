@@ -34,7 +34,7 @@ const ENERGY_LEVELS = [
 ];
 
 export default function QuickTrackingModal({ visible, onClose, defaultTags = [] }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   const { addQuickTracking } = useNotebookStore();
   const cycleData = getCycleDataAdaptive();

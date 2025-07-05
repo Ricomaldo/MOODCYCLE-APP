@@ -16,7 +16,7 @@ import { useTheme } from '../../hooks/useTheme';
 const CARD_SIZE = 360; // 1080px équivalent en densité React Native (3x scale)
 
 const ShareableCard = forwardRef(({ message, visible = false }, ref) => {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   
   if (!visible) return null;

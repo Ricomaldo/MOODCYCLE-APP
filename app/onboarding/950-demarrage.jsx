@@ -6,19 +6,24 @@
 // 🔄 Cycle: Onboarding - Étape finale
 // ─────────────────────────────────────────────────────────
 //
-import React, { useEffect, useRef, useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
-import OnboardingScreen from '../../src/core/layout/OnboardingScreen';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
 import { getPersonalizedInsight } from '../../src/services/InsightsEngine';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
-import { AnimatedRevealMessage } from '../../src/core/ui/animations';
+import OnboardingButton from '../../src/features/onboarding/shared/OnboardingButton';
+import { 
+  AnimatedRevealMessage, 
+  AnimatedCascadeCard,
+  ANIMATION_DURATIONS 
+} from '../../src/core/ui/animations';
 
 export default function CadeauScreen() {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   const intelligence = useOnboardingIntelligence('950-demarrage');
   
@@ -27,43 +32,8 @@ export default function CadeauScreen() {
   const [personalizedInsight, setPersonalizedInsight] = useState(null);
   const [error, setError] = useState(false);
   const [intelligenceRecap, setIntelligenceRecap] = useState(null);
-  
-  // Animations
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(20)).current;
-  const sparkleAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Séquence d'animation
-    Animated.sequence([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    // Animation continue des étincelles
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(sparkleAnim, {
-          toValue: 1,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(sparkleAnim, {
-          toValue: 0,
-          duration: 2000,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-
     generatePersonalizedContent();
   }, []);
 
@@ -171,19 +141,15 @@ export default function CadeauScreen() {
     if (isLoading) {
       return (
         <View style={styles.loadingContainer}>
-          <Animated.View style={{
-            transform: [{
-              rotate: sparkleAnim.interpolate({
-                inputRange: [0, 1],
-                outputRange: ['0deg', '360deg']
-              })
-            }]
-          }}>
+          <AnimatedRevealMessage 
+            delay={ANIMATION_DURATIONS.initialMessage}
+            style={styles.loadingMessageContainer}
+          >
             <BodyText style={styles.loadingEmoji}>✨</BodyText>
-          </Animated.View>
-          <BodyText style={styles.loadingText}>
-            Génération de ton expérience personnalisée...
-          </BodyText>
+            <BodyText style={styles.loadingText}>
+              Génération de ton expérience personnalisée...
+            </BodyText>
+          </AnimatedRevealMessage>
         </View>
       );
     }
@@ -191,15 +157,20 @@ export default function CadeauScreen() {
     if (error) {
       return (
         <View style={styles.errorContainer}>
-          <BodyText style={styles.errorText}>
-            Quelque chose s'est passé... Mais tu es prête ! 🌟
-          </BodyText>
-          <TouchableOpacity 
-            style={styles.retryButton}
-            onPress={generatePersonalizedContent}
+          <AnimatedRevealMessage 
+            delay={ANIMATION_DURATIONS.initialMessage}
+            style={styles.errorMessageContainer}
           >
-            <BodyText style={styles.retryButtonText}>Réessayer</BodyText>
-          </TouchableOpacity>
+            <BodyText style={styles.errorText}>
+              Quelque chose s'est passé... Mais tu es prête ! 🌟
+            </BodyText>
+            <TouchableOpacity 
+              style={styles.retryButton}
+              onPress={generatePersonalizedContent}
+            >
+              <BodyText style={styles.retryButtonText}>Réessayer</BodyText>
+            </TouchableOpacity>
+          </AnimatedRevealMessage>
         </View>
       );
     }
@@ -208,78 +179,75 @@ export default function CadeauScreen() {
       <View style={styles.successContainer}>
         {/* Message de Mélune */}
         <View style={styles.messageSection}>
-          <MeluneAvatar 
-            phase="ovulatory" 
-            size="large" 
-            style="classic"
-            animated={true}
-          />
-          
-          <Animated.View
-            style={[
-              styles.messageContainer,
-              {
-                transform: [{ translateY: slideAnim }]
-              }
-            ]}
+          <AnimatedRevealMessage 
+            delay={ANIMATION_DURATIONS.initialMessage}
+            style={styles.messageContainer}
           >
-            <AnimatedRevealMessage delay={800}>
-              <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
-                Ton voyage commence maintenant ! 🌟
-              </BodyText>
-            </AnimatedRevealMessage>
-          </Animated.View>
+            <MeluneAvatar 
+              phase="ovulatory" 
+              size="large" 
+              style="classic"
+              animated={true}
+            />
+            <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
+              Ton voyage commence maintenant ! 🌟
+            </BodyText>
+          </AnimatedRevealMessage>
         </View>
 
         {/* Section principale */}
         {personalizedInsight && (
           <View style={styles.mainSection}>
-            <View style={styles.insightCard}>
+            <AnimatedCascadeCard
+              delay={ANIMATION_DURATIONS.initialMessage + 800}
+              style={styles.insightCard}
+            >
               <BodyText style={styles.insightText}>
                 {personalizedInsight.content}
               </BodyText>
-            </View>
+            </AnimatedCascadeCard>
           </View>
         )}
 
         {/* Section bouton */}
-        <View style={styles.bottomSection}>
-          <TouchableOpacity
-            style={styles.continueButton}
-            onPress={handleFinishOnboarding}
-            activeOpacity={0.8}
-          >
-            <BodyText style={styles.continueButtonText}>
-              Commencer mon voyage
-            </BodyText>
-          </TouchableOpacity>
-        </View>
+        <OnboardingButton
+          title="Commencer mon voyage"
+          onPress={handleFinishOnboarding}
+          delay={ANIMATION_DURATIONS.initialMessage + 1200}
+          variant="primary"
+          style={styles.buttonContainer}
+        />
       </View>
     );
   };
 
   return (
-    <OnboardingScreen currentScreen="950-demarrage" hideProgress={true}>
-      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <View style={styles.content}>
         {renderContent()}
-      </Animated.View>
-    </OnboardingScreen>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const getStyles = (theme) => StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  
   content: {
     flex: 1,
+    justifyContent: 'space-between',
+    paddingVertical: theme.spacing.xxl,
   },
   
   messageSection: {
     alignItems: 'center',
-    paddingTop: theme.spacing.xxl,
+    paddingHorizontal: theme.spacing.xl,
   },
   
   messageContainer: {
     alignItems: 'center',
-    paddingHorizontal: theme.spacing.xl,
     marginTop: theme.spacing.xl,
   },
   
@@ -289,6 +257,7 @@ const getStyles = (theme) => StyleSheet.create({
     color: theme.colors.text,
     lineHeight: 28,
     maxWidth: 300,
+    marginTop: theme.spacing.l,
   },
   
   mainSection: {
@@ -304,9 +273,14 @@ const getStyles = (theme) => StyleSheet.create({
     paddingHorizontal: theme.spacing.xl,
   },
   
+  loadingMessageContainer: {
+    alignItems: 'center',
+  },
+  
   loadingEmoji: {
     fontSize: 32,
     marginBottom: theme.spacing.l,
+    textAlign: 'center',
   },
   
   loadingText: {
@@ -320,6 +294,10 @@ const getStyles = (theme) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: theme.spacing.xl,
+  },
+  
+  errorMessageContainer: {
+    alignItems: 'center',
   },
   
   errorText: {
@@ -354,6 +332,11 @@ const getStyles = (theme) => StyleSheet.create({
     padding: theme.spacing.xl,
     borderWidth: 2,
     borderColor: theme.colors.border,
+    shadowColor: theme.colors.text,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   
   insightText: {
@@ -362,21 +345,8 @@ const getStyles = (theme) => StyleSheet.create({
     lineHeight: 24,
   },
   
-  bottomSection: {
+  buttonContainer: {
     paddingHorizontal: theme.spacing.xl,
     paddingBottom: theme.spacing.xxl,
-  },
-  
-  continueButton: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.medium,
-    paddingVertical: theme.spacing.l,
-    alignItems: 'center',
-  },
-  
-  continueButtonText: {
-    color: theme.colors.white,
-    fontSize: 16,
-    fontWeight: '600',
   },
 });

@@ -7,9 +7,9 @@
 // ─────────────────────────────────────────────────────────
 //
 import React, { useState, useRef, useEffect } from 'react';
-import { View, TouchableOpacity, StyleSheet, ScrollView, Animated } from 'react-native';
+import { View, StyleSheet, ScrollView, Animated } from 'react-native';
 import { router } from 'expo-router';
-import OnboardingScreen from '../../src/core/layout/OnboardingScreen';
+import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { useUserStore } from '../../src/stores/useUserStore';
@@ -18,7 +18,6 @@ import {
   AnimatedOnboardingScreen,
   AnimatedRevealMessage,
   AnimatedOnboardingButton,
-  AnimatedCascadeCard,
   StandardOnboardingButton,
   ANIMATION_DURATIONS,
   ANIMATION_CONFIGS
@@ -27,6 +26,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ObservationInvitation } from '../../src/features/onboarding/observation/ObservationInvitation';
 import { useCycleStore } from '../../src/stores/useCycleStore';
 import { useUserIntelligence } from '../../src/stores/useUserIntelligence';
+import OnboardingCard from '../../src/features/onboarding/shared/OnboardingCard';
 
 // 🎨 Dimensions thérapeutiques avec couleurs
 const THERAPEUTIC_DIMENSIONS = [
@@ -75,7 +75,7 @@ const THERAPEUTIC_DIMENSIONS = [
 ];
 
 export default function PreferencesScreen() {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   const { preferences, updatePreferences } = useUserStore();
   const intelligence = useOnboardingIntelligence('800-preferences');
@@ -213,7 +213,7 @@ export default function PreferencesScreen() {
   };
 
   return (
-    <OnboardingScreen currentScreen="800-preferences">
+    <ScreenContainer edges={['top', 'bottom']} style={styles.container}>
       <AnimatedOnboardingScreen>
         <ScrollView 
           style={styles.scrollView}
@@ -244,53 +244,20 @@ export default function PreferencesScreen() {
 
           {/* Section principale */}
           <View style={styles.dimensionsContainer}>
-            {THERAPEUTIC_DIMENSIONS.map((dimension, index) => {
-              const value = currentPreferences[dimension.key];
-              const borderColor = getColorWithIntensity(dimension.color, value);
-              return (
-                <AnimatedCascadeCard 
-                  key={dimension.key}
-                  index={index}
-                  delay={ANIMATION_DURATIONS.welcomeFirstMessage + 500} // Délai après le message
-                >
-                  <TouchableOpacity
-                    style={[
-                      styles.dimensionCard,
-                      { borderColor }
-                    ]}
-                    onPress={() => handleTap(dimension.key)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.dimensionHeader}>
-                      <View style={[
-                        styles.dimensionIcon,
-                        { backgroundColor: dimension.color + '20' }
-                      ]}>
-                        <BodyText style={styles.iconText}>{dimension.icon}</BodyText>
-                      </View>
-                      <View style={styles.dimensionInfo}>
-                        <BodyText style={styles.dimensionTitle}>
-                          {dimension.title}
-                        </BodyText>
-                        <BodyText style={styles.dimensionDescription}>
-                          {dimension.description}
-                        </BodyText>
-                        {value > 0 && (
-                          <View style={[
-                            styles.intensityBadge,
-                            { backgroundColor: getColorWithIntensity(dimension.color, value) }
-                          ]}>
-                            <BodyText style={styles.intensityText}>
-                              {value === 3 ? 'Intéressé' : 'Passionné'}
-                            </BodyText>
-                          </View>
-                        )}
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                </AnimatedCascadeCard>
-              );
-            })}
+            {THERAPEUTIC_DIMENSIONS.map((dimension, index) => (
+              <OnboardingCard
+                key={dimension.key}
+                variant="preference"
+                icon={dimension.icon}
+                title={dimension.title}
+                description={dimension.description}
+                onPress={() => handleTap(dimension.key)}
+                color={dimension.color}
+                value={currentPreferences[dimension.key]}
+                index={index}
+                delay={ANIMATION_DURATIONS.welcomeFirstMessage + 500}
+              />
+            ))}
           </View>
 
           {/* Feedback selon nombre de sélections */}
@@ -306,7 +273,7 @@ export default function PreferencesScreen() {
             </View>
           )}
 
-          {/* Invitation à l'observation - NOUVEAU */}
+          {/* Invitation à l'observation */}
           {selectedCount > 0 && !hasShownObservation && (
             <ObservationInvitation
               persona={intelligence.currentPersona || 'emma'}
@@ -315,7 +282,7 @@ export default function PreferencesScreen() {
                 handleObservation(data);
                 setHasShownObservation(true);
               }}
-              visible={selectedCount >= 2} // Apparaît après 2 sélections
+              visible={selectedCount >= 2}
             />
           )}
         </ScrollView>
@@ -339,7 +306,7 @@ export default function PreferencesScreen() {
           </AnimatedOnboardingButton>
         </View>
       </AnimatedOnboardingScreen>
-    </OnboardingScreen>
+    </ScreenContainer>
   );
 }
 
@@ -351,7 +318,7 @@ const getStyles = (theme) => StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingTop: theme.spacing.xl,
-    paddingBottom: theme.spacing.xxl + 60, // Extra space for scroll indicator
+    paddingBottom: theme.spacing.xxl + 60,
   },
   
   messageSection: {
@@ -371,68 +338,6 @@ const getStyles = (theme) => StyleSheet.create({
   dimensionsContainer: {
     paddingHorizontal: theme.spacing.xl,
     gap: theme.spacing.m,
-  },
-  
-  dimensionCard: {
-    backgroundColor: theme.colors.surface,
-    padding: theme.spacing.l,
-    borderRadius: theme.borderRadius.large,
-    borderWidth: 2,
-    borderColor: theme.colors.border,
-    shadowColor: theme.colors.text,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  
-  dimensionHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  
-  dimensionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: theme.spacing.m,
-  },
-  
-  iconText: {
-    fontSize: 20,
-  },
-  
-  dimensionInfo: {
-    flex: 1,
-  },
-  
-  dimensionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: 2,
-  },
-  
-  dimensionDescription: {
-    fontSize: 14,
-    color: theme.colors.textLight,
-    lineHeight: 18,
-  },
-  
-  intensityBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: theme.spacing.m,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.small,
-    marginTop: theme.spacing.s,
-  },
-  
-  intensityText: {
-    color: theme.colors.white,
-    fontSize: 12,
-    fontWeight: '600',
   },
   
   bottomSection: {
@@ -467,5 +372,9 @@ const getStyles = (theme) => StyleSheet.create({
     color: theme.colors.primary,
     textAlign: 'center',
     fontStyle: 'italic',
+  },
+
+  container: {
+    flex: 1,
   },
 });

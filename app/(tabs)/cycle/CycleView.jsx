@@ -57,7 +57,7 @@ export default function CycleView() {
   const smartSuggestions = useSmartSuggestions();
   
   const { profile } = useUserStore();
-  const { theme } = useTheme();
+  const theme = useTheme();
   const { getPhaseLabel, getArchetypeLabel } = useTerminology('spiritual');
 
   const safeProfile = profile || { prenom: null };

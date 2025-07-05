@@ -46,7 +46,7 @@ const CalendarView = memo(function CalendarView({
   onPhasePress = () => {},
   onDatePress = () => {},
 }) {
-  const { theme } = useTheme();
+  const theme = useTheme();
   const styles = getStyles(theme);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
