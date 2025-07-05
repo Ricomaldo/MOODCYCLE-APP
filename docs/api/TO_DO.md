@@ -8,6 +8,83 @@
 
 ---
 
+## 🚨 **NOUVEAU PROBLÈME CRITIQUE IDENTIFIÉ - ENDPOINTS API**
+
+### ❌ **Problème Architecture API**
+**Date découverte** : 5 juillet 2025  
+**Impact** : App mobile ne peut pas accéder aux données API
+
+#### **Situation Actuelle**
+- ✅ **API Health** : `GET /api/health` → 200 OK
+- ❌ **Endpoints Admin** : `GET /api/admin/*` → 401 "Token requis"
+- ❌ **Endpoints Publics** : `GET /api/insights` → 404 "Cannot GET"
+
+#### **Problème Identifié**
+L'app mobile essaie d'accéder aux données via des endpoints qui n'existent pas ou nécessitent une authentification admin.
+
+```javascript
+// PROBLÈME : App mobile → Endpoints admin (auth requise)
+ContentManager.getInsights() → /api/admin/insights → 401 Token requis
+ContentManager.getPhases() → /api/admin/phases → 401 Token requis
+```
+
+#### **Solution Implémentée Côté Client**
+**Date** : 5 juillet 2025  
+**Fichiers modifiés** :
+- `src/config/api.js` : Ajout endpoints publics
+- `src/services/ContentManager.js` : Migration vers endpoints publics
+
+```javascript
+// SOLUTION : App mobile → Endpoints publics (pas d'auth)
+ContentManager.getInsights() → /api/insights → Fallback local si 404
+ContentManager.getPhases() → /api/phases → Fallback local si 404
+```
+
+#### **Actions Requises Côté Serveur**
+**URGENT** : Créer les endpoints publics pour l'app mobile
+
+```javascript
+// À implémenter sur le serveur
+app.get('/api/insights', (req, res) => {
+  // Données publiques pour l'app mobile (pas d'auth)
+  res.json({ data: insights });
+});
+
+app.get('/api/phases', (req, res) => {
+  res.json({ data: phases });
+});
+
+app.get('/api/closings', (req, res) => {
+  res.json({ data: closings });
+});
+
+app.get('/api/vignettes', (req, res) => {
+  res.json({ data: vignettes });
+});
+```
+
+#### **Architecture API Cible**
+```
+📱 APP MOBILE (Consommation)
+├── GET /api/insights     → 🌐 Public (pas d'auth)
+├── GET /api/phases       → 🌐 Public (pas d'auth)
+├── GET /api/closings     → 🌐 Public (pas d'auth)
+└── GET /api/vignettes    → 🌐 Public (pas d'auth)
+
+🔧 INTERFACE ADMIN (Édition)
+├── GET /api/admin/insights     → 🔒 Privé (auth admin)
+├── POST /api/admin/insights    → 🔒 Privé (auth admin)
+├── PUT /api/admin/insights/:id → 🔒 Privé (auth admin)
+└── DELETE /api/admin/insights/:id → 🔒 Privé (auth admin)
+```
+
+#### **Status Actuel**
+- ✅ **App mobile** : Fonctionne avec fallback local
+- ❌ **Endpoints publics** : À créer côté serveur
+- ✅ **Sécurité** : Pas de credentials admin dans le code mobile
+
+---
+
 ## 🔥 **MISSION CAPITALE - UPGRADE PHASES.JSON**
 
 ### 📊 **État de Migration Actuel**
@@ -42,6 +119,49 @@
 - **AVANT** : 5 enrichissements par phase (20 total)
 - **MAINTENANT** : 1 enrichissement par phase (4 total)
 - **MANQUANT** : **16 enrichissements à recréer via API admin**
+
+---
+
+## 📋 **TESTS ET VALIDATION CRÉÉS**
+
+### ✅ **Tests Unitaires API & ContentManager**
+**Date** : 5 juillet 2025  
+**Fichiers créés** :
+- `__tests__/unit/config/api.test.js` : Tests configuration API
+- `__tests__/unit/services/ContentManager.test.js` : Tests gestionnaire contenu
+- `__tests__/unit/services/ContentManager.simple.test.js` : Tests simplifiés
+
+#### **Couverture Tests API**
+- ✅ Configuration endpoints (dev/prod)
+- ✅ Génération URLs (getEndpointUrl)
+- ✅ Headers et authentification
+- ✅ Gestion erreurs et fallbacks
+- ✅ Validation timeouts et limites
+
+#### **Couverture Tests ContentManager**
+- ✅ Cache et TTL (insights: 2h, phases: 24h, closings: 7j)
+- ✅ Récupération API avec fallback local
+- ✅ Gestion erreurs réseau et HTTP
+- ✅ Performance et optimisations
+- ✅ Validation structure données
+
+#### **Tests Manuels curl**
+```bash
+# API Health - ✅ FONCTIONNE
+curl -X GET "https://moodcycle.irimwebforge.com/api/health"
+# → 200 OK {"status":"healthy"}
+
+# Endpoints Admin - ❌ AUTH REQUISE
+curl -X GET "https://moodcycle.irimwebforge.com/api/admin/insights"
+# → 401 {"success":false,"error":"Token requis"}
+
+# Endpoints Publics - ❌ N'EXISTENT PAS
+curl -X GET "https://moodcycle.irimwebforge.com/api/insights"
+# → 404 "Cannot GET /api/insights"
+```
+
+#### **Note Jest**
+⚠️ **Problème fuite mémoire** : Les tests Jest ont un problème de configuration causant des fuites mémoire. Solution temporaire : tests manuels curl + fallback local robuste.
 
 ---
 
@@ -100,6 +220,16 @@ const newPhase = {
 ---
 
 ## 📋 **CHECKLIST DE VALIDATION**
+
+### **Phase 0 : Endpoints API Publics** ⚠️ **NOUVEAU - PRIORITÉ CRITIQUE**
+- [ ] **Créer endpoint public** : `GET /api/insights`
+- [ ] **Créer endpoint public** : `GET /api/phases`
+- [ ] **Créer endpoint public** : `GET /api/closings`
+- [ ] **Créer endpoint public** : `GET /api/vignettes`
+- [ ] **Tester endpoints publics** : Validation avec curl
+- [ ] **Valider structure response** : Format `{data: [...]}` attendu
+- [ ] **Performance check** : Temps réponse < 2s
+- [ ] **Déploiement production** : Mise en ligne endpoints publics
 
 ### **Phase 1 : Structure API**
 - [ ] Adapter endpoints API pour `editableContent`

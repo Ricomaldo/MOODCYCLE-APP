@@ -160,7 +160,8 @@ export default function PreferencesScreen() {
     // Track les préférences
     intelligence.trackAction('preferences_configured', {
       preferences: currentPreferences,
-      selectedCount: Object.values(currentPreferences).filter(v => v > 0).length
+      selectedCount: Object.values(currentPreferences).filter(v => v > 0).length,
+      hasObservations: hasShownObservation
     });
     
     router.push('/onboarding/900-essai');
@@ -201,15 +202,15 @@ export default function PreferencesScreen() {
 
   const getPersonalizedFeedback = () => {
     const count = getSelectedCount();
-    if (intelligence.personaConfidence >= 0.8) {
+    if (intelligence.personaConfidence >= 0.4) {
       if (count === 0) return intelligence.getPersonalizedMessage('zero_selected');
       if (count <= 2) return intelligence.getPersonalizedMessage('some_selected');
       return intelligence.getPersonalizedMessage('many_selected');
     }
     // Fallbacks par défaut
     if (count === 0) return "Prends ton temps pour explorer...";
-    if (count <= 2) return "Bon début !";
-    return "Belle diversité de choix !";
+    if (count <= 2) return "Belle sélection ! Continue si tu veux";
+    return "Quelle richesse dans tes choix !";
   };
 
   return (
@@ -223,23 +224,25 @@ export default function PreferencesScreen() {
           onScroll={handleScroll}
           scrollEventThrottle={16}
         >
-          {/* Message de Mélune */}
+          {/* Message de Mélune avec feedback intégré */}
           <View style={styles.messageSection}>
             <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage}>
               <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
-                {intelligence.personaConfidence >= 0.6
+                {intelligence.personaConfidence >= 0.4
                   ? intelligence.getPersonalizedMessage('message')
                   : "Chaque femme a sa propre sagesse... Dis-moi ce qui résonne en toi"}
               </BodyText>
             </AnimatedRevealMessage>
             
-            {getSelectedCount() > 0 && (
-              <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage + 1000}>
-                <BodyText style={styles.feedbackText}>
-                  {getPersonalizedFeedback()}
-                </BodyText>
-              </AnimatedRevealMessage>
-            )}
+            <AnimatedRevealMessage 
+              key={getSelectedCount()} 
+              delay={300}
+              style={styles.feedbackContainer}
+            >
+              <BodyText style={styles.feedbackText}>
+                {getPersonalizedFeedback()}
+              </BodyText>
+            </AnimatedRevealMessage>
           </View>
 
           {/* Section principale */}
@@ -260,21 +263,8 @@ export default function PreferencesScreen() {
             ))}
           </View>
 
-          {/* Feedback selon nombre de sélections */}
-          {intelligence.personaConfidence >= 0.6 && (
-            <View style={styles.feedbackContainer}>
-              <BodyText style={styles.feedbackText}>
-                {intelligence.getPersonalizedMessage(
-                  selectedCount === 0 ? 'zero_selected' :
-                  selectedCount >= 4 ? 'many_selected' :
-                  'some_selected'
-                )}
-              </BodyText>
-            </View>
-          )}
-
           {/* Invitation à l'observation */}
-          {selectedCount > 0 && !hasShownObservation && (
+          {getSelectedCount() > 0 && !hasShownObservation && (
             <ObservationInvitation
               persona={intelligence.currentPersona || 'emma'}
               theme={theme}
@@ -282,7 +272,7 @@ export default function PreferencesScreen() {
                 handleObservation(data);
                 setHasShownObservation(true);
               }}
-              visible={selectedCount >= 2}
+              visible={getSelectedCount() >= 2}
             />
           )}
         </ScrollView>

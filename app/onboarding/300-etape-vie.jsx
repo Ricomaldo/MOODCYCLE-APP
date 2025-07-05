@@ -1,12 +1,12 @@
 //
 // ─────────────────────────────────────────────────────────
 // 📄 Fichier : app/onboarding/300-etape-vie.jsx
-// 🎯 Status: ✅ FINAL - NE PAS MODIFIER
+// 🎯 Status: ✅ PATTERN ABSOLU - Basé sur 250-rencontre.jsx
 // 📝 Description: Choix de l'étape de vie et personnalisation
 // 🔄 Cycle: Onboarding - Étape 4/8
 // ─────────────────────────────────────────────────────────
 //
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Text, Animated } from 'react-native';
 import { router } from 'expo-router';
 import ScreenContainer from '../../src/core/layout/ScreenContainer';
@@ -18,12 +18,12 @@ import {
   AnimatedRevealMessage, 
   AnimatedOnboardingScreen,
   ANIMATION_DURATIONS,
-  ANIMATION_PRESETS
+  ANIMATION_CONFIGS
 } from '../../src/core/ui/animations';
 import OnboardingCard from '../../src/features/onboarding/shared/OnboardingCard';
 
 // 🎯 Tranches d'âge avec descriptions psychologiques
-const AGE_RANGES_DATA = [
+const AGE_RANGES = [
   {
     id: '18-25',
     title: 'Exploratrice (18-25 ans)',
@@ -65,32 +65,69 @@ export default function EtapeVieScreen() {
   // États
   const [selectedAge, setSelectedAge] = useState(profile.ageRange || null);
   const [showEncouragement, setShowEncouragement] = useState(false);
+  
+  // Animations - PATTERN OBLIGATOIRE
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+  const cardsAnim = useRef(AGE_RANGES.map(() => new Animated.Value(0))).current;
   const indicatorOpacity = useRef(new Animated.Value(1)).current;
 
-  // Préparation des données avec les couleurs du thème
-  const AGE_RANGES = AGE_RANGES_DATA.map((range, index) => ({
-    ...range,
-    color: index === AGE_RANGES_DATA.length - 1 
-      ? theme.colors.primary 
-      : theme.colors.phases[['follicular', 'ovulatory', 'luteal', 'menstrual'][index]]
-  }));
+  useEffect(() => {
+    // Phase 1 : Entrée page
+    const { pageEnter } = ANIMATION_CONFIGS.onboarding.welcome;
+    
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        ...pageEnter.fade
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        ...pageEnter.slide
+      }),
+    ]).start(() => {
+      // Phase 2 : Cascade progressive
+      cardsAnim.forEach((anim, index) => {
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: ANIMATION_DURATIONS.elegant,
+          delay: ANIMATION_DURATIONS.welcomeFirstMessage + (index * 200),
+          ...ANIMATION_CONFIGS.onboarding.welcome.elementEnter,
+          useNativeDriver: true,
+        }).start();
+      });
+    });
+  }, []);
 
   const handleAgeSelect = (ageRange) => {
     setSelectedAge(ageRange.id);
     updateProfile({ ageRange: ageRange.id });
     
-    // Afficher l'encouragement si persona disponible
-    if (intelligence.personaConfidence >= 0.4) {
-      setShowEncouragement(true);
-    }
-    
     intelligence.trackAction('age_range_selected', {
       range: ageRange.id
     });
     
+    // ✅ SIMPLIFIÉ : À ce stade, confiance < 40%, donc encouragement basique
+    // Afficher l'encouragement default
+    setShowEncouragement(true);
+    
+    // Attendre que l'encouragement s'affiche puis naviguer
     setTimeout(() => {
-      router.push('/onboarding/400-prenom');
-    }, ANIMATION_DURATIONS.elegant);
+      // Phase 3 : Cascade inversée
+      const exitAnimations = cardsAnim.map((anim, index) => 
+        Animated.timing(anim, {
+          toValue: 0,
+          duration: ANIMATION_DURATIONS.elegant,
+          delay: ((AGE_RANGES.length - 1) - index) * 100,
+          ...ANIMATION_CONFIGS.onboarding.welcome.elementExit,
+          useNativeDriver: true,
+        })
+      );
+
+      Animated.parallel(exitAnimations).start(() => {
+        router.push('/onboarding/400-prenom');
+      });
+    }, 1800); // Laisser 1.8s pour lire l'encouragement
   };
 
   const handleScroll = (event) => {
@@ -117,47 +154,72 @@ export default function EtapeVieScreen() {
           onScroll={handleScroll}
           scrollEventThrottle={16}
         >
-          {/* Message de Mélune */}
-          <View style={styles.messageSection}>
-            <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage}>
-              <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
-                {intelligence.personaConfidence >= 0.4 
-                  ? intelligence.getPersonalizedMessage('message')
-                  : "Chaque étape de la vie d'une femme porte sa propre magie... Dis-moi où tu en es de ton voyage"}
-              </BodyText>
-            </AnimatedRevealMessage>
-          </View>
-
-          {/* Section principale */}
-          <View style={styles.mainSection}>
-            <View style={styles.choicesContainer}>
-              {AGE_RANGES.map((ageRange, index) => (
-                <OnboardingCard
-                  key={ageRange.id}
-                  variant="lifecycle"
-                  icon={ageRange.icon}
-                  title={ageRange.title}
-                  description={ageRange.description}
-                  isSelected={selectedAge === ageRange.id}
-                  onPress={() => handleAgeSelect(ageRange)}
-                  color={ageRange.color}
-                  index={index}
-                  delay={ANIMATION_DURATIONS.welcomeFirstMessage + 500}
-                />
-              ))}
-            </View>
+          <Animated.View style={[
+            styles.content,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }]
+            }
+          ]}>
             
-            {/* Encouragement personnalisé après sélection */}
-            {showEncouragement && selectedAge && intelligence.personaConfidence >= 0.4 && (
-              <View style={styles.encouragementContainer}>
-                <AnimatedRevealMessage delay={300}>
-                  <BodyText style={styles.encouragementText}>
-                    {intelligence.getPersonalizedMessage('encouragement')}
-                  </BodyText>
-                </AnimatedRevealMessage>
+            {/* Message Section */}
+            <View style={styles.messageSection}>
+              <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage}>
+                <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
+                  {/* ✅ SIMPLIFIÉ : Toujours utiliser le message default car confiance < 40% */}
+                  {intelligence.getPersonalizedMessage('message') || 
+                   "Chaque étape de la vie d'une femme porte sa propre magie... Dis-moi où tu en es de ton voyage"}
+                </BodyText>
+              </AnimatedRevealMessage>
+            </View>
+
+            {/* Choix Section */}
+            <View style={styles.choicesSection}>
+              <View style={styles.choicesContainer}>
+                {AGE_RANGES.map((ageRange, index) => (
+                  <Animated.View
+                    key={ageRange.id}
+                    style={[
+                      styles.cardWrapper,
+                      {
+                        opacity: cardsAnim[index],
+                        transform: [{
+                          translateY: cardsAnim[index].interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [20, 0]
+                          })
+                        }]
+                      }
+                    ]}
+                  >
+                    <OnboardingCard
+                      variant="lifecycle"
+                      icon={ageRange.icon}
+                      title={ageRange.title}
+                      description={ageRange.description}
+                      isSelected={selectedAge === ageRange.id}
+                      onPress={() => handleAgeSelect(ageRange)}
+                      color={theme.colors.phases?.[['follicular', 'ovulatory', 'luteal', 'menstrual', 'primary'][index]] || theme.colors.primary}
+                      index={index}
+                    />
+                  </Animated.View>
+                ))}
               </View>
-            )}
-          </View>
+              
+              {/* ✅ SIMPLIFIÉ : Encouragement default toujours disponible */}
+              {showEncouragement && selectedAge && (
+                <View style={styles.encouragementContainer}>
+                  <AnimatedRevealMessage delay={300}>
+                    <BodyText style={styles.encouragementText}>
+                      {intelligence.getPersonalizedMessage('encouragement') || 
+                       "Nous allons découvrir ensemble ton chemin unique."}
+                    </BodyText>
+                  </AnimatedRevealMessage>
+                </View>
+              )}
+            </View>
+
+          </Animated.View>
         </ScrollView>
 
         {/* Indicateur de scroll avec animation */}
@@ -177,18 +239,27 @@ export default function EtapeVieScreen() {
 }
 
 const getStyles = (theme) => StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+
+  content: {
+    flex: 1,
+  },
+  
   scrollView: {
     flex: 1,
   },
   
   scrollContent: {
     flexGrow: 1,
+    paddingTop: theme.spacing.xl,
     paddingBottom: theme.spacing.xxl,
   },
   
   messageSection: {
     alignItems: 'center',
-    paddingTop: theme.spacing.xl,
     paddingHorizontal: theme.spacing.xl,
   },
   
@@ -200,14 +271,18 @@ const getStyles = (theme) => StyleSheet.create({
     maxWidth: 300,
   },
   
-  mainSection: {
+  choicesSection: {
     flex: 1,
     paddingHorizontal: theme.spacing.xl,
-    paddingTop: theme.spacing.xxl,
+    paddingTop: theme.spacing.l,
   },
   
   choicesContainer: {
-    gap: theme.spacing.m,
+    gap: theme.spacing.l,
+  },
+
+  cardWrapper: {
+    width: '100%',
   },
 
   scrollIndicator: {
@@ -243,9 +318,5 @@ const getStyles = (theme) => StyleSheet.create({
     color: theme.colors.primary,
     textAlign: 'center',
     fontStyle: 'italic',
-  },
-
-  container: {
-    flex: 1,
   },
 });

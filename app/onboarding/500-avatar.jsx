@@ -1,15 +1,15 @@
 //
 // ─────────────────────────────────────────────────────────
 // 📄 Fichier : app/onboarding/500-avatar.jsx
-// 🎯 Status: ✅ FINAL - NE PAS MODIFIER
+// 🎯 Status: ✅ PATTERN ABSOLU - Conforme au guide
 // 📝 Description: Personnalisation de l'apparence de Melune
 // 🔄 Cycle: Onboarding - Étape 6/8
 // ─────────────────────────────────────────────────────────
 //
-import React, { useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, ScrollView, Image } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, TouchableOpacity, StyleSheet, ScrollView, Image, Animated } from 'react-native';
 import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { useUserStore } from '../../src/stores/useUserStore';
@@ -18,9 +18,9 @@ import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
 import OnboardingButton from '../../src/features/onboarding/shared/OnboardingButton';
 import { 
   AnimatedRevealMessage,
-  AnimatedCascadeCard,
+  AnimatedOnboardingScreen,
   ANIMATION_DURATIONS,
-  ANIMATION_PRESETS
+  ANIMATION_CONFIGS
 } from '../../src/core/ui/animations';
 
 // Images
@@ -95,6 +95,38 @@ export default function AvatarScreen() {
     position: 'bottom-right'
   });
 
+  // Animations obligatoires du pattern absolu
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+  const cardsAnim = useRef(INITIAL_OPTIONS.map(() => new Animated.Value(0))).current;
+
+  useEffect(() => {
+    // Entrée progressive de la page avec les presets
+    const { pageEnter } = ANIMATION_CONFIGS.onboarding.welcome;
+    
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        ...pageEnter.fade
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        ...pageEnter.slide
+      }),
+    ]).start(() => {
+      // Animation en cascade des cartes
+      cardsAnim.forEach((anim, index) => {
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: ANIMATION_DURATIONS.elegant,
+          delay: ANIMATION_DURATIONS.welcomeFirstMessage + (index * 200), // Délai progressif
+          ...ANIMATION_CONFIGS.onboarding.welcome.elementEnter,
+          useNativeDriver: true,
+        }).start();
+      });
+    });
+  }, []);
+
   const handleOptionSelect = (category, optionId) => {
     setSelections(prev => ({
       ...prev,
@@ -118,10 +150,20 @@ export default function AvatarScreen() {
       position: selections.position
     });
     
-    // Navigation vers la page de terminologie
-    setTimeout(() => {
+    // Animation de sortie en cascade inversée (PATTERN ABSOLU)
+    const exitAnimations = cardsAnim.map((anim, index) => 
+      Animated.timing(anim, {
+        toValue: 0,
+        duration: ANIMATION_DURATIONS.elegant,
+        delay: ((INITIAL_OPTIONS.length - 1) - index) * 100,
+        ...ANIMATION_CONFIGS.onboarding.welcome.elementExit,
+        useNativeDriver: true,
+      })
+    );
+
+    Animated.parallel(exitAnimations).start(() => {
       router.push('/onboarding/600-terminology');
-    }, 300);
+    });
   };
 
   const renderPositionPreview = (position) => {
@@ -202,6 +244,10 @@ export default function AvatarScreen() {
         ]}
         onPress={() => handleOptionSelect(category, option.id)}
         activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel={`${option.name}: ${option.description}`}
+        accessibilityHint={isSelected ? "Actuellement sélectionné" : "Appuyer pour sélectionner cette option"}
+        accessibilityState={{ selected: isSelected }}
       >
         <View style={styles.optionHeader}>
           {isStyleCategory ? (
@@ -209,11 +255,19 @@ export default function AvatarScreen() {
               source={AVATAR_IMAGES[option.id]}
               style={styles.avatarPreview}
               resizeMode="contain"
+              accessibilityLabel={`Aperçu du style ${option.name}`}
             />
           ) : isPositionCategory ? (
-            renderPositionPreview(option.id)
+            <View accessibilityLabel={`Aperçu de la position ${option.name}`}>
+              {renderPositionPreview(option.id)}
+            </View>
           ) : (
-            <BodyText style={styles.optionIcon}>{option.icon}</BodyText>
+            <BodyText 
+              style={styles.optionIcon}
+              accessibilityLabel={`Icône ${option.name}`}
+            >
+              {option.icon}
+            </BodyText>
           )}
           <View style={styles.optionInfo}>
             <BodyText style={[
@@ -236,7 +290,10 @@ export default function AvatarScreen() {
             )}
           </View>
           {isSelected && (
-            <View style={styles.selectedIndicator}>
+            <View 
+              style={styles.selectedIndicator}
+              accessibilityLabel="Option sélectionnée"
+            >
               <BodyText style={styles.checkmark}>✓</BodyText>
             </View>
           )}
@@ -245,12 +302,22 @@ export default function AvatarScreen() {
     );
   };
 
-  const renderCategory = (category) => {
+  const renderCategory = (category, index) => {
     return (
-      <AnimatedCascadeCard
+      <Animated.View
         key={category.id}
-        delay={ANIMATION_DURATIONS.initialMessage + 800 + (category.id === 'style' ? 0 : category.id === 'tone' ? 200 : 400)}
-        style={styles.categoryContainer}
+        style={[
+          styles.categoryContainer,
+          {
+            opacity: cardsAnim[index],
+            transform: [{
+              translateY: cardsAnim[index].interpolate({
+                inputRange: [0, 1],
+                outputRange: [20, 0]
+              })
+            }]
+          }
+        ]}
       >
         <BodyText style={styles.categoryTitle}>{category.title}</BodyText>
         <BodyText style={styles.categoryDescription}>{category.description}</BodyText>
@@ -258,79 +325,93 @@ export default function AvatarScreen() {
         <View style={styles.optionsGrid}>
           {category.options.map(option => renderOptionCard(category.id, option))}
         </View>
-      </AnimatedCascadeCard>
+      </Animated.View>
     );
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <View style={styles.content}>
-        {/* Message de Mélune */}
-        <View style={styles.messageSection}>
-          <AnimatedRevealMessage 
-            delay={ANIMATION_DURATIONS.initialMessage}
-            style={styles.messageContainer}
-          >
-            <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
-              {intelligence.personaConfidence >= 0.4 
-                ? intelligence.getPersonalizedMessage('message')
-                : "Choisis comment tu souhaites me voir apparaître dans l'application"}
-            </BodyText>
-          </AnimatedRevealMessage>
-          
-          {intelligence.personaConfidence >= 0.4 && (
-            <AnimatedRevealMessage 
-              delay={ANIMATION_DURATIONS.initialMessage + 400}
-              style={styles.hintContainer}
-            >
-              <BodyText style={styles.hintText}>
-                {intelligence.getPersonalizedMessage('style_hint')}
-              </BodyText>
-            </AnimatedRevealMessage>
-          )}
-        </View>
-
-        {/* Section principale */}
-        <ScrollView 
-          style={styles.mainSection}
-          showsVerticalScrollIndicator={false}
+    <ScreenContainer edges={['bottom']} style={styles.container}>
+      <AnimatedOnboardingScreen>
+        <ScrollView
+          style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          bounces={false}
         >
-          {INITIAL_OPTIONS.map(renderCategory)}
-        </ScrollView>
+          <Animated.View style={[
+            styles.content,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }]
+            }
+          ]}>
+            {/* Message de Mélune */}
+            <View style={styles.messageSection}>
+              <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage}>
+                <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
+                  {intelligence.personaConfidence >= 0.4 
+                    ? intelligence.getPersonalizedMessage('message')
+                    : "Choisis comment tu souhaites me voir apparaître dans l'application"}
+                </BodyText>
+              </AnimatedRevealMessage>
+              
+              {intelligence.personaConfidence >= 0.4 && (
+                <AnimatedRevealMessage 
+                  delay={ANIMATION_DURATIONS.welcomeFirstMessage + 400}
+                  style={styles.hintContainer}
+                >
+                  <BodyText style={styles.hintText}>
+                    {intelligence.getPersonalizedMessage('style_hint')}
+                  </BodyText>
+                </AnimatedRevealMessage>
+              )}
+            </View>
 
-        {/* Section bouton */}
-        <View style={styles.bottomSection}>
-          <OnboardingButton
-            title="Continuer"
-            onPress={handleContinue}
-            delay={ANIMATION_DURATIONS.initialMessage + 1200}
-            variant="primary"
-          />
-        </View>
-      </View>
-    </SafeAreaView>
+            {/* Section principale */}
+            <View style={styles.choicesSection}>
+              <View style={styles.choicesContainer}>
+                {INITIAL_OPTIONS.map((category, index) => renderCategory(category, index))}
+              </View>
+            </View>
+
+            {/* Section bouton */}
+            <View style={styles.bottomSection}>
+              <OnboardingButton
+                title="Continuer"
+                onPress={handleContinue}
+                delay={ANIMATION_DURATIONS.welcomeFirstMessage + 1200}
+                variant="primary"
+              />
+            </View>
+          </Animated.View>
+        </ScrollView>
+      </AnimatedOnboardingScreen>
+    </ScreenContainer>
   );
 }
 
 const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: theme.colors.background,
   },
-  
+
   content: {
     flex: 1,
   },
   
-  messageSection: {
-    alignItems: 'center',
-    paddingTop: theme.spacing.xxl,
+  scrollView: {
+    flex: 1,
   },
   
-  messageContainer: {
+  scrollContent: {
+    flexGrow: 1,
+    paddingTop: theme.spacing.m,
+  },
+  
+  messageSection: {
     alignItems: 'center',
     paddingHorizontal: theme.spacing.xl,
-    marginTop: theme.spacing.xl,
   },
   
   message: {
@@ -351,13 +432,14 @@ const getStyles = (theme) => StyleSheet.create({
     fontStyle: 'italic',
   },
   
-  mainSection: {
+  choicesSection: {
     flex: 1,
-    paddingHorizontal: theme.spacing.xl,
+    paddingTop: theme.spacing.l,
   },
   
-  scrollContent: {
-    paddingTop: theme.spacing.xl,
+  choicesContainer: {
+    paddingHorizontal: theme.spacing.xl,
+    gap: theme.spacing.l,
   },
   
   categoryContainer: {
@@ -372,7 +454,7 @@ const getStyles = (theme) => StyleSheet.create({
   },
   
   categoryDescription: {
-    fontSize: 14,
+    fontSize: 16,
     color: theme.colors.textLight,
     marginBottom: theme.spacing.l,
   },
@@ -387,6 +469,7 @@ const getStyles = (theme) => StyleSheet.create({
     padding: theme.spacing.l,
     borderWidth: 2,
     borderColor: theme.colors.border,
+    minHeight: 44,
   },
   
   optionCardSelected: {
@@ -397,15 +480,19 @@ const getStyles = (theme) => StyleSheet.create({
   optionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    minHeight: 44,
   },
   
   optionIcon: {
     fontSize: 24,
     marginRight: theme.spacing.m,
+    minWidth: 44,
+    textAlign: 'center',
   },
   
   optionInfo: {
     flex: 1,
+    paddingVertical: theme.spacing.xs,
   },
   
   optionName: {
@@ -416,21 +503,22 @@ const getStyles = (theme) => StyleSheet.create({
   },
   
   optionDescription: {
-    fontSize: 14,
-    color: theme.colors.textLight,
+    fontSize: 16,
+    color: theme.colors.text,
+    opacity: 0.8,
   },
 
   styleHint: {
-    fontSize: 12,
+    fontSize: 14,
     color: theme.colors.primary,
     fontStyle: 'italic',
     marginTop: theme.spacing.xs,
   },
   
   selectedIndicator: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -438,18 +526,18 @@ const getStyles = (theme) => StyleSheet.create({
   
   checkmark: {
     color: theme.colors.white,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
   },
   
   avatarPreview: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     marginRight: theme.spacing.m,
   },
   
   phonePreview: {
-    width: 40,
+    width: 44,
     height: 60,
     marginRight: theme.spacing.m,
     borderRadius: theme.borderRadius.small,

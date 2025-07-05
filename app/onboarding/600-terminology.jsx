@@ -1,7 +1,7 @@
 //
 // ─────────────────────────────────────────────────────────
 // 📄 Fichier : app/onboarding/600-terminology.jsx
-// 🎯 Status: ✅ FINAL - NE PAS MODIFIER
+// 🎯 Status: ✅ PATTERN ABSOLU - Conforme au guide
 // 📝 Description: Personnalisation de la terminologie cyclique
 // 🔄 Cycle: Onboarding - Étape 7/8
 // ─────────────────────────────────────────────────────────
@@ -15,7 +15,13 @@ import { BodyText, Caption } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { useTerminologySelector } from '../../src/hooks/useTerminology';
 import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
-import { AnimatedRevealMessage, AnimatedOnboardingScreen } from '../../src/core/ui/animations';
+import { 
+  AnimatedRevealMessage, 
+  AnimatedOnboardingScreen,
+  ANIMATION_DURATIONS,
+  ANIMATION_CONFIGS
+} from '../../src/core/ui/animations';
+import OnboardingButton from '../../src/features/onboarding/shared/OnboardingButton';
 
 // Options de terminologie
 const TERMINOLOGY_OPTIONS = [
@@ -59,24 +65,36 @@ export default function TerminologyScreen() {
   const [selectedTerminology, setSelectedTerminology] = useState(currentTerminology || 'modern');
   const [previewPhases, setPreviewPhases] = useState([]);
   
-  // Animations
+  // Animations obligatoires du pattern absolu
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
+  const cardsAnim = useRef(TERMINOLOGY_OPTIONS.map(() => new Animated.Value(0))).current;
 
   useEffect(() => {
-    // Séquence d'animation
-    Animated.sequence([
+    // Entrée progressive de la page avec les presets
+    const { pageEnter } = ANIMATION_CONFIGS.onboarding.welcome;
+    
+    Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
+        ...pageEnter.fade
       }),
-      Animated.timing(slideAnim, {
+      Animated.spring(slideAnim, {
         toValue: 0,
-        duration: 800,
-        useNativeDriver: true,
+        ...pageEnter.slide
       }),
-    ]).start();
+    ]).start(() => {
+      // Animation en cascade des cartes
+      cardsAnim.forEach((anim, index) => {
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: ANIMATION_DURATIONS.elegant,
+          delay: ANIMATION_DURATIONS.welcomeFirstMessage + (index * 200), // Délai progressif
+          ...ANIMATION_CONFIGS.onboarding.welcome.elementEnter,
+          useNativeDriver: true,
+        }).start();
+      });
+    });
   }, []);
 
   useEffect(() => {
@@ -107,117 +125,138 @@ export default function TerminologyScreen() {
       finalTerminology: selectedTerminology
     });
     
-    // Navigation vers l'étape suivante
-    setTimeout(() => {
+    // Animation de sortie en cascade inversée (PATTERN ABSOLU)
+    const exitAnimations = cardsAnim.map((anim, index) => 
+      Animated.timing(anim, {
+        toValue: 0,
+        duration: ANIMATION_DURATIONS.elegant,
+        delay: ((TERMINOLOGY_OPTIONS.length - 1) - index) * 100,
+        ...ANIMATION_CONFIGS.onboarding.welcome.elementExit,
+        useNativeDriver: true,
+      })
+    );
+
+    Animated.parallel(exitAnimations).start(() => {
       router.push('/onboarding/700-cycle');
-    }, 300);
+    });
   };
 
-  const renderTerminologyOption = (option) => {
+  const renderTerminologyOption = (option, index) => {
     const isSelected = selectedTerminology === option.key;
     
     return (
-      <TouchableOpacity
+      <Animated.View
         key={option.key}
         style={[
-          styles.optionCard,
-          isSelected && styles.optionCardSelected
+          {
+            opacity: cardsAnim[index],
+            transform: [{
+              translateY: cardsAnim[index].interpolate({
+                inputRange: [0, 1],
+                outputRange: [20, 0]
+              })
+            }]
+          }
         ]}
-        onPress={() => handleTerminologySelect(option.key)}
-        activeOpacity={0.7}
       >
-        <View style={styles.optionHeader}>
-          <View style={styles.optionIcon}>
-            <BodyText style={styles.optionEmoji}>{option.icon}</BodyText>
-          </View>
-          <View style={styles.optionContent}>
-            <BodyText style={[
-              styles.optionName,
-              isSelected && styles.optionNameSelected
-            ]}>
-              {option.name}
-            </BodyText>
-            <Caption style={[
-              styles.optionDescription,
-              isSelected && styles.optionDescriptionSelected
-            ]}>
-              {option.description}
-            </Caption>
-          </View>
-          {isSelected && (
-            <View style={styles.selectedIndicator}>
-              <BodyText style={styles.checkmark}>✓</BodyText>
+        <TouchableOpacity
+          style={[
+            styles.optionCard,
+            isSelected && styles.optionCardSelected
+          ]}
+          onPress={() => handleTerminologySelect(option.key)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.optionHeader}>
+            <View style={styles.optionIcon}>
+              <BodyText style={styles.optionEmoji}>{option.icon}</BodyText>
             </View>
-          )}
-        </View>
-        
-        {/* Phases */}
-        <View style={styles.optionExamples}>
-          <View style={styles.examplePhases}>
-            {option.phases.map((phase, index) => (
-              <Caption 
-                key={index} 
-                style={[
-                  styles.examplePhase,
-                  isSelected && { color: theme.colors.primary }
-                ]}
-              >
-                {phase}
+            <View style={styles.optionContent}>
+              <BodyText style={[
+                styles.optionName,
+                isSelected && styles.optionNameSelected
+              ]}>
+                {option.name}
+              </BodyText>
+              <Caption style={[
+                styles.optionDescription,
+                isSelected && styles.optionDescriptionSelected
+              ]}>
+                {option.description}
               </Caption>
-            ))}
+            </View>
+            {isSelected && (
+              <View style={styles.selectedIndicator}>
+                <BodyText style={styles.checkmark}>✓</BodyText>
+              </View>
+            )}
           </View>
-        </View>
-      </TouchableOpacity>
+          
+          {/* Phases */}
+          <View style={styles.optionExamples}>
+            <View style={styles.examplePhases}>
+              {option.phases.map((phase, index) => (
+                <Caption 
+                  key={index} 
+                  style={[
+                    styles.examplePhase,
+                    isSelected && { color: theme.colors.primary }
+                  ]}
+                >
+                  {phase}
+                </Caption>
+              ))}
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Animated.View>
     );
   };
 
   return (
     <ScreenContainer edges={['top', 'bottom']} style={styles.container}>
       <AnimatedOnboardingScreen>
-        <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-          
-          {/* Message de Mélune */}
-          <View style={styles.messageSection}>
-            <Animated.View
-              style={[
-                styles.messageContainer,
-                {
-                  transform: [{ translateY: slideAnim }]
-                }
-              ]}
-            >
-              <AnimatedRevealMessage delay={800}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
+          <Animated.View style={[
+            styles.content, 
+            { 
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }]
+            }
+          ]}>
+            
+            {/* Message de Mélune */}
+            <View style={styles.messageSection}>
+              <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage}>
                 <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
                   Choisis les termes qui te correspondent le mieux pour parler de ton cycle
                 </BodyText>
               </AnimatedRevealMessage>
-            </Animated.View>
-          </View>
-
-          {/* Section principale */}
-          <ScrollView 
-            style={styles.mainSection}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
-          >
-            <View style={styles.optionsContainer}>
-              {TERMINOLOGY_OPTIONS.map(renderTerminologyOption)}
             </View>
-          </ScrollView>
 
-          {/* Section bouton */}
-          <View style={styles.bottomSection}>
-            <TouchableOpacity
-              style={styles.continueButton}
-              onPress={handleContinue}
-              activeOpacity={0.8}
-            >
-              <BodyText style={styles.continueButtonText}>
-                Continuer
-              </BodyText>
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
+            {/* Section principale */}
+            <View style={styles.choicesSection}>
+              <View style={styles.choicesContainer}>
+                {TERMINOLOGY_OPTIONS.map((option, index) => renderTerminologyOption(option, index))}
+              </View>
+            </View>
+
+            {/* Section bouton */}
+            <View style={styles.bottomSection}>
+              <OnboardingButton
+                title="Continuer"
+                onPress={handleContinue}
+                delay={ANIMATION_DURATIONS.welcomeFirstMessage + 1200}
+                variant="primary"
+              />
+            </View>
+          </Animated.View>
+        </ScrollView>
       </AnimatedOnboardingScreen>
     </ScreenContainer>
   );
@@ -226,21 +265,25 @@ export default function TerminologyScreen() {
 const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: theme.colors.background,
   },
   
   content: {
     flex: 1,
   },
   
-  messageSection: {
-    alignItems: 'center',
-    paddingTop: theme.spacing.xxl,
+  scrollView: {
+    flex: 1,
   },
   
-  messageContainer: {
+  scrollContent: {
+    flexGrow: 1,
+    paddingTop: theme.spacing.xl,
+  },
+  
+  messageSection: {
     alignItems: 'center',
     paddingHorizontal: theme.spacing.xl,
-    marginTop: theme.spacing.xl,
   },
   
   message: {
@@ -251,16 +294,13 @@ const getStyles = (theme) => StyleSheet.create({
     maxWidth: 300,
   },
   
-  mainSection: {
+  choicesSection: {
     flex: 1,
+    paddingTop: theme.spacing.l, // Réduit de xxl à l
+  },
+  
+  choicesContainer: {
     paddingHorizontal: theme.spacing.xl,
-  },
-  
-  scrollContent: {
-    paddingTop: theme.spacing.xl,
-  },
-  
-  optionsContainer: {
     gap: theme.spacing.l,
   },
   
@@ -361,19 +401,7 @@ const getStyles = (theme) => StyleSheet.create({
   
   bottomSection: {
     paddingHorizontal: theme.spacing.xl,
+    paddingTop: theme.spacing.xl,
     paddingBottom: theme.spacing.xxl,
-  },
-  
-  continueButton: {
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.medium,
-    paddingVertical: theme.spacing.l,
-    alignItems: 'center',
-  },
-  
-  continueButtonText: {
-    color: theme.colors.white,
-    fontSize: 16,
-    fontWeight: '600',
   },
 }); 

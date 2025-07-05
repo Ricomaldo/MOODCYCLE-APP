@@ -1,122 +1,124 @@
 //
 // ─────────────────────────────────────────────────────────
 // 📄 Fichier : app/onboarding/900-essai.jsx
-// 🎯 Status: 🔄 TRANSFORMÉ - ÉQUIPE 3 Mission Paywall Intelligent
-// 📝 Description: Expérience de démonstration de valeur AVANT choix version
+// 🎯 Status: ✅ HARMONISÉ - Pattern onboarding cohérent
+// 📝 Description: Démonstration de valeur puis choix de version
 // 🔄 Cycle: Onboarding - Étape 8/8
 // ─────────────────────────────────────────────────────────
 //
 import React, { useState } from 'react';
 import { View, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { useUserStore } from '../../src/stores/useUserStore';
 import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
-import OnboardingButton from '../../src/features/onboarding/shared/OnboardingButton';
 import { 
+  AnimatedOnboardingScreen,
   AnimatedRevealMessage,
+  AnimatedOnboardingButton,
+  StandardOnboardingButton,
   AnimatedCascadeCard,
   ANIMATION_DURATIONS,
-  ANIMATION_PRESETS
+  ANIMATION_CONFIGS
 } from '../../src/core/ui/animations';
-import ValuePreview from '../../src/features/onboarding/ValuePreview';
 import { Feather } from '@expo/vector-icons';
+import ValuePreview from '../../src/features/onboarding/ValuePreview';
 
 // 🎯 Options d'accompagnement personnalisées par persona
 const PERSONA_ARGUMENTS = {
   emma: {
-    title: "Choisis ton accompagnement",
-    subtitle: "Deux façons de révéler ton langage cyclique unique",
+    introMessage: "Parfait ! Maintenant, laisse-moi te montrer la magie qui t'attend... ✨",
+    choiceMessage: "Tu as vu ce dont je suis capable... Choisis ton niveau d'accompagnement 🌟",
     complete: {
       title: "Accompagnement Complet",
-      description: "14 jours d'exploration guidée",
+      description: "14 jours d'exploration guidée avec toute l'intelligence de Mélune",
       benefits: [
-        "✨ Intelligence Melune complète",
-        "💫 Chat enrichi et personnalisé",
+        "✨ Intelligence Mélune complète",
+        "💫 Chat enrichi et personnalisé", 
         "🌙 Insights selon ta phase",
-        "📱 Accès à toutes les fonctionnalités"
+        "📱 Toutes les fonctionnalités"
       ],
-      cta: "Explorer pendant 14 jours"
+      cta: "Explorer 14 jours"
     }
   },
   laure: {
-    title: "Choisis ton accompagnement",
-    subtitle: "Deux approches pour optimiser ton cycle",
+    introMessage: "Excellent ! Maintenant, découvre ce que Mélune peut faire pour optimiser ton quotidien 📊",
+    choiceMessage: "Tu as vu le potentiel... Choisis ton niveau d'optimisation 🎯",
     complete: {
       title: "Accompagnement Complet",
-      description: "14 jours d'optimisation guidée",
+      description: "14 jours d'optimisation guidée avec analyses approfondies",
       benefits: [
         "📊 Analyse approfondie patterns",
         "⚡ Optimisation performance",
-        "📈 Métriques détaillées",
+        "📈 Métriques détaillées", 
         "🎯 Objectifs personnalisés"
       ],
-      cta: "Optimiser pendant 14 jours"
+      cta: "Optimiser 14 jours"
     }
   },
   clara: {
-    title: "Choisis ton accompagnement",
-    subtitle: "Deux chemins vers ta transformation",
+    introMessage: "Yes ! Maintenant, prépare-toi à découvrir ton plein potentiel cyclique 🚀",
+    choiceMessage: "Prête pour la transformation complète ? Choisis ton intensité 💥",
     complete: {
-      title: "Accompagnement Complet",
-      description: "14 jours de transformation guidée",
+      title: "Accompagnement Complet", 
+      description: "14 jours de transformation guidée avec coaching énergétique",
       benefits: [
         "🚀 Puissance cyclique totale",
         "💥 Coaching énergétique",
         "⚡ Défis quotidiens",
         "🎯 Programme personnalisé"
       ],
-      cta: "Transformer pendant 14 jours"
+      cta: "Transformer 14 jours"
     }
   },
   sylvie: {
-    title: "Choisis ton accompagnement",
-    subtitle: "Deux rythmes pour ta découverte",
+    introMessage: "Merveilleux ! Laisse-moi te montrer comment Mélune peut t'accompagner avec douceur 🌸",
+    choiceMessage: "Cette bienveillance te parle... Choisis ton accompagnement 💝",
     complete: {
       title: "Accompagnement Complet",
-      description: "14 jours de découverte guidée",
+      description: "14 jours de découverte guidée avec guidance maternelle", 
       benefits: [
         "🌸 Guidance maternelle",
         "🕯️ Rituels personnalisés",
         "💝 Espace d'expression",
         "🌿 Programme adaptatif"
       ],
-      cta: "Découvrir pendant 14 jours"
+      cta: "Découvrir 14 jours"
     }
   },
   christine: {
-    title: "Choisis ton accompagnement",
-    subtitle: "Deux voies vers la sagesse cyclique",
+    introMessage: "Parfait ! Découvre maintenant comment cette sagesse peut s'approfondir 🌟",
+    choiceMessage: "Cette sagesse résonne en toi... Choisis ton chemin 💎",
     complete: {
       title: "Accompagnement Complet",
-      description: "14 jours de sagesse guidée",
+      description: "14 jours de sagesse guidée avec communauté bienveillante",
       benefits: [
-        "🌟 Sagesse personnalisée",
+        "🌟 Sagesse personnalisée", 
         "🍃 Transition accompagnée",
         "💎 Communauté bienveillante",
         "🌸 Programme adapté"
       ],
-      cta: "Explorer pendant 14 jours"
+      cta: "Explorer 14 jours"
     }
   }
 };
 
-// 🤝 Version Essentielle (anciennement Solidaire)
+// 🤝 Version Essentielle
 const VERSION_ESSENTIELLE = {
   title: "Version Essentielle",
   description: "L'essentiel pour ton cycle, gratuit pour toujours",
   benefits: [
-    "💬 Conversations avec Melune",
-    "📅 Suivi cycle simplifié",
+    "💬 Conversations avec Mélune",
+    "📅 Suivi cycle simplifié", 
     "📝 Journal personnel",
     "🌱 Fonctionnalités de base"
   ],
   cta: "Commencer gratuitement"
 };
 
-export default function ChoixVersionScreen() {
+export default function EssaiScreen() {
   const theme = useTheme();
   const styles = getStyles(theme);
   const intelligence = useOnboardingIntelligence('900-essai');
@@ -125,25 +127,38 @@ export default function ChoixVersionScreen() {
   const persona = intelligence.currentPersona || 'emma';
   const personaContent = PERSONA_ARGUMENTS[persona];
   const [showValuePreview, setShowValuePreview] = useState(true);
-  const [valuePreviewComplete, setValuePreviewComplete] = useState(false);
+  const [selectedVersion, setSelectedVersion] = useState(null);
 
   const handleValuePreviewComplete = () => {
-    setValuePreviewComplete(true);
     setShowValuePreview(false);
     intelligence.trackAction('value_preview_completed', { persona });
   };
 
-  const handleCompleteChoice = () => {
-    intelligence.trackAction('complete_version_selected', {
-      persona,
-      onboardingDuration: Date.now() - (intelligence.userProfile.startDate || Date.now())
-    });
+  const handleVersionSelect = (version) => {
+    setSelectedVersion(version);
+  };
+
+  const handleContinue = () => {
+    if (selectedVersion === 'complete') {
+      intelligence.trackAction('complete_version_selected', {
+        persona,
+        onboardingDuration: Date.now() - (intelligence.userProfile.startDate || Date.now())
+      });
+    } else {
+      intelligence.trackAction('essential_version_selected', { persona });
+    }
+    
     router.push('/onboarding/950-demarrage');
   };
 
-  const handleEssentielleChoice = () => {
-    intelligence.trackAction('essential_version_selected', { persona });
-    router.push('/onboarding/950-demarrage');
+  const getPersonalizedFeedback = () => {
+    if (!selectedVersion) return "Prends ton temps pour choisir...";
+    
+    if (selectedVersion === 'complete') {
+      return intelligence.getPersonalizedMessage('complete_selected') || "Excellent choix pour une exploration complète ! ✨";
+    } else {
+      return intelligence.getPersonalizedMessage('essential_selected') || "Parfait pour commencer en douceur ! 🌱";
+    }
   };
 
   // Récupérer les données pour la démo
@@ -157,147 +172,172 @@ export default function ChoixVersionScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <View style={styles.content}>
-        
-        {showValuePreview ? (
-          // 🎯 NOUVELLE EXPÉRIENCE : Démonstration de valeur
-          <View style={styles.valuePreviewContainer}>
-            <AnimatedRevealMessage 
-              delay={1000}
-              style={styles.messageContainer}
-            >
-              <BodyText style={[styles.valuePreviewTitle, { fontFamily: 'Quintessential' }]}>
-                Découvre la magie de Mélune ✨
-              </BodyText>
-            </AnimatedRevealMessage>
-
-            <AnimatedCascadeCard
-              delay={2000}
-              style={styles.valuePreviewCard}
-            >
-              <ValuePreview
-                demoData={getDemoData()}
-                onComplete={handleValuePreviewComplete}
-                persona={persona}
-                theme={theme}
-              />
-            </AnimatedCascadeCard>
-          </View>
-        ) : (
-          // 🎯 CHOIX DE VERSION après démonstration
-          <View style={styles.choiceContainer}>
-            {/* Message personnalisé */}
-            <View style={styles.messageSection}>
-              <AnimatedRevealMessage 
-                delay={800}
-                style={styles.messageContainer}
-              >
-                <BodyText style={[styles.title, { fontFamily: 'Quintessential' }]}>
-                  {personaContent.title}
-                </BodyText>
-              </AnimatedRevealMessage>
-              
-              <AnimatedRevealMessage 
-                delay={1400}
-                style={styles.messageContainer}
-              >
-                <BodyText style={[styles.subtitle, { fontFamily: 'Quintessential' }]}>
-                  {personaContent.subtitle}
-                </BodyText>
-              </AnimatedRevealMessage>
-            </View>
-
-            {/* Options de version */}
-            <ScrollView 
-              style={styles.mainSection}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.scrollContent}
-            >
-              {/* Version Complète */}
-              <AnimatedCascadeCard
-                delay={2200}
-                style={styles.versionCard}
-              >
-                <TouchableOpacity
-                  style={styles.versionOption}
-                  onPress={handleCompleteChoice}
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.versionHeader}>
-                    <BodyText style={styles.versionTitle}>
-                      {personaContent.complete.title}
-                    </BodyText>
-                    <View style={styles.premiumBadge}>
-                      <BodyText style={styles.premiumText}>PREMIUM</BodyText>
-                    </View>
-                  </View>
-                  
-                  <BodyText style={styles.versionDescription}>
-                    {personaContent.complete.description}
+    <ScreenContainer edges={['top', 'bottom']} style={styles.container}>
+      <AnimatedOnboardingScreen>
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
+          {showValuePreview ? (
+            // 🎯 DÉMONSTRATION DE VALEUR
+            <>
+              {/* Message d'introduction */}
+              <View style={styles.messageSection}>
+                <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage}>
+                  <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
+                    {personaContent.introMessage}
                   </BodyText>
-                  
-                  <View style={styles.benefitsList}>
-                    {personaContent.complete.benefits.map((benefit, index) => (
-                      <BodyText key={index} style={styles.benefitItem}>
-                        {benefit}
-                      </BodyText>
-                    ))}
-                  </View>
-                  
-                  <View style={styles.ctaContainer}>
-                    <BodyText style={styles.ctaText}>
-                      {personaContent.complete.cta}
-                    </BodyText>
-                    <Feather name="arrow-right" size={20} color={theme.colors.primary} />
-                  </View>
-                </TouchableOpacity>
-              </AnimatedCascadeCard>
+                </AnimatedRevealMessage>
+              </View>
 
-              {/* Version Essentielle */}
-              <AnimatedCascadeCard
-                delay={2800}
-                style={styles.versionCard}
-              >
-                <TouchableOpacity
-                  style={styles.versionOption}
-                  onPress={handleEssentielleChoice}
-                  activeOpacity={0.8}
+              {/* Démonstration ValuePreview */}
+              <View style={styles.demoSection}>
+                <AnimatedCascadeCard
+                  delay={ANIMATION_DURATIONS.welcomeFirstMessage + 500}
+                  style={styles.demoCard}
                 >
-                  <View style={styles.versionHeader}>
-                    <BodyText style={styles.versionTitle}>
-                      {VERSION_ESSENTIELLE.title}
-                    </BodyText>
-                    <View style={styles.freeBadge}>
-                      <BodyText style={styles.freeText}>GRATUIT</BodyText>
-                    </View>
-                  </View>
-                  
-                  <BodyText style={styles.versionDescription}>
-                    {VERSION_ESSENTIELLE.description}
+                  <ValuePreview
+                    persona={persona}
+                    phase={getDemoData().phase}
+                    preferences={getDemoData().preferences}
+                    onComplete={handleValuePreviewComplete}
+                  />
+                </AnimatedCascadeCard>
+              </View>
+            </>
+          ) : (
+            // 🎯 CHOIX DE VERSION
+            <>
+              {/* Message de choix */}
+              <View style={styles.messageSection}>
+                <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage}>
+                  <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
+                    {personaContent.choiceMessage}
                   </BodyText>
-                  
-                  <View style={styles.benefitsList}>
-                    {VERSION_ESSENTIELLE.benefits.map((benefit, index) => (
-                      <BodyText key={index} style={styles.benefitItem}>
-                        {benefit}
-                      </BodyText>
-                    ))}
-                  </View>
-                  
-                  <View style={styles.ctaContainer}>
-                    <BodyText style={styles.ctaText}>
-                      {VERSION_ESSENTIELLE.cta}
+                </AnimatedRevealMessage>
+                
+                {selectedVersion && (
+                  <AnimatedRevealMessage 
+                    key={selectedVersion} 
+                    delay={300}
+                    style={styles.feedbackContainer}
+                  >
+                    <BodyText style={styles.feedbackText}>
+                      {getPersonalizedFeedback()}
                     </BodyText>
-                    <Feather name="arrow-right" size={20} color={theme.colors.text} />
-                  </View>
-                </TouchableOpacity>
-              </AnimatedCascadeCard>
-            </ScrollView>
-          </View>
-        )}
-      </View>
-    </SafeAreaView>
+                  </AnimatedRevealMessage>
+                )}
+              </View>
+
+              {/* Options de version */}
+              <View style={styles.versionsContainer}>
+                {/* Version Complète */}
+                <AnimatedCascadeCard
+                  index={0}
+                  delay={ANIMATION_DURATIONS.welcomeFirstMessage + 500}
+                  style={styles.versionCard}
+                >
+                  <TouchableOpacity
+                    style={[
+                      styles.versionOption,
+                      selectedVersion === 'complete' && styles.selectedVersion
+                    ]}
+                    onPress={() => handleVersionSelect('complete')}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.versionHeader}>
+                      <BodyText style={styles.versionTitle}>
+                        {personaContent.complete.title}
+                      </BodyText>
+                      <View style={styles.premiumBadge}>
+                        <BodyText style={styles.premiumText}>PREMIUM</BodyText>
+                      </View>
+                    </View>
+                    
+                    <BodyText style={styles.versionDescription}>
+                      {personaContent.complete.description}
+                    </BodyText>
+                    
+                    <View style={styles.benefitsList}>
+                      {personaContent.complete.benefits.map((benefit, index) => (
+                        <BodyText key={index} style={styles.benefitItem}>
+                          {benefit}
+                        </BodyText>
+                      ))}
+                    </View>
+                    
+                    <View style={styles.ctaContainer}>
+                      <BodyText style={styles.ctaText}>
+                        {personaContent.complete.cta}
+                      </BodyText>
+                      <Feather name="arrow-right" size={20} color={theme.colors.primary} />
+                    </View>
+                  </TouchableOpacity>
+                </AnimatedCascadeCard>
+
+                {/* Version Essentielle */}
+                <AnimatedCascadeCard
+                  index={1}
+                  delay={ANIMATION_DURATIONS.welcomeFirstMessage + 700}
+                  style={styles.versionCard}
+                >
+                  <TouchableOpacity
+                    style={[
+                      styles.versionOption,
+                      selectedVersion === 'essential' && styles.selectedVersion
+                    ]}
+                    onPress={() => handleVersionSelect('essential')}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.versionHeader}>
+                      <BodyText style={styles.versionTitle}>
+                        {VERSION_ESSENTIELLE.title}
+                      </BodyText>
+                      <View style={styles.freeBadge}>
+                        <BodyText style={styles.freeText}>GRATUIT</BodyText>
+                      </View>
+                    </View>
+                    
+                    <BodyText style={styles.versionDescription}>
+                      {VERSION_ESSENTIELLE.description}
+                    </BodyText>
+                    
+                    <View style={styles.benefitsList}>
+                      {VERSION_ESSENTIELLE.benefits.map((benefit, index) => (
+                        <BodyText key={index} style={styles.benefitItem}>
+                          {benefit}
+                        </BodyText>
+                      ))}
+                    </View>
+                    
+                    <View style={styles.ctaContainer}>
+                      <BodyText style={styles.ctaText}>
+                        {VERSION_ESSENTIELLE.cta}
+                      </BodyText>
+                      <Feather name="arrow-right" size={20} color={theme.colors.text} />
+                    </View>
+                  </TouchableOpacity>
+                </AnimatedCascadeCard>
+              </View>
+            </>
+          )}
+        </ScrollView>
+
+        {/* Section bouton */}
+        <View style={styles.bottomSection}>
+          <AnimatedOnboardingButton {...ANIMATION_CONFIGS.onboarding.welcome.button}>
+            <StandardOnboardingButton
+              title={showValuePreview ? "Voir la démo" : "Continuer"}
+              onPress={showValuePreview ? handleValuePreviewComplete : handleContinue}
+              variant="primary"
+              disabled={!showValuePreview && !selectedVersion}
+            />
+          </AnimatedOnboardingButton>
+        </View>
+      </AnimatedOnboardingScreen>
+    </ScreenContainer>
   );
 }
 
@@ -306,81 +346,48 @@ const getStyles = (theme) => StyleSheet.create({
     flex: 1,
   },
   
-  content: {
+  scrollView: {
     flex: 1,
-    justifyContent: 'space-between',
-    paddingVertical: theme.spacing.xxl,
   },
   
-  // Value Preview Section
-  valuePreviewContainer: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  
-  messageContainer: {
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.xl,
-    marginTop: theme.spacing.xl,
-  },
-  
-  valuePreviewTitle: {
-    fontSize: 24,
-    textAlign: 'center',
-    color: theme.colors.text,
-    lineHeight: 32,
-    maxWidth: 300,
-  },
-  
-  valuePreviewCard: {
-    flex: 1,
-    marginTop: theme.spacing.xl,
-    marginHorizontal: theme.spacing.xl,
-  },
-  
-  // Choice Section
-  choiceContainer: {
-    flex: 1,
+  scrollContent: {
+    flexGrow: 1,
+    paddingTop: theme.spacing.xl,
+    paddingBottom: theme.spacing.xxl + 60,
   },
   
   messageSection: {
     alignItems: 'center',
     paddingHorizontal: theme.spacing.xl,
+    marginBottom: theme.spacing.xl,
   },
   
-  title: {
-    fontSize: 24,
+  message: {
+    fontSize: 20,
     textAlign: 'center',
     color: theme.colors.text,
-    lineHeight: 32,
-    marginBottom: theme.spacing.m,
-  },
-  
-  subtitle: {
-    fontSize: 18,
-    textAlign: 'center',
-    color: theme.colors.textLight,
-    lineHeight: 24,
+    lineHeight: 28,
     maxWidth: 300,
   },
   
-  mainSection: {
-    flex: 1,
+  demoSection: {
     paddingHorizontal: theme.spacing.xl,
-    marginTop: theme.spacing.xl,
   },
   
-  scrollContent: {
-    paddingBottom: theme.spacing.xl,
-    gap: theme.spacing.l,
+  demoCard: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.large,
+    borderWidth: 2,
+    borderColor: theme.colors.border,
+    overflow: 'hidden',
+  },
+  
+  versionsContainer: {
+    paddingHorizontal: theme.spacing.xl,
+    gap: theme.spacing.m,
   },
   
   versionCard: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.large,
-    padding: theme.spacing.l,
-    borderWidth: 2,
-    borderColor: theme.colors.border,
     shadowColor: theme.colors.text,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -389,7 +396,16 @@ const getStyles = (theme) => StyleSheet.create({
   },
   
   versionOption: {
-    flex: 1,
+    backgroundColor: theme.colors.surface,
+    padding: theme.spacing.l,
+    borderRadius: theme.borderRadius.large,
+    borderWidth: 2,
+    borderColor: theme.colors.border,
+  },
+  
+  selectedVersion: {
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primary + '08',
   },
   
   versionHeader: {
@@ -400,7 +416,7 @@ const getStyles = (theme) => StyleSheet.create({
   },
   
   versionTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '600',
     color: theme.colors.text,
   },
@@ -432,9 +448,9 @@ const getStyles = (theme) => StyleSheet.create({
   },
   
   versionDescription: {
-    fontSize: 16,
+    fontSize: 14,
     color: theme.colors.textLight,
-    lineHeight: 22,
+    lineHeight: 20,
     marginBottom: theme.spacing.m,
   },
   
@@ -444,9 +460,9 @@ const getStyles = (theme) => StyleSheet.create({
   },
   
   benefitItem: {
-    fontSize: 14,
+    fontSize: 13,
     color: theme.colors.text,
-    lineHeight: 20,
+    lineHeight: 18,
   },
   
   ctaContainer: {
@@ -459,8 +475,26 @@ const getStyles = (theme) => StyleSheet.create({
   },
   
   ctaText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: theme.colors.primary,
+  },
+  
+  bottomSection: {
+    paddingHorizontal: theme.spacing.xl,
+    paddingBottom: theme.spacing.xxl,
+  },
+  
+  feedbackContainer: {
+    paddingHorizontal: theme.spacing.xl,
+    paddingTop: theme.spacing.l,
+    alignItems: 'center',
+  },
+
+  feedbackText: {
+    fontSize: 14,
+    color: theme.colors.primary,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
 });

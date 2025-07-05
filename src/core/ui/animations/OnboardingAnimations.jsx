@@ -467,10 +467,12 @@ const getStyles = (theme) => StyleSheet.create({
   },
 
   buttonText: {
-    fontFamily: theme.fonts.heading,
-    fontSize: 16,
+    fontFamily: 'Quicksand_700Bold',
+    fontSize: 20,
+    lineHeight: 26,
     color: theme.colors.white,
     textAlign: 'center',
+    fontWeight: '700',
   },
 
   buttonTextSecondary: {

@@ -180,7 +180,6 @@ const getStyles = (theme) => StyleSheet.create({
 
   content: {
     flex: 1,
-    justifyContent: 'space-between',
   },
   
   scrollView: {
@@ -189,11 +188,11 @@ const getStyles = (theme) => StyleSheet.create({
   
   scrollContent: {
     flexGrow: 1,
+    paddingTop: theme.spacing.xl,
   },
   
   messageSection: {
     alignItems: 'center',
-    paddingTop: theme.spacing.l, // Réduit de xl à l
     paddingHorizontal: theme.spacing.xl,
   },
   

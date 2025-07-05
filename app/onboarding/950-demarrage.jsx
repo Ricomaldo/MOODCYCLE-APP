@@ -1,28 +1,31 @@
 //
 // ─────────────────────────────────────────────────────────
 // 📄 Fichier : app/onboarding/950-demarrage.jsx
-// 🎯 Status: ✅ FINAL - NE PAS MODIFIER
+// 🎯 Status: ✅ HARMONISÉ - Template onboarding cohérent
 // 📝 Description: Finalisation et activation de l'intelligence
 // 🔄 Cycle: Onboarding - Étape finale
 // ─────────────────────────────────────────────────────────
 //
 import React, { useEffect, useState } from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
 import { getPersonalizedInsight } from '../../src/services/InsightsEngine';
 import MeluneAvatar from '../../src/features/shared/MeluneAvatar';
-import OnboardingButton from '../../src/features/onboarding/shared/OnboardingButton';
 import { 
-  AnimatedRevealMessage, 
+  AnimatedOnboardingScreen,
+  AnimatedRevealMessage,
+  AnimatedOnboardingButton,
+  StandardOnboardingButton,
   AnimatedCascadeCard,
-  ANIMATION_DURATIONS 
+  ANIMATION_DURATIONS,
+  ANIMATION_CONFIGS
 } from '../../src/core/ui/animations';
 
-export default function CadeauScreen() {
+export default function DemarrageScreen() {
   const theme = useTheme();
   const styles = getStyles(theme);
   const intelligence = useOnboardingIntelligence('950-demarrage');
@@ -137,96 +140,119 @@ export default function CadeauScreen() {
     router.replace('/(tabs)/cycle');
   };
 
-  const renderContent = () => {
-    if (isLoading) {
-      return (
-        <View style={styles.loadingContainer}>
-          <AnimatedRevealMessage 
-            delay={ANIMATION_DURATIONS.initialMessage}
-            style={styles.loadingMessageContainer}
-          >
-            <BodyText style={styles.loadingEmoji}>✨</BodyText>
-            <BodyText style={styles.loadingText}>
-              Génération de ton expérience personnalisée...
-            </BodyText>
-          </AnimatedRevealMessage>
-        </View>
-      );
-    }
+  const handleRetry = () => {
+    setError(false);
+    generatePersonalizedContent();
+  };
 
-    if (error) {
-      return (
-        <View style={styles.errorContainer}>
-          <AnimatedRevealMessage 
-            delay={ANIMATION_DURATIONS.initialMessage}
-            style={styles.errorMessageContainer}
-          >
-            <BodyText style={styles.errorText}>
-              Quelque chose s'est passé... Mais tu es prête ! 🌟
-            </BodyText>
-            <TouchableOpacity 
-              style={styles.retryButton}
-              onPress={generatePersonalizedContent}
-            >
-              <BodyText style={styles.retryButtonText}>Réessayer</BodyText>
-            </TouchableOpacity>
-          </AnimatedRevealMessage>
-        </View>
-      );
-    }
-
-    return (
-      <View style={styles.successContainer}>
-        {/* Message de Mélune */}
-        <View style={styles.messageSection}>
-          <AnimatedRevealMessage 
-            delay={ANIMATION_DURATIONS.initialMessage}
-            style={styles.messageContainer}
-          >
-            <MeluneAvatar 
-              phase="ovulatory" 
-              size="large" 
-              style="classic"
-              animated={true}
-            />
-            <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
-              Ton voyage commence maintenant ! 🌟
-            </BodyText>
-          </AnimatedRevealMessage>
-        </View>
-
-        {/* Section principale */}
-        {personalizedInsight && (
-          <View style={styles.mainSection}>
-            <AnimatedCascadeCard
-              delay={ANIMATION_DURATIONS.initialMessage + 800}
-              style={styles.insightCard}
-            >
-              <BodyText style={styles.insightText}>
-                {personalizedInsight.content}
-              </BodyText>
-            </AnimatedCascadeCard>
-          </View>
-        )}
-
-        {/* Section bouton */}
-        <OnboardingButton
-          title="Commencer mon voyage"
-          onPress={handleFinishOnboarding}
-          delay={ANIMATION_DURATIONS.initialMessage + 1200}
-          variant="primary"
-          style={styles.buttonContainer}
-        />
-      </View>
-    );
+  const getWelcomeMessage = () => {
+    if (isLoading) return "Génération de ton expérience personnalisée...";
+    if (error) return "Quelque chose s'est passé... Mais tu es prête ! 🌟";
+    return "Ton voyage commence maintenant ! 🌟";
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <View style={styles.content}>
-        {renderContent()}
-      </View>
-    </SafeAreaView>
+    <ScreenContainer edges={['top', 'bottom']} style={styles.container}>
+      <AnimatedOnboardingScreen>
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
+          {/* Message de Mélune */}
+          <View style={styles.messageSection}>
+            <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage}>
+              <MeluneAvatar 
+                phase="ovulatory" 
+                size="large" 
+                style="classic"
+                animated={true}
+              />
+            </AnimatedRevealMessage>
+            
+            <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage + 400}>
+              <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
+                {getWelcomeMessage()}
+              </BodyText>
+            </AnimatedRevealMessage>
+          </View>
+
+          {/* Section principale */}
+          <View style={styles.mainSection}>
+            {isLoading ? (
+              <AnimatedCascadeCard
+                delay={ANIMATION_DURATIONS.welcomeFirstMessage + 800}
+                style={styles.loadingCard}
+              >
+                <BodyText style={styles.loadingEmoji}>✨</BodyText>
+                <BodyText style={styles.loadingText}>
+                  Préparation de ton expérience personnalisée...
+                </BodyText>
+              </AnimatedCascadeCard>
+            ) : error ? (
+              <AnimatedCascadeCard
+                delay={ANIMATION_DURATIONS.welcomeFirstMessage + 800}
+                style={styles.errorCard}
+              >
+                <BodyText style={styles.errorText}>
+                  Une petite erreur s'est glissée, mais tu es prête à commencer !
+                </BodyText>
+                <TouchableOpacity 
+                  style={styles.retryButton}
+                  onPress={handleRetry}
+                >
+                  <BodyText style={styles.retryButtonText}>Réessayer</BodyText>
+                </TouchableOpacity>
+              </AnimatedCascadeCard>
+            ) : personalizedInsight ? (
+              <AnimatedCascadeCard
+                delay={ANIMATION_DURATIONS.welcomeFirstMessage + 800}
+                style={styles.insightCard}
+              >
+                <BodyText style={styles.insightText}>
+                  {personalizedInsight.content}
+                </BodyText>
+                
+                {intelligenceRecap && (
+                  <View style={styles.recapContainer}>
+                    <BodyText style={styles.recapTitle}>
+                      Ton profil Mélune :
+                    </BodyText>
+                    <BodyText style={styles.recapText}>
+                      • Persona : {intelligenceRecap.persona}
+                    </BodyText>
+                    <BodyText style={styles.recapText}>
+                      • Phase actuelle : {intelligenceRecap.phase}
+                    </BodyText>
+                    <BodyText style={styles.recapText}>
+                      • Préférences : {intelligenceRecap.preferences} configurées
+                    </BodyText>
+                    {intelligenceRecap.observations > 0 && (
+                      <BodyText style={styles.recapText}>
+                        • Observations : {intelligenceRecap.observations} enregistrées
+                      </BodyText>
+                    )}
+                  </View>
+                )}
+              </AnimatedCascadeCard>
+            ) : null}
+          </View>
+        </ScrollView>
+
+        {/* Section bouton */}
+        <View style={styles.bottomSection}>
+          <AnimatedOnboardingButton {...ANIMATION_CONFIGS.onboarding.welcome.button}>
+            <StandardOnboardingButton
+              title="Commencer mon voyage"
+              onPress={handleFinishOnboarding}
+              variant="primary"
+              disabled={isLoading}
+            />
+          </AnimatedOnboardingButton>
+        </View>
+      </AnimatedOnboardingScreen>
+    </ScreenContainer>
   );
 }
 
@@ -235,20 +261,20 @@ const getStyles = (theme) => StyleSheet.create({
     flex: 1,
   },
   
-  content: {
+  scrollView: {
     flex: 1,
-    justifyContent: 'space-between',
-    paddingVertical: theme.spacing.xxl,
+  },
+  
+  scrollContent: {
+    flexGrow: 1,
+    paddingTop: theme.spacing.xl,
+    paddingBottom: theme.spacing.xxl + 60,
   },
   
   messageSection: {
     alignItems: 'center',
     paddingHorizontal: theme.spacing.xl,
-  },
-  
-  messageContainer: {
-    alignItems: 'center',
-    marginTop: theme.spacing.xl,
+    marginBottom: theme.spacing.xl,
   },
   
   message: {
@@ -261,19 +287,15 @@ const getStyles = (theme) => StyleSheet.create({
   },
   
   mainSection: {
-    flex: 1,
-    paddingHorizontal: theme.spacing.xl,
-    paddingTop: theme.spacing.xl,
-  },
-  
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     paddingHorizontal: theme.spacing.xl,
   },
   
-  loadingMessageContainer: {
+  loadingCard: {
+    backgroundColor: theme.colors.surface,
+    padding: theme.spacing.xl,
+    borderRadius: theme.borderRadius.large,
+    borderWidth: 2,
+    borderColor: theme.colors.border,
     alignItems: 'center',
   },
   
@@ -289,41 +311,35 @@ const getStyles = (theme) => StyleSheet.create({
     textAlign: 'center',
   },
   
-  errorContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: theme.spacing.xl,
-  },
-  
-  errorMessageContainer: {
+  errorCard: {
+    backgroundColor: theme.colors.surface,
+    padding: theme.spacing.xl,
+    borderRadius: theme.borderRadius.large,
+    borderWidth: 2,
+    borderColor: theme.colors.border,
     alignItems: 'center',
   },
   
   errorText: {
     fontSize: 16,
-    color: theme.colors.error,
+    color: theme.colors.text,
     textAlign: 'center',
     marginBottom: theme.spacing.l,
   },
   
   retryButton: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.primary + '15',
     paddingVertical: theme.spacing.m,
     paddingHorizontal: theme.spacing.xl,
     borderRadius: theme.borderRadius.medium,
     borderWidth: 2,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors.primary,
   },
   
   retryButtonText: {
     fontSize: 14,
-    color: theme.colors.text,
+    color: theme.colors.primary,
     fontWeight: '600',
-  },
-  
-  successContainer: {
-    flex: 1,
   },
   
   insightCard: {
@@ -332,20 +348,36 @@ const getStyles = (theme) => StyleSheet.create({
     padding: theme.spacing.xl,
     borderWidth: 2,
     borderColor: theme.colors.border,
-    shadowColor: theme.colors.text,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
   },
   
   insightText: {
     fontSize: 16,
     color: theme.colors.text,
     lineHeight: 24,
+    marginBottom: theme.spacing.l,
   },
   
-  buttonContainer: {
+  recapContainer: {
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+    paddingTop: theme.spacing.l,
+  },
+  
+  recapTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.primary,
+    marginBottom: theme.spacing.s,
+  },
+  
+  recapText: {
+    fontSize: 13,
+    color: theme.colors.textLight,
+    lineHeight: 18,
+    marginBottom: theme.spacing.xs,
+  },
+  
+  bottomSection: {
     paddingHorizontal: theme.spacing.xl,
     paddingBottom: theme.spacing.xxl,
   },

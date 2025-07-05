@@ -45,11 +45,11 @@ export function ObservationInvitation({
 
   const getPersonaMessage = () => {
     const messages = {
-      emma: "Dis-moi comment tu te sens en ce moment...",
-      laure: "Partage ton ressenti actuel avec moi...",
-      clara: "Comment te sens-tu aujourd'hui ?",
-      sylvie: "Raconte-moi ton état d'esprit...",
-      christine: "Quel est ton ressenti du moment ?"
+      emma: "Aide-moi à te connaître : comment te sens-tu maintenant ?",
+      laure: "Première donnée pour optimiser : ton ressenti actuel ?",
+      clara: "Commençons par capturer ton énergie du moment !",
+      sylvie: "Partageons ce moment : comment vas-tu ?",
+      christine: "Première observation ensemble : ton état présent ?"
     };
     return messages[persona] || messages.emma;
   };
@@ -85,7 +85,7 @@ export function ObservationInvitation({
           </View>
           <View style={styles.textContainer}>
             <BodyText style={styles.invitationTitle}>
-              Première observation
+              💫 Première observation ensemble
             </BodyText>
             <Caption style={styles.invitationMessage}>
               {getPersonaMessage()}

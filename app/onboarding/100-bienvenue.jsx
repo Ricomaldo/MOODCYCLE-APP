@@ -64,17 +64,16 @@ export default function BienvenueScreen() {
 
   return (
     <ScreenContainer edges={['top', 'bottom']} style={styles.container}>
-      <Animated.View 
-        style={[
-          styles.content,
-          {
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }]
-          }
-        ]}
-      >
-        {/* Messages d'introduction */}
-        <View style={styles.messagesContainer}>
+      <View style={styles.content}>
+        {/* Messages d'introduction avec animation translation */}
+        <Animated.View 
+          style={[
+            styles.messagesContainer,
+            {
+              transform: [{ translateY: slideAnim }]
+            }
+          ]}
+        >
           <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage}>
             <BodyText style={styles.message}>
               Devenez la femme que vous êtes,
@@ -86,7 +85,7 @@ export default function BienvenueScreen() {
               votre cycle révèle votre vraie nature...
             </BodyText>
           </AnimatedRevealMessage>
-        </View>
+        </Animated.View>
 
         {/* Logo et sparkles */}
         <View style={styles.logoSection}>
@@ -117,12 +116,18 @@ export default function BienvenueScreen() {
           </View>
         </View>
 
-        {/* Bouton commencer isolé en composant */}
-        <OnboardingButton
-          onPress={handleContinue}
-          style={styles.buttonContainer}
-        />
-      </Animated.View>
+        {/* Bouton avec animation fade */}
+        <Animated.View 
+          style={[
+            styles.buttonContainer,
+            {
+              opacity: fadeAnim
+            }
+          ]}
+        >
+          <OnboardingButton onPress={handleContinue} />
+        </Animated.View>
+      </View>
     </ScreenContainer>
   );
 }
@@ -201,7 +206,10 @@ const getStyles = ({ colors, fonts, spacing }) => StyleSheet.create({
   sparkle6: { bottom: '40%', left: '5%' },
 
   appNameContainer: {
-    marginTop: spacing.l,
+    marginTop: spacing.xl,
+    minHeight: 60,
+    justifyContent: 'center',
+    paddingVertical: spacing.m,
   },
 
   appName: {
@@ -209,6 +217,7 @@ const getStyles = ({ colors, fonts, spacing }) => StyleSheet.create({
     fontSize: 32,
     color: colors.text,
     textAlign: 'center',
+    lineHeight: 40,
   },
 
   buttonContainer: {

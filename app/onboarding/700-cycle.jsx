@@ -1,16 +1,16 @@
 //
 // ─────────────────────────────────────────────────────────
 // 📄 Fichier : app/onboarding/700-cycle.jsx
-// 🎯 Status: ✅ REFACTORISÉ v3.0 - Conversationnel
-// 📝 Description: Configuration cycle avec empathie
-// 🔄 Version: 3.0 - 258 lignes
+// 🎯 Status: ✅ RÉVOLUTION DOUCE - Approche Miranda Gray + Fallback technique
+// 📝 Description: Configuration cycle avec ressentis + données techniques
+// 🔄 Cycle: Onboarding - Étape 8/8
 // ─────────────────────────────────────────────────────────
 //
-import React, { useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, Text, ScrollView, Platform } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity, Animated, Platform } from 'react-native';
 import { router } from 'expo-router';
-import * as Haptics from 'expo-haptics';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Feather } from '@expo/vector-icons';
+import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import { BodyText, Caption } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { useCycleStore } from '../../src/stores/useCycleStore';
@@ -21,10 +21,42 @@ import { CycleDurationWheel } from '../../src/features/onboarding/cycle/CycleDur
 import OnboardingButton from '../../src/features/onboarding/shared/OnboardingButton';
 import { 
   AnimatedRevealMessage,
-  AnimatedCascadeCard,
+  AnimatedOnboardingScreen,
   ANIMATION_DURATIONS,
-  ANIMATION_PRESETS
+  ANIMATION_CONFIGS
 } from '../../src/core/ui/animations';
+
+// Énergies cycliques selon Miranda Gray
+const CYCLE_ENERGIES = [
+  { 
+    id: 'menstrual', 
+    emoji: '🌙', 
+    label: 'Repos profond', 
+    description: 'Période de repos et introspection',
+    color: '#8B4A6B'
+  },
+  { 
+    id: 'follicular', 
+    emoji: '🌱', 
+    label: 'Énergie montante', 
+    description: 'Regain d\'énergie et nouvelles idées',
+    color: '#C8A882'
+  },
+  { 
+    id: 'ovulatory', 
+    emoji: '☀️', 
+    label: 'Pleine puissance', 
+    description: 'Rayonnement et confiance maximale',
+    color: '#4A90A4'
+  },
+  { 
+    id: 'luteal', 
+    emoji: '🍂', 
+    label: 'Transition douce', 
+    description: 'Besoin de calme et d\'organisation',
+    color: '#6B5B95'
+  }
+];
 
 // Composant principal
 export default function CycleScreen() {
@@ -33,22 +65,105 @@ export default function CycleScreen() {
   const { updateCycle } = useCycleStore();
   const intelligence = useOnboardingIntelligence('700-cycle');
   
+  // États pour approche hybride
+  const [selectedEnergy, setSelectedEnergy] = useState(null);
+  const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
   const [lastPeriodDate, setLastPeriodDate] = useState(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
   const [cycleLength, setCycleLength] = useState(28);
   
+  // Animations obligatoires du pattern absolu
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current;
+  const cardsAnim = useRef([new Animated.Value(0), new Animated.Value(0), new Animated.Value(0)]).current;
+
+  useEffect(() => {
+    // Entrée progressive de la page avec les presets
+    const { pageEnter } = ANIMATION_CONFIGS.onboarding.welcome;
+    
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        ...pageEnter.fade
+      }),
+      Animated.spring(slideAnim, {
+        toValue: 0,
+        ...pageEnter.slide
+      }),
+    ]).start(() => {
+      // Animation en cascade des cartes
+      cardsAnim.forEach((anim, index) => {
+        Animated.timing(anim, {
+          toValue: 1,
+          duration: ANIMATION_DURATIONS.elegant,
+          delay: ANIMATION_DURATIONS.welcomeFirstMessage + (index * 200),
+          ...ANIMATION_CONFIGS.onboarding.welcome.elementEnter,
+          useNativeDriver: true,
+        }).start();
+      });
+    });
+  }, []);
+
+  const handleEnergySelect = (energy) => {
+    setSelectedEnergy(energy);
+    
+    // Calculer une date approximative basée sur l'énergie ressentie
+    const now = new Date();
+    let estimatedLastPeriod;
+    
+    switch (energy.id) {
+      case 'menstrual':
+        estimatedLastPeriod = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000); // Il y a 2 jours
+        break;
+      case 'follicular':
+        estimatedLastPeriod = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000); // Il y a 10 jours
+        break;
+      case 'ovulatory':
+        estimatedLastPeriod = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000); // Il y a 14 jours
+        break;
+      case 'luteal':
+        estimatedLastPeriod = new Date(now.getTime() - 21 * 24 * 60 * 60 * 1000); // Il y a 21 jours
+        break;
+      default:
+        estimatedLastPeriod = lastPeriodDate;
+    }
+    
+    setLastPeriodDate(estimatedLastPeriod);
+  };
+
   const handleContinue = () => {
+    // Utiliser les données selon l'approche choisie
+    const finalDate = selectedEnergy ? lastPeriodDate : lastPeriodDate;
+    const finalLength = cycleLength;
+    
     updateCycle({
-      lastPeriodDate: lastPeriodDate.toISOString(),
-      length: cycleLength,
-      periodDuration: 5
+      lastPeriodDate: finalDate.toISOString(),
+      length: finalLength,
+      periodDuration: 5,
+      // ✨ Ajouter l'énergie ressentie pour CycleObservationEngine
+      currentEnergyFelt: selectedEnergy?.id || null
     });
     
     intelligence.trackAction('cycle_configured', {
-      cycleLength,
-      lastPeriodDate: lastPeriodDate.toISOString()
+      approach: selectedEnergy ? 'energy_based' : 'technical',
+      energySelected: selectedEnergy?.id,
+      cycleLength: finalLength,
+      lastPeriodDate: finalDate.toISOString()
     });
     
-    router.push('/onboarding/800-preferences');
+    // Animation de sortie
+    const exitAnimations = cardsAnim.map((anim, index) => 
+      Animated.timing(anim, {
+        toValue: 0,
+        duration: ANIMATION_DURATIONS.elegant,
+        delay: ((cardsAnim.length - 1) - index) * 100,
+        ...ANIMATION_CONFIGS.onboarding.welcome.elementExit,
+        useNativeDriver: true,
+      })
+    );
+
+    Animated.parallel(exitAnimations).start(() => {
+      router.push('/onboarding/800-preferences');
+    });
   };
   
   const getConversationalMessage = () => {
@@ -57,96 +172,204 @@ export default function CycleScreen() {
   };
   
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <View style={styles.content}>
-        {/* Message conversationnel */}
-        <View style={styles.messageSection}>
-          <AnimatedRevealMessage 
-            delay={ANIMATION_DURATIONS.initialMessage}
-            style={styles.messageContainer}
-          >
-            <BodyText style={styles.conversationalMessage}>
-              {getConversationalMessage()}
-            </BodyText>
-          </AnimatedRevealMessage>
-        </View>
-        
-        {/* Contenu principal - ScrollView avec flex pour prendre l'espace disponible */}
-        <View style={styles.mainSection}>
-          <ScrollView 
-            style={styles.scrollView}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
-          >
-            {/* Carte unifiée conversationnelle */}
-            <AnimatedCascadeCard
-              delay={ANIMATION_DURATIONS.initialMessage + 800}
-              style={styles.unifiedCard}
-            >
-              {/* Question date avec empathie */}
-              <View style={styles.section}>
-                <Text style={styles.gentleQuestion}>
-                  {getOnboardingMessage('700-cycle-questions', intelligence.currentPersona, 'date') || "Tes dernières règles, c'était... 🌸"}
-                </Text>
-                <CycleDateSelector
-                  value={lastPeriodDate}
-                  onChange={setLastPeriodDate}
-                  persona={intelligence.currentPersona}
-                  theme={theme}
-                />
-              </View>
-              
-              <View style={styles.softDivider} />
-              
-              {/* Question durée avec bienveillance */}
-              <View style={styles.section}>
-                <Text style={styles.gentleQuestion}>
-                  {getOnboardingMessage('700-cycle-questions', intelligence.currentPersona, 'duration') || "Et d'habitude, ton cycle dure... 🌙"}
-                </Text>
-                <CycleDurationWheel
-                  value={cycleLength}
-                  onChange={setCycleLength}
-                  persona={intelligence.currentPersona}
-                  theme={theme}
-                />
-              </View>
-              
-              {/* Validation douce */}
-              <AnimatedRevealMessage 
-                delay={ANIMATION_DURATIONS.initialMessage + 1200}
-                style={styles.validationSection}
-              >
-                <Caption style={styles.validation}>
-                  Parfait, j'ai tout ce qu'il me faut pour t'accompagner ✨
-                </Caption>
+    <ScreenContainer edges={['top', 'bottom']} style={styles.container}>
+      <AnimatedOnboardingScreen>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
+          <Animated.View style={[
+            styles.content,
+            {
+              opacity: fadeAnim,
+              transform: [{ translateY: slideAnim }]
+            }
+          ]}>
+            {/* Message de Mélune */}
+            <View style={styles.messageSection}>
+              <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage}>
+                <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
+                  {getConversationalMessage()}
+                </BodyText>
               </AnimatedRevealMessage>
-            </AnimatedCascadeCard>
-          </ScrollView>
-        </View>
-        
-        {/* Bouton continuer - Fixe en bas */}
-        <OnboardingButton
-          title="Continuer"
-          onPress={handleContinue}
-          delay={ANIMATION_DURATIONS.initialMessage + 1400}
-          variant="primary"
-          style={styles.buttonContainer}
-        />
-      </View>
-    </SafeAreaView>
+            </View>
+
+            {/* Section principale */}
+            <View style={styles.choicesSection}>
+              <View style={styles.choicesContainer}>
+                
+                {/* ✨ NOUVELLE APPROCHE : Sélection d'énergie Miranda Gray */}
+                <Animated.View
+                  style={[
+                    styles.cardWrapper,
+                    {
+                      opacity: cardsAnim[0],
+                      transform: [{
+                        translateY: cardsAnim[0].interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [20, 0]
+                        })
+                      }]
+                    }
+                  ]}
+                >
+                  <View style={styles.energyCard}>
+                    <Text style={styles.gentleQuestion}>
+                      Comment te sens-tu physiquement ces derniers temps ? 🌸
+                    </Text>
+                    
+                    <View style={styles.energiesGrid}>
+                      {CYCLE_ENERGIES.map((energy) => (
+                        <TouchableOpacity
+                          key={energy.id}
+                          style={[
+                            styles.energyOption,
+                            selectedEnergy?.id === energy.id && styles.energyOptionSelected,
+                            selectedEnergy?.id === energy.id && { 
+                              backgroundColor: energy.color + '20',
+                              borderColor: energy.color + '60'
+                            }
+                          ]}
+                          onPress={() => handleEnergySelect(energy)}
+                        >
+                          <Text style={styles.energyEmoji}>{energy.emoji}</Text>
+                          <BodyText style={[
+                            styles.energyLabel,
+                            selectedEnergy?.id === energy.id && { color: energy.color }
+                          ]}>
+                            {energy.label}
+                          </BodyText>
+                          <Caption style={styles.energyDescription}>
+                            {energy.description}
+                          </Caption>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                </Animated.View>
+
+                {/* ✨ Zone "Autre chose ?" conversationnelle */}
+                <Animated.View
+                  style={[
+                    styles.cardWrapper,
+                    {
+                      opacity: cardsAnim[1],
+                      transform: [{
+                        translateY: cardsAnim[1].interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [20, 0]
+                        })
+                      }]
+                    }
+                  ]}
+                >
+                  <TouchableOpacity 
+                    style={styles.technicalToggle}
+                    onPress={() => setShowTechnicalDetails(!showTechnicalDetails)}
+                  >
+                    <View style={styles.toggleContent}>
+                      <Feather 
+                        name="calendar" 
+                        size={20} 
+                        color={theme.colors.primary} 
+                      />
+                      <BodyText style={styles.toggleText}>
+                        Plutôt avec des dates précises ?
+                      </BodyText>
+                      <Feather 
+                        name={showTechnicalDetails ? "chevron-up" : "chevron-down"} 
+                        size={20} 
+                        color={theme.colors.textLight} 
+                      />
+                    </View>
+                  </TouchableOpacity>
+                </Animated.View>
+
+                {/* Détails techniques (masqués par défaut) */}
+                {showTechnicalDetails && (
+                  <Animated.View
+                    style={[
+                      styles.cardWrapper,
+                      {
+                        opacity: cardsAnim[2],
+                        transform: [{
+                          translateY: cardsAnim[2].interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [20, 0]
+                          })
+                        }]
+                      }
+                    ]}
+                  >
+                    <View style={styles.technicalDetails}>
+                      {/* Date */}
+                      <View style={styles.technicalSection}>
+                        <Text style={styles.technicalQuestion}>
+                          {getOnboardingMessage('700-cycle-questions', intelligence.currentPersona, 'date') || "Tes dernières règles, c'était quand ?"}
+                        </Text>
+                        <CycleDateSelector
+                          value={lastPeriodDate}
+                          onChange={setLastPeriodDate}
+                          persona={intelligence.currentPersona}
+                          theme={theme}
+                        />
+                      </View>
+
+                      {/* Durée */}
+                      <View style={styles.technicalSection}>
+                        <Text style={styles.technicalQuestion}>
+                          {getOnboardingMessage('700-cycle-questions', intelligence.currentPersona, 'duration') || "Ton cycle dure combien de jours d'habitude ?"}
+                        </Text>
+                        <CycleDurationWheel
+                          value={cycleLength}
+                          onChange={setCycleLength}
+                          persona={intelligence.currentPersona}
+                          theme={theme}
+                        />
+                      </View>
+                    </View>
+                  </Animated.View>
+                )}
+              </View>
+            </View>
+
+            {/* Section bouton */}
+            <View style={styles.bottomSection}>
+              <OnboardingButton
+                title="Continuer"
+                onPress={handleContinue}
+                delay={ANIMATION_DURATIONS.welcomeFirstMessage + 1200}
+                variant="primary"
+                disabled={!selectedEnergy && !showTechnicalDetails}
+              />
+            </View>
+          </Animated.View>
+        </ScrollView>
+      </AnimatedOnboardingScreen>
+    </ScreenContainer>
   );
 }
 
-// Styles simplifiés et cohérents
+// Styles conformes au pattern absolu
 const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: theme.colors.background,
   },
-  
+
   content: {
     flex: 1,
-    justifyContent: 'space-between',
-    paddingVertical: theme.spacing.xxl,
+  },
+  
+  scrollView: {
+    flex: 1,
+  },
+  
+  scrollContent: {
+    flexGrow: 1,
+    paddingTop: theme.spacing.xl,
   },
   
   messageSection: {
@@ -154,32 +377,29 @@ const getStyles = (theme) => StyleSheet.create({
     paddingHorizontal: theme.spacing.xl,
   },
   
-  messageContainer: {
-    alignItems: 'center',
-    marginTop: theme.spacing.xl,
-  },
-  
-  conversationalMessage: {
+  message: {
     fontSize: 20,
     textAlign: 'center',
     color: theme.colors.text,
     lineHeight: 28,
-    fontFamily: 'Quintessential',
     maxWidth: 320,
   },
   
-  mainSection: {
+  choicesSection: {
     flex: 1,
+    paddingTop: theme.spacing.l, // Réduit de xxl à l
+  },
+  
+  choicesContainer: {
     paddingHorizontal: theme.spacing.xl,
-    marginTop: theme.spacing.xl,
+    gap: theme.spacing.l,
+  },
+
+  cardWrapper: {
+    width: '100%',
   },
   
-  scrollContent: {
-    paddingTop: theme.spacing.xl,
-    paddingBottom: theme.spacing.xl,
-  },
-  
-  unifiedCard: {
+  energyCard: {
     backgroundColor: theme.colors.surface + '95',
     borderRadius: 28,
     padding: theme.spacing.l,
@@ -198,10 +418,6 @@ const getStyles = (theme) => StyleSheet.create({
     }),
   },
   
-  section: {
-    marginBottom: theme.spacing.s,
-  },
-  
   gentleQuestion: {
     fontSize: 16,
     color: theme.colors.text,
@@ -211,30 +427,102 @@ const getStyles = (theme) => StyleSheet.create({
     fontFamily: 'Quicksand_500Medium',
   },
   
-  softDivider: {
-    height: 1,
-    backgroundColor: theme.colors.border + '20',
-    marginVertical: theme.spacing.m,
-    marginHorizontal: -theme.spacing.m,
+  energiesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.s,
+    marginTop: theme.spacing.m,
   },
   
-  validationSection: {
-    marginTop: theme.spacing.l,
+  energyOption: {
+    width: '48%',
+    padding: theme.spacing.m,
+    borderWidth: 2,
+    borderColor: theme.colors.border + '30',
+    borderRadius: theme.borderRadius.medium,
+    backgroundColor: theme.colors.surface + '95',
     alignItems: 'center',
+    minHeight: 100,
   },
   
-  validation: {
-    color: theme.colors.success,
-    fontSize: 14,
+  energyOptionSelected: {
+    borderWidth: 2,
+    transform: [{ scale: 1.02 }],
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  
+  energyEmoji: {
+    fontSize: 32,
+    marginBottom: theme.spacing.s,
     textAlign: 'center',
   },
   
-  scrollView: {
+  energyLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.text,
+    textAlign: 'center',
+    marginBottom: theme.spacing.xs,
+  },
+  
+  energyDescription: {
+    fontSize: 11,
+    color: theme.colors.textLight,
+    textAlign: 'center',
+    lineHeight: 16,
+  },
+  
+  technicalToggle: {
+    padding: theme.spacing.m,
+    borderWidth: 1,
+    borderColor: theme.colors.border + '40',
+    borderRadius: theme.borderRadius.medium,
+    backgroundColor: theme.colors.surface + '80',
+  },
+  
+  toggleContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     flex: 1,
   },
   
-  buttonContainer: {
+  toggleText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: theme.colors.text,
+    flex: 1,
+    marginLeft: theme.spacing.s,
+  },
+  
+  technicalDetails: {
+    padding: theme.spacing.l,
+    backgroundColor: theme.colors.surface + '95',
+    borderRadius: theme.borderRadius.large,
+    borderWidth: 1,
+    borderColor: theme.colors.border + '20',
+  },
+  
+  technicalSection: {
+    marginBottom: theme.spacing.l,
+  },
+  
+  technicalQuestion: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: theme.colors.text,
+    marginBottom: theme.spacing.m,
+    textAlign: 'center',
+    fontFamily: 'Quicksand_500Medium',
+  },
+  
+  bottomSection: {
     paddingHorizontal: theme.spacing.xl,
+    paddingTop: theme.spacing.xl,
     paddingBottom: theme.spacing.xxl,
   },
 });

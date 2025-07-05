@@ -8,45 +8,28 @@
 //
 
 export const ONBOARDING_MESSAGES = {
-    // 250-rencontre: Adaptation selon journey choice uniquement
+    // 250-rencontre: Messages selon le choix du parcours
     '250-rencontre': {
       journey: {
-        body_disconnect: "Je sens que tu es en quête d'une reconnexion profonde... Confie-moi ce qui t'appelle",
-        hiding_nature: "Tu portes en toi une essence que le monde a peut-être voilée... Révélons-la ensemble",
-        emotional_control: "Les émotions sont des messagères... Apprenons leur langage ensemble"
-      }
+        body_disconnect: "Je vois... Tu veux retrouver cette connexion perdue avec ton corps. C'est un chemin magnifique.",
+        hiding_nature: "Ah, tu veux révéler qui tu es vraiment ! J'adore cette authenticité.",
+        emotional_control: "Comprendre tes émotions... C'est la clé de tant de choses. Explorons ensemble."
+      },
+      // ✅ NETTOYÉ : Pas de messages personnalisés, confiance = 0%
+      default: "Je sens que tu es en quête de quelque chose de profond... Confie-moi ce qui t'appelle"
     },
   
-    // 300-etape-vie: Messages par persona (40% confiance)
+    // 300-etape-vie: Messages selon l'âge (confiance commence mais < 40%)
     '300-etape-vie': {
-      emma: {
-        message: "Chaque étape de la vie a sa propre magie unique... Dis-moi où tu danses dans ton voyage",
-        encouragement: "C'est excitant de découvrir tout ça ensemble !",
-      },
-      laure: {
-        message: "Chaque phase de vie apporte ses défis et opportunités... Où te situes-tu dans ton parcours ?",
-        encouragement: "Excellente étape pour optimiser ton bien-être cyclique.",
-      },
-      clara: {
-        message: "Chaque âge révèle de nouveaux super-pouvoirs cycliques ! Où en es-tu ?",
-        encouragement: "Prête à débloquer ton potentiel maximum !",
-      },
-      sylvie: {
-        message: "Chaque transition porte sa propre sagesse... À quelle étape de transformation es-tu ?",
-        encouragement: "Je suis là pour t'accompagner dans cette phase.",
-      },
-      christine: {
-        message: "Chaque saison de la vie féminine a sa beauté... Quelle est la tienne aujourd'hui ?",
-        encouragement: "Ta sagesse guide déjà ton chemin.",
-      },
-      // Fallback si persona non calculée - DOIT ÊTRE UN OBJET
+      // ✅ NETTOYÉ : Supprimé tous les messages personnalisés
+      // La confiance n'atteint pas encore 40% à ce stade
       default: {
         message: "Chaque étape de la vie d'une femme porte sa propre magie... Dis-moi où tu en es de ton voyage",
-        encouragement: "Nous allons découvrir ensemble."
+        encouragement: "Nous allons découvrir ensemble ton chemin unique."
       }
     },
   
-    // 400-prenom: Preview relation personnalisée
+    // 400-prenom: Preview relation personnalisée (confiance ≥ 40%)
     '400-prenom': {
       emma: {
         question: "J'ai hâte de créer notre lien unique ! Comment je peux t'appeler ?",
@@ -73,7 +56,11 @@ export const ONBOARDING_MESSAGES = {
         preview: (prenom) => `${prenom}, c'est un plaisir de vous accompagner dans ce voyage.`,
         confirmation: "Enchantée ${prenom}, explorons votre sagesse ensemble."
       },
-      default: "Comment aimerais-tu que je t'appelle ?"
+      default: {
+        question: "Comment aimerais-tu que je t'appelle ?",
+        preview: (prenom) => `${prenom} ! Je suis trop contente de faire ta connaissance ! 💖`,
+        confirmation: "Parfait ${prenom}, notre aventure commence !"
+      }
     },
   
     // 500-avatar: Suggestions de style selon persona
@@ -98,7 +85,10 @@ export const ONBOARDING_MESSAGES = {
         message: "Choisissez l'apparence qui vous accompagnera dans ce voyage",
         style_hint: "Le style mystique porte une belle symbolique spirituelle",
       },
-      default: "Choisis comment tu souhaites me voir apparaître dans l'application"
+      default: {
+        message: "Choisis comment tu souhaites me voir apparaître dans l'application",
+        style_hint: "Chaque style a sa beauté, choisis celui qui te parle"
+      }
     },
   
     // 700-cycle: Messages adaptés pour configuration cycle
@@ -167,9 +157,9 @@ export const ONBOARDING_MESSAGES = {
     '800-preferences': {
       emma: {
         message: "Chaque femme a ses curiosités... Qu'est-ce qui t'attire le plus ?",
-        zero_selected: "Prends ton temps, explore ce qui résonne !",
-        some_selected: "Super choix ! Continue si d'autres t'appellent.",
-        many_selected: "Wow, tu es curieuse de tout ! J'adore !"
+        zero_selected: "Prends ton temps, explore ce qui résonne ! ✨",
+        some_selected: "Super choix ! Continue si d'autres t'appellent 💫",
+        many_selected: "Wow, tu es curieuse de tout ! J'adore cette ouverture ! 🌟"
       },
       laure: {
         message: "Sélectionne les approches qui correspondent à tes objectifs",
@@ -195,7 +185,12 @@ export const ONBOARDING_MESSAGES = {
         some_selected: "Choix réfléchis et pertinents.",
         many_selected: "Belle ouverture à la diversité des approches."
       },
-      default: "Chaque femme a sa propre sagesse... Dis-moi ce qui résonne en toi"
+      default: {
+        message: "Chaque femme a sa propre sagesse... Dis-moi ce qui résonne en toi",
+        zero_selected: "Prends ton temps pour explorer...",
+        some_selected: "Belle sélection ! Continue si tu veux",
+        many_selected: "Quelle richesse dans tes choix !"
+      }
     },
   
     // Messages d'intelligence progressive (tous écrans)
