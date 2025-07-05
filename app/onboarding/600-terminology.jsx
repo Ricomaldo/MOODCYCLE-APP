@@ -8,7 +8,7 @@
 //
 
 import React, { useEffect, useRef, useState } from 'react';
-import { View, TouchableOpacity, StyleSheet, Animated, ScrollView } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Animated, ScrollView, Text } from 'react-native';
 import { router } from 'expo-router';
 import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import { BodyText, Caption } from '../../src/core/ui/typography';
@@ -69,6 +69,7 @@ export default function TerminologyScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
   const cardsAnim = useRef(TERMINOLOGY_OPTIONS.map(() => new Animated.Value(0))).current;
+  const indicatorOpacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     // Entrée progressive de la page avec les presets
@@ -141,6 +142,19 @@ export default function TerminologyScreen() {
     });
   };
 
+  const handleScroll = (event) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    
+    // Dès qu'on commence à scroller, on cache l'indicateur
+    if (offsetY > 10) {
+      Animated.timing(indicatorOpacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+  };
+
   const renderTerminologyOption = (option, index) => {
     const isSelected = selectedTerminology === option.key;
     
@@ -166,6 +180,10 @@ export default function TerminologyScreen() {
           ]}
           onPress={() => handleTerminologySelect(option.key)}
           activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={`${option.name}: ${option.description}`}
+          accessibilityHint={isSelected ? "Actuellement sélectionné" : "Appuyer pour sélectionner cette terminologie"}
+          accessibilityState={{ selected: isSelected }}
         >
           <View style={styles.optionHeader}>
             <View style={styles.optionIcon}>
@@ -186,7 +204,10 @@ export default function TerminologyScreen() {
               </Caption>
             </View>
             {isSelected && (
-              <View style={styles.selectedIndicator}>
+              <View 
+                style={styles.selectedIndicator}
+                accessibilityLabel="Terminologie sélectionnée"
+              >
                 <BodyText style={styles.checkmark}>✓</BodyText>
               </View>
             )}
@@ -214,13 +235,15 @@ export default function TerminologyScreen() {
   };
 
   return (
-    <ScreenContainer edges={['top', 'bottom']} style={styles.container}>
+    <ScreenContainer edges={['bottom']} style={styles.container}>
       <AnimatedOnboardingScreen>
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           bounces={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
         >
           <Animated.View style={[
             styles.content, 
@@ -257,6 +280,19 @@ export default function TerminologyScreen() {
             </View>
           </Animated.View>
         </ScrollView>
+
+        {/* Indicateur de scroll avec animation */}
+        <Animated.View 
+          style={[
+            styles.scrollIndicator,
+            { opacity: indicatorOpacity }
+          ]}
+          pointerEvents="none"
+          accessibilityLabel="Indicateur de défilement vers le bas"
+        >
+          <Text style={styles.scrollIndicatorText}>↓</Text>
+          <BodyText style={styles.scrollIndicatorLabel}>Découvrir plus</BodyText>
+        </Animated.View>
       </AnimatedOnboardingScreen>
     </ScreenContainer>
   );
@@ -278,7 +314,7 @@ const getStyles = (theme) => StyleSheet.create({
   
   scrollContent: {
     flexGrow: 1,
-    paddingTop: theme.spacing.xl,
+    paddingTop: theme.spacing.m,
   },
   
   messageSection: {
@@ -310,6 +346,7 @@ const getStyles = (theme) => StyleSheet.create({
     padding: theme.spacing.l,
     borderWidth: 2,
     borderColor: theme.colors.border,
+    minHeight: 44, // ✅ WCAG 2.1 AA - Zone de touch minimum
   },
   
   optionCardSelected: {
@@ -321,6 +358,7 @@ const getStyles = (theme) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: theme.spacing.m,
+    minHeight: 44, // ✅ WCAG 2.1 AA - Zone de touch minimum interne
   },
   
   optionIcon: {
@@ -362,9 +400,9 @@ const getStyles = (theme) => StyleSheet.create({
   },
   
   selectedIndicator: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 44, // ✅ WCAG 2.1 AA - Zone de touch minimum
+    height: 44, // ✅ WCAG 2.1 AA - Zone de touch minimum
+    borderRadius: 22,
     backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
@@ -373,7 +411,7 @@ const getStyles = (theme) => StyleSheet.create({
   
   checkmark: {
     color: theme.colors.white,
-    fontSize: 14,
+    fontSize: 16, // ✅ WCAG 2.1 AA - Taille minimum conforme
     fontWeight: '600',
   },
   
@@ -391,7 +429,7 @@ const getStyles = (theme) => StyleSheet.create({
   },
   
   examplePhase: {
-    fontSize: 12,
+    fontSize: 14, // ✅ WCAG 2.1 AA - Taille minimum corrigée
     color: theme.colors.textLight,
     backgroundColor: theme.colors.surface,
     paddingHorizontal: theme.spacing.s,
@@ -403,5 +441,27 @@ const getStyles = (theme) => StyleSheet.create({
     paddingHorizontal: theme.spacing.xl,
     paddingTop: theme.spacing.xl,
     paddingBottom: theme.spacing.xxl,
+  },
+
+  scrollIndicator: {
+    position: 'absolute',
+    bottom: theme.spacing.xl,
+    alignSelf: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface + '80',
+    paddingHorizontal: theme.spacing.m,
+    paddingVertical: theme.spacing.s,
+    borderRadius: theme.borderRadius.medium,
+  },
+
+  scrollIndicatorText: {
+    fontSize: 20,
+    color: theme.colors.primary,
+    marginBottom: -4,
+  },
+
+  scrollIndicatorLabel: {
+    fontSize: 14, // ✅ WCAG 2.1 AA - Taille minimum conforme
+    color: theme.colors.textLight,
   },
 }); 

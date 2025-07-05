@@ -144,7 +144,7 @@ export default function EtapeVieScreen() {
   };
 
   return (
-    <ScreenContainer edges={['top', 'bottom']} style={styles.container}>
+    <ScreenContainer edges={['bottom']} style={styles.container}>
       <AnimatedOnboardingScreen>
         <ScrollView 
           style={styles.scrollView}
@@ -229,6 +229,7 @@ export default function EtapeVieScreen() {
             { opacity: indicatorOpacity }
           ]}
           pointerEvents="none"
+          accessibilityLabel="Indicateur de défilement vers le bas"
         >
           <Text style={styles.scrollIndicatorText}>↓</Text>
           <BodyText style={styles.scrollIndicatorLabel}>Découvrir plus</BodyText>
@@ -254,7 +255,7 @@ const getStyles = (theme) => StyleSheet.create({
   
   scrollContent: {
     flexGrow: 1,
-    paddingTop: theme.spacing.xl,
+    paddingTop: theme.spacing.m,
     paddingBottom: theme.spacing.xxl,
   },
   
@@ -303,7 +304,7 @@ const getStyles = (theme) => StyleSheet.create({
   },
 
   scrollIndicatorLabel: {
-    fontSize: 12,
+    fontSize: 14, // ✅ WCAG 2.1 AA - Taille minimum corrigée
     color: theme.colors.textLight,
   },
 

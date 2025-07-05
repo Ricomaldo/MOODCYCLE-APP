@@ -6,10 +6,10 @@
 // 🔄 Cycle: Onboarding - Étape 5/8
 // ─────────────────────────────────────────────────────────
 //
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { View, TouchableOpacity, StyleSheet, Animated, ScrollView, TextInput, Keyboard } from 'react-native';
 import { router } from 'expo-router';
-import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
+// Intelligence supprimée - userStore suffit pour cette étape
 import ScreenContainer from '../../src/core/layout/ScreenContainer';
 import { BodyText } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
@@ -40,7 +40,7 @@ const getStyles = (theme) => StyleSheet.create({
   },
   messageSection: {
     alignItems: 'center',
-    paddingTop: theme.spacing.xl,
+    paddingTop: theme.spacing.m,
     paddingHorizontal: theme.spacing.xl,
   },
   meluneMessage: {
@@ -79,6 +79,7 @@ const getStyles = (theme) => StyleSheet.create({
     paddingVertical: theme.spacing.m,
     textAlign: 'center',
     borderRadius: theme.borderRadius.medium,
+    minHeight: 44, // ✅ WCAG 2.1 AA - Zone de touch minimum
   },
   prenomInputValid: {
     ...theme.glassmorphism.getStyle(theme.colors.success, {
@@ -129,9 +130,8 @@ const getStyles = (theme) => StyleSheet.create({
 
 export default function PrenomScreen() {
   const theme = useTheme();
-  const styles = getStyles(theme);
+  const styles = useMemo(() => getStyles(theme), [theme]);
   const { profile, updateProfile } = useUserStore();
-  const intelligence = useOnboardingIntelligence('400-prenom');
   
   // État du formulaire
   const [prenom, setPrenom] = useState(profile.prenom || '');
@@ -164,15 +164,7 @@ export default function PrenomScreen() {
       prenom: trimmedPrenom,
     });
     
-    // Message de confirmation personnalisé
-    if (intelligence.personaConfidence >= 0.4) {
-      intelligence.getPersonalizedMessage('confirmation', { prenom: trimmedPrenom });
-    }
-    
-    // 🧠 Track finalisation relation
-    intelligence.trackAction('relationship_initialized', {
-      prenom: trimmedPrenom
-    });
+    // Tracking simplifié - juste sauvegarder dans le store suffit
 
     // Navigation avec délai élégant
     setTimeout(() => {
@@ -180,18 +172,19 @@ export default function PrenomScreen() {
     }, ANIMATION_DURATIONS.elegant);
   };
 
-  const generatePersonalizedPreview = () => {
+  const personalizedPreview = useMemo(() => {
     if (!prenom.trim()) return null;
-    
-    if (intelligence.personaConfidence >= 0.4) {
-      return intelligence.getPersonalizedMessage('preview', { prenom: prenom.trim() });
-    }
-    
     return `${prenom.trim()} ! Je suis trop contente de faire ta connaissance ! 💖`;
-  };
+  }, [prenom]);
+
+  const buttonTitle = useMemo(() => {
+    if (isProcessing) return '💕 Initialisation de notre relation...';
+    if (isValid) return '💖 Parfait, continuons !';
+    return 'Dis-moi ton prénom';
+  }, [isProcessing, isValid]);
 
   return (
-    <ScreenContainer edges={['top', 'bottom']} style={styles.container}>
+    <ScreenContainer edges={['bottom']} style={styles.container}>
       <AnimatedOnboardingScreen>
         <ScrollView 
           style={styles.scrollView}
@@ -204,9 +197,7 @@ export default function PrenomScreen() {
           <View style={styles.messageSection}>
             <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage}>
               <BodyText style={[styles.meluneMessage, { fontFamily: 'Quintessential' }]}>
-                {intelligence.personaConfidence >= 0.4 
-                  ? intelligence.getPersonalizedMessage('question')
-                  : "Comment aimerais-tu que je t'appelle ?"}
+                Comment aimerais-tu que je t'appelle ?
               </BodyText>
             </AnimatedRevealMessage>
           </View>
@@ -238,15 +229,21 @@ export default function PrenomScreen() {
                     autoCorrect={false}
                     returnKeyType="done"
                     blurOnSubmit={false}
+                    accessibilityRole="none"
+                    accessibilityLabel="Champ de saisie du prénom"
+                    accessibilityHint="Entrez votre prénom pour personnaliser votre relation avec Mélune"
                   />
                 </View>
 
                 {/* 4. Preview relation */}
-                {prenom.trim().length >= 2 && (
+                {personalizedPreview && (
                   <AnimatedRevealMessage delay={200}>
-                    <View style={styles.previewBubble}>
+                    <View 
+                      style={styles.previewBubble}
+                      accessibilityLabel="Aperçu de la relation personnalisée"
+                    >
                       <BodyText style={styles.previewText}>
-                        {generatePersonalizedPreview()}
+                        {personalizedPreview}
                       </BodyText>
                     </View>
                   </AnimatedRevealMessage>
@@ -258,13 +255,7 @@ export default function PrenomScreen() {
           {/* 5. Bouton avec animation autonome */}
           <OnboardingButton
             onPress={handleSubmit}
-            title={
-              isProcessing ? 
-                '💕 Initialisation de notre relation...' : 
-                isValid ? 
-                  '💖 Parfait, continuons !' : 
-                  'Dis-moi ton prénom'
-            }
+            title={buttonTitle}
             disabled={!isValid || isProcessing}
             loading={isProcessing}
             showAnimation={true}

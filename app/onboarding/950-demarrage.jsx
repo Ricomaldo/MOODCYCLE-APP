@@ -152,7 +152,7 @@ export default function DemarrageScreen() {
   };
 
   return (
-    <ScreenContainer edges={['top', 'bottom']} style={styles.container}>
+    <ScreenContainer edges={['bottom']} style={styles.container}>
       <AnimatedOnboardingScreen>
         <ScrollView 
           style={styles.scrollView}
@@ -267,7 +267,7 @@ const getStyles = (theme) => StyleSheet.create({
   
   scrollContent: {
     flexGrow: 1,
-    paddingTop: theme.spacing.xl,
+    paddingTop: theme.spacing.m,
     paddingBottom: theme.spacing.xxl + 60,
   },
   

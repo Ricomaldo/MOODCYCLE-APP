@@ -282,12 +282,7 @@ export default function AvatarScreen() {
             ]}>
               {option.description}
             </BodyText>
-            {/* Suggestion personnalisée pour le style */}
-            {category === 'style' && option.id === getRecommendedStyle() && intelligence.personaConfidence >= 0.4 && (
-              <BodyText style={styles.styleHint}>
-                {intelligence.getPersonalizedMessage('style_hint')}
-              </BodyText>
-            )}
+            {/* Suggestion supprimée - éviter double recommandation avec message principal */}
           </View>
           {isSelected && (
             <View 

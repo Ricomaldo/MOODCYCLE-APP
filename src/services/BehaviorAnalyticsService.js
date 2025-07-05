@@ -1,0 +1,520 @@
+//
+// ─────────────────────────────────────────────────────────
+// 📄 File: src/services/BehaviorAnalyticsService.js
+// 🧩 Type: Analytics Service
+// 📚 Description: Service avancé d'analyse comportementale
+// 🕒 Version: 1.0 - 2025-01-15
+// 🧭 Used in: App-wide behavior tracking
+// ─────────────────────────────────────────────────────────
+//
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
+
+class BehaviorAnalyticsService {
+  constructor() {
+    this.behaviors = [];
+    this.sessionStart = Date.now();
+    this.currentScreen = null;
+    this.screenStartTime = null;
+    this.interactionBuffer = [];
+    this.isTracking = true;
+    
+    // Configuration
+    this.maxBehaviors = 1000;
+    this.bufferFlushInterval = 30000; // 30 secondes
+    this.storageKey = 'behavior_analytics_data';
+    
+    // Patterns de comportement
+    this.patterns = {
+      navigation: new Map(),
+      interactions: new Map(),
+      timing: new Map(),
+      sequences: []
+    };
+    
+    this.initializeService();
+  }
+
+  /**
+   * Initialiser le service
+   */
+  async initializeService() {
+    try {
+      // Charger les données existantes
+      await this.loadStoredBehaviors();
+      
+      // Démarrer le flush périodique
+      this.startPeriodicFlush();
+      
+      console.log('🎯 BehaviorAnalyticsService initialisé');
+    } catch (error) {
+      console.error('❌ Erreur init BehaviorAnalyticsService:', error);
+    }
+  }
+
+  /**
+   * Charger les comportements stockés
+   */
+  async loadStoredBehaviors() {
+    try {
+      const stored = await AsyncStorage.getItem(this.storageKey);
+      if (stored) {
+        const data = JSON.parse(stored);
+        this.behaviors = data.behaviors || [];
+        this.patterns = data.patterns || this.patterns;
+      }
+    } catch (error) {
+      console.error('❌ Erreur chargement behaviors:', error);
+    }
+  }
+
+  /**
+   * Sauvegarder les comportements
+   */
+  async saveBehaviors() {
+    try {
+      const data = {
+        behaviors: this.behaviors.slice(-this.maxBehaviors),
+        patterns: this.patterns,
+        lastSaved: Date.now()
+      };
+      
+      await AsyncStorage.setItem(this.storageKey, JSON.stringify(data));
+    } catch (error) {
+      console.error('❌ Erreur sauvegarde behaviors:', error);
+    }
+  }
+
+  /**
+   * Démarrer le flush périodique
+   */
+  startPeriodicFlush() {
+    setInterval(() => {
+      this.flushInteractionBuffer();
+      this.saveBehaviors();
+    }, this.bufferFlushInterval);
+  }
+
+  /**
+   * Tracker une interaction utilisateur
+   */
+  trackInteraction(type, data = {}) {
+    if (!this.isTracking) return;
+
+    const interaction = {
+      id: `interaction_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      type,
+      timestamp: Date.now(),
+      sessionTime: Date.now() - this.sessionStart,
+      screen: this.currentScreen,
+      platform: Platform.OS,
+      data: {
+        ...data,
+        // Contexte automatique
+        screenTime: this.screenStartTime ? Date.now() - this.screenStartTime : 0,
+        sessionDuration: Date.now() - this.sessionStart
+      }
+    };
+
+    this.interactionBuffer.push(interaction);
+    this.updatePatterns(interaction);
+
+    // Flush si buffer plein
+    if (this.interactionBuffer.length >= 50) {
+      this.flushInteractionBuffer();
+    }
+  }
+
+  /**
+   * Tracker la navigation
+   */
+  trackNavigation(screenName, params = {}) {
+    // Finaliser l'écran précédent
+    if (this.currentScreen && this.screenStartTime) {
+      const screenTime = Date.now() - this.screenStartTime;
+      this.trackInteraction('screen_exit', {
+        screen: this.currentScreen,
+        duration: screenTime,
+        exitType: 'navigation'
+      });
+    }
+
+    // Nouveau écran
+    this.currentScreen = screenName;
+    this.screenStartTime = Date.now();
+    
+    this.trackInteraction('screen_enter', {
+      screen: screenName,
+      params,
+      entryType: 'navigation'
+    });
+
+    // Mettre à jour patterns navigation
+    this.updateNavigationPatterns(screenName);
+  }
+
+  /**
+   * Tracker les interactions de scroll
+   */
+  trackScroll(screenName, scrollData) {
+    this.trackInteraction('scroll', {
+      screen: screenName,
+      scrollY: scrollData.y,
+      scrollDirection: scrollData.direction,
+      scrollVelocity: scrollData.velocity,
+      contentHeight: scrollData.contentHeight,
+      scrollPercentage: scrollData.percentage
+    });
+  }
+
+  /**
+   * Tracker les interactions avec les boutons
+   */
+  trackButtonPress(buttonId, context = {}) {
+    this.trackInteraction('button_press', {
+      buttonId,
+      context,
+      pressType: 'tap'
+    });
+  }
+
+  /**
+   * Tracker les interactions avec les modales
+   */
+  trackModalInteraction(modalId, action, data = {}) {
+    this.trackInteraction('modal_interaction', {
+      modalId,
+      action, // 'open', 'close', 'interact'
+      data
+    });
+  }
+
+  /**
+   * Tracker les interactions de saisie
+   */
+  trackTextInput(inputId, inputData) {
+    this.trackInteraction('text_input', {
+      inputId,
+      textLength: inputData.text?.length || 0,
+      inputType: inputData.type, // 'observation', 'note', 'search'
+      hasEmoji: /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]/u.test(inputData.text || ''),
+      wordCount: inputData.text ? inputData.text.split(' ').length : 0
+    });
+  }
+
+  /**
+   * Tracker les interactions avec les cartes/vignettes
+   */
+  trackCardInteraction(cardId, action, cardData = {}) {
+    this.trackInteraction('card_interaction', {
+      cardId,
+      action, // 'tap', 'swipe', 'save', 'share'
+      cardType: cardData.type, // 'insight', 'vignette', 'observation'
+      cardPhase: cardData.phase,
+      cardTags: cardData.tags
+    });
+  }
+
+  /**
+   * Tracker les gestes tactiles
+   */
+  trackGesture(gestureType, gestureData) {
+    this.trackInteraction('gesture', {
+      gestureType, // 'swipe', 'pinch', 'long_press', 'drag'
+      direction: gestureData.direction,
+      velocity: gestureData.velocity,
+      distance: gestureData.distance,
+      duration: gestureData.duration
+    });
+  }
+
+  /**
+   * Tracker les erreurs utilisateur
+   */
+  trackUserError(errorType, errorData) {
+    this.trackInteraction('user_error', {
+      errorType, // 'validation', 'network', 'input'
+      errorMessage: errorData.message,
+      errorContext: errorData.context,
+      recoveryAction: errorData.recovery
+    });
+  }
+
+  /**
+   * Mettre à jour les patterns de comportement
+   */
+  updatePatterns(interaction) {
+    const { type, data } = interaction;
+
+    // Patterns d'interaction
+    const interactionKey = `${type}_${data.screen || 'global'}`;
+    this.patterns.interactions.set(
+      interactionKey,
+      (this.patterns.interactions.get(interactionKey) || 0) + 1
+    );
+
+    // Patterns de timing
+    if (type === 'screen_exit' && data.duration) {
+      const timingKey = `screen_time_${data.screen}`;
+      const existing = this.patterns.timing.get(timingKey) || [];
+      existing.push(data.duration);
+      this.patterns.timing.set(timingKey, existing.slice(-20)); // Garder 20 dernières valeurs
+    }
+
+    // Séquences d'actions
+    this.patterns.sequences.push({
+      type,
+      screen: data.screen,
+      timestamp: interaction.timestamp
+    });
+
+    // Garder seulement les 100 dernières séquences
+    if (this.patterns.sequences.length > 100) {
+      this.patterns.sequences = this.patterns.sequences.slice(-100);
+    }
+  }
+
+  /**
+   * Mettre à jour les patterns de navigation
+   */
+  updateNavigationPatterns(screenName) {
+    const navKey = `nav_${screenName}`;
+    this.patterns.navigation.set(
+      navKey,
+      (this.patterns.navigation.get(navKey) || 0) + 1
+    );
+  }
+
+  /**
+   * Flusher le buffer d'interactions
+   */
+  flushInteractionBuffer() {
+    if (this.interactionBuffer.length === 0) return;
+
+    // Ajouter au stockage principal
+    this.behaviors.push(...this.interactionBuffer);
+    
+    // Limiter la taille
+    if (this.behaviors.length > this.maxBehaviors) {
+      this.behaviors = this.behaviors.slice(-this.maxBehaviors);
+    }
+
+    // Vider le buffer
+    this.interactionBuffer = [];
+  }
+
+  /**
+   * Analyser les patterns comportementaux
+   */
+  analyzePatterns() {
+    const analysis = {
+      timestamp: Date.now(),
+      sessionDuration: Date.now() - this.sessionStart,
+      totalInteractions: this.behaviors.length,
+      
+      // Analyse navigation
+      navigation: this.analyzeNavigationPatterns(),
+      
+      // Analyse interactions
+      interactions: this.analyzeInteractionPatterns(),
+      
+      // Analyse timing
+      timing: this.analyzeTimingPatterns(),
+      
+      // Analyse séquences
+      sequences: this.analyzeSequencePatterns(),
+      
+      // Analyse engagement
+      engagement: this.analyzeEngagementPatterns()
+    };
+
+    return analysis;
+  }
+
+  /**
+   * Analyser les patterns de navigation
+   */
+  analyzeNavigationPatterns() {
+    const navCounts = Object.fromEntries(this.patterns.navigation);
+    const totalNavs = Object.values(navCounts).reduce((sum, count) => sum + count, 0);
+    
+    return {
+      mostVisitedScreens: Object.entries(navCounts)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 5)
+        .map(([screen, count]) => ({ screen: screen.replace('nav_', ''), count, percentage: (count / totalNavs * 100).toFixed(1) })),
+      totalNavigations: totalNavs,
+      uniqueScreens: Object.keys(navCounts).length
+    };
+  }
+
+  /**
+   * Analyser les patterns d'interaction
+   */
+  analyzeInteractionPatterns() {
+    const interactionCounts = Object.fromEntries(this.patterns.interactions);
+    const totalInteractions = Object.values(interactionCounts).reduce((sum, count) => sum + count, 0);
+    
+    return {
+      topInteractions: Object.entries(interactionCounts)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 10)
+        .map(([interaction, count]) => ({ interaction, count, percentage: (count / totalInteractions * 100).toFixed(1) })),
+      totalInteractions,
+      uniqueInteractionTypes: Object.keys(interactionCounts).length
+    };
+  }
+
+  /**
+   * Analyser les patterns de timing
+   */
+  analyzeTimingPatterns() {
+    const timingData = {};
+    
+    this.patterns.timing.forEach((durations, screen) => {
+      if (durations.length > 0) {
+        const avg = durations.reduce((sum, d) => sum + d, 0) / durations.length;
+        const min = Math.min(...durations);
+        const max = Math.max(...durations);
+        
+        timingData[screen] = {
+          averageTime: Math.round(avg),
+          minTime: min,
+          maxTime: max,
+          totalSessions: durations.length
+        };
+      }
+    });
+    
+    return timingData;
+  }
+
+  /**
+   * Analyser les patterns de séquence
+   */
+  analyzeSequencePatterns() {
+    const sequences = this.patterns.sequences;
+    if (sequences.length < 2) return { commonSequences: [], totalSequences: 0 };
+    
+    const sequencePairs = [];
+    for (let i = 0; i < sequences.length - 1; i++) {
+      const current = sequences[i];
+      const next = sequences[i + 1];
+      const pair = `${current.type}→${next.type}`;
+      sequencePairs.push(pair);
+    }
+    
+    const sequenceCounts = {};
+    sequencePairs.forEach(pair => {
+      sequenceCounts[pair] = (sequenceCounts[pair] || 0) + 1;
+    });
+    
+    return {
+      commonSequences: Object.entries(sequenceCounts)
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 5)
+        .map(([sequence, count]) => ({ sequence, count })),
+      totalSequences: sequencePairs.length
+    };
+  }
+
+  /**
+   * Analyser les patterns d'engagement
+   */
+  analyzeEngagementPatterns() {
+    const recentBehaviors = this.behaviors.filter(b => Date.now() - b.timestamp < 24 * 60 * 60 * 1000);
+    const sessionDuration = Date.now() - this.sessionStart;
+    
+    return {
+      sessionDuration: Math.round(sessionDuration / 1000), // en secondes
+      recentInteractions: recentBehaviors.length,
+      interactionRate: recentBehaviors.length / (sessionDuration / 1000 / 60), // par minute
+      engagementLevel: this.calculateEngagementLevel(recentBehaviors, sessionDuration)
+    };
+  }
+
+  /**
+   * Calculer le niveau d'engagement
+   */
+  calculateEngagementLevel(behaviors, sessionDuration) {
+    const minutes = sessionDuration / 1000 / 60;
+    const interactionRate = behaviors.length / minutes;
+    
+    if (interactionRate > 10) return 'high';
+    if (interactionRate > 5) return 'medium';
+    if (interactionRate > 2) return 'low';
+    return 'minimal';
+  }
+
+  /**
+   * Obtenir les données pour synchronisation
+   */
+  getSyncData() {
+    return {
+      behaviors: this.behaviors.slice(-100), // 100 derniers comportements
+      patterns: {
+        navigation: Object.fromEntries(this.patterns.navigation),
+        interactions: Object.fromEntries(this.patterns.interactions),
+        timing: Object.fromEntries(this.patterns.timing),
+        sequences: this.patterns.sequences.slice(-20)
+      },
+      analysis: this.analyzePatterns(),
+      sessionInfo: {
+        sessionStart: this.sessionStart,
+        sessionDuration: Date.now() - this.sessionStart,
+        currentScreen: this.currentScreen,
+        platform: Platform.OS
+      }
+    };
+  }
+
+  /**
+   * Réinitialiser les données
+   */
+  async resetData() {
+    this.behaviors = [];
+    this.interactionBuffer = [];
+    this.patterns = {
+      navigation: new Map(),
+      interactions: new Map(),
+      timing: new Map(),
+      sequences: []
+    };
+    
+    await AsyncStorage.removeItem(this.storageKey);
+    console.log('🔄 BehaviorAnalyticsService réinitialisé');
+  }
+
+  /**
+   * Activer/désactiver le tracking
+   */
+  setTracking(enabled) {
+    this.isTracking = enabled;
+    console.log(`🎯 Behavior tracking ${enabled ? 'activé' : 'désactivé'}`);
+  }
+
+  /**
+   * Obtenir les statistiques
+   */
+  getStats() {
+    return {
+      totalBehaviors: this.behaviors.length,
+      bufferSize: this.interactionBuffer.length,
+      sessionDuration: Date.now() - this.sessionStart,
+      currentScreen: this.currentScreen,
+      isTracking: this.isTracking,
+      patterns: {
+        navigationCount: this.patterns.navigation.size,
+        interactionCount: this.patterns.interactions.size,
+        timingCount: this.patterns.timing.size,
+        sequenceCount: this.patterns.sequences.length
+      }
+    };
+  }
+}
+
+// Instance singleton
+const behaviorAnalytics = new BehaviorAnalyticsService();
+
+export default behaviorAnalytics; 

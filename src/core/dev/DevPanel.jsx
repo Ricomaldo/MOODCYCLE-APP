@@ -22,6 +22,7 @@ import { useNavigationStore } from '../../stores/useNavigationStore';
 
 // Hooks
 import { useIntelligencePerformance } from '../../hooks/useIntelligencePerformance';
+import { useStoresSync } from '../../hooks/useStoresSync';
 
 // Config
 import { PERSONA_PROFILES } from '../../config/personaProfiles';
@@ -32,6 +33,8 @@ import { getCurrentPhase, getCurrentPhaseAdaptive } from '../../utils/cycleCalcu
 import IntelligenceCache from '../../services/IntelligenceCache';
 import { runABTest } from '../../services/ABTestService';
 import { initializeIntelligence, validateIntelligenceHealth } from '../../services/IntelligenceInit';
+import TestDataGenerator from '../../services/TestDataGenerator';
+import behaviorAnalytics from '../../services/BehaviorAnalyticsService';
 
 export default function DevPanel() {
   const router = useRouter();
@@ -83,6 +86,9 @@ export default function DevPanel() {
 
   // 🆕 PERFORMANCE MONITORING
   const { trackPipelineExecution, getPerformanceReport } = useIntelligencePerformance();
+  
+  // 📊 STORES SYNC
+  const { initialized, loading, error, metrics, manualSync, resetSync } = useStoresSync();
 
   useEffect(() => {
     if (showPanel) {
@@ -298,6 +304,56 @@ export default function DevPanel() {
     );
   };
 
+  // 🆕 SIMULATION ENGAGEMENT SÉPARÉE
+  const simulateEngagementLevel = (level) => {
+    const engagementData = {
+      discovery: {
+        daysUsed: 2,
+        conversationsStarted: 1,
+        notebookEntriesCreated: 0,
+        autonomySignals: 0,
+        phasesExplored: ['menstrual']
+      },
+      learning: {
+        daysUsed: 10,
+        conversationsStarted: 5,
+        notebookEntriesCreated: 3,
+        autonomySignals: 1,
+        phasesExplored: ['menstrual', 'follicular', 'ovulatory']
+      },
+      autonomous: {
+        daysUsed: 25,
+        conversationsStarted: 15,
+        notebookEntriesCreated: 10,
+        autonomySignals: 5,
+        phasesExplored: ['menstrual', 'follicular', 'ovulatory', 'luteal'],
+        cyclesCompleted: 2
+      }
+    };
+
+    const data = engagementData[level];
+    if (!data) return;
+
+    // Mise à jour directe du store engagement
+    Object.keys(data).forEach(key => {
+      engagement.metrics[key] = data[key];
+    });
+
+    // Recalcul automatique de la maturité
+    engagement.calculateMaturity();
+
+    toggleButtonState(`engagement_${level}`, 2000);
+    console.log(`📊 Engagement Simulé: Niveau "${level}" activé`);
+    
+    Alert.alert(
+      '📊 Engagement Simulé',
+      `Niveau: ${level.toUpperCase()}\n` +
+      `Jours: ${data.daysUsed}\n` +
+      `Conversations: ${data.conversationsStarted}\n` +
+      `Signaux autonomie: ${data.autonomySignals}`
+    );
+  };
+
   const reinitializeIntelligenceServices = async () => {
     try {
       toggleButtonState('pipelineTest', 3000);
@@ -490,12 +546,23 @@ export default function DevPanel() {
       'Effacer toutes les données ?',
       [
         { text: 'Oui', style: 'destructive', onPress: () => {
+          // UserStore
           resetUser();
+          // ChatStore
           clearMessages();
+          // NotebookStore
           resetNotebook();
+          // IntelligenceStore
           intelligence.resetLearning();
+          // EngagementStore
           engagement.resetEngagement();
-          Alert.alert('✅ Reset Complet');
+          // 🆕 CycleStore
+          useCycleStore.getState().resetCycle();
+          // 🆕 NavigationStore
+          navigation.reset?.();
+          // Note: AppStore (thème, dev mode) volontairement préservé pour le dev
+          
+          Alert.alert('✅ Reset Complet', 'Tous les stores ont été réinitialisés !');
         }},
         { text: 'Annuler', style: 'cancel' }
       ]
@@ -699,6 +766,193 @@ export default function DevPanel() {
         </View>
       </ScrollView>
 
+      {/* 📊 STORES SYNC SECTION */}
+      <View style={styles.syncSection}>
+        <Text style={styles.sectionTitle}>📊 Synchronisation Analytics</Text>
+        <View style={styles.syncStatus}>
+          <Text style={styles.syncText}>
+            Status: {initialized ? '✅ Initialisé' : '⏳ En cours...'}
+          </Text>
+          <Text style={styles.syncText}>
+            Dernière sync: {metrics?.lastSync ? new Date(metrics.lastSync).toLocaleString('fr-FR') : 'Jamais'}
+          </Text>
+          <Text style={styles.syncText}>
+            Taille données: {metrics?.dataSize || 'N/A'}
+          </Text>
+          {error && (
+            <Text style={[styles.syncText, { color: '#FF5722' }]}>
+              Erreur: {error}
+            </Text>
+          )}
+        </View>
+        
+        <View style={styles.buttonGrid}>
+          <TouchableOpacity 
+            style={[styles.button, { backgroundColor: loading ? '#9E9E9E' : '#2196F3' }]}
+            onPress={manualSync}
+            disabled={loading}>
+            <Text style={styles.buttonText}>
+              {loading ? '⏳ Sync...' : '🚀 Sync Manuelle'}
+            </Text>
+          </TouchableOpacity>
+          
+                     <TouchableOpacity 
+             style={[styles.button, { backgroundColor: '#FF9800' }]}
+             onPress={() => {
+               Alert.alert(
+                 '🔄 Reset Sync',
+                 'Réinitialiser la synchronisation ?',
+                 [
+                   { text: 'Annuler', style: 'cancel' },
+                   { text: 'Reset', onPress: resetSync }
+                 ]
+               );
+             }}>
+             <Text style={styles.buttonText}>🔄 Reset Sync</Text>
+           </TouchableOpacity>
+         </View>
+         
+         {/* 🧪 TEST DATA SECTION */}
+         <View style={styles.testSection}>
+           <Text style={styles.sectionTitle}>🧪 Données de Test</Text>
+           <View style={styles.buttonGrid}>
+             <TouchableOpacity 
+               style={[styles.button, { backgroundColor: '#9C27B0' }]}
+               onPress={async () => {
+                 const result = await TestDataGenerator.populateAllStores('emma');
+                 if (result.success) {
+                   Alert.alert(
+                     '✅ Données générées',
+                     `Persona: ${result.persona}\nCycle: ${result.stats.cycleLength}j\nMessages: ${result.stats.messagesCount}\nConfiance: ${result.stats.confidence}%`
+                   );
+                 } else {
+                   Alert.alert('❌ Erreur', result.error);
+                 }
+               }}>
+               <Text style={styles.buttonText}>👩 Emma</Text>
+             </TouchableOpacity>
+             
+             <TouchableOpacity 
+               style={[styles.button, { backgroundColor: '#E91E63' }]}
+               onPress={async () => {
+                 const result = await TestDataGenerator.populateAllStores('laure');
+                 if (result.success) {
+                   Alert.alert(
+                     '✅ Données générées',
+                     `Persona: ${result.persona}\nCycle: ${result.stats.cycleLength}j\nMessages: ${result.stats.messagesCount}\nConfiance: ${result.stats.confidence}%`
+                   );
+                 } else {
+                   Alert.alert('❌ Erreur', result.error);
+                 }
+               }}>
+               <Text style={styles.buttonText}>👩‍💼 Laure</Text>
+             </TouchableOpacity>
+             
+             <TouchableOpacity 
+               style={[styles.button, { backgroundColor: '#4CAF50' }]}
+               onPress={async () => {
+                 const result = await TestDataGenerator.populateAllStores('sylvie');
+                 if (result.success) {
+                   Alert.alert(
+                     '✅ Données générées',
+                     `Persona: ${result.persona}\nCycle: ${result.stats.cycleLength}j\nMessages: ${result.stats.messagesCount}\nConfiance: ${result.stats.confidence}%`
+                   );
+                 } else {
+                   Alert.alert('❌ Erreur', result.error);
+                 }
+               }}>
+               <Text style={styles.buttonText}>🌿 Sylvie</Text>
+             </TouchableOpacity>
+             
+             <TouchableOpacity 
+               style={[styles.button, { backgroundColor: '#FF5722' }]}
+               onPress={async () => {
+                 const report = TestDataGenerator.generateTestReport();
+                 Alert.alert(
+                   '📊 Rapport Test',
+                   `Taille totale: ${(report.totalDataSize / 1024).toFixed(1)} KB\nStores: ${Object.keys(report.stores).length}\nQualité: ${Object.values(report.dataQuality).filter(Boolean).length}/${Object.keys(report.dataQuality).length}`
+                 );
+                 console.log('📊 Test Report:', report);
+               }}>
+               <Text style={styles.buttonText}>📊 Rapport</Text>
+             </TouchableOpacity>
+                    </View>
+       </View>
+       
+       {/* 🎯 BEHAVIOR ANALYTICS SECTION */}
+       <View style={styles.behaviorSection}>
+         <Text style={styles.sectionTitle}>🎯 Analytics Comportementaux</Text>
+         <View style={styles.behaviorStats}>
+           <Text style={styles.syncText}>
+             Interactions: {behaviorAnalytics.getStats().totalBehaviors}
+           </Text>
+           <Text style={styles.syncText}>
+             Buffer: {behaviorAnalytics.getStats().bufferSize}
+           </Text>
+           <Text style={styles.syncText}>
+             Écran: {behaviorAnalytics.getStats().currentScreen || 'N/A'}
+           </Text>
+           <Text style={styles.syncText}>
+             Session: {Math.round(behaviorAnalytics.getStats().sessionDuration / 1000 / 60)}min
+           </Text>
+         </View>
+         <View style={styles.buttonGrid}>
+           <TouchableOpacity 
+             style={[styles.button, { backgroundColor: '#673AB7' }]}
+             onPress={() => {
+               const patterns = behaviorAnalytics.analyzePatterns();
+               Alert.alert(
+                 '📊 Analyse Patterns',
+                 `Interactions: ${patterns.totalInteractions}\nNavigation: ${patterns.navigation.totalNavigations}\nEngagement: ${patterns.engagement.engagementLevel}`
+               );
+               console.log('🎯 Behavior Patterns:', patterns);
+             }}>
+             <Text style={styles.buttonText}>📊 Analyser</Text>
+           </TouchableOpacity>
+           
+           <TouchableOpacity 
+             style={[styles.button, { backgroundColor: '#3F51B5' }]}
+             onPress={() => {
+               const syncData = behaviorAnalytics.getSyncData();
+               Alert.alert(
+                 '📤 Données Sync',
+                 `Behaviors: ${syncData.behaviors.length}\nPatterns: ${Object.keys(syncData.patterns.interactions).length}\nTaille: ${JSON.stringify(syncData).length} chars`
+               );
+               console.log('📤 Behavior Sync Data:', syncData);
+             }}>
+             <Text style={styles.buttonText}>📤 Sync Data</Text>
+           </TouchableOpacity>
+           
+           <TouchableOpacity 
+             style={[styles.button, { backgroundColor: '#2196F3' }]}
+             onPress={() => {
+               // Simuler quelques interactions
+               behaviorAnalytics.trackButtonPress('test_button', { location: 'devpanel' });
+               behaviorAnalytics.trackInteraction('test_interaction', { type: 'manual' });
+               behaviorAnalytics.trackNavigation('test_screen', { source: 'devpanel' });
+               Alert.alert('✅ Test', 'Interactions simulées ajoutées');
+             }}>
+             <Text style={styles.buttonText}>🧪 Test</Text>
+           </TouchableOpacity>
+           
+           <TouchableOpacity 
+             style={[styles.button, { backgroundColor: '#FF5722' }]}
+             onPress={() => {
+               Alert.alert(
+                 '🔄 Reset Analytics',
+                 'Réinitialiser les données comportementales ?',
+                 [
+                   { text: 'Annuler', style: 'cancel' },
+                   { text: 'Reset', onPress: () => behaviorAnalytics.resetData() }
+                 ]
+               );
+             }}>
+             <Text style={styles.buttonText}>🔄 Reset</Text>
+           </TouchableOpacity>
+         </View>
+       </View>
+     </View>
+
       <View style={styles.buttonGrid}>
         <TouchableOpacity 
           style={[styles.button, { backgroundColor: '#FF5722' }]}
@@ -835,6 +1089,7 @@ Sync: ${syncStatus}
 
   const renderTestTab = () => (
     <View style={styles.tabContent}>
+      <Text style={styles.sectionTitle}>🧠 INTELLIGENCE (Patterns)</Text>
       <View style={styles.buttonGrid}>
         <TouchableOpacity 
           style={[styles.button, getButtonStyle('#FF6B6B', 'evening_active')]} 
@@ -851,6 +1106,29 @@ Sync: ${syncStatus}
           onPress={() => simulateIntelligenceData('beginner')}>
           <Text style={styles.buttonText}>🌱 Débutante</Text>
         </TouchableOpacity>
+      </View>
+      
+      <Text style={styles.sectionTitle}>📊 ENGAGEMENT (Métriques)</Text>
+      <View style={styles.buttonGrid}>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#27AE60' }]} 
+          onPress={() => simulateEngagementLevel('discovery')}>
+          <Text style={styles.buttonText}>🔍 Discovery</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#3498DB' }]} 
+          onPress={() => simulateEngagementLevel('learning')}>
+          <Text style={styles.buttonText}>📚 Learning</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.button, { backgroundColor: '#9B59B6' }]} 
+          onPress={() => simulateEngagementLevel('autonomous')}>
+          <Text style={styles.buttonText}>🚀 Autonomous</Text>
+        </TouchableOpacity>
+      </View>
+      
+      <Text style={styles.sectionTitle}>🔧 OUTILS</Text>
+      <View style={styles.buttonGrid}>
         <TouchableOpacity 
           style={[styles.button, { backgroundColor: '#8E44AD' }]} 
           onPress={showIntelligenceDebug}>
@@ -1429,9 +1707,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 8,
+    marginTop: 12,
+    color: '#2C3E50',
   },
   debugItem: {
     marginBottom: 8,
@@ -1463,5 +1743,43 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     marginBottom: 4,
+  },
+  syncSection: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: 'rgba(33, 150, 243, 0.1)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(33, 150, 243, 0.3)',
+  },
+  syncStatus: {
+    marginBottom: 12,
+  },
+  syncText: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 4,
+  },
+  testSection: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: 'rgba(156, 39, 176, 0.1)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(156, 39, 176, 0.3)',
+  },
+  behaviorSection: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: 'rgba(103, 58, 183, 0.1)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(103, 58, 183, 0.3)',
+  },
+  behaviorStats: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 12,
   },
 });

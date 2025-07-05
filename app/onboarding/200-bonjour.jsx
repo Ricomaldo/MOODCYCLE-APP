@@ -209,7 +209,7 @@ export default function BonjourScreen() {
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 140 : 0}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 148 : 0}
       >
         <AnimatedOnboardingScreen>
           <View style={styles.mainContent}>
@@ -243,7 +243,7 @@ export default function BonjourScreen() {
                   ]}>
                     <MeluneAvatar 
                       phase="follicular"
-                      size={Platform.OS === "ios" ? "medium" : "large"}
+                      size="large"
                       style="classic"
                       animated={startContent}
                     />
@@ -354,7 +354,8 @@ const getStyles = (theme) => StyleSheet.create({
 
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: Platform.OS === 'ios' ? 250 : theme.spacing.xxl,
+    paddingTop: theme.spacing.xl,
+    paddingBottom: Platform.OS === 'ios' ? 200 : theme.spacing.xxl,
   },
 
   scrollContentExpanded: {
@@ -367,20 +368,20 @@ const getStyles = (theme) => StyleSheet.create({
 
   meluneSection: {
     alignItems: 'center',
-    paddingTop: Platform.OS === 'ios' ? theme.spacing.s : theme.spacing.xl,
+    paddingTop: theme.spacing.xs,
   },
 
   meluneSectionExpanded: {
-    flex: Platform.OS === 'ios' ? 0.25 : 0.6,
+    flex: 0.4,
     justifyContent: 'center',
   },
 
   meluneContainer: {
-    marginBottom: Platform.OS === 'ios' ? theme.spacing.s : theme.spacing.m,
+    marginBottom: theme.spacing.m,
   },
 
   meluneContainerExpanded: {
-    marginBottom: Platform.OS === 'ios' ? theme.spacing.m : theme.spacing.l,
+    marginBottom: theme.spacing.l,
   },
 
   messageContainer: {
@@ -389,10 +390,10 @@ const getStyles = (theme) => StyleSheet.create({
   },
 
   greeting: {
-    fontSize: Platform.OS === 'ios' ? 22 : 28,
+    fontSize: 26,
     textAlign: 'center',
     color: theme.colors.text,
-    lineHeight: Platform.OS === 'ios' ? 28 : 36,
+    lineHeight: 34,
   },
 
   chatContainer: {
@@ -436,8 +437,8 @@ const getStyles = (theme) => StyleSheet.create({
 
   inputWrapper: {
     backgroundColor: theme.colors.background,
-    paddingHorizontal: theme.spacing.s,
-    paddingVertical: Platform.OS === 'ios' ? theme.spacing.xs : theme.spacing.m,
+    paddingHorizontal: theme.spacing.xl,
+    paddingVertical: theme.spacing.m,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
   },
@@ -456,8 +457,8 @@ const getStyles = (theme) => StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: theme.colors.text,
-    paddingVertical: Platform.OS === 'ios' ? theme.spacing.xs : theme.spacing.m,
-    minHeight: Platform.OS === 'ios' ? 40 : 48,
+    paddingVertical: theme.spacing.m,
+    minHeight: 44,
   },
 
   sendButton: {

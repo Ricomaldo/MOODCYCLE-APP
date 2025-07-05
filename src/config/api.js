@@ -9,7 +9,7 @@
 //
 const API_CONFIG = {
   development: {
-    baseURL: "http://localhost:4000",
+    baseURL: "http://localhost:3001",
     endpoints: {
       chat: '/api/chat',
       health: '/api/health',
@@ -18,6 +18,9 @@ const API_CONFIG = {
       phases: '/api/phases',
       closings: '/api/closings',
       vignettes: '/api/vignettes',
+      // Endpoints stores sync
+      storesSync: '/api/stores/sync',
+      storesAnalytics: '/api/stores/analytics',
       // Endpoints admin pour l'édition (auth requise)
       admin: {
         insights: '/api/admin/insights',
@@ -39,6 +42,9 @@ const API_CONFIG = {
       phases: '/api/phases',
       closings: '/api/closings',
       vignettes: '/api/vignettes',
+      // Endpoints stores sync
+      storesSync: '/api/stores/sync',
+      storesAnalytics: '/api/stores/analytics',
       // Endpoints admin pour l'édition (auth requise)
       admin: {
         insights: '/api/admin/insights',
@@ -53,7 +59,7 @@ const API_CONFIG = {
 };
 
 export const getApiConfig = () => {
-  const config = API_CONFIG.production;
+  const config = __DEV__ ? API_CONFIG.development : API_CONFIG.production;
   if (__DEV__) {
     console.info("🔧 API Config (DEV):", config.baseURL);
   }

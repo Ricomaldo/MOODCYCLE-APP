@@ -97,6 +97,10 @@ export function OnboardingCard({
         style={styles.card}
         onPress={onPress}
         activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel={`${title}: ${description}`}
+        accessibilityHint={isSelected ? "Actuellement sélectionné" : "Appuyer pour sélectionner cette option"}
+        accessibilityState={{ selected: isSelected }}
       >
         <View style={styles.cardHeader}>
           {renderIcon()}
@@ -141,6 +145,7 @@ const getStyles = (theme, variant, color, value, isSelected) => {
       borderRadius: theme.borderRadius.large,
       borderWidth: 2,
       borderColor,
+      minHeight: 44, // ✅ WCAG 2.1 AA - Zone de touch minimum
       ...(variant === 'lifecycle' && {
         borderLeftWidth: 4,
         borderLeftColor: color || theme.colors.primary,
@@ -150,6 +155,7 @@ const getStyles = (theme, variant, color, value, isSelected) => {
     cardHeader: {
       flexDirection: 'row',
       alignItems: variant === 'preference' ? 'flex-start' : 'center',
+      minHeight: 44, // ✅ WCAG 2.1 AA - Zone de touch minimum interne
     },
     
     // Icône pour choice
@@ -160,6 +166,7 @@ const getStyles = (theme, variant, color, value, isSelected) => {
       height: 48,
       textAlign: 'center',
       lineHeight: 48,
+      minWidth: 44, // ✅ WCAG 2.1 AA - Zone de touch minimum
     },
     
     // Conteneur d'icône pour lifecycle et preference
@@ -211,7 +218,7 @@ const getStyles = (theme, variant, color, value, isSelected) => {
     
     intensityText: {
       color: theme.colors.white,
-      fontSize: 12,
+      fontSize: 14, // ✅ WCAG 2.1 AA - Taille minimum corrigée
       fontWeight: '600',
     },
   });

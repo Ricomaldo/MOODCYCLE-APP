@@ -71,29 +71,41 @@ export default function OnboardingNavigation({ currentScreen, canGoBack = true }
       useNativeDriver: false,
     }).start();
 
-    // Animation bouton retour
+    // Animation bouton retour - activé seulement à partir de l'écran 500 (personnalisation)
+    const shouldShowBackButton = canGoBack && 
+      !['100-bienvenue', '200-bonjour', '250-rencontre', '300-etape-vie', '400-prenom'].includes(currentScreen);
+    
     Animated.timing(backButtonAnim, {
-      toValue: canGoBack && currentScreen !== '100-bienvenue' ? 1 : 0,
+      toValue: shouldShowBackButton ? 1 : 0,
       duration: 300,
       useNativeDriver: true,
     }).start();
 
-    // Animation bouton avant
+    // Animation bouton avant - désactivé sur 200
+    const shouldShowForwardButton = lastValidatedStep > currentStep && 
+      currentScreen !== '200-bonjour';
+    
     Animated.timing(forwardButtonAnim, {
-      toValue: lastValidatedStep > currentStep ? 1 : 0,
+      toValue: shouldShowForwardButton ? 1 : 0,
       duration: 300,
       useNativeDriver: true,
     }).start();
   }, [currentStep, canGoBack, currentScreen, lastValidatedStep]);
 
   const handleBack = () => {
-    if (canGoBack && currentScreen !== '100-bienvenue') {
+    const shouldAllowBack = canGoBack && 
+      !['100-bienvenue', '200-bonjour', '250-rencontre', '300-etape-vie', '400-prenom'].includes(currentScreen);
+    
+    if (shouldAllowBack) {
       router.back();
     }
   };
 
   const handleForward = () => {
-    if (lastValidatedStep > currentStep) {
+    const shouldAllowForward = lastValidatedStep > currentStep && 
+      currentScreen !== '200-bonjour';
+    
+    if (shouldAllowForward) {
       // Trouver le prochain écran dans la séquence
       const screenSequence = Object.entries(SCREEN_MAPPING);
       const currentIndex = screenSequence.findIndex(([screen]) => screen === currentScreen);
@@ -134,7 +146,7 @@ export default function OnboardingNavigation({ currentScreen, canGoBack = true }
           style={styles.backButton}
           onPress={handleBack}
           activeOpacity={0.7}
-          disabled={!canGoBack || currentScreen === '100-bienvenue'}
+          disabled={!canGoBack || ['100-bienvenue', '200-bonjour', '250-rencontre', '300-etape-vie', '400-prenom'].includes(currentScreen)}
         >
           <Feather name="chevron-left" size={24} color={theme.colors.text} />
         </TouchableOpacity>
@@ -194,7 +206,7 @@ export default function OnboardingNavigation({ currentScreen, canGoBack = true }
           style={styles.forwardButton}
           onPress={handleForward}
           activeOpacity={0.7}
-          disabled={lastValidatedStep <= currentStep}
+          disabled={lastValidatedStep <= currentStep || currentScreen === '200-bonjour'}
         >
           <Feather name="chevron-right" size={24} color={theme.colors.text} />
         </TouchableOpacity>
@@ -210,7 +222,7 @@ const getStyles = (theme) => StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: theme.spacing.l,
     paddingVertical: theme.spacing.m,
-    backgroundColor: theme.colors.background,
+    backgroundColor: theme.colors.backgroundSecondary,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border + '20',
   },

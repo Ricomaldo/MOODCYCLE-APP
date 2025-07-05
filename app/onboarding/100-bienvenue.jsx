@@ -59,7 +59,15 @@ export default function BienvenueScreen() {
 
   const handleContinue = () => {
     intelligence.trackAction('welcome_completed');
-    router.push('/onboarding/200-bonjour');
+    
+    // Animation de sortie élégante avec fade out
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: ANIMATION_DURATIONS.elegant,
+      useNativeDriver: true,
+    }).start(() => {
+      router.push('/onboarding/200-bonjour');
+    });
   };
 
   return (

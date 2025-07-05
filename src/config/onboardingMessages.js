@@ -10,11 +10,6 @@
 export const ONBOARDING_MESSAGES = {
     // 250-rencontre: Messages selon le choix du parcours
     '250-rencontre': {
-      journey: {
-        body_disconnect: "Je vois... Tu veux retrouver cette connexion perdue avec ton corps. C'est un chemin magnifique.",
-        hiding_nature: "Ah, tu veux révéler qui tu es vraiment ! J'adore cette authenticité.",
-        emotional_control: "Comprendre tes émotions... C'est la clé de tant de choses. Explorons ensemble."
-      },
       // ✅ NETTOYÉ : Pas de messages personnalisés, confiance = 0%
       default: "Je sens que tu es en quête de quelque chose de profond... Confie-moi ce qui t'appelle"
     },

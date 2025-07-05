@@ -107,7 +107,7 @@ export default function RencontreScreen() {
   };
 
   return (
-    <ScreenContainer edges={['top', 'bottom']} style={styles.container}>
+    <ScreenContainer edges={['bottom']} style={styles.container}>
       <AnimatedOnboardingScreen>
         <ScrollView
           style={styles.scrollView}
@@ -126,9 +126,7 @@ export default function RencontreScreen() {
             <View style={styles.messageSection}>
               <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage}>
                 <BodyText style={[styles.message, { fontFamily: 'Quintessential' }]}>
-                  {selectedChoice 
-                    ? intelligence.getPersonalizedMessage('journey', { journeyChoice: selectedChoice }) 
-                    : "Je sens que tu es en quête de quelque chose de profond... Confie-moi ce qui t'appelle"}
+                  Je sens que tu es en quête de quelque chose de profond... Confie-moi ce qui t'appelle
                 </BodyText>
               </AnimatedRevealMessage>
             </View>
@@ -188,7 +186,7 @@ const getStyles = (theme) => StyleSheet.create({
   
   scrollContent: {
     flexGrow: 1,
-    paddingTop: theme.spacing.xl,
+    paddingTop: theme.spacing.m,
   },
   
   messageSection: {

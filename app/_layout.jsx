@@ -28,15 +28,27 @@ import { initializeIntelligence } from "../src/services/IntelligenceInit";
 import { useEffect } from "react";
 import Config from "../src/config/appConfig";
 import { AppStoreProvider } from "../src/core/AppStoreProvider";
+import { useStoresSync } from "../src/hooks/useStoresSync";
 
 // ✅ Composant wrapper simplifié
 function LayoutContent() {
   const { isDark } = useTheme();
+  
+  // 📊 Initialisation du service de synchronisation des stores
+  const { initialized, autoSync } = useStoresSync();
 
   // 🧠 Initialisation des services d'intelligence
   useEffect(() => {
     initializeIntelligence(Config.getIntelligenceConfig());
   }, []);
+  
+  // 🚀 Auto-sync des stores au démarrage
+  useEffect(() => {
+    if (initialized) {
+      console.log('📊 StoresSync initialized, starting auto-sync...');
+      autoSync();
+    }
+  }, [initialized, autoSync]);
 
   return (
     <>
