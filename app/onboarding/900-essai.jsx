@@ -194,17 +194,14 @@ export default function EssaiScreen() {
 
               {/* Démonstration ValuePreview */}
               <View style={styles.demoSection}>
-                <AnimatedCascadeCard
-                  delay={ANIMATION_DURATIONS.welcomeFirstMessage + 500}
-                  style={styles.demoCard}
-                >
+                <View style={styles.demoCard}>
                   <ValuePreview
                     persona={persona}
                     phase={getDemoData().phase}
                     preferences={getDemoData().preferences}
                     onComplete={handleValuePreviewComplete}
                   />
-                </AnimatedCascadeCard>
+                </View>
               </View>
             </>
           ) : (
@@ -221,7 +218,7 @@ export default function EssaiScreen() {
                 {selectedVersion && (
                   <AnimatedRevealMessage 
                     key={selectedVersion} 
-                    delay={300}
+                    delay={ANIMATION_DURATIONS.normal}
                     style={styles.feedbackContainer}
                   >
                     <BodyText style={styles.feedbackText}>
@@ -236,7 +233,7 @@ export default function EssaiScreen() {
                 {/* Version Complète */}
                 <AnimatedCascadeCard
                   index={0}
-                  delay={ANIMATION_DURATIONS.welcomeFirstMessage + 500}
+                  delay={ANIMATION_DURATIONS.dramatic}
                   style={styles.versionCard}
                 >
                   <TouchableOpacity
@@ -280,7 +277,7 @@ export default function EssaiScreen() {
                 {/* Version Essentielle */}
                 <AnimatedCascadeCard
                   index={1}
-                  delay={ANIMATION_DURATIONS.welcomeFirstMessage + 700}
+                  delay={ANIMATION_DURATIONS.elegant}
                   style={styles.versionCard}
                 >
                   <TouchableOpacity

@@ -15,6 +15,7 @@ import { BodyText, Caption } from '../../src/core/ui/typography';
 import { useTheme } from '../../src/hooks/useTheme';
 import { useCycleStore } from '../../src/stores/useCycleStore';
 import { useOnboardingIntelligence } from '../../src/hooks/useOnboardingIntelligence';
+import { useUserIntelligence } from '../../src/stores/useUserIntelligence';
 import { getOnboardingMessage } from '../../src/config/onboardingMessages';
 import { CycleDateSelector } from '../../src/features/onboarding/cycle/CycleDateSelector';
 import { CycleDurationWheel } from '../../src/features/onboarding/cycle/CycleDurationWheel';
@@ -68,7 +69,7 @@ export default function CycleScreen() {
   // États pour approche hybride
   const [selectedEnergy, setSelectedEnergy] = useState(null);
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
-  const [lastPeriodDate, setLastPeriodDate] = useState(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+  const [lastPeriodDate, setLastPeriodDate] = useState(new Date()); // Par défaut : aujourd'hui
   const [cycleLength, setCycleLength] = useState(28);
   
   // Animations obligatoires du pattern absolu
@@ -106,22 +107,38 @@ export default function CycleScreen() {
   const handleEnergySelect = (energy) => {
     setSelectedEnergy(energy);
     
-    // Calculer une date approximative basée sur l'énergie ressentie
+    // 🎯 Estimation affinée basée sur l'énergie ressentie + patterns populationnels
     const now = new Date();
     let estimatedLastPeriod;
     
     switch (energy.id) {
       case 'menstrual':
-        estimatedLastPeriod = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000); // Il y a 2 jours
+        // Si repos profond = règles en cours (J1-J5)
+        // Estimation : dernières règles = il y a 0-2 jours
+        const menstrualDays = [0, 1, 2];
+        const randomMenstrualDay = menstrualDays[Math.floor(Math.random() * menstrualDays.length)];
+        estimatedLastPeriod = new Date(now.getTime() - randomMenstrualDay * 24 * 60 * 60 * 1000);
         break;
       case 'follicular':
-        estimatedLastPeriod = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000); // Il y a 10 jours
+        // Si énergie montante = phase folliculaire (J6-J13)
+        // Estimation : dernières règles = il y a 6-13 jours
+        const follicularDays = [6, 7, 8, 9, 10, 11, 12, 13];
+        const randomFollicularDay = follicularDays[Math.floor(Math.random() * follicularDays.length)];
+        estimatedLastPeriod = new Date(now.getTime() - randomFollicularDay * 24 * 60 * 60 * 1000);
         break;
       case 'ovulatory':
-        estimatedLastPeriod = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000); // Il y a 14 jours
+        // Si pleine puissance = ovulation (J12-J16)
+        // Estimation : dernières règles = il y a 12-16 jours
+        const ovulatoryDays = [12, 13, 14, 15, 16];
+        const randomOvulatoryDay = ovulatoryDays[Math.floor(Math.random() * ovulatoryDays.length)];
+        estimatedLastPeriod = new Date(now.getTime() - randomOvulatoryDay * 24 * 60 * 60 * 1000);
         break;
       case 'luteal':
-        estimatedLastPeriod = new Date(now.getTime() - 21 * 24 * 60 * 60 * 1000); // Il y a 21 jours
+        // Si transition douce = phase lutéale (J17-J28)
+        // Estimation : dernières règles = il y a 17-27 jours
+        const lutealDays = [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27];
+        const randomLutealDay = lutealDays[Math.floor(Math.random() * lutealDays.length)];
+        estimatedLastPeriod = new Date(now.getTime() - randomLutealDay * 24 * 60 * 60 * 1000);
         break;
       default:
         estimatedLastPeriod = lastPeriodDate;
@@ -140,7 +157,11 @@ export default function CycleScreen() {
       length: finalLength,
       periodDuration: 5,
       // ✨ Ajouter l'énergie ressentie pour CycleObservationEngine
-      currentEnergyFelt: selectedEnergy?.id || null
+      currentEnergyFelt: selectedEnergy?.id || null,
+      // 🎯 Métadonnées pour amélioration progressive
+      initialEstimationMethod: selectedEnergy ? 'energy_based' : 'technical',
+      initialEnergyConfidence: selectedEnergy ? 0.7 : 0.9, // Technique plus sûr initialement
+      energyTimestamp: new Date().toISOString()
     });
     
     intelligence.trackAction('cycle_configured', {

@@ -103,9 +103,9 @@ export function OnboardingCard({
           <View style={styles.cardInfo}>
             <BodyText style={styles.cardTitle}>{title}</BodyText>
             <BodyText style={styles.cardDescription}>{description}</BodyText>
-            {renderIntensityBadge()}
           </View>
         </View>
+        {renderIntensityBadge()}
       </TouchableOpacity>
     </AnimatedCascadeCard>
   );
@@ -196,11 +196,17 @@ const getStyles = (theme, variant, color, value, isSelected) => {
     },
     
     intensityBadge: {
-      alignSelf: 'flex-start',
+      position: 'absolute',
+      top: theme.spacing.s,
+      right: theme.spacing.s,
       paddingHorizontal: theme.spacing.m,
       paddingVertical: theme.spacing.xs,
       borderRadius: theme.borderRadius.small,
-      marginTop: theme.spacing.s,
+      shadowColor: theme.colors.text,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 2,
+      elevation: 3,
     },
     
     intensityText: {

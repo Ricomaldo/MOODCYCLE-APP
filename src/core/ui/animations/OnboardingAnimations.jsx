@@ -345,17 +345,21 @@ export function AnimatedOnboardingScreen({ children, delay = 0 }) {
  * Animation en cascade pour cartes/éléments
  * @param {ReactNode} children - Contenu à animer
  * @param {number} index - Index pour délai décalé
+ * @param {number} delay - Délai externe optionnel
  * @param {Object} style - Styles additionnels
  */
-export function AnimatedCascadeCard({ children, index = 0, style }) {
+export function AnimatedCascadeCard({ children, index = 0, delay = null, style }) {
   const opacityAnim = useRef(new Animated.Value(0)).current;
   const translateYAnim = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
-    const delay = AnimationHelpers.getStaggerDelay(index, 100);
+    // Utiliser delay externe si fourni, sinon calcul automatique
+    const finalDelay = delay !== null 
+      ? delay 
+      : ANIMATION_DURATIONS.elegant + AnimationHelpers.getStaggerDelay(index, 100);
     
     Animated.sequence([
-      Animated.delay(ANIMATION_DURATIONS.elegant + delay),
+      Animated.delay(finalDelay),
       Animated.parallel([
         Animated.timing(opacityAnim, {
           toValue: 1,
@@ -370,7 +374,7 @@ export function AnimatedCascadeCard({ children, index = 0, style }) {
         }),
       ]),
     ]).start();
-  }, [index]);
+  }, [index, delay]);
 
   return (
     <Animated.View

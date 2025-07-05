@@ -64,16 +64,17 @@ export default function BienvenueScreen() {
 
   return (
     <ScreenContainer edges={['top', 'bottom']} style={styles.container}>
-      <View style={styles.content}>
-        {/* Messages d'introduction avec animation translation */}
-        <Animated.View 
-          style={[
-            styles.messagesContainer,
-            {
-              transform: [{ translateY: slideAnim }]
-            }
-          ]}
-        >
+      <Animated.View 
+        style={[
+          styles.content,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }]
+          }
+        ]}
+      >
+        {/* Messages d'introduction */}
+        <View style={styles.messagesContainer}>
           <AnimatedRevealMessage delay={ANIMATION_DURATIONS.welcomeFirstMessage}>
             <BodyText style={styles.message}>
               Devenez la femme que vous êtes,
@@ -85,7 +86,7 @@ export default function BienvenueScreen() {
               votre cycle révèle votre vraie nature...
             </BodyText>
           </AnimatedRevealMessage>
-        </Animated.View>
+        </View>
 
         {/* Logo et sparkles */}
         <View style={styles.logoSection}>
@@ -116,18 +117,11 @@ export default function BienvenueScreen() {
           </View>
         </View>
 
-        {/* Bouton avec animation fade */}
-        <Animated.View 
-          style={[
-            styles.buttonContainer,
-            {
-              opacity: fadeAnim
-            }
-          ]}
-        >
+        {/* Bouton */}
+        <View style={styles.buttonContainer}>
           <OnboardingButton onPress={handleContinue} />
-        </Animated.View>
-      </View>
+        </View>
+      </Animated.View>
     </ScreenContainer>
   );
 }
@@ -141,14 +135,15 @@ const getStyles = ({ colors, fonts, spacing }) => StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'space-between',
-    paddingVertical: spacing.xxl,
+    paddingTop: spacing.xxl,
+    paddingBottom: spacing.xl,
   },
 
   messagesContainer: {
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
     gap: spacing.xl,
-    marginTop: spacing.xxl * 2,
+    marginTop: spacing.xl,
   },
 
   message: {
@@ -221,7 +216,7 @@ const getStyles = ({ colors, fonts, spacing }) => StyleSheet.create({
   },
 
   buttonContainer: {
-    marginTop: spacing.xl,
     paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.m,
   },
 });

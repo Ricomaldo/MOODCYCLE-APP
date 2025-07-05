@@ -25,9 +25,9 @@ export default function ValuePreview({ persona, phase, preferences, onComplete }
   const [autoAdvance, setAutoAdvance] = useState(true);
 
   const steps = [
-    { component: 'demo', title: 'Démonstration IA', duration: 8000 },
-    { component: 'testimonial', title: 'Témoignage', duration: 6000 },
-    { component: 'reveal', title: 'Révélation', duration: 5000 }
+    { component: 'demo', title: 'Démonstration IA', duration: 6000 },
+    { component: 'testimonial', title: 'Témoignage', duration: 4000 },
+    { component: 'reveal', title: 'Révélation', duration: 3000 }
   ];
 
   // Auto-advance avec possibilité de désactiver
